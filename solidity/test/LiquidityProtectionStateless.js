@@ -5,10 +5,10 @@ const Decimal = require('decimal.js');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 
 const FACTOR_LISTS = [
-    [9, 12, 15].map(x => new BN(10).pow(new BN(x))),
-    [18, 24, 30].map(x => new BN(10).pow(new BN(x))),
-    [23, 47, 95].map(x => new BN(x).pow(new BN(10))),
-    [7, 9, 11, 13].map(x => new BN(x).pow(new BN(10)))
+    [9, 12, 15].map((x) => new BN(10).pow(new BN(x))),
+    [18, 24, 30].map((x) => new BN(10).pow(new BN(x))),
+    [23, 47, 95].map((x) => new BN(x).pow(new BN(10))),
+    [7, 9, 11, 13].map((x) => new BN(x).pow(new BN(10)))
 ];
 
 function impLossTest(initialRateN, initialRateD, currentRateN, currentRateD) {
@@ -25,7 +25,7 @@ function assertAlmostEqual(actual, expected) {
     }
 }
 
-contract('LiquidityProtectionStateless', accounts => {
+contract('LiquidityProtectionStateless', (accounts) => {
     before(async () => {
         liquidityProtection = await LiquidityProtection.new(accounts[0], accounts[0], accounts[0], accounts[0]);
     });
@@ -37,7 +37,12 @@ contract('LiquidityProtectionStateless', accounts => {
                     for (const currentRateD of factorList) {
                         it(`impLoss(${initialRateN}/${initialRateD}, ${currentRateN}/${currentRateD})`, async () => {
                             const expected = impLossTest(initialRateN, initialRateD, currentRateN, currentRateD);
-                            const actual = await liquidityProtection.impLossTest(initialRateN, initialRateD, currentRateN, currentRateD);
+                            const actual = await liquidityProtection.impLossTest(
+                                initialRateN,
+                                initialRateD,
+                                currentRateN,
+                                currentRateD
+                            );
                             assertAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected);
                         });
                     }

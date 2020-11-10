@@ -3,9 +3,7 @@ pragma solidity 0.6.12;
 import "../converter/types/liquidity-pool-v1/LiquidityPoolV1ConverterFactory.sol";
 import "./TestLiquidityPoolV1Converter.sol";
 
-contract TestLiquidityPoolV1ConverterFactory is
-    LiquidityPoolV1ConverterFactory
-{
+contract TestLiquidityPoolV1ConverterFactory is LiquidityPoolV1ConverterFactory {
     function createConverter(
         IConverterAnchor _anchor,
         IContractRegistry _registry,

@@ -17,12 +17,7 @@ import "../utility/TokenHolder.sol";
  * Reporting cross chain transfers works similar to standard multisig contracts, meaning that multiple
  * callers are required to report a transfer before tokens are released to the target account.
  */
-contract BancorX is
-    IBancorX,
-    TokenHandler,
-    TokenHolder,
-    ContractRegistryClient
-{
+contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
 
     // represents a transaction on another blockchain where tokens were destroyed/locked
@@ -88,13 +83,7 @@ contract BancorX is
      * @param _amount          transfer amount
      * @param _id              xtransfer id
      */
-    event XTransfer(
-        address indexed _from,
-        bytes32 _toBlockchain,
-        bytes32 indexed _to,
-        uint256 _amount,
-        uint256 _id
-    );
+    event XTransfer(address indexed _from, bytes32 _toBlockchain, bytes32 indexed _to, uint256 _amount, uint256 _id);
 
     /**
      * @dev triggered when report is successfully submitted
@@ -154,10 +143,7 @@ contract BancorX is
         notThis(address(_token))
     {
         // validate input
-        require(
-            _minLimit <= _maxLockLimit && _minLimit <= _maxReleaseLimit,
-            "ERR_INVALID_MIN_LIMIT"
-        );
+        require(_minLimit <= _maxLockLimit && _minLimit <= _maxReleaseLimit, "ERR_INVALID_MIN_LIMIT");
 
         // the maximum limits, minimum limit, and limit increase per block
         maxLockLimit = _maxLockLimit;
@@ -213,11 +199,7 @@ contract BancorX is
      *
      * @param _maxLockLimit    new maxLockLimit
      */
-    function setMaxLockLimit(uint256 _maxLockLimit)
-        public
-        ownerOnly
-        greaterThanZero(_maxLockLimit)
-    {
+    function setMaxLockLimit(uint256 _maxLockLimit) public ownerOnly greaterThanZero(_maxLockLimit) {
         maxLockLimit = _maxLockLimit;
     }
 
@@ -226,11 +208,7 @@ contract BancorX is
      *
      * @param _maxReleaseLimit    new maxReleaseLimit
      */
-    function setMaxReleaseLimit(uint256 _maxReleaseLimit)
-        public
-        ownerOnly
-        greaterThanZero(_maxReleaseLimit)
-    {
+    function setMaxReleaseLimit(uint256 _maxReleaseLimit) public ownerOnly greaterThanZero(_maxReleaseLimit) {
         maxReleaseLimit = _maxReleaseLimit;
     }
 
@@ -239,16 +217,9 @@ contract BancorX is
      *
      * @param _minLimit    new minLimit
      */
-    function setMinLimit(uint256 _minLimit)
-        public
-        ownerOnly
-        greaterThanZero(_minLimit)
-    {
+    function setMinLimit(uint256 _minLimit) public ownerOnly greaterThanZero(_minLimit) {
         // validate input
-        require(
-            _minLimit <= maxLockLimit && _minLimit <= maxReleaseLimit,
-            "ERR_INVALID_MIN_LIMIT"
-        );
+        require(_minLimit <= maxLockLimit && _minLimit <= maxReleaseLimit, "ERR_INVALID_MIN_LIMIT");
 
         minLimit = _minLimit;
     }
@@ -258,11 +229,7 @@ contract BancorX is
      *
      * @param _limitIncPerBlock    new limitIncPerBlock
      */
-    function setLimitIncPerBlock(uint256 _limitIncPerBlock)
-        public
-        ownerOnly
-        greaterThanZero(_limitIncPerBlock)
-    {
+    function setLimitIncPerBlock(uint256 _limitIncPerBlock) public ownerOnly greaterThanZero(_limitIncPerBlock) {
         limitIncPerBlock = _limitIncPerBlock;
     }
 
@@ -271,11 +238,7 @@ contract BancorX is
      *
      * @param _minRequiredReports    new minRequiredReports
      */
-    function setMinRequiredReports(uint8 _minRequiredReports)
-        public
-        ownerOnly
-        greaterThanZero(_minRequiredReports)
-    {
+    function setMinRequiredReports(uint8 _minRequiredReports) public ownerOnly greaterThanZero(_minRequiredReports) {
         minRequiredReports = _minRequiredReports;
     }
 
@@ -315,9 +278,7 @@ contract BancorX is
      * @param _reporters    new list of reporters
      */
     function upgrade(address[] memory _reporters) public ownerOnly {
-        IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(
-            addressOf(BANCOR_X_UPGRADER)
-        );
+        IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(addressOf(BANCOR_X_UPGRADER));
 
         transferOwnership(address(bancorXUpgrader));
         bancorXUpgrader.upgrade(version, _reporters);
@@ -340,10 +301,7 @@ contract BancorX is
         uint256 currentLockLimit = getCurrentLockLimit();
 
         // verify lock limit
-        require(
-            _amount >= minLimit && _amount <= currentLockLimit,
-            "ERR_AMOUNT_TOO_HIGH"
-        );
+        require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
 
         lockTokens(_amount);
 
@@ -373,10 +331,7 @@ contract BancorX is
         uint256 currentLockLimit = getCurrentLockLimit();
 
         // require that; minLimit <= _amount <= currentLockLimit
-        require(
-            _amount >= minLimit && _amount <= currentLockLimit,
-            "ERR_AMOUNT_TOO_HIGH"
-        );
+        require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
 
         lockTokens(_amount);
 
@@ -403,13 +358,7 @@ contract BancorX is
         address _to,
         uint256 _amount,
         uint256 _xTransferId
-    )
-        public
-        reporterOnly
-        reportingAllowed
-        validAddress(_to)
-        greaterThanZero(_amount)
-    {
+    ) public reporterOnly reportingAllowed validAddress(_to) greaterThanZero(_amount) {
         // require that the transaction has not been reported yet by the reporter
         require(!reportedTxs[_txId][msg.sender], "ERR_ALREADY_REPORTED");
 
@@ -426,39 +375,20 @@ contract BancorX is
 
             if (_xTransferId != 0) {
                 // verify uniqueness of xTransfer id to prevent overwriting
-                require(
-                    transactionIds[_xTransferId] == 0,
-                    "ERR_TX_ALREADY_EXISTS"
-                );
+                require(transactionIds[_xTransferId] == 0, "ERR_TX_ALREADY_EXISTS");
                 transactionIds[_xTransferId] = _txId;
             }
         } else {
             // otherwise, verify transaction details
-            require(
-                txn.to == _to &&
-                    txn.amount == _amount &&
-                    txn.fromBlockchain == _fromBlockchain,
-                "ERR_TX_MISMATCH"
-            );
+            require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain, "ERR_TX_MISMATCH");
 
-            if (_xTransferId != 0)
-                require(
-                    transactionIds[_xTransferId] == _txId,
-                    "ERR_TX_ALREADY_EXISTS"
-                );
+            if (_xTransferId != 0) require(transactionIds[_xTransferId] == _txId, "ERR_TX_ALREADY_EXISTS");
         }
 
         // increment the number of reports
         txn.numOfReports++;
 
-        emit TxReport(
-            msg.sender,
-            _fromBlockchain,
-            _txId,
-            _to,
-            _amount,
-            _xTransferId
-        );
+        emit TxReport(msg.sender, _fromBlockchain, _txId, _to, _amount, _xTransferId);
 
         // if theres enough reports, try to release tokens
         if (txn.numOfReports >= minRequiredReports) {
@@ -481,16 +411,10 @@ contract BancorX is
      *
      * @return amount that was sent in xTransfer corresponding to _xTransferId
      */
-    function getXTransferAmount(uint256 _xTransferId, address _for)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function getXTransferAmount(uint256 _xTransferId, address _for) public view override returns (uint256) {
         // xTransferId -> txId -> Transaction
 
-            Transaction memory transaction
-         = transactions[transactionIds[_xTransferId]];
+        Transaction memory transaction = transactions[transactionIds[_xTransferId]];
 
         // verify that the xTransferId is for _for
         require(transaction.to == _for, "ERR_TX_MISMATCH");
@@ -505,9 +429,7 @@ contract BancorX is
      */
     function getCurrentLockLimit() public view returns (uint256) {
         // prevLockLimit + ((currBlockNumber - prevLockBlockNumber) * limitIncPerBlock)
-        uint256 currentLockLimit = prevLockLimit.add(
-            ((block.number).sub(prevLockBlockNumber)).mul(limitIncPerBlock)
-        );
+        uint256 currentLockLimit = prevLockLimit.add(((block.number).sub(prevLockBlockNumber)).mul(limitIncPerBlock));
         if (currentLockLimit > maxLockLimit) return maxLockLimit;
         return currentLockLimit;
     }
@@ -546,10 +468,7 @@ contract BancorX is
         // get the current release limit
         uint256 currentReleaseLimit = getCurrentReleaseLimit();
 
-        require(
-            _amount >= minLimit && _amount <= currentReleaseLimit,
-            "ERR_AMOUNT_TOO_HIGH"
-        );
+        require(_amount >= minLimit && _amount <= currentReleaseLimit, "ERR_AMOUNT_TOO_HIGH");
 
         // update the previous release limit and block number
         prevReleaseLimit = currentReleaseLimit.sub(_amount);

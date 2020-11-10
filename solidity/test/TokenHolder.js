@@ -6,7 +6,7 @@ const { ZERO_ADDRESS } = constants;
 const TokenHolder = artifacts.require('TokenHolder');
 const ERC20Token = artifacts.require('ERC20Token');
 
-contract('TokenHolder', accounts => {
+contract('TokenHolder', (accounts) => {
     let holder;
     let erc20Token;
     const receiver = accounts[2];
@@ -29,8 +29,10 @@ contract('TokenHolder', accounts => {
     });
 
     it('should revert when a non owner attempts to withdraw tokens', async () => {
-        await expectRevert(holder.withdrawTokens(erc20Token.address, receiver, new BN(1), { from: nonOwner }),
-            'ERR_ACCESS_DENIED');
+        await expectRevert(
+            holder.withdrawTokens(erc20Token.address, receiver, new BN(1), { from: nonOwner }),
+            'ERR_ACCESS_DENIED'
+        );
     });
 
     it('should revert when attempting to withdraw tokens from an invalid ERC20 token address', async () => {

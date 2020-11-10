@@ -15,13 +15,11 @@ contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant CONVERSION_PATH_FINDER = "ConversionPathFinder";
     bytes32 internal constant CONVERTER_UPGRADER = "BancorConverterUpgrader";
     bytes32 internal constant CONVERTER_REGISTRY = "BancorConverterRegistry";
-    bytes32
-        internal constant CONVERTER_REGISTRY_DATA = "BancorConverterRegistryData";
+    bytes32 internal constant CONVERTER_REGISTRY_DATA = "BancorConverterRegistryData";
     bytes32 internal constant BNT_TOKEN = "BNTToken";
     bytes32 internal constant BANCOR_X = "BancorX";
     bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";
-    bytes32
-        internal constant CHAINLINK_ORACLE_WHITELIST = "ChainlinkOracleWhitelist";
+    bytes32 internal constant CHAINLINK_ORACLE_WHITELIST = "ChainlinkOracleWhitelist";
 
     IContractRegistry public registry; // address of the current contract-registry
     IContractRegistry public prevRegistry; // address of the previous contract-registry
@@ -47,10 +45,7 @@ contract ContractRegistryClient is Owned, Utils {
      *
      * @param  _registry   address of a contract-registry contract
      */
-    constructor(IContractRegistry _registry)
-        internal
-        validAddress(address(_registry))
-    {
+    constructor(IContractRegistry _registry) internal validAddress(address(_registry)) {
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
     }
@@ -60,27 +55,16 @@ contract ContractRegistryClient is Owned, Utils {
      */
     function updateRegistry() public {
         // verify that this function is permitted
-        require(
-            msg.sender == owner || !onlyOwnerCanUpdateRegistry,
-            "ERR_ACCESS_DENIED"
-        );
+        require(msg.sender == owner || !onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
 
         // get the new contract-registry
-        IContractRegistry newRegistry = IContractRegistry(
-            addressOf(CONTRACT_REGISTRY)
-        );
+        IContractRegistry newRegistry = IContractRegistry(addressOf(CONTRACT_REGISTRY));
 
         // verify that the new contract-registry is different and not zero
-        require(
-            newRegistry != registry && address(newRegistry) != address(0),
-            "ERR_INVALID_REGISTRY"
-        );
+        require(newRegistry != registry && address(newRegistry) != address(0), "ERR_INVALID_REGISTRY");
 
         // verify that the new contract-registry is pointing to a non-zero contract-registry
-        require(
-            newRegistry.addressOf(CONTRACT_REGISTRY) != address(0),
-            "ERR_INVALID_REGISTRY"
-        );
+        require(newRegistry.addressOf(CONTRACT_REGISTRY) != address(0), "ERR_INVALID_REGISTRY");
 
         // save a backup of the current contract-registry before replacing it
         prevRegistry = registry;
@@ -102,10 +86,7 @@ contract ContractRegistryClient is Owned, Utils {
      *
      * @param _onlyOwnerCanUpdateRegistry  indicates whether or not permission is restricted to owner only
      */
-    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry)
-        public
-        ownerOnly
-    {
+    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) public ownerOnly {
         // change the permission to update the contract-registry
         onlyOwnerCanUpdateRegistry = _onlyOwnerCanUpdateRegistry;
     }

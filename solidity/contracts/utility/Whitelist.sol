@@ -31,12 +31,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
      *
      * @return true if the address is whitelisted, false if not
      */
-    function isWhitelisted(address _address)
-        public
-        view
-        override
-        returns (bool)
-    {
+    function isWhitelisted(address _address) public view override returns (bool) {
         return whitelist[_address];
     }
 
@@ -45,11 +40,7 @@ contract Whitelist is IWhitelist, Owned, Utils {
      *
      * @param _address address to add
      */
-    function addAddress(address _address)
-        public
-        ownerOnly
-        validAddress(_address)
-    {
+    function addAddress(address _address) public ownerOnly validAddress(_address) {
         if (whitelist[_address])
             // checks if the address is already whitelisted
             return;

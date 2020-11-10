@@ -18,20 +18,15 @@ const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
 /* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
-    reserves: [
-        { symbol: 'AAA' },
-        { symbol: 'BBB' },
-        { symbol: 'CCC' },
-        { symbol: 'DDD' }
-    ],
+    reserves: [{ symbol: 'AAA' }, { symbol: 'BBB' }, { symbol: 'CCC' }, { symbol: 'DDD' }],
     converters: [
-        { symbol: 'BNT'         , reserves: [{ symbol: 'ETH'    }] },
-        { symbol: 'AAABNT'      , reserves: [{ symbol: 'AAA'    }, { symbol: 'BNT'       }] },
-        { symbol: 'BBBBNT'      , reserves: [{ symbol: 'BBB'    }, { symbol: 'BNT'       }] },
-        { symbol: 'CCCBNT'      , reserves: [{ symbol: 'CCC'    }, { symbol: 'BNT'       }] },
-        { symbol: 'AAABNTBNT'   , reserves: [{ symbol: 'AAABNT' }, { symbol: 'BNT'       }] },
-        { symbol: 'BBBBNTBNT'   , reserves: [{ symbol: 'BBBBNT' }, { symbol: 'BNT'       }] },
-        { symbol: 'DDDAAABNTBNT', reserves: [{ symbol: 'DDD'    }, { symbol: 'AAABNTBNT' }] }
+        { symbol: 'BNT', reserves: [{ symbol: 'ETH' }] },
+        { symbol: 'AAABNT', reserves: [{ symbol: 'AAA' }, { symbol: 'BNT' }] },
+        { symbol: 'BBBBNT', reserves: [{ symbol: 'BBB' }, { symbol: 'BNT' }] },
+        { symbol: 'CCCBNT', reserves: [{ symbol: 'CCC' }, { symbol: 'BNT' }] },
+        { symbol: 'AAABNTBNT', reserves: [{ symbol: 'AAABNT' }, { symbol: 'BNT' }] },
+        { symbol: 'BBBBNTBNT', reserves: [{ symbol: 'BBBBNT' }, { symbol: 'BNT' }] },
+        { symbol: 'DDDAAABNTBNT', reserves: [{ symbol: 'DDD' }, { symbol: 'AAABNTBNT' }] }
     ]
 };
 /* eslint-enable no-multi-spaces,comma-spacing */
@@ -48,7 +43,7 @@ const getSymbol = async (tokenAddress) => {
 const printPath = async (sourceToken, targetToken, path) => {
     const sourceSymbol = await getSymbol(sourceToken);
     const targetSymbol = await getSymbol(targetToken);
-    const symbols = await Promise.all(path.map(token => getSymbol(token)));
+    const symbols = await Promise.all(path.map((token) => getSymbol(token)));
     console.log(`path from ${sourceSymbol} to ${targetSymbol} = [${symbols}]`);
 };
 
@@ -107,7 +102,7 @@ const getShortestPath = (sourcePath, targetPath) => {
 
     let length = 0;
     for (let p = 0; p < path.length; p += 1) {
-        for (let q = p + 2; q < path.length - p % 2; q += 2) {
+        for (let q = p + 2; q < path.length - (p % 2); q += 2) {
             if (path[p] === path[q]) {
                 p = q;
             }
@@ -118,7 +113,7 @@ const getShortestPath = (sourcePath, targetPath) => {
     return path.slice(0, length);
 };
 
-contract('ConversionPathFinder', accounts => {
+contract('ConversionPathFinder', (accounts) => {
     let contractRegistry;
     let converterFactory;
     let converterRegistry;
@@ -153,8 +148,16 @@ contract('ConversionPathFinder', accounts => {
         }
 
         for (const converter of LAYOUT.converters) {
-            const tokens = converter.reserves.map(reserve => addresses[reserve.symbol]);
-            await converterRegistry.newConverter(tokens.length === 1 ? 0 : 1, 'name', converter.symbol, 0, 0, tokens, tokens.map(token => 1));
+            const tokens = converter.reserves.map((reserve) => addresses[reserve.symbol]);
+            await converterRegistry.newConverter(
+                tokens.length === 1 ? 0 : 1,
+                'name',
+                converter.symbol,
+                0,
+                0,
+                tokens,
+                tokens.map((token) => 1)
+            );
             const anchor = await IConverterAnchor.at((await converterRegistry.getAnchors.call()).slice(-1)[0]);
             const converterBase = await ConverterBase.at(await anchor.owner.call());
             await converterBase.acceptOwnership();
@@ -187,7 +190,7 @@ contract('ConversionPathFinder', accounts => {
         expect(actual).to.be.empty();
     });
 
-    const allSymbols = ['ETH', ...[...LAYOUT.reserves, ...LAYOUT.converters].map(record => record.symbol)];
+    const allSymbols = ['ETH', ...[...LAYOUT.reserves, ...LAYOUT.converters].map((record) => record.symbol)];
     for (const sourceSymbol of allSymbols) {
         for (const targetSymbol of allSymbols) {
             it(`from ${sourceSymbol} to ${targetSymbol}`, async () => {

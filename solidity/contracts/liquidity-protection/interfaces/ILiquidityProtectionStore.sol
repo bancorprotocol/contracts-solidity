@@ -10,15 +10,30 @@ import "../../utility/interfaces/IOwned.sol";
 */
 interface ILiquidityProtectionStore is IOwned {
     function addPoolToWhitelist(IConverterAnchor _anchor) external;
+
     function removePoolFromWhitelist(IConverterAnchor _anchor) external;
+
     function isPoolWhitelisted(IConverterAnchor _anchor) external view returns (bool);
 
-    function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) external;
+    function withdrawTokens(
+        IERC20Token _token,
+        address _to,
+        uint256 _amount
+    ) external;
 
     function protectedLiquidity(uint256 _id)
         external
         view
-        returns (address, IDSToken, IERC20Token, uint256, uint256, uint256, uint256, uint256);
+        returns (
+            address,
+            IDSToken,
+            IERC20Token,
+            uint256,
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
     function addProtectedLiquidity(
         address _provider,
@@ -31,16 +46,33 @@ interface ILiquidityProtectionStore is IOwned {
         uint256 _timestamp
     ) external returns (uint256);
 
-    function updateProtectedLiquidityAmounts(uint256 _id, uint256 _poolNewAmount, uint256 _reserveNewAmount) external;
-    function removeProtectedLiquidity(uint256 _id) external;
-    
-    function lockedBalance(address _provider, uint256 _index) external view returns (uint256, uint256);
-    function lockedBalanceRange(address _provider, uint256 _startIndex, uint256 _endIndex) external view returns (uint256[] memory, uint256[] memory);
+    function updateProtectedLiquidityAmounts(
+        uint256 _id,
+        uint256 _poolNewAmount,
+        uint256 _reserveNewAmount
+    ) external;
 
-    function addLockedBalance(address _provider, uint256 _reserveAmount, uint256 _expirationTime) external returns (uint256);
+    function removeProtectedLiquidity(uint256 _id) external;
+
+    function lockedBalance(address _provider, uint256 _index) external view returns (uint256, uint256);
+
+    function lockedBalanceRange(
+        address _provider,
+        uint256 _startIndex,
+        uint256 _endIndex
+    ) external view returns (uint256[] memory, uint256[] memory);
+
+    function addLockedBalance(
+        address _provider,
+        uint256 _reserveAmount,
+        uint256 _expirationTime
+    ) external returns (uint256);
+
     function removeLockedBalance(address _provider, uint256 _index) external;
 
     function systemBalance(IERC20Token _poolToken) external view returns (uint256);
+
     function incSystemBalance(IERC20Token _poolToken, uint256 _poolAmount) external;
-    function decSystemBalance(IERC20Token _poolToken, uint256 _poolAmount ) external;
+
+    function decSystemBalance(IERC20Token _poolToken, uint256 _poolAmount) external;
 }

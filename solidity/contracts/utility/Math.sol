@@ -107,15 +107,10 @@ library Math {
      *
      * @return the average number of decimal digits in the given list of positive integers
      */
-    function geometricMean(uint256[] memory _values)
-        internal
-        pure
-        returns (uint256)
-    {
+    function geometricMean(uint256[] memory _values) internal pure returns (uint256) {
         uint256 numOfDigits = 0;
         uint256 length = _values.length;
-        for (uint256 i = 0; i < length; i++)
-            numOfDigits += decimalLength(_values[i]);
+        for (uint256 i = 0; i < length; i++) numOfDigits += decimalLength(_values[i]);
         return uint256(10)**(roundDivUnsafe(numOfDigits, length) - 1);
     }
 
@@ -141,11 +136,7 @@ library Math {
      *
      * @return the nearest integer to the given quotient
      */
-    function roundDivUnsafe(uint256 _n, uint256 _d)
-        internal
-        pure
-        returns (uint256)
-    {
+    function roundDivUnsafe(uint256 _n, uint256 _d) internal pure returns (uint256) {
         return (_n + _d / 2) / _d;
     }
 }

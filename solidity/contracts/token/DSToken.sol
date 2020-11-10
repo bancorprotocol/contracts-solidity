@@ -46,13 +46,7 @@ contract DSToken is IDSToken, ERC20Token, Owned {
      * @param _to      account to receive the new amount
      * @param _amount  amount to increase the supply by
      */
-    function issue(address _to, uint256 _amount)
-        public
-        override
-        ownerOnly
-        validAddress(_to)
-        notThis(_to)
-    {
+    function issue(address _to, uint256 _amount) public override ownerOnly validAddress(_to) notThis(_to) {
         totalSupply = totalSupply.add(_amount);
         balanceOf[_to] = balanceOf[_to].add(_amount);
 

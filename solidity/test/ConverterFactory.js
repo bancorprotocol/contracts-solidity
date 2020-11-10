@@ -10,7 +10,7 @@ const TypedConverterAnchorFactory = artifacts.require('TestTypedConverterAnchorF
 const ConverterBase = artifacts.require('ConverterBase');
 const DSToken = artifacts.require('DSToken');
 
-contract('ConverterFactory', accounts => {
+contract('ConverterFactory', (accounts) => {
     let contractRegistry;
     let converterFactory;
     let anchorFactory;
@@ -20,7 +20,11 @@ contract('ConverterFactory', accounts => {
 
     const MAX_CONVERSION_FEE = new BN(10000);
 
-    for (const Factory of [LiquidTokenConverterFactory, LiquidityPoolV1ConverterFactory, LiquidityPoolV2ConverterFactory]) {
+    for (const Factory of [
+        LiquidTokenConverterFactory,
+        LiquidityPoolV1ConverterFactory,
+        LiquidityPoolV2ConverterFactory
+    ]) {
         describe(Factory.contractName, () => {
             before(async () => {
                 // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -35,26 +39,37 @@ contract('ConverterFactory', accounts => {
 
             it('should allow the owner to register a typed converter anchor factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
-                expect(await converterFactory.anchorFactories.call(await anchorFactory.converterType.call())).to.eql(anchorFactory.address);
+                expect(await converterFactory.anchorFactories.call(await anchorFactory.converterType.call())).to.eql(
+                    anchorFactory.address
+                );
             });
 
             it('should allow the owner to reregister a typed converter anchor factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
 
                 const anchorFactory2 = await TypedConverterAnchorFactory.new('TypedAnchor2');
-                expect(await anchorFactory.converterType.call()).to.be.bignumber.equal(await anchorFactory.converterType.call());
+                expect(await anchorFactory.converterType.call()).to.be.bignumber.equal(
+                    await anchorFactory.converterType.call()
+                );
 
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory2.address);
-                expect(await converterFactory.anchorFactories.call(await anchorFactory2.converterType.call())).to.eql(anchorFactory2.address);
+                expect(await converterFactory.anchorFactories.call(await anchorFactory2.converterType.call())).to.eql(
+                    anchorFactory2.address
+                );
             });
 
             it('should revert if a non-owner attempts to register a typed converter anchor factory', async () => {
-                await expectRevert(converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+                await expectRevert(
+                    converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address, { from: nonOwner }),
+                    'ERR_ACCESS_DENIED'
+                );
             });
 
             it('should allow the owner to register a typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
-                expect(await converterFactory.converterFactories.call(await factory.converterType.call())).to.eql(factory.address);
+                expect(await converterFactory.converterFactories.call(await factory.converterType.call())).to.eql(
+                    factory.address
+                );
             });
 
             it('should allow the owner to reregister a typed converter factory', async () => {
@@ -64,11 +79,16 @@ contract('ConverterFactory', accounts => {
                 expect(await factory.converterType.call()).to.be.bignumber.equal(await factory2.converterType.call());
 
                 await converterFactory.registerTypedConverterFactory(factory2.address);
-                expect(await converterFactory.converterFactories.call(await factory2.converterType.call())).to.eql(factory2.address);
+                expect(await converterFactory.converterFactories.call(await factory2.converterType.call())).to.eql(
+                    factory2.address
+                );
             });
 
             it('should revert if a non-owner attempts to register a typed converter factory', async () => {
-                await expectRevert(converterFactory.registerTypedConverterFactory(factory.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+                await expectRevert(
+                    converterFactory.registerTypedConverterFactory(factory.address, { from: nonOwner }),
+                    'ERR_ACCESS_DENIED'
+                );
             });
 
             it('should create an achor using an existing factory', async () => {
@@ -106,8 +126,12 @@ contract('ConverterFactory', accounts => {
 
                 const converterType = await factory.converterType.call();
 
-                const res = await converterFactory.createConverter(converterType, anchor.address,
-                    contractRegistry.address, MAX_CONVERSION_FEE);
+                const res = await converterFactory.createConverter(
+                    converterType,
+                    anchor.address,
+                    contractRegistry.address,
+                    MAX_CONVERSION_FEE
+                );
                 const converterAddress = await converterFactory.createdConverter.call();
                 const converter = await ConverterBase.at(converterAddress);
 
@@ -117,7 +141,11 @@ contract('ConverterFactory', accounts => {
                 expect(await converter.owner.call()).to.be.eql(converterFactory.address);
                 expect(await converter.newOwner.call()).to.be.eql(owner);
 
-                expectEvent(res, 'NewConverter', { _type: converterType, _converter: converter.address, _owner: owner });
+                expectEvent(res, 'NewConverter', {
+                    _type: converterType,
+                    _converter: converter.address,
+                    _owner: owner
+                });
             });
         });
     }

@@ -5,7 +5,7 @@ const { ZERO_ADDRESS } = constants;
 
 const ERC20Token = artifacts.require('ERC20Token');
 
-contract('ERC20Token', accounts => {
+contract('ERC20Token', (accounts) => {
     let token;
     const name = 'Token1';
     const symbol = 'TKN1';
@@ -117,23 +117,29 @@ contract('ERC20Token', accounts => {
         const value = new BN(200);
         await token.approve(receiver, value);
 
-        await expectRevert(token.transferFrom(sender, receiver2, value.add(new BN(1)), { from: receiver }),
-            'ERR_UNDERFLOW');
+        await expectRevert(
+            token.transferFrom(sender, receiver2, value.add(new BN(1)), { from: receiver }),
+            'ERR_UNDERFLOW'
+        );
     });
 
     it('should revert when attempting to transfer from an invalid account', async () => {
         const value = new BN(10);
         await token.approve(receiver, value);
 
-        await expectRevert(token.transferFrom(ZERO_ADDRESS, receiver2, new BN(0), { from: receiver }),
-            'ERR_INVALID_ADDRESS');
+        await expectRevert(
+            token.transferFrom(ZERO_ADDRESS, receiver2, new BN(0), { from: receiver }),
+            'ERR_INVALID_ADDRESS'
+        );
     });
 
     it('should revert when attempting to transfer from to an invalid account', async () => {
         const value = new BN(111);
         await token.approve(receiver, value);
 
-        await expectRevert(token.transferFrom(sender, ZERO_ADDRESS, new BN(0), { from: receiver }),
-            'ERR_INVALID_ADDRESS');
+        await expectRevert(
+            token.transferFrom(sender, ZERO_ADDRESS, new BN(0), { from: receiver }),
+            'ERR_INVALID_ADDRESS'
+        );
     });
 });

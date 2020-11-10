@@ -30,10 +30,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
      * @param _contractName    contract name
      * @param _contractAddress new contract address
      */
-    event AddressUpdate(
-        bytes32 indexed _contractName,
-        address _contractAddress
-    );
+    event AddressUpdate(bytes32 indexed _contractName, address _contractAddress);
 
     /**
      * @dev returns the number of items in the registry
@@ -51,12 +48,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
      *
      * @return contract address
      */
-    function addressOf(bytes32 _contractName)
-        public
-        view
-        override
-        returns (address)
-    {
+    function addressOf(bytes32 _contractName) public view override returns (address) {
         return items[_contractName].contractAddress;
     }
 
@@ -101,10 +93,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
     function unregisterAddress(bytes32 _contractName) public ownerOnly {
         // validate input
         require(_contractName.length > 0, "ERR_INVALID_NAME");
-        require(
-            items[_contractName].contractAddress != address(0),
-            "ERR_INVALID_NAME"
-        );
+        require(items[_contractName].contractAddress != address(0), "ERR_INVALID_NAME");
 
         // remove the address from the registry
         items[_contractName].contractAddress = address(0);
@@ -112,8 +101,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
         // if there are multiple items in the registry, move the last element to the deleted element's position
         // and modify last element's registryItem.nameIndex in the items collection to point to the right position in contractNames
         if (contractNames.length > 1) {
-            string memory lastContractNameString = contractNames[contractNames
-                .length - 1];
+            string memory lastContractNameString = contractNames[contractNames.length - 1];
             uint256 unregisterIndex = items[_contractName].nameIndex;
 
             contractNames[unregisterIndex] = lastContractNameString;
@@ -137,11 +125,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
      *
      * @return string representation of the given bytes32 argument
      */
-    function bytes32ToString(bytes32 _bytes)
-        private
-        pure
-        returns (string memory)
-    {
+    function bytes32ToString(bytes32 _bytes) private pure returns (string memory) {
         bytes memory byteArray = new bytes(32);
         for (uint256 i = 0; i < 32; i++) {
             byteArray[i] = _bytes[i];
@@ -156,11 +140,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
      *
      * @return string representation of the given bytes32 argument
      */
-    function stringToBytes32(string memory _string)
-        private
-        pure
-        returns (bytes32)
-    {
+    function stringToBytes32(string memory _string) private pure returns (bytes32) {
         bytes32 result;
         assembly {
             result := mload(add(_string, 32))

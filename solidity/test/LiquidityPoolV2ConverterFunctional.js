@@ -19,7 +19,7 @@ const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2Conver
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 
-contract('LiquidityPoolV2ConverterFunctional', accounts => {
+contract('LiquidityPoolV2ConverterFunctional', (accounts) => {
     let whitelist;
     let converter;
     let container;
@@ -57,7 +57,11 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
 
         whitelist = await Whitelist.new();
         container = await PoolTokensContainer.new('pool', 'pool', 0);
-        converter = await LiquidityPoolV2Converter.new(container.address, contractRegistry.address, percentageToPPM('100%'));
+        converter = await LiquidityPoolV2Converter.new(
+            container.address,
+            contractRegistry.address,
+            percentageToPPM('100%')
+        );
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
         priceOracles = [];
@@ -76,34 +80,44 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
         await contractRegistry.registerAddress(registry.CHAINLINK_ORACLE_WHITELIST, whitelist.address);
 
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
-        await converterFactory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
-        await converterFactory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
+        await converterFactory.registerTypedConverterAnchorFactory(
+            (await LiquidityPoolV2ConverterAnchorFactory.new()).address
+        );
+        await converterFactory.registerTypedConverterCustomFactory(
+            (await LiquidityPoolV2ConverterCustomFactory.new()).address
+        );
     });
 
     for (const command of commands) {
         it(JSON.stringify(command), async () => {
             await timeIncrease(command.elapsed);
             switch (command.operation) {
-            case 'newPool':
-                await newPool(command.pTokenId, command.sTokenId, command.numOfUsers);
-                break;
-            case 'setFees':
-                await setFees(command.conversionFee, command.oracleDeviationFee);
-                break;
-            case 'setRates':
-                await setRates(command.pTokenRate, command.sTokenRate);
-                break;
-            case 'addLiquidity':
-                await addLiquidity(command.tokenId, command.userId, command.inputAmount, command.outputAmount);
-                break;
-            case 'remLiquidity':
-                await remLiquidity(command.tokenId, command.userId, command.inputAmount, command.outputAmount);
-                break;
-            case 'convert':
-                await convert(command.sourceTokenId, command.targetTokenId, command.userId, command.inputAmount, command.outputAmount);
-                break;
-            default:
-                throw new Error(`operation '${command.operation}' not supported`);
+                case 'newPool':
+                    await newPool(command.pTokenId, command.sTokenId, command.numOfUsers);
+                    break;
+                case 'setFees':
+                    await setFees(command.conversionFee, command.oracleDeviationFee);
+                    break;
+                case 'setRates':
+                    await setRates(command.pTokenRate, command.sTokenRate);
+                    break;
+                case 'addLiquidity':
+                    await addLiquidity(command.tokenId, command.userId, command.inputAmount, command.outputAmount);
+                    break;
+                case 'remLiquidity':
+                    await remLiquidity(command.tokenId, command.userId, command.inputAmount, command.outputAmount);
+                    break;
+                case 'convert':
+                    await convert(
+                        command.sourceTokenId,
+                        command.targetTokenId,
+                        command.userId,
+                        command.inputAmount,
+                        command.outputAmount
+                    );
+                    break;
+                default:
+                    throw new Error(`operation '${command.operation}' not supported`);
             }
         });
     }
@@ -114,7 +128,7 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
 
         reserveTokens = {
             [pTokenId]: await ERC20Token.new(pTokenId, pTokenId, 0, totalSupply),
-            [sTokenId]: await ERC20Token.new(sTokenId, sTokenId, 0, totalSupply),
+            [sTokenId]: await ERC20Token.new(sTokenId, sTokenId, 0, totalSupply)
         };
 
         await converter.addReserve(reserveTokens[pTokenId].address, percentageToPPM('50%'));
@@ -130,7 +144,7 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
 
         poolTokens = {
             [pTokenId]: await ERC20Token.at(await converter.poolToken(reserveTokens[pTokenId].address)),
-            [sTokenId]: await ERC20Token.at(await converter.poolToken(reserveTokens[sTokenId].address)),
+            [sTokenId]: await ERC20Token.at(await converter.poolToken(reserveTokens[sTokenId].address))
         };
     }
 
@@ -147,22 +161,34 @@ contract('LiquidityPoolV2ConverterFunctional', accounts => {
     }
 
     async function addLiquidity(tokenId, userId, inputAmount, outputAmount) {
-        await reserveTokens[tokenId].approve(converter.address, inputAmount, {from: accounts[userId]});
-        const response = await converter.addLiquidity(reserveTokens[tokenId].address, inputAmount, MIN_RETURN, {from: accounts[userId]});
-        assertAlmostEqual(response.logs.filter(log => log.event == 'LiquidityAdded')[0].args._amount, outputAmount);
+        await reserveTokens[tokenId].approve(converter.address, inputAmount, { from: accounts[userId] });
+        const response = await converter.addLiquidity(reserveTokens[tokenId].address, inputAmount, MIN_RETURN, {
+            from: accounts[userId]
+        });
+        assertAlmostEqual(response.logs.filter((log) => log.event == 'LiquidityAdded')[0].args._amount, outputAmount);
     }
 
     async function remLiquidity(tokenId, userId, inputAmount, outputAmount) {
         inputAmount = inputAmount != 'all' ? inputAmount : await poolTokens[tokenId].balanceOf(accounts[userId]);
-        await reserveTokens[tokenId].approve(converter.address, inputAmount, {from: accounts[userId]});
-        const response = await converter.removeLiquidity(poolTokens[tokenId].address, inputAmount, MIN_RETURN, {from: accounts[userId]});
-        assertAlmostEqual(response.logs.filter(log => log.event == 'LiquidityRemoved')[0].args._amount, outputAmount);
+        await reserveTokens[tokenId].approve(converter.address, inputAmount, { from: accounts[userId] });
+        const response = await converter.removeLiquidity(poolTokens[tokenId].address, inputAmount, MIN_RETURN, {
+            from: accounts[userId]
+        });
+        assertAlmostEqual(response.logs.filter((log) => log.event == 'LiquidityRemoved')[0].args._amount, outputAmount);
     }
 
     async function convert(sourceTokenId, targetTokenId, userId, inputAmount, outputAmount) {
         const path = [reserveTokens[sourceTokenId].address, container.address, reserveTokens[targetTokenId].address];
-        await reserveTokens[sourceTokenId].approve(bancorNetwork.address, inputAmount, {from: accounts[userId]});
-        const response = await bancorNetwork.convertByPath(path, inputAmount, MIN_RETURN, ZERO_ADDRESS, ZERO_ADDRESS, 0, {from: accounts[userId]});
-        assertAlmostEqual(response.logs.filter(log => log.event == 'Conversion')[0].args._toAmount, outputAmount);
+        await reserveTokens[sourceTokenId].approve(bancorNetwork.address, inputAmount, { from: accounts[userId] });
+        const response = await bancorNetwork.convertByPath(
+            path,
+            inputAmount,
+            MIN_RETURN,
+            ZERO_ADDRESS,
+            ZERO_ADDRESS,
+            0,
+            { from: accounts[userId] }
+        );
+        assertAlmostEqual(response.logs.filter((log) => log.event == 'Conversion')[0].args._toAmount, outputAmount);
     }
 });

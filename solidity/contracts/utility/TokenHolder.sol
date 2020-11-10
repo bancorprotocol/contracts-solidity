@@ -30,15 +30,7 @@ contract TokenHolder is ITokenHolder, TokenHandler, Owned, Utils {
         IERC20Token _token,
         address _to,
         uint256 _amount
-    )
-        public
-        virtual
-        override
-        ownerOnly
-        validAddress(address(_token))
-        validAddress(_to)
-        notThis(_to)
-    {
+    ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {
         safeTransfer(_token, _to, _amount);
     }
 }

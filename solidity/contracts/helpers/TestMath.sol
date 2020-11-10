@@ -37,19 +37,11 @@ contract TestMath {
         return Math.accurateRatio(_a, _b, _scale);
     }
 
-    function roundDivTest(uint256 _n, uint256 _d)
-        external
-        pure
-        returns (uint256)
-    {
+    function roundDivTest(uint256 _n, uint256 _d) external pure returns (uint256) {
         return Math.roundDiv(_n, _d);
     }
 
-    function geometricMeanTest(uint256[] memory _values)
-        external
-        pure
-        returns (uint256)
-    {
+    function geometricMeanTest(uint256[] memory _values) external pure returns (uint256) {
         return Math.geometricMean(_values);
     }
 
@@ -57,11 +49,7 @@ contract TestMath {
         return Math.decimalLength(_x);
     }
 
-    function roundDivUnsafeTest(uint256 _n, uint256 _d)
-        external
-        pure
-        returns (uint256)
-    {
+    function roundDivUnsafeTest(uint256 _n, uint256 _d) external pure returns (uint256) {
         return Math.roundDivUnsafe(_n, _d);
     }
 }

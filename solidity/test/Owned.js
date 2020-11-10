@@ -5,7 +5,7 @@ const { ZERO_ADDRESS } = constants;
 
 const Owned = artifacts.require('Owned');
 
-contract('Owned', accounts => {
+contract('Owned', (accounts) => {
     let contract;
     const owner = accounts[0];
     const newOwner = accounts[1];

@@ -8,10 +8,7 @@ import "../converter/ConverterRegistry.sol";
 contract TestConverterRegistry is ConverterRegistry {
     IConverter public createdConverter;
 
-    constructor(IContractRegistry _registry)
-        public
-        ConverterRegistry(_registry)
-    {}
+    constructor(IContractRegistry _registry) public ConverterRegistry(_registry) {}
 
     function newConverter(
         uint16 _type,

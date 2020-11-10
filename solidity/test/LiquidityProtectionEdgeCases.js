@@ -16,7 +16,7 @@ const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
-const f = (a, b) => [].concat(...a.map(d => b.map(e => [].concat(d, e))));
+const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
 
 function decimalToInteger(value, decimals) {
@@ -39,9 +39,9 @@ function condOrAlmostEqual(cond, actual, expected, maxError) {
 }
 
 const CONFIGURATIONS = [
-    {increaseRate: false, generateFee: false},
-    {increaseRate: false, generateFee: true},
-    {increaseRate: true, generateFee: false}
+    { increaseRate: false, generateFee: false },
+    { increaseRate: false, generateFee: true },
+    { increaseRate: true, generateFee: false }
 ];
 
 const NUM_OF_DAYS = [30, 100];
@@ -51,7 +51,7 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
-contract('LiquidityProtectionEdgeCases', accounts => {
+contract('LiquidityProtectionEdgeCases', (accounts) => {
     const addProtectedLiquidity = async (token, amount) => {
         await token.approve(liquidityProtection.address, amount);
         await liquidityProtection.addLiquidity(poolToken.address, token.address, amount);
@@ -83,7 +83,7 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         const reserveBalance = await converter.reserveBalance(networkToken.address);
         const systemBalance = await liquidityProtectionStore.systemBalance(poolToken.address);
         return systemBalance.mul(reserveBalance).div(totalSupply);
-    }
+    };
 
     let contractRegistry;
     let converterRegistry;
@@ -127,7 +127,15 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         await baseToken.issue(owner, new BN('1'.padEnd(40, '0')));
         await networkToken.issue(owner, new BN('1'.padEnd(40, '0')));
 
-        await converterRegistry.newConverter(1, 'PT', 'PT', 18, FULL_PPM, [baseToken.address, networkToken.address], [HALF_PPM, HALF_PPM]);
+        await converterRegistry.newConverter(
+            1,
+            'PT',
+            'PT',
+            18,
+            FULL_PPM,
+            [baseToken.address, networkToken.address],
+            [HALF_PPM, HALF_PPM]
+        );
         const anchorCount = await converterRegistry.getAnchorCount();
         const poolTokenAddress = await converterRegistry.getAnchor(anchorCount.sub(new BN(1)));
         poolToken = await DSToken.at(poolTokenAddress);
@@ -136,7 +144,12 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         await converter.acceptOwnership();
 
         liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
-        liquidityProtection = await LiquidityProtection.new(liquidityProtectionStore.address, networkToken.address, govToken.address, contractRegistry.address);
+        liquidityProtection = await LiquidityProtection.new(
+            liquidityProtectionStore.address,
+            networkToken.address,
+            govToken.address,
+            contractRegistry.address
+        );
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await networkToken.transferOwnership(liquidityProtection.address);
         await govToken.transferOwnership(liquidityProtection.address);
@@ -152,34 +165,34 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         for (const numOfDays of NUM_OF_DAYS) {
             const timestamp = numOfDays * 24 * 60 * 60 + 1;
             for (const decimals of DECIMAL_COMBINATIONS) {
-                const amounts = decimals.map(n => new BN(10).pow(new BN(n)));
+                const amounts = decimals.map((n) => new BN(10).pow(new BN(n)));
 
                 let test;
                 if (!config.increaseRate && !config.generateFee) {
                     test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0');
-                }
-                else if (!config.increaseRate && config.generateFee) {
+                } else if (!config.increaseRate && config.generateFee) {
                     test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.0');
-                }
-                else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
+                } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
-                }
-                else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                    test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
-                }
-                else {
+                } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
+                    test = (actual, expected) =>
+                        condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
+                } else {
                     throw new Error('invalid configuration');
                 }
 
                 it(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
                     await baseToken.approve(converter.address, amounts[0]);
                     await networkToken.approve(converter.address, amounts[1]);
-                    await converter.addLiquidity([baseToken.address, networkToken.address], [amounts[0], amounts[1]], 1);
+                    await converter.addLiquidity(
+                        [baseToken.address, networkToken.address],
+                        [amounts[0], amounts[1]],
+                        1
+                    );
 
                     await addProtectedLiquidity(baseToken, amounts[2]);
                     const networkTokenMaxAmount = await getNetworkTokenMaxAmount();
-                    if (amounts[3].gt(networkTokenMaxAmount))
-                        amounts[3] = networkTokenMaxAmount;
+                    if (amounts[3].gt(networkTokenMaxAmount)) amounts[3] = networkTokenMaxAmount;
                     await addProtectedLiquidity(networkToken, amounts[3]);
 
                     if (config.increaseRate) {
@@ -203,34 +216,33 @@ contract('LiquidityProtectionEdgeCases', accounts => {
         for (const numOfDays of NUM_OF_DAYS) {
             const timestamp = numOfDays * 24 * 60 * 60 + 1;
             for (const decimals of DECIMAL_COMBINATIONS) {
-                const amounts = decimals.map(n => new BN(10).pow(new BN(n)));
+                const amounts = decimals.map((n) => new BN(10).pow(new BN(n)));
 
                 let test;
                 if (!config.increaseRate && !config.generateFee) {
                     test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0');
-                }
-                else if (!config.increaseRate && config.generateFee) {
+                } else if (!config.increaseRate && config.generateFee) {
                     test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.002');
-                }
-                else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
+                } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
                     test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
-                }
-                else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
+                } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
                     test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.002');
-                }
-                else {
+                } else {
                     throw new Error('invalid configuration');
                 }
 
                 it(`network token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
                     await baseToken.approve(converter.address, amounts[0]);
                     await networkToken.approve(converter.address, amounts[1]);
-                    await converter.addLiquidity([baseToken.address, networkToken.address], [amounts[0], amounts[1]], 1);
+                    await converter.addLiquidity(
+                        [baseToken.address, networkToken.address],
+                        [amounts[0], amounts[1]],
+                        1
+                    );
 
                     await addProtectedLiquidity(baseToken, amounts[2]);
                     const networkTokenMaxAmount = await getNetworkTokenMaxAmount();
-                    if (amounts[3].gt(networkTokenMaxAmount))
-                        amounts[3] = networkTokenMaxAmount;
+                    if (amounts[3].gt(networkTokenMaxAmount)) amounts[3] = networkTokenMaxAmount;
                     await addProtectedLiquidity(networkToken, amounts[3]);
 
                     if (config.increaseRate) {

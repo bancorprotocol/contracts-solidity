@@ -33,11 +33,7 @@ contract ERC20Token is IERC20Token, Utils {
      * @param _spender wallet that receives the allowance
      * @param _value   allowance amount
      */
-    event Approval(
-        address indexed _owner,
-        address indexed _spender,
-        uint256 _value
-    );
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
      * @dev initializes a new ERC20Token instance
@@ -73,13 +69,7 @@ contract ERC20Token is IERC20Token, Utils {
      *
      * @return true if the transfer was successful, false if it wasn't
      */
-    function transfer(address _to, uint256 _value)
-        public
-        virtual
-        override
-        validAddress(_to)
-        returns (bool)
-    {
+    function transfer(address _to, uint256 _value) public virtual override validAddress(_to) returns (bool) {
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
         balanceOf[_to] = balanceOf[_to].add(_value);
         emit Transfer(msg.sender, _to, _value);
@@ -100,14 +90,7 @@ contract ERC20Token is IERC20Token, Utils {
         address _from,
         address _to,
         uint256 _value
-    )
-        public
-        virtual
-        override
-        validAddress(_from)
-        validAddress(_to)
-        returns (bool)
-    {
+    ) public virtual override validAddress(_from) validAddress(_to) returns (bool) {
         allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
         balanceOf[_from] = balanceOf[_from].sub(_value);
         balanceOf[_to] = balanceOf[_to].add(_value);
@@ -124,13 +107,7 @@ contract ERC20Token is IERC20Token, Utils {
      *
      * @return true if the approval was successful, false if it wasn't
      */
-    function approve(address _spender, uint256 _value)
-        public
-        virtual
-        override
-        validAddress(_spender)
-        returns (bool)
-    {
+    function approve(address _spender, uint256 _value) public virtual override validAddress(_spender) returns (bool) {
         allowance[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value);
         return true;
