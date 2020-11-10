@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 /**
-  * @dev Library for basic math operations with overflow/underflow protection
+  * @dev This library supports basic math operations with overflow/underflow protection.
 */
 library SafeMath {
     /**

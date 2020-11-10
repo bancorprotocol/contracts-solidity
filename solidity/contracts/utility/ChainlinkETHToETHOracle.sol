@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import "./interfaces/IChainlinkPriceOracle.sol";
 
 /**
-  * @dev Provides the trivial ETH/ETH rate to be used with other TKN/ETH rates
+  * @dev This contract provides the trivial ETH/ETH rate to be used with other TKN/ETH rates.
 */
 contract ChainlinkETHToETHOracle is IChainlinkPriceOracle {
     int256 private constant ETH_RATE = 1;
@@ -24,6 +24,6 @@ contract ChainlinkETHToETHOracle is IChainlinkPriceOracle {
       * @return always returns current block's timestamp
     */
     function latestTimestamp() external view override returns (uint256) {
-        return now;
+        return block.timestamp;
     }
 }

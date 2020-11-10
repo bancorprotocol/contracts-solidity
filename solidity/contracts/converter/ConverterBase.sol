@@ -9,13 +9,10 @@ import "../utility/ReentrancyGuard.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
-import "../token/interfaces/IEtherToken.sol";
-import "../bancorx/interfaces/IBancorX.sol";
+import "../utility/interfaces/IWhitelist.sol";
 
 /**
-  * @dev ConverterBase
-  *
-  * The converter contains the main logic for conversions between different ERC20 tokens.
+  * @dev This contract contains the main logic for conversions between different ERC20 tokens.
   *
   * It is also the upgradable part of the mechanism (note that upgrades are opt-in).
   *
@@ -56,17 +53,16 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev version number
     */
-    uint16 public constant version = 42;
+    uint16 public constant version = 43;
 
     IConverterAnchor public override anchor;            // converter anchor contract
-    IWhitelist public override conversionWhitelist;     // whitelist contract with list of addresses that are allowed to use the converter
+    IWhitelist public conversionWhitelist;              // whitelist contract with list of addresses that are allowed to use the converter
     IERC20Token[] public reserveTokens;                 // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
     mapping (IERC20Token => Reserve) public reserves;   // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
     uint32 public reserveRatio = 0;                     // ratio between the reserves and the market cap, equal to the total reserve weights
     uint32 public override maxConversionFee = 0;        // maximum conversion fee for the lifetime of the contract,
                                                         // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
     uint32 public override conversionFee = 0;           // current conversion fee, represented in ppm, 0...maxConversionFee
-    bool public constant conversionsEnabled = true;     // deprecated, backward compatibility
 
     /**
       * @dev triggered when the converter is activated
@@ -83,9 +79,9 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @param _fromToken       source ERC20 token
       * @param _toToken         target ERC20 token
       * @param _trader          wallet that initiated the trade
-      * @param _amount          amount converted, in the source token
-      * @param _return          amount returned, minus conversion fee
-      * @param _conversionFee   conversion fee
+      * @param _amount          input amount in units of the source token
+      * @param _return          output amount minus conversion fee in units of the target token
+      * @param _conversionFee   conversion fee in units of the target token
     */
     event Conversion(
         IERC20Token indexed _fromToken,
@@ -99,7 +95,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     /**
       * @dev triggered when the rate between two tokens in the converter changes
       * note that the event might be dispatched for rate updates between any two tokens in the converter
-      * note that prior to version 28, you should use the 'PriceDataUpdate' event instead
       *
       * @param  _token1 address of the first token
       * @param  _token2 address of the second token
@@ -133,9 +128,9 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         IContractRegistry _registry,
         uint32 _maxConversionFee
     )
-        validAddress(address(_anchor))
         ContractRegistryClient(_registry)
         internal
+        validAddress(address(_anchor))
         validConversionFee(_maxConversionFee)
     {
         anchor = _anchor;
@@ -213,9 +208,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * can only be called if the converter has an ETH reserve
     */
     receive() external override payable {
-        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE"); // require(hasETHReserve(), "ERR_INVALID_RESERVE");
-        // a workaround for a problem when running solidity-coverage
-        // see https://github.com/sc-forks/solidity-coverage/issues/487
+        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE");
     }
 
     /**
@@ -261,7 +254,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     */
     function setConversionWhitelist(IWhitelist _whitelist)
         public
-        override
         ownerOnly
         notThis(address(_whitelist))
     {
@@ -343,8 +335,9 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
-        if (reserves[_token].isSet)
+        if (reserves[_token].isSet) {
             syncReserveBalance(_token);
+        }
     }
 
     /**
@@ -364,7 +357,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     }
 
     /**
-      * @dev returns the number of reserve tokens defined
+      * @dev returns the number of reserve tokens
       * note that prior to version 17, you should use 'connectorTokenCount' instead
       *
       * @return number of reserve tokens
@@ -430,21 +423,12 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
     */
     function reserveBalance(IERC20Token _reserveToken)
         public
-        override
         view
+        override
         validReserve(_reserveToken)
         returns (uint256)
     {
         return reserves[_reserveToken].balance;
-    }
-
-    /**
-      * @dev checks whether or not the converter has an ETH reserve
-      *
-      * @return true if the converter has an ETH reserve, false otherwise
-    */
-    function hasETHReserve() public view returns (bool) {
-        return reserves[ETH_RESERVE_ADDRESS].isSet;
     }
 
     /**
@@ -508,7 +492,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @return conversion fee
     */
     function calculateFee(uint256 _targetAmount) internal view returns (uint256) {
-        return _targetAmount.mul(conversionFee).div(PPM_RESOLUTION);
+        return _targetAmount.mul(conversionFee) / PPM_RESOLUTION;
     }
 
     /**
@@ -517,10 +501,12 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
       * @param _reserveToken    address of the reserve token
     */
     function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
-        if (_reserveToken == ETH_RESERVE_ADDRESS)
+        if (_reserveToken == ETH_RESERVE_ADDRESS) {
             reserves[_reserveToken].balance = address(this).balance;
-        else
+        }
+        else {
             reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this));
+        }
     }
 
     /**

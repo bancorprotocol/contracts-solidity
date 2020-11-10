@@ -3,7 +3,6 @@ pragma solidity 0.6.12;
 import "./IConverterAnchor.sol";
 import "../../token/interfaces/IERC20Token.sol";
 import "../../utility/interfaces/IOwned.sol";
-import "../../utility/interfaces/IWhitelist.sol";
 
 /*
     Converter interface
@@ -20,7 +19,6 @@ interface IConverter is IOwned {
                      address _trader,
                      address payable _beneficiary) external payable returns (uint256);
 
-    function conversionWhitelist() external view returns (IWhitelist);
     function conversionFee() external view returns (uint32);
     function maxConversionFee() external view returns (uint32);
     function reserveBalance(IERC20Token _reserveToken) external view returns (uint256);
@@ -29,7 +27,6 @@ interface IConverter is IOwned {
     function transferAnchorOwnership(address _newOwner) external;
     function acceptAnchorOwnership() external;
     function setConversionFee(uint32 _conversionFee) external;
-    function setConversionWhitelist(IWhitelist _whitelist) external;
     function withdrawTokens(IERC20Token _token, address _to, uint256 _amount) external;
     function withdrawETH(address payable _to) external;
     function addReserve(IERC20Token _token, uint32 _ratio) external;
