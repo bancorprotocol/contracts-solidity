@@ -16,12 +16,7 @@ contract TestLiquidityProtection is LiquidityProtection {
         return currentTime;
     }
 
-    function _minNetworkCompensation()
-        internal
-        view
-        override
-        returns (uint256)
-    {
+    function _minNetworkCompensation() internal view override returns (uint256) {
         return 3;
     }
 
@@ -35,27 +30,14 @@ contract TestLiquidityProtection is LiquidityProtection {
         uint256 _currentRateN,
         uint256 _currentRateD
     ) external pure returns (uint256, uint256) {
-        Fraction memory initialRate = Fraction({
-            n: _initialRateN,
-            d: _initialRateD
-        });
-        Fraction memory currentRate = Fraction({
-            n: _currentRateN,
-            d: _currentRateD
-        });
+        Fraction memory initialRate = Fraction({n: _initialRateN, d: _initialRateD});
+        Fraction memory currentRate = Fraction({n: _currentRateN, d: _currentRateD});
         Fraction memory impLossRate = impLoss(initialRate, currentRate);
         return (impLossRate.n, impLossRate.d);
     }
 
-    function averageRateTest(IDSToken _poolToken, IERC20Token _reserveToken)
-        external
-        view
-        returns (uint256, uint256)
-    {
-        Fraction memory rate = reserveTokenAverageRate(
-            _poolToken,
-            _reserveToken
-        );
+    function averageRateTest(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256, uint256) {
+        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken);
         return (rate.n, rate.d);
     }
 }

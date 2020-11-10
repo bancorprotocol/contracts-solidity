@@ -15,12 +15,7 @@ contract TestConverterFactory is ConverterFactory {
         string memory _symbol,
         uint8 _decimals
     ) public override returns (IConverterAnchor) {
-        createdAnchor = super.createAnchor(
-            _converterType,
-            _name,
-            _symbol,
-            _decimals
-        );
+        createdAnchor = super.createAnchor(_converterType, _name, _symbol, _decimals);
         return createdAnchor;
     }
 
@@ -30,12 +25,7 @@ contract TestConverterFactory is ConverterFactory {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     ) public override returns (IConverter) {
-        createdConverter = super.createConverter(
-            _type,
-            _anchor,
-            _registry,
-            _maxConversionFee
-        );
+        createdConverter = super.createConverter(_type, _anchor, _registry, _maxConversionFee);
         return createdConverter;
     }
 }

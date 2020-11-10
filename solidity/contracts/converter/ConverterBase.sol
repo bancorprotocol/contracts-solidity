@@ -36,19 +36,11 @@ import "../utility/interfaces/IWhitelist.sol";
  *
  * Note that converters don't currently support tokens with transfer fees.
  */
-abstract contract ConverterBase is
-    IConverter,
-    TokenHandler,
-    TokenHolder,
-    ContractRegistryClient,
-    ReentrancyGuard
-{
+abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint32 internal constant PPM_RESOLUTION = 1000000;
-    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(
-        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-    );
+    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct Reserve {
         uint256 balance; // reserve balance
@@ -79,11 +71,7 @@ abstract contract ConverterBase is
      * @param _anchor      converter anchor
      * @param _activated   true if the converter was activated, false if it was deactivated
      */
-    event Activation(
-        uint16 indexed _type,
-        IConverterAnchor indexed _anchor,
-        bool indexed _activated
-    );
+    event Activation(uint16 indexed _type, IConverterAnchor indexed _anchor, bool indexed _activated);
 
     /**
      * @dev triggered when a conversion between two tokens occurs
@@ -113,12 +101,7 @@ abstract contract ConverterBase is
      * @param  _rateN  rate of 1 unit of `_token1` in `_token2` (numerator)
      * @param  _rateD  rate of 1 unit of `_token1` in `_token2` (denominator)
      */
-    event TokenRateUpdate(
-        IERC20Token indexed _token1,
-        IERC20Token indexed _token2,
-        uint256 _rateN,
-        uint256 _rateD
-    );
+    event TokenRateUpdate(IERC20Token indexed _token1, IERC20Token indexed _token2, uint256 _rateN, uint256 _rateD);
 
     /**
      * @dev triggered when the conversion fee is updated
@@ -139,12 +122,7 @@ abstract contract ConverterBase is
         IConverterAnchor _anchor,
         IContractRegistry _registry,
         uint32 _maxConversionFee
-    )
-        internal
-        ContractRegistryClient(_registry)
-        validAddress(address(_anchor))
-        validConversionFee(_maxConversionFee)
-    {
+    ) internal ContractRegistryClient(_registry) validAddress(address(_anchor)) validConversionFee(_maxConversionFee) {
         anchor = _anchor;
         maxConversionFee = _maxConversionFee;
     }
@@ -201,10 +179,7 @@ abstract contract ConverterBase is
 
     // error message binary size optimization
     function _validReserveWeight(uint32 _weight) internal pure {
-        require(
-            _weight > 0 && _weight <= PPM_RESOLUTION,
-            "ERR_INVALID_RESERVE_WEIGHT"
-        );
+        require(_weight > 0 && _weight <= PPM_RESOLUTION, "ERR_INVALID_RESERVE_WEIGHT");
     }
 
     // overrides interface declaration
@@ -233,13 +208,7 @@ abstract contract ConverterBase is
      *
      * @param _to  address to send the ETH to
      */
-    function withdrawETH(address payable _to)
-        public
-        override
-        protected
-        ownerOnly
-        validReserve(ETH_RESERVE_ADDRESS)
-    {
+    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(ETH_RESERVE_ADDRESS) {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // verify that the converter is inactive or that the owner is the upgrader contract
@@ -266,11 +235,7 @@ abstract contract ConverterBase is
      *
      * @param _whitelist    address of a whitelist contract
      */
-    function setConversionWhitelist(IWhitelist _whitelist)
-        public
-        ownerOnly
-        notThis(address(_whitelist))
-    {
+    function setConversionWhitelist(IWhitelist _whitelist) public ownerOnly notThis(address(_whitelist)) {
         conversionWhitelist = _whitelist;
     }
 
@@ -291,12 +256,7 @@ abstract contract ConverterBase is
      *
      * @param _newOwner    new token owner
      */
-    function transferAnchorOwnership(address _newOwner)
-        public
-        override
-        ownerOnly
-        only(CONVERTER_UPGRADER)
-    {
+    function transferAnchorOwnership(address _newOwner) public override ownerOnly only(CONVERTER_UPGRADER) {
         anchor.transferOwnership(_newOwner);
     }
 
@@ -320,10 +280,7 @@ abstract contract ConverterBase is
      * @param _conversionFee new conversion fee, represented in ppm
      */
     function setConversionFee(uint32 _conversionFee) public override ownerOnly {
-        require(
-            _conversionFee <= maxConversionFee,
-            "ERR_INVALID_CONVERSION_FEE"
-        );
+        require(_conversionFee <= maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
         emit ConversionFeeUpdate(conversionFee, _conversionFee);
         conversionFee = _conversionFee;
     }
@@ -347,12 +304,7 @@ abstract contract ConverterBase is
 
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
-        require(
-            !reserves[_token].isSet ||
-                !isActive() ||
-                owner == converterUpgrader,
-            "ERR_ACCESS_DENIED"
-        );
+        require(!reserves[_token].isSet || !isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
@@ -367,9 +319,7 @@ abstract contract ConverterBase is
      * note that the owner needs to call acceptOwnership on the new converter after the upgrade
      */
     function upgrade() public ownerOnly {
-        IConverterUpgrader converterUpgrader = IConverterUpgrader(
-            addressOf(CONVERTER_UPGRADER)
-        );
+        IConverterUpgrader converterUpgrader = IConverterUpgrader(addressOf(CONVERTER_UPGRADER));
 
         // trigger de-activation event
         emit Activation(converterType(), anchor, false);
@@ -407,14 +357,8 @@ abstract contract ConverterBase is
         validReserveWeight(_weight)
     {
         // validate input
-        require(
-            address(_token) != address(anchor) && !reserves[_token].isSet,
-            "ERR_INVALID_RESERVE"
-        );
-        require(
-            _weight <= PPM_RESOLUTION - reserveRatio,
-            "ERR_INVALID_RESERVE_WEIGHT"
-        );
+        require(address(_token) != address(anchor) && !reserves[_token].isSet, "ERR_INVALID_RESERVE");
+        require(_weight <= PPM_RESOLUTION - reserveRatio, "ERR_INVALID_RESERVE_WEIGHT");
         require(reserveTokenCount() < uint16(-1), "ERR_INVALID_RESERVE_COUNT");
 
         Reserve storage newReserve = reserves[_token];
@@ -433,12 +377,7 @@ abstract contract ConverterBase is
      *
      * @return reserve weight
      */
-    function reserveWeight(IERC20Token _reserveToken)
-        public
-        view
-        validReserve(_reserveToken)
-        returns (uint32)
-    {
+    function reserveWeight(IERC20Token _reserveToken) public view validReserve(_reserveToken) returns (uint32) {
         return reserves[_reserveToken].weight;
     }
 
@@ -485,19 +424,11 @@ abstract contract ConverterBase is
         // if a whitelist is set, verify that both and trader and the beneficiary are whitelisted
         require(
             address(conversionWhitelist) == address(0) ||
-                (conversionWhitelist.isWhitelisted(_trader) &&
-                    conversionWhitelist.isWhitelisted(_beneficiary)),
+                (conversionWhitelist.isWhitelisted(_trader) && conversionWhitelist.isWhitelisted(_beneficiary)),
             "ERR_NOT_WHITELISTED"
         );
 
-        return
-            doConvert(
-                _sourceToken,
-                _targetToken,
-                _amount,
-                _trader,
-                _beneficiary
-            );
+        return doConvert(_sourceToken, _targetToken, _amount, _trader, _beneficiary);
     }
 
     /**
@@ -527,11 +458,7 @@ abstract contract ConverterBase is
      *
      * @return conversion fee
      */
-    function calculateFee(uint256 _targetAmount)
-        internal
-        view
-        returns (uint256)
-    {
+    function calculateFee(uint256 _targetAmount) internal view returns (uint256) {
         return _targetAmount.mul(conversionFee) / PPM_RESOLUTION;
     }
 
@@ -540,16 +467,11 @@ abstract contract ConverterBase is
      *
      * @param _reserveToken    address of the reserve token
      */
-    function syncReserveBalance(IERC20Token _reserveToken)
-        internal
-        validReserve(_reserveToken)
-    {
+    function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
         if (_reserveToken == ETH_RESERVE_ADDRESS) {
             reserves[_reserveToken].balance = address(this).balance;
         } else {
-            reserves[_reserveToken].balance = _reserveToken.balanceOf(
-                address(this)
-            );
+            reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this));
         }
     }
 
@@ -558,8 +480,7 @@ abstract contract ConverterBase is
      */
     function syncReserveBalances() internal {
         uint256 reserveCount = reserveTokens.length;
-        for (uint256 i = 0; i < reserveCount; i++)
-            syncReserveBalance(reserveTokens[i]);
+        for (uint256 i = 0; i < reserveCount; i++) syncReserveBalance(reserveTokens[i]);
     }
 
     /**
@@ -584,14 +505,7 @@ abstract contract ConverterBase is
         // currently the fee is always taken from the target token
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2**255);
-        emit Conversion(
-            _sourceToken,
-            _targetToken,
-            _trader,
-            _amount,
-            _returnAmount,
-            int256(_feeAmount)
-        );
+        emit Conversion(_sourceToken, _targetToken, _trader, _amount, _returnAmount, int256(_feeAmount));
     }
 
     /**
@@ -604,11 +518,7 @@ abstract contract ConverterBase is
     /**
      * @dev deprecated, backward compatibility
      */
-    function transferTokenOwnership(address _newOwner)
-        public
-        override
-        ownerOnly
-    {
+    function transferTokenOwnership(address _newOwner) public override ownerOnly {
         transferAnchorOwnership(_newOwner);
     }
 
@@ -641,12 +551,7 @@ abstract contract ConverterBase is
     /**
      * @dev deprecated, backward compatibility
      */
-    function connectorTokens(uint256 _index)
-        public
-        view
-        override
-        returns (IERC20Token)
-    {
+    function connectorTokens(uint256 _index) public view override returns (IERC20Token) {
         return ConverterBase.reserveTokens[_index];
     }
 
@@ -660,12 +565,7 @@ abstract contract ConverterBase is
     /**
      * @dev deprecated, backward compatibility
      */
-    function getConnectorBalance(IERC20Token _connectorToken)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function getConnectorBalance(IERC20Token _connectorToken) public view override returns (uint256) {
         return reserveBalance(_connectorToken);
     }
 

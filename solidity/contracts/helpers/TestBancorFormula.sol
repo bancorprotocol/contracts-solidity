@@ -23,19 +23,11 @@ contract TestBancorFormula is BancorFormula {
         return super.floorLog2(_n);
     }
 
-    function findPositionInMaxExpArrayTest(uint256 _x)
-        external
-        view
-        returns (uint8)
-    {
+    function findPositionInMaxExpArrayTest(uint256 _x) external view returns (uint8) {
         return super.findPositionInMaxExpArray(_x);
     }
 
-    function generalExpTest(uint256 _x, uint8 _precision)
-        external
-        pure
-        returns (uint256)
-    {
+    function generalExpTest(uint256 _x, uint8 _precision) external pure returns (uint256) {
         return super.generalExp(_x, _precision);
     }
 
@@ -47,27 +39,15 @@ contract TestBancorFormula is BancorFormula {
         return super.optimalExp(x);
     }
 
-    function normalizedWeightsTest(uint256 _a, uint256 _b)
-        external
-        pure
-        returns (uint32, uint32)
-    {
+    function normalizedWeightsTest(uint256 _a, uint256 _b) external pure returns (uint32, uint32) {
         return super.normalizedWeights(_a, _b);
     }
 
-    function accurateWeightsTest(uint256 _a, uint256 _b)
-        external
-        pure
-        returns (uint32, uint32)
-    {
+    function accurateWeightsTest(uint256 _a, uint256 _b) external pure returns (uint32, uint32) {
         return super.accurateWeights(_a, _b);
     }
 
-    function roundDivTest(uint256 _n, uint256 _d)
-        external
-        pure
-        returns (uint256)
-    {
+    function roundDivTest(uint256 _n, uint256 _d) external pure returns (uint256) {
         return super.roundDiv(_n, _d);
     }
 }

@@ -30,10 +30,7 @@ contract EtherToken is IEtherToken, ERC20Token {
      * @param _name        token name
      * @param _symbol      token symbol
      */
-    constructor(string memory _name, string memory _symbol)
-        public
-        ERC20Token(_name, _symbol, 18, 0)
-    {}
+    constructor(string memory _name, string memory _symbol) public ERC20Token(_name, _symbol, 18, 0) {}
 
     /**
      * @dev deposit ether on behalf of the sender
@@ -70,11 +67,7 @@ contract EtherToken is IEtherToken, ERC20Token {
      * @param _to      account to receive the ether
      * @param _amount  amount of ether to withdraw
      */
-    function withdrawTo(address payable _to, uint256 _amount)
-        public
-        override
-        notThis(_to)
-    {
+    function withdrawTo(address payable _to, uint256 _amount) public override notThis(_to) {
         balanceOf[msg.sender] = balanceOf[msg.sender].sub(_amount); // deduct the amount from the account balance
         totalSupply = totalSupply.sub(_amount); // decrease the total supply
         _to.transfer(_amount); // send the amount to the target account

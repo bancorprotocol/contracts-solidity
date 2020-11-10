@@ -14,11 +14,7 @@ contract NonStandardToken is Utils {
     mapping(address => mapping(address => uint256)) public allowance;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(
-        address indexed _owner,
-        address indexed _spender,
-        uint256 _value
-    );
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /**
      * @dev initializes a new NonStandardToken instance
@@ -73,10 +69,7 @@ contract NonStandardToken is Utils {
      * @param _spender approved address
      * @param _value   allowance amount
      */
-    function _approve(address _spender, uint256 _value)
-        internal
-        validAddress(_spender)
-    {
+    function _approve(address _spender, uint256 _value) internal validAddress(_spender) {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
         require(_value == 0 || allowance[msg.sender][_spender] == 0);
 

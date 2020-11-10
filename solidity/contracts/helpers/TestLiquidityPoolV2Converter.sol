@@ -23,10 +23,7 @@ contract TestLiquidityPoolV2Converter is LiquidityPoolV2Converter {
         currentTime = _currentTime;
     }
 
-    function setReserveWeight(IERC20Token _reserveToken, uint32 _weight)
-        public
-        validReserve(_reserveToken)
-    {
+    function setReserveWeight(IERC20Token _reserveToken, uint32 _weight) public validReserve(_reserveToken) {
         reserves[_reserveToken].weight = _weight;
 
         if (_reserveToken == primaryReserveToken) {

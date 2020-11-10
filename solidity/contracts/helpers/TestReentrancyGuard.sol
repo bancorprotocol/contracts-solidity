@@ -21,9 +21,7 @@ contract TestReentrancyGuardAttacker {
     }
 
     function run() public {
-        callProtectedMethod
-            ? target.protectedMethod()
-            : target.unprotectedMethod();
+        callProtectedMethod ? target.protectedMethod() : target.unprotectedMethod();
     }
 
     function callback() external {

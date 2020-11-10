@@ -15,9 +15,7 @@ import "./interfaces/IChainlinkPriceOracle.sol";
 contract PriceOracle is IPriceOracle, Utils {
     using SafeMath for uint256;
 
-    IERC20Token private constant ETH_ADDRESS = IERC20Token(
-        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-    );
+    IERC20Token private constant ETH_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint8 private constant ETH_DECIMALS = 18;
 
     IERC20Token public tokenA; // token A the oracle supports
@@ -65,10 +63,7 @@ contract PriceOracle is IPriceOracle, Utils {
     }
 
     // error message binary size optimization
-    function _validUniqueAddresses(address _address1, address _address2)
-        internal
-        pure
-    {
+    function _validUniqueAddresses(address _address1, address _address2) internal pure {
         _validAddress(_address1);
         _validAddress(_address2);
         require(_address1 != _address2, "ERR_SAME_ADDRESS");
@@ -81,14 +76,10 @@ contract PriceOracle is IPriceOracle, Utils {
     }
 
     // error message binary size optimization
-    function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB)
-        internal
-        view
-    {
+    function _supportedTokens(IERC20Token _tokenA, IERC20Token _tokenB) internal view {
         _validUniqueAddresses(address(_tokenA), address(_tokenB));
         require(
-            address(tokensToOracles[_tokenA]) != address(0) &&
-                address(tokensToOracles[_tokenB]) != address(0),
+            address(tokensToOracles[_tokenA]) != address(0) && address(tokensToOracles[_tokenB]) != address(0),
             "ERR_UNSUPPORTED_TOKEN"
         );
     }
@@ -129,13 +120,9 @@ contract PriceOracle is IPriceOracle, Utils {
         // 1 weiA costs $0.00005, 1 weiB costs $0.02, and weiA / weiB is 0.0025.
 
         if (decimalsTokenA > decimalsTokenB) {
-            rateTokenB = rateTokenB.mul(
-                uint256(10)**(decimalsTokenA - decimalsTokenB)
-            );
+            rateTokenB = rateTokenB.mul(uint256(10)**(decimalsTokenA - decimalsTokenB));
         } else if (decimalsTokenA < decimalsTokenB) {
-            rateTokenA = rateTokenA.mul(
-                uint256(10)**(decimalsTokenB - decimalsTokenA)
-            );
+            rateTokenA = rateTokenA.mul(uint256(10)**(decimalsTokenB - decimalsTokenA));
         }
 
         return (rateTokenA, rateTokenB);

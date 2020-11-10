@@ -20,17 +20,11 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @param _converter   new converter address
      * @param _owner       converter owner address
      */
-    event NewConverter(
-        uint16 indexed _type,
-        IConverter indexed _converter,
-        address indexed _owner
-    );
+    event NewConverter(uint16 indexed _type, IConverter indexed _converter, address indexed _owner);
 
     mapping(uint16 => ITypedConverterFactory) public converterFactories;
     mapping(uint16 => ITypedConverterAnchorFactory) public anchorFactories;
-    mapping(uint16 => ITypedConverterCustomFactory)
-        public
-        override customFactories;
+    mapping(uint16 => ITypedConverterCustomFactory) public override customFactories;
 
     /**
      * @dev initializes the factory with a specific typed converter factory
@@ -38,10 +32,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      *
      * @param _factory typed converter factory
      */
-    function registerTypedConverterFactory(ITypedConverterFactory _factory)
-        public
-        ownerOnly
-    {
+    function registerTypedConverterFactory(ITypedConverterFactory _factory) public ownerOnly {
         converterFactories[_factory.converterType()] = _factory;
     }
 
@@ -51,9 +42,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      *
      * @param _factory typed converter anchor factory
      */
-    function registerTypedConverterAnchorFactory(
-        ITypedConverterAnchorFactory _factory
-    ) public ownerOnly {
+    function registerTypedConverterAnchorFactory(ITypedConverterAnchorFactory _factory) public ownerOnly {
         anchorFactories[_factory.converterType()] = _factory;
     }
 
@@ -63,9 +52,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      *
      * @param _factory typed converter custom factory
      */
-    function registerTypedConverterCustomFactory(
-        ITypedConverterCustomFactory _factory
-    ) public ownerOnly {
+    function registerTypedConverterCustomFactory(ITypedConverterCustomFactory _factory) public ownerOnly {
         customFactories[_factory.converterType()] = _factory;
     }
 
@@ -119,11 +106,7 @@ contract ConverterFactory is IConverterFactory, Owned {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     ) public virtual override returns (IConverter) {
-        IConverter converter = converterFactories[_type].createConverter(
-            _anchor,
-            _registry,
-            _maxConversionFee
-        );
+        IConverter converter = converterFactories[_type].createConverter(_anchor, _registry, _maxConversionFee);
         converter.acceptOwnership();
         converter.transferOwnership(msg.sender);
 

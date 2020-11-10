@@ -18,28 +18,20 @@ contract BancorFormula is IBancorFormula {
 
     // Auto-generated via 'PrintLn2ScalingFactors.py'
     uint256 private constant LN2_NUMERATOR = 0x3f80fe03f80fe03f80fe03f80fe03f8;
-    uint256
-        private constant LN2_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
+    uint256 private constant LN2_DENOMINATOR = 0x5b9de1d10bf4103d647b0955897ba80;
 
     // Auto-generated via 'PrintFunctionOptimalLog.py' and 'PrintFunctionOptimalExp.py'
-    uint256
-        private constant OPT_LOG_MAX_VAL = 0x15bf0a8b1457695355fb8ac404e7a79e3;
-    uint256
-        private constant OPT_EXP_MAX_VAL = 0x800000000000000000000000000000000;
+    uint256 private constant OPT_LOG_MAX_VAL = 0x15bf0a8b1457695355fb8ac404e7a79e3;
+    uint256 private constant OPT_EXP_MAX_VAL = 0x800000000000000000000000000000000;
 
     // Auto-generated via 'PrintLambertFactors.py'
-    uint256
-        private constant LAMBERT_CONV_RADIUS = 0x002f16ac6c59de6f8d5d6f63c1482a7c86;
-    uint256
-        private constant LAMBERT_POS2_SAMPLE = 0x0003060c183060c183060c183060c18306;
-    uint256
-        private constant LAMBERT_POS2_MAXVAL = 0x01af16ac6c59de6f8d5d6f63c1482a7c80;
-    uint256
-        private constant LAMBERT_POS3_MAXVAL = 0x6b22d43e72c326539cceeef8bb48f255ff;
+    uint256 private constant LAMBERT_CONV_RADIUS = 0x002f16ac6c59de6f8d5d6f63c1482a7c86;
+    uint256 private constant LAMBERT_POS2_SAMPLE = 0x0003060c183060c183060c183060c18306;
+    uint256 private constant LAMBERT_POS2_MAXVAL = 0x01af16ac6c59de6f8d5d6f63c1482a7c80;
+    uint256 private constant LAMBERT_POS3_MAXVAL = 0x6b22d43e72c326539cceeef8bb48f255ff;
 
     // Auto-generated via 'PrintWeightFactors.py'
-    uint256
-        private constant MAX_UNF_WEIGHT = 0x10c6f7a0b5ed8d36b4c7f34938583621fafc8b0079a2834d26fa3fcc9ea9;
+    uint256 private constant MAX_UNF_WEIGHT = 0x10c6f7a0b5ed8d36b4c7f34938583621fafc8b0079a2834d26fa3fcc9ea9;
 
     // Auto-generated via 'PrintMaxExpArray.py'
     uint256[128] private maxExpArray;
@@ -340,27 +332,18 @@ contract BancorFormula is IBancorFormula {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
-        require(
-            _reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT,
-            "ERR_INVALID_RESERVE_WEIGHT"
-        );
+        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
 
         // special case for 0 deposit amount
         if (_amount == 0) return 0;
 
         // special case if the weight = 100%
-        if (_reserveWeight == MAX_WEIGHT)
-            return _supply.mul(_amount) / _reserveBalance;
+        if (_reserveWeight == MAX_WEIGHT) return _supply.mul(_amount) / _reserveBalance;
 
         uint256 result;
         uint8 precision;
         uint256 baseN = _amount.add(_reserveBalance);
-        (result, precision) = power(
-            baseN,
-            _reserveBalance,
-            _reserveWeight,
-            MAX_WEIGHT
-        );
+        (result, precision) = power(baseN, _reserveBalance, _reserveWeight, MAX_WEIGHT);
         uint256 temp = _supply.mul(result) >> precision;
         return temp - _supply;
     }
@@ -388,10 +371,7 @@ contract BancorFormula is IBancorFormula {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
-        require(
-            _reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT,
-            "ERR_INVALID_RESERVE_WEIGHT"
-        );
+        require(_reserveWeight > 0 && _reserveWeight <= MAX_WEIGHT, "ERR_INVALID_RESERVE_WEIGHT");
         require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 sell amount
@@ -401,8 +381,7 @@ contract BancorFormula is IBancorFormula {
         if (_amount == _supply) return _reserveBalance;
 
         // special case if the weight = 100%
-        if (_reserveWeight == MAX_WEIGHT)
-            return _reserveBalance.mul(_amount) / _supply;
+        if (_reserveWeight == MAX_WEIGHT) return _reserveBalance.mul(_amount) / _supply;
 
         uint256 result;
         uint8 precision;
@@ -436,10 +415,7 @@ contract BancorFormula is IBancorFormula {
         uint256 _amount
     ) public view override returns (uint256) {
         // validate input
-        require(
-            _sourceReserveBalance > 0 && _targetReserveBalance > 0,
-            "ERR_INVALID_RESERVE_BALANCE"
-        );
+        require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
         require(
             _sourceReserveWeight > 0 &&
                 _sourceReserveWeight <= MAX_WEIGHT &&
@@ -450,19 +426,12 @@ contract BancorFormula is IBancorFormula {
 
         // special case for equal weights
         if (_sourceReserveWeight == _targetReserveWeight)
-            return
-                _targetReserveBalance.mul(_amount) /
-                _sourceReserveBalance.add(_amount);
+            return _targetReserveBalance.mul(_amount) / _sourceReserveBalance.add(_amount);
 
         uint256 result;
         uint8 precision;
         uint256 baseN = _sourceReserveBalance.add(_amount);
-        (result, precision) = power(
-            baseN,
-            _sourceReserveBalance,
-            _sourceReserveWeight,
-            _targetReserveWeight
-        );
+        (result, precision) = power(baseN, _sourceReserveBalance, _sourceReserveWeight, _targetReserveWeight);
         uint256 temp1 = _targetReserveBalance.mul(result);
         uint256 temp2 = _targetReserveBalance << precision;
         return (temp1 - temp2) / result;
@@ -491,17 +460,13 @@ contract BancorFormula is IBancorFormula {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
-        require(
-            _reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2,
-            "ERR_INVALID_RESERVE_RATIO"
-        );
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
 
         // special case for 0 amount
         if (_amount == 0) return 0;
 
         // special case if the reserve ratio = 100%
-        if (_reserveRatio == MAX_WEIGHT)
-            return (_amount.mul(_reserveBalance) - 1) / _supply + 1;
+        if (_reserveRatio == MAX_WEIGHT) return (_amount.mul(_reserveBalance) - 1) / _supply + 1;
 
         uint256 result;
         uint8 precision;
@@ -534,27 +499,18 @@ contract BancorFormula is IBancorFormula {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
-        require(
-            _reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2,
-            "ERR_INVALID_RESERVE_RATIO"
-        );
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
 
         // special case for 0 amount
         if (_amount == 0) return 0;
 
         // special case if the reserve ratio = 100%
-        if (_reserveRatio == MAX_WEIGHT)
-            return _amount.mul(_supply) / _reserveBalance;
+        if (_reserveRatio == MAX_WEIGHT) return _amount.mul(_supply) / _reserveBalance;
 
         uint256 result;
         uint8 precision;
         uint256 baseN = _reserveBalance.add(_amount);
-        (result, precision) = power(
-            baseN,
-            _reserveBalance,
-            _reserveRatio,
-            MAX_WEIGHT
-        );
+        (result, precision) = power(baseN, _reserveBalance, _reserveRatio, MAX_WEIGHT);
         uint256 temp = _supply.mul(result) >> precision;
         return temp - _supply;
     }
@@ -582,10 +538,7 @@ contract BancorFormula is IBancorFormula {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
-        require(
-            _reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2,
-            "ERR_INVALID_RESERVE_RATIO"
-        );
+        require(_reserveRatio > 1 && _reserveRatio <= MAX_WEIGHT * 2, "ERR_INVALID_RESERVE_RATIO");
         require(_amount <= _supply, "ERR_INVALID_AMOUNT");
 
         // special case for 0 amount
@@ -595,8 +548,7 @@ contract BancorFormula is IBancorFormula {
         if (_amount == _supply) return _reserveBalance;
 
         // special case if the reserve ratio = 100%
-        if (_reserveRatio == MAX_WEIGHT)
-            return _amount.mul(_reserveBalance) / _supply;
+        if (_reserveRatio == MAX_WEIGHT) return _amount.mul(_reserveBalance) / _supply;
 
         uint256 result;
         uint8 precision;
@@ -654,45 +606,22 @@ contract BancorFormula is IBancorFormula {
         uint256 _reserveRateDenominator
     ) public view override returns (uint32, uint32) {
         if (_primaryReserveStakedBalance == _primaryReserveBalance)
-            require(
-                _primaryReserveStakedBalance > 0 ||
-                    _secondaryReserveBalance > 0,
-                "ERR_INVALID_RESERVE_BALANCE"
-            );
+            require(_primaryReserveStakedBalance > 0 || _secondaryReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
         else
             require(
-                _primaryReserveStakedBalance > 0 &&
-                    _primaryReserveBalance > 0 &&
-                    _secondaryReserveBalance > 0,
+                _primaryReserveStakedBalance > 0 && _primaryReserveBalance > 0 && _secondaryReserveBalance > 0,
                 "ERR_INVALID_RESERVE_BALANCE"
             );
-        require(
-            _reserveRateNumerator > 0 && _reserveRateDenominator > 0,
-            "ERR_INVALID_RESERVE_RATE"
-        );
+        require(_reserveRateNumerator > 0 && _reserveRateDenominator > 0, "ERR_INVALID_RESERVE_RATE");
 
         uint256 tq = _primaryReserveStakedBalance.mul(_reserveRateNumerator);
         uint256 rp = _secondaryReserveBalance.mul(_reserveRateDenominator);
 
         if (_primaryReserveStakedBalance < _primaryReserveBalance)
-            return
-                balancedWeightsByStake(
-                    _primaryReserveBalance,
-                    _primaryReserveStakedBalance,
-                    tq,
-                    rp,
-                    true
-                );
+            return balancedWeightsByStake(_primaryReserveBalance, _primaryReserveStakedBalance, tq, rp, true);
 
         if (_primaryReserveStakedBalance > _primaryReserveBalance)
-            return
-                balancedWeightsByStake(
-                    _primaryReserveStakedBalance,
-                    _primaryReserveBalance,
-                    tq,
-                    rp,
-                    false
-                );
+            return balancedWeightsByStake(_primaryReserveStakedBalance, _primaryReserveBalance, tq, rp, false);
 
         return normalizedWeights(tq, rp);
     }
@@ -736,13 +665,7 @@ contract BancorFormula is IBancorFormula {
             return (optimalExp(baseLogTimesExp), MAX_PRECISION);
         } else {
             uint8 precision = findPositionInMaxExpArray(baseLogTimesExp);
-            return (
-                generalExp(
-                    baseLogTimesExp >> (MAX_PRECISION - precision),
-                    precision
-                ),
-                precision
-            );
+            return (generalExp(baseLogTimesExp >> (MAX_PRECISION - precision), precision), precision);
         }
     }
 
@@ -804,11 +727,7 @@ contract BancorFormula is IBancorFormula {
      * - This function finds the position of [the smallest value in "maxExpArray" larger than or equal to "x"]
      * - This function finds the highest position of [a value in "maxExpArray" larger than or equal to "x"]
      */
-    function findPositionInMaxExpArray(uint256 _x)
-        internal
-        view
-        returns (uint8)
-    {
+    function findPositionInMaxExpArray(uint256 _x) internal view returns (uint8) {
         uint8 lo = MIN_PRECISION;
         uint8 hi = MAX_PRECISION;
 
@@ -831,11 +750,7 @@ contract BancorFormula is IBancorFormula {
      * the global "maxExpArray" maps each "precision" to "((maximumExponent + 1) << (MAX_PRECISION - precision)) - 1".
      * the maximum permitted value for "x" is therefore given by "maxExpArray[precision] >> (MAX_PRECISION - precision)".
      */
-    function generalExp(uint256 _x, uint8 _precision)
-        internal
-        pure
-        returns (uint256)
-    {
+    function generalExp(uint256 _x, uint8 _precision) internal pure returns (uint256) {
         uint256 xi = _x;
         uint256 res = 0;
 
@@ -904,8 +819,7 @@ contract BancorFormula is IBancorFormula {
         xi = (xi * _x) >> _precision;
         res += xi * 0x0000000000000000000000000000001; // add x^33 * (33! / 33!)
 
-        return
-            res / 0x688589cc0e9505e2f2fee5580000000 + _x + (ONE << _precision); // divide by 33! and then add x^1 / 1! + x^0 / 0!
+        return res / 0x688589cc0e9505e2f2fee5580000000 + _x + (ONE << _precision); // divide by 33! and then add x^1 / 1! + x^0 / 0!
     }
 
     /**
@@ -961,37 +875,21 @@ contract BancorFormula is IBancorFormula {
 
         z = y = x - FIXED_1;
         w = (y * y) / FIXED_1;
-        res +=
-            (z * (0x100000000000000000000000000000000 - y)) /
-            0x100000000000000000000000000000000;
+        res += (z * (0x100000000000000000000000000000000 - y)) / 0x100000000000000000000000000000000;
         z = (z * w) / FIXED_1; // add y^01 / 01 - y^02 / 02
-        res +=
-            (z * (0x0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - y)) /
-            0x200000000000000000000000000000000;
+        res += (z * (0x0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - y)) / 0x200000000000000000000000000000000;
         z = (z * w) / FIXED_1; // add y^03 / 03 - y^04 / 04
-        res +=
-            (z * (0x099999999999999999999999999999999 - y)) /
-            0x300000000000000000000000000000000;
+        res += (z * (0x099999999999999999999999999999999 - y)) / 0x300000000000000000000000000000000;
         z = (z * w) / FIXED_1; // add y^05 / 05 - y^06 / 06
-        res +=
-            (z * (0x092492492492492492492492492492492 - y)) /
-            0x400000000000000000000000000000000;
+        res += (z * (0x092492492492492492492492492492492 - y)) / 0x400000000000000000000000000000000;
         z = (z * w) / FIXED_1; // add y^07 / 07 - y^08 / 08
-        res +=
-            (z * (0x08e38e38e38e38e38e38e38e38e38e38e - y)) /
-            0x500000000000000000000000000000000;
+        res += (z * (0x08e38e38e38e38e38e38e38e38e38e38e - y)) / 0x500000000000000000000000000000000;
         z = (z * w) / FIXED_1; // add y^09 / 09 - y^10 / 10
-        res +=
-            (z * (0x08ba2e8ba2e8ba2e8ba2e8ba2e8ba2e8b - y)) /
-            0x600000000000000000000000000000000;
+        res += (z * (0x08ba2e8ba2e8ba2e8ba2e8ba2e8ba2e8b - y)) / 0x600000000000000000000000000000000;
         z = (z * w) / FIXED_1; // add y^11 / 11 - y^12 / 12
-        res +=
-            (z * (0x089d89d89d89d89d89d89d89d89d89d89 - y)) /
-            0x700000000000000000000000000000000;
+        res += (z * (0x089d89d89d89d89d89d89d89d89d89d89 - y)) / 0x700000000000000000000000000000000;
         z = (z * w) / FIXED_1; // add y^13 / 13 - y^14 / 14
-        res +=
-            (z * (0x088888888888888888888888888888888 - y)) /
-            0x800000000000000000000000000000000; // add y^15 / 15 - y^16 / 16
+        res += (z * (0x088888888888888888888888888888888 - y)) / 0x800000000000000000000000000000000; // add y^15 / 15 - y^16 / 16
 
         return res;
     }
@@ -1055,33 +953,19 @@ contract BancorFormula is IBancorFormula {
         res = res / 0x21c3677c82b40000 + y + FIXED_1; // divide by 20! and then add y^1 / 1! + y^0 / 0!
 
         if ((x & 0x010000000000000000000000000000000) != 0)
-            res =
-                (res * 0x1c3d6a24ed82218787d624d3e5eba95f9) /
-                0x18ebef9eac820ae8682b9793ac6d1e776; // multiply by e^2^(-3)
+            res = (res * 0x1c3d6a24ed82218787d624d3e5eba95f9) / 0x18ebef9eac820ae8682b9793ac6d1e776; // multiply by e^2^(-3)
         if ((x & 0x020000000000000000000000000000000) != 0)
-            res =
-                (res * 0x18ebef9eac820ae8682b9793ac6d1e778) /
-                0x1368b2fc6f9609fe7aceb46aa619baed4; // multiply by e^2^(-2)
+            res = (res * 0x18ebef9eac820ae8682b9793ac6d1e778) / 0x1368b2fc6f9609fe7aceb46aa619baed4; // multiply by e^2^(-2)
         if ((x & 0x040000000000000000000000000000000) != 0)
-            res =
-                (res * 0x1368b2fc6f9609fe7aceb46aa619baed5) /
-                0x0bc5ab1b16779be3575bd8f0520a9f21f; // multiply by e^2^(-1)
+            res = (res * 0x1368b2fc6f9609fe7aceb46aa619baed5) / 0x0bc5ab1b16779be3575bd8f0520a9f21f; // multiply by e^2^(-1)
         if ((x & 0x080000000000000000000000000000000) != 0)
-            res =
-                (res * 0x0bc5ab1b16779be3575bd8f0520a9f21e) /
-                0x0454aaa8efe072e7f6ddbab84b40a55c9; // multiply by e^2^(+0)
+            res = (res * 0x0bc5ab1b16779be3575bd8f0520a9f21e) / 0x0454aaa8efe072e7f6ddbab84b40a55c9; // multiply by e^2^(+0)
         if ((x & 0x100000000000000000000000000000000) != 0)
-            res =
-                (res * 0x0454aaa8efe072e7f6ddbab84b40a55c5) /
-                0x00960aadc109e7a3bf4578099615711ea; // multiply by e^2^(+1)
+            res = (res * 0x0454aaa8efe072e7f6ddbab84b40a55c5) / 0x00960aadc109e7a3bf4578099615711ea; // multiply by e^2^(+1)
         if ((x & 0x200000000000000000000000000000000) != 0)
-            res =
-                (res * 0x00960aadc109e7a3bf4578099615711d7) /
-                0x0002bf84208204f5977f9a8cf01fdce3d; // multiply by e^2^(+2)
+            res = (res * 0x00960aadc109e7a3bf4578099615711d7) / 0x0002bf84208204f5977f9a8cf01fdce3d; // multiply by e^2^(+2)
         if ((x & 0x400000000000000000000000000000000) != 0)
-            res =
-                (res * 0x0002bf84208204f5977f9a8cf01fdc307) /
-                0x0000003c6ab775dd0b95b4cbee7e65d11; // multiply by e^2^(+3)
+            res = (res * 0x0002bf84208204f5977f9a8cf01fdc307) / 0x0000003c6ab775dd0b95b4cbee7e65d11; // multiply by e^2^(+3)
 
         return res;
     }
@@ -1303,11 +1187,7 @@ contract BancorFormula is IBancorFormula {
     /**
      * @dev reduces "a" and "b" while maintaining their ratio.
      */
-    function safeFactors(uint256 _a, uint256 _b)
-        internal
-        pure
-        returns (uint256, uint256)
-    {
+    function safeFactors(uint256 _a, uint256 _b) internal pure returns (uint256, uint256) {
         if (_a <= FIXED_2 && _b <= FIXED_2) return (_a, _b);
         if (_a < FIXED_2) return ((_a * FIXED_2) / _b, FIXED_2);
         if (_b < FIXED_2) return (FIXED_2, (_b * FIXED_2) / _a);
@@ -1319,11 +1199,7 @@ contract BancorFormula is IBancorFormula {
     /**
      * @dev computes "MAX_WEIGHT * a / (a + b)" and "MAX_WEIGHT * b / (a + b)".
      */
-    function normalizedWeights(uint256 _a, uint256 _b)
-        internal
-        pure
-        returns (uint32, uint32)
-    {
+    function normalizedWeights(uint256 _a, uint256 _b) internal pure returns (uint32, uint32) {
         if (_a <= _b) return accurateWeights(_a, _b);
         (uint32 y, uint32 x) = accurateWeights(_b, _a);
         return (x, y);
@@ -1332,11 +1208,7 @@ contract BancorFormula is IBancorFormula {
     /**
      * @dev computes "MAX_WEIGHT * a / (a + b)" and "MAX_WEIGHT * b / (a + b)", assuming that "a <= b".
      */
-    function accurateWeights(uint256 _a, uint256 _b)
-        internal
-        pure
-        returns (uint32, uint32)
-    {
+    function accurateWeights(uint256 _a, uint256 _b) internal pure returns (uint32, uint32) {
         if (_a > MAX_UNF_WEIGHT) {
             uint256 c = _a / (MAX_UNF_WEIGHT + 1) + 1;
             _a /= c;
@@ -1363,13 +1235,7 @@ contract BancorFormula is IBancorFormula {
         uint32 _reserveWeight,
         uint256 _amount
     ) public view returns (uint256) {
-        return
-            purchaseTargetAmount(
-                _supply,
-                _reserveBalance,
-                _reserveWeight,
-                _amount
-            );
+        return purchaseTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**
@@ -1381,8 +1247,7 @@ contract BancorFormula is IBancorFormula {
         uint32 _reserveWeight,
         uint256 _amount
     ) public view returns (uint256) {
-        return
-            saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
+        return saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**
@@ -1446,13 +1311,7 @@ contract BancorFormula is IBancorFormula {
         uint32 _reserveRatio,
         uint256 _amount
     ) public view returns (uint256) {
-        return
-            liquidateReserveAmount(
-                _supply,
-                _reserveBalance,
-                _reserveRatio,
-                _amount
-            );
+        return liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount);
     }
 
     /**
@@ -1464,13 +1323,7 @@ contract BancorFormula is IBancorFormula {
         uint32 _reserveWeight,
         uint256 _amount
     ) public view returns (uint256) {
-        return
-            purchaseTargetAmount(
-                _supply,
-                _reserveBalance,
-                _reserveWeight,
-                _amount
-            );
+        return purchaseTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**
@@ -1482,8 +1335,7 @@ contract BancorFormula is IBancorFormula {
         uint32 _reserveWeight,
         uint256 _amount
     ) public view returns (uint256) {
-        return
-            saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
+        return saleTargetAmount(_supply, _reserveBalance, _reserveWeight, _amount);
     }
 
     /**
@@ -1515,12 +1367,6 @@ contract BancorFormula is IBancorFormula {
         uint32 _reserveRatio,
         uint256 _amount
     ) public view returns (uint256) {
-        return
-            liquidateReserveAmount(
-                _supply,
-                _reserveBalance,
-                _reserveRatio,
-                _amount
-            );
+        return liquidateReserveAmount(_supply, _reserveBalance, _reserveRatio, _amount);
     }
 }
