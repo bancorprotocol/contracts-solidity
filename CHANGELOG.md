@@ -1,3 +1,11 @@
+### 0.6.23
+LiquidityProtection
+* Improved accuracy of the return/fee calculations
+
+General
+* Many other minor changes and cleanups
+
+
 ### 0.6.22
 LiquidityProtection
 * Fixed an issue that prevented users from adding single sided liquidity in some cases
