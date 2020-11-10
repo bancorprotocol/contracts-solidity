@@ -693,21 +693,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
         uint256 baseAmount = poolAmount.mul(poolRate.n / 2).div(poolRate.d);
-        uint256 networkAmount = 0;
-
-        // calculate the compensation if still needed
-        if (baseAmount < targetAmount) {
-            uint256 delta = targetAmount - baseAmount;
-
-            // calculate the delta in network tokens
-            delta = delta.mul(packedRates.removeAverageRateN).div(packedRates.removeAverageRateD);
-
-            // the delta might be very small due to precision loss
-            // in which case no compensation will take place (gas optimization)
-            if (delta >= _minNetworkCompensation()) {
-                networkAmount = delta;
-            }
-        }
+        uint256 networkAmount = getNetworkCompensation(targetAmount, baseAmount, packedRates);
 
         return (targetAmount, baseAmount, networkAmount);
     }
@@ -803,25 +789,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
         
         // compensate the caller with network tokens if still needed
-        if (baseBalance < targetAmount) {
-            uint256 delta = targetAmount - baseBalance;
-
-            // calculate the delta in network tokens
-            delta = delta.mul(packedRates.removeAverageRateN).div(packedRates.removeAverageRateD);
-
-            // the delta might be very small due to precision loss
-            // in which case no compensation will take place (gas optimization)
-            if (delta >= _minNetworkCompensation()) {
-                // check if there's enough network token balance, otherwise mint more
-                uint256 networkBalance = networkToken.balanceOf(address(this));
-                if (networkBalance < delta) {
-                    networkToken.issue(address(this), delta - networkBalance);
-                }
-
-                // lock network tokens for the caller
-                safeTransfer(networkToken, address(store), delta);
-                lockTokens(msg.sender, delta);
+        uint256 delta = getNetworkCompensation(targetAmount, baseBalance, packedRates);
+        if (delta > 0) {
+            // check if there's enough network token balance, otherwise mint more
+            uint256 networkBalance = networkToken.balanceOf(address(this));
+            if (networkBalance < delta) {
+                networkToken.issue(address(this), delta - networkBalance);
             }
+
+            // lock network tokens for the caller
+            safeTransfer(networkToken, address(store), delta);
+            lockTokens(msg.sender, delta);
         }
 
         // if the contract still holds network token, burn them
@@ -1294,6 +1272,21 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function compensationAmount(uint256 _amount, uint256 _total, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
         (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
         return _total.mul(_loss.d.sub(_loss.n)).div(_loss.d).add(_amount.mul(compN).div(compD));
+    }
+
+    function getNetworkCompensation(uint256 _targetAmount, uint256 _baseAmount, PackedRates memory _packedRates) internal view returns (uint256) {
+        if (_targetAmount > _baseAmount) {
+            // calculate the delta in network tokens
+            uint256 delta = (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(_packedRates.removeAverageRateD);
+
+            // the delta might be very small due to precision loss
+            // in which case no compensation will take place (gas optimization)
+            if (delta >= _minNetworkCompensation()) {
+                return delta;
+            }
+        }
+
+        return 0;
     }
 
     /**
