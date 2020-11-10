@@ -9,6 +9,10 @@ contract TestMath {
         return Math.floorSqrt(_num);
     }
 
+    function ceilSqrtTest(uint256 _num) external pure returns (uint256) {
+        return Math.ceilSqrt(_num);
+    }
+
     function reducedRatioTest(uint256 _n, uint256 _d, uint256 _max) external pure returns (uint256, uint256) {
         return Math.reducedRatio(_n, _d, _max);
     }

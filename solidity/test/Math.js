@@ -24,6 +24,17 @@ contract('Math', accounts => {
         }
     }
 
+    for (let n = 1; n <= 256; n++) {
+        for (const k of n < 256 ? [-1, 0, +1] : [-1]) {
+            const x = new BN(2).pow(new BN(n)).add(new BN(k));
+            it(`Function ceilSqrt(0x${x.toString(16)})`, async () => {
+                const expected = MathUtils.ceilSqrt(x);
+                const actual = await mathContract.ceilSqrtTest(x);
+                expect(actual).to.be.bignumber.equal(expected);
+            });
+        }
+    }
+
     for (const scale of SCALES) {
         for (let a = 0; a < 10; a++) {
             for (let b = 1; b <= 10; b++) {
