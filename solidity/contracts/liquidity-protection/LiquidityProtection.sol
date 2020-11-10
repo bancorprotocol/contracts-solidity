@@ -38,14 +38,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 timestamp;          // timestamp
     }
 
-    // various rates between the reserve token in context (A) and the other reserve token (B)
+    // various rates between the two reserve tokens. the rate is of 1 unit of the protected reserve token in units of the other reserve token
     struct PackedRates {
-        uint128 addSpotRateN;       // spot rate of 1 A in units of B when liquidity was added
-        uint128 addSpotRateD;       // spot rate of 1 A in units of B when liquidity was added
-        uint128 removeSpotRateN;    // spot rate of 1 A in units of B when liquidity is removed
-        uint128 removeSpotRateD;    // spot rate of 1 A in units of B when liquidity is removed
-        uint128 removeAverageRateN; // average rate of 1 A in units of B when liquidity is removed
-        uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed
+        uint128 addSpotRateN;       // spot rate of 1 A in units of B when liquidity was added (numerator)
+        uint128 addSpotRateD;       // spot rate of 1 A in units of B when liquidity was added (denominator)
+        uint128 removeSpotRateN;    // spot rate of 1 A in units of B when liquidity is removed (numerator)
+        uint128 removeSpotRateD;    // spot rate of 1 A in units of B when liquidity is removed (denominator)
+        uint128 removeAverageRateN; // average rate of 1 A in units of B when liquidity is removed (numerator)
+        uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
@@ -194,6 +194,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // error message binary size optimization
     function _updatingLiquidityOnly() internal view {
         require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
+    }
+
+    // ensures that the portion is valid
+    modifier validPortion(uint32 _portion) {
+        _validPortion(_portion);
+        _;
+    }
+
+    // error message binary size optimization
+    function _validPortion(uint32 _portion) internal pure {
+        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
     }
 
     // ensures that the pool is supported
@@ -645,11 +656,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _id,
         uint32 _portion,
         uint256 _removeTimestamp
-    ) external view returns (uint256, uint256, uint256)
+    ) external view validPortion(_portion) returns (uint256, uint256, uint256)
     {
-        // verify input
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
-
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
         // verify input
@@ -693,21 +701,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
         uint256 baseAmount = poolAmount.mul(poolRate.n / 2).div(poolRate.d);
-        uint256 networkAmount = 0;
-
-        // calculate the compensation if still needed
-        if (baseAmount < targetAmount) {
-            uint256 delta = targetAmount - baseAmount;
-
-            // calculate the delta in network tokens
-            delta = delta.mul(packedRates.removeAverageRateN).div(packedRates.removeAverageRateD);
-
-            // the delta might be very small due to precision loss
-            // in which case no compensation will take place (gas optimization)
-            if (delta >= _minNetworkCompensation()) {
-                networkAmount = delta;
-            }
-        }
+        uint256 networkAmount = getNetworkCompensation(targetAmount, baseAmount, packedRates);
 
         return (targetAmount, baseAmount, networkAmount);
     }
@@ -719,9 +713,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _id      id in the caller's list of protected liquidity
       * @param _portion portion of liquidity to remove, in PPM
     */
-    function removeLiquidity(uint256 _id, uint32 _portion) external protected {
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
-
+    function removeLiquidity(uint256 _id, uint32 _portion) external validPortion(_portion) protected {
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
         // verify input & permissions
@@ -803,25 +795,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
         
         // compensate the caller with network tokens if still needed
-        if (baseBalance < targetAmount) {
-            uint256 delta = targetAmount - baseBalance;
-
-            // calculate the delta in network tokens
-            delta = delta.mul(packedRates.removeAverageRateN).div(packedRates.removeAverageRateD);
-
-            // the delta might be very small due to precision loss
-            // in which case no compensation will take place (gas optimization)
-            if (delta >= _minNetworkCompensation()) {
-                // check if there's enough network token balance, otherwise mint more
-                uint256 networkBalance = networkToken.balanceOf(address(this));
-                if (networkBalance < delta) {
-                    networkToken.issue(address(this), delta - networkBalance);
-                }
-
-                // lock network tokens for the caller
-                safeTransfer(networkToken, address(store), delta);
-                lockTokens(msg.sender, delta);
+        uint256 delta = getNetworkCompensation(targetAmount, baseBalance, packedRates);
+        if (delta > 0) {
+            // check if there's enough network token balance, otherwise mint more
+            uint256 networkBalance = networkToken.balanceOf(address(this));
+            if (networkBalance < delta) {
+                networkToken.issue(address(this), delta - networkBalance);
             }
+
+            // lock network tokens for the caller
+            safeTransfer(networkToken, address(store), delta);
+            lockTokens(msg.sender, delta);
         }
 
         // if the contract still holds network token, burn them
@@ -1090,9 +1074,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     {
         (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) = reserveTokenRates(_poolToken, _reserveToken);
 
-        require(_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
-        require(removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128, "ERR_INVALID_RATE");
-        require(removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128, "ERR_INVALID_RATE");
+        require((_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128) &&
+                (removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128) &&
+                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128), "ERR_INVALID_RATE");
 
         return PackedRates({
             addSpotRateN: uint128(_addSpotRateN),
@@ -1294,6 +1278,21 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function compensationAmount(uint256 _amount, uint256 _total, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
         (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
         return _total.mul(_loss.d.sub(_loss.n)).div(_loss.d).add(_amount.mul(compN).div(compD));
+    }
+
+    function getNetworkCompensation(uint256 _targetAmount, uint256 _baseAmount, PackedRates memory _packedRates) internal view returns (uint256) {
+        if (_targetAmount > _baseAmount) {
+            // calculate the delta in network tokens
+            uint256 delta = (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(_packedRates.removeAverageRateD);
+
+            // the delta might be very small due to precision loss
+            // in which case no compensation will take place (gas optimization)
+            if (delta >= _minNetworkCompensation()) {
+                return delta;
+            }
+        }
+
+        return 0;
     }
 
     /**
