@@ -1294,15 +1294,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     function getNetworkCompensation(uint256 _targetAmount, uint256 _baseAmount, PackedRates memory _packedRates) internal view returns (uint256) {
-        if (_targetAmount > _baseAmount) {
-            // calculate the delta in network tokens
-            uint256 delta = (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(_packedRates.removeAverageRateD);
+        if (_targetAmount <= _baseAmount) {
+            return 0;
+        }
 
-            // the delta might be very small due to precision loss
-            // in which case no compensation will take place (gas optimization)
-            if (delta >= _minNetworkCompensation()) {
-                return delta;
-            }
+        // calculate the delta in network tokens
+        uint256 delta = (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(_packedRates.removeAverageRateD);
+
+        // the delta might be very small due to precision loss
+        // in which case no compensation will take place (gas optimization)
+        if (delta >= _minNetworkCompensation()) {
+            return delta;
         }
 
         return 0;
