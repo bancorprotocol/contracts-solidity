@@ -459,7 +459,7 @@ contract('LiquidityProtection', (accounts) => {
     it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
         await expectRevert(
             liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }),
-            'ERR_INVALID_PORTION'
+            'ERR_ACCESS_DENIED'
         );
     });
 
@@ -1202,7 +1202,7 @@ contract('LiquidityProtection', (accounts) => {
     });
 
     it('should revert when calling removeLiquidityReturn with zero portion of the liquidity', async () => {
-        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PERCENT');
+        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PORTION');
     });
 
     it('should revert when calling removeLiquidityReturn with remove more than 100% of the liquidity', async () => {
@@ -1252,14 +1252,17 @@ contract('LiquidityProtection', (accounts) => {
                 const prevBalance = await getBalance(baseToken, baseTokenAddress, owner);
                 const prevGovBalance = await govToken.balanceOf(owner);
 
-                const res = await govToken.approve(liquidityProtection.address, protection.reserveAmount);
-                const res2 = await liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION);
+                let transactionCost = new BN(0);
+                if (protection.reserveToken === networkToken.address) {
+                    const res = await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
+                }
+                const res = await liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION);
                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 expect(protectionIds.length).to.eql(0);
 
-                let transactionCost = new BN(0);
                 if (isETHReserve) {
-                    transactionCost = (await getTransactionCost(res)).add(await getTransactionCost(res2));
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
                 }
 
                 // verify balances
@@ -1311,11 +1314,16 @@ contract('LiquidityProtection', (accounts) => {
                 const prevGovBalance = await govToken.balanceOf(owner);
 
                 const portion = new BN(800000);
-                const res = await govToken.approve(
-                    liquidityProtection.address,
-                    prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
-                );
-                const res2 = await liquidityProtection.removeLiquidity(protectionId, portion);
+                let transactionCost = new BN(0);
+                if (prevProtection.reserveAddress === networkToken.address) {
+                    const res = await govToken.approve(
+                        liquidityProtection.address,
+                        prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
+                    );
+
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
+                }
+                const res = await liquidityProtection.removeLiquidity(protectionId, portion);
                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 expect(protectionIds.length).to.eql(1);
 
@@ -1325,9 +1333,8 @@ contract('LiquidityProtection', (accounts) => {
                 expect(protection.poolAmount).to.be.bignumber.equal(prevProtection.poolAmount.div(new BN(5)));
                 expect(protection.reserveAmount).to.be.bignumber.equal(prevProtection.reserveAmount.div(new BN(5)));
 
-                let transactionCost = new BN(0);
                 if (isETHReserve) {
-                    transactionCost = (await getTransactionCost(res)).add(await getTransactionCost(res2));
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
                 }
 
                 // verify balances
