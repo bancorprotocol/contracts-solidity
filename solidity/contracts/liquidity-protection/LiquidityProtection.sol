@@ -645,7 +645,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         )
     {
         // verify input
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
+        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
 
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
@@ -723,7 +723,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _portion portion of liquidity to remove, in PPM
      */
     function removeLiquidity(uint256 _id, uint32 _portion) external protected {
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PERCENT");
+        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
 
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
 
@@ -1346,8 +1346,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory _loss,
         Fraction memory _level
     ) internal pure returns (uint256) {
-        (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
-        return _total.mul(_loss.d.sub(_loss.n)).div(_loss.d).add(_amount.mul(compN).div(compD));
+        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT128);
+        return _total.mul(lossD.sub(lossN)).div(lossD).add(_amount.mul(lossN.mul(_level.n)).div(lossD.mul(_level.d)));
     }
 
     /**
