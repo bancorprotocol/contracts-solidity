@@ -3,7 +3,7 @@ const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
 const EtherToken = artifacts.require('EtherToken');
 
-contract('EtherToken', accounts => {
+contract('EtherToken', (accounts) => {
     let token;
     const name = 'Ether Token';
     const symbol = 'ETH';
@@ -128,7 +128,9 @@ contract('EtherToken', accounts => {
         const value2 = new BN(10);
         await token.approve(receiver, value2);
 
-        await expectRevert(token.transferFrom(sender, token.address, new BN(1), { from: receiver }),
-            'ERR_ADDRESS_IS_SELF');
+        await expectRevert(
+            token.transferFrom(sender, token.address, new BN(1), { from: receiver }),
+            'ERR_ADDRESS_IS_SELF'
+        );
     });
 });

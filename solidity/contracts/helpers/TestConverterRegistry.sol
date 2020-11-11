@@ -8,8 +8,7 @@ import "../converter/ConverterRegistry.sol";
 contract TestConverterRegistry is ConverterRegistry {
     IConverter public createdConverter;
 
-    constructor(IContractRegistry _registry) public ConverterRegistry(_registry) {
-    }
+    constructor(IContractRegistry _registry) public ConverterRegistry(_registry) {}
 
     function newConverter(
         uint16 _type,
@@ -19,10 +18,16 @@ contract TestConverterRegistry is ConverterRegistry {
         uint32 _maxConversionFee,
         IERC20Token[] memory _reserveTokens,
         uint32[] memory _reserveWeights
-    )
-    public override returns (IConverter) {
-        createdConverter = super.newConverter(_type, _name, _symbol, _decimals, _maxConversionFee, _reserveTokens,
-            _reserveWeights);
+    ) public override returns (IConverter) {
+        createdConverter = super.newConverter(
+            _type,
+            _name,
+            _symbol,
+            _decimals,
+            _maxConversionFee,
+            _reserveTokens,
+            _reserveWeights
+        );
 
         return createdConverter;
     }

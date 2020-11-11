@@ -5,7 +5,7 @@ const { registry } = require('./helpers/Constants');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 
-contract('ConverterRegistryData', accounts => {
+contract('ConverterRegistryData', (accounts) => {
     let contractRegistry;
     let converterRegistry;
     const owner = accounts[0];
@@ -37,16 +37,25 @@ contract('ConverterRegistryData', accounts => {
 
         it('should revert when a non owner attempts to remove a liquidity pool', async () => {
             await converterRegistry.addLiquidityPool(address1);
-            await expectRevert(converterRegistry.removeLiquidityPool(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                converterRegistry.removeLiquidityPool(address1, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('should revert when a non owner attempts to add a convertible token', async () => {
-            await expectRevert(converterRegistry.addConvertibleToken(address1, address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                converterRegistry.addConvertibleToken(address1, address1, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('should revert when a non owner attempts to remove a convertible token', async () => {
             await converterRegistry.addConvertibleToken(address1, address1);
-            await expectRevert(converterRegistry.removeConvertibleToken(address1, address2, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                converterRegistry.removeConvertibleToken(address1, address2, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
     });
 
@@ -176,8 +185,8 @@ contract('ConverterRegistryData', accounts => {
             }
 
             for (let items = accounts.slice(); items.length > 0; items.length--) {
-                const bgnIndex = (items.length - 1) * (1 - direction) / 2;
-                const endIndex = (items.length - 1) * (1 + direction) / 2;
+                const bgnIndex = ((items.length - 1) * (1 - direction)) / 2;
+                const endIndex = ((items.length - 1) * (1 + direction)) / 2;
                 const item = await converterRegistry.getSmartToken(bgnIndex);
                 await converterRegistry.removeSmartToken(item);
                 expect(item).to.eql(items[bgnIndex]);
@@ -202,8 +211,8 @@ contract('ConverterRegistryData', accounts => {
             }
 
             for (let items = accounts.slice(); items.length > 0; items.length--) {
-                const bgnIndex = (items.length - 1) * (1 - direction) / 2;
-                const endIndex = (items.length - 1) * (1 + direction) / 2;
+                const bgnIndex = ((items.length - 1) * (1 - direction)) / 2;
+                const endIndex = ((items.length - 1) * (1 + direction)) / 2;
                 const item = await converterRegistry.getLiquidityPool(bgnIndex);
                 await converterRegistry.removeLiquidityPool(item);
                 expect(item).to.eql(items[bgnIndex]);
@@ -228,8 +237,11 @@ contract('ConverterRegistryData', accounts => {
         const test = async (convertibleToken, anchor, func, currentState) => {
             await func(convertibleToken, anchor, currentState);
             const convertibleTokens = await converterRegistry.getConvertibleTokens();
-            const anchors = await Promise.all(convertibleTokens.map(convertibleToken =>
-                converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)));
+            const anchors = await Promise.all(
+                convertibleTokens.map((convertibleToken) =>
+                    converterRegistry.getConvertibleTokenSmartTokens(convertibleToken)
+                )
+            );
 
             expect({ convertibleTokens, anchors }).to.deep.eql(currentState);
         };
@@ -239,8 +251,7 @@ contract('ConverterRegistryData', accounts => {
             if (index === -1) {
                 currentState.convertibleTokens.push(convertibleToken);
                 currentState.anchors.push([anchor]);
-            }
-            else {
+            } else {
                 currentState.anchors[index].push(anchor);
             }
 
@@ -257,8 +268,7 @@ contract('ConverterRegistryData', accounts => {
             if (currentState.anchors[index].length === 1) {
                 currentState.anchors.splice(index, 1);
                 swapLast(currentState.convertibleTokens, convertibleToken);
-            }
-            else {
+            } else {
                 swapLast(currentState.anchors[index], anchor);
             }
 
@@ -270,11 +280,17 @@ contract('ConverterRegistryData', accounts => {
         };
 
         const rows = (reverseKeys, reverseVals) => {
-            return [].concat.apply([], reorder(keyAccounts, reverseKeys).map(x => reorder(valAccounts, reverseVals).map(y => [x, y])));
+            return [].concat.apply(
+                [],
+                reorder(keyAccounts, reverseKeys).map((x) => reorder(valAccounts, reverseVals).map((y) => [x, y]))
+            );
         };
 
         const cols = (reverseKeys, reverseVals) => {
-            return [].concat.apply([], reorder(valAccounts, reverseVals).map(x => reorder(keyAccounts, reverseKeys).map(y => [y, x])));
+            return [].concat.apply(
+                [],
+                reorder(valAccounts, reverseVals).map((x) => reorder(keyAccounts, reverseKeys).map((y) => [y, x]))
+            );
         };
 
         it('should add and remove data', async () => {

@@ -5,7 +5,7 @@ const { ZERO_ADDRESS } = constants;
 
 const Whitelist = artifacts.require('Whitelist');
 
-contract('Whitelist', accounts => {
+contract('Whitelist', (accounts) => {
     let whitelist;
     const address1 = accounts[1];
     const address2 = accounts[2];

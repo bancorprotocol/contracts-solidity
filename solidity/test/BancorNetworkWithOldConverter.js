@@ -19,7 +19,7 @@ Token network structure:
 
 */
 
-contract('BancorNetworkWithOldConverter', accounts => {
+contract('BancorNetworkWithOldConverter', (accounts) => {
     const OLD_CONVERTER_VERSION = 9;
 
     let poolToken1;
@@ -52,8 +52,15 @@ contract('BancorNetworkWithOldConverter', accounts => {
         poolToken3 = await DSToken.new('Token3', 'TKN3', 2);
         await poolToken3.issue(owner, 3000000);
 
-        converter = await ConverterHelper.new(1, poolToken2.address, contractRegistry.address, 0, poolToken1.address,
-            300000, OLD_CONVERTER_VERSION);
+        converter = await ConverterHelper.new(
+            1,
+            poolToken2.address,
+            contractRegistry.address,
+            0,
+            poolToken1.address,
+            300000,
+            OLD_CONVERTER_VERSION
+        );
         await converter.addConnector(poolToken3.address, 150000, false);
 
         await poolToken1.transfer(converter.address, 40000);
@@ -71,16 +78,26 @@ contract('BancorNetworkWithOldConverter', accounts => {
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the liquid token', async () => {
         const value = new BN(100);
-        const getReturn = (await converter.getReturn.call(poolToken1.address, poolToken2.address, value));
-        const returnByPath = (await bancorNetwork.getReturnByPath.call([poolToken1.address, poolToken2.address, poolToken2.address], value))[0];
+        const getReturn = await converter.getReturn.call(poolToken1.address, poolToken2.address, value);
+        const returnByPath = (
+            await bancorNetwork.getReturnByPath.call(
+                [poolToken1.address, poolToken2.address, poolToken2.address],
+                value
+            )
+        )[0];
 
         expect(getReturn).to.be.bignumber.equal(returnByPath);
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a reserve', async () => {
         const value = new BN(100);
-        const getReturn = (await converter.getReturn.call(poolToken2.address, poolToken1.address, value));
-        const returnByPath = (await bancorNetwork.getReturnByPath.call([poolToken2.address, poolToken2.address, poolToken1.address], value))[0];
+        const getReturn = await converter.getReturn.call(poolToken2.address, poolToken1.address, value);
+        const returnByPath = (
+            await bancorNetwork.getReturnByPath.call(
+                [poolToken2.address, poolToken2.address, poolToken1.address],
+                value
+            )
+        )[0];
 
         expect(getReturn).to.be.bignumber.equal(returnByPath);
     });

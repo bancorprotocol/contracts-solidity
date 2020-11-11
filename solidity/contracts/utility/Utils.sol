@@ -2,8 +2,8 @@
 pragma solidity 0.6.12;
 
 /**
-  * @dev Utilities & Common Modifiers
-*/
+ * @dev Utilities & Common Modifiers
+ */
 contract Utils {
     // verifies that a value is greater than zero
     modifier greaterThanZero(uint256 _value) {

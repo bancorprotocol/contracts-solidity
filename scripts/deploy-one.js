@@ -41,11 +41,9 @@ const getTransactionReceipt = async (web3) => {
                 return receipt;
             }
             console.log('Invalid transaction-hash');
-        }
-        else if (hash) {
+        } else if (hash) {
             console.log('Illegal transaction-hash');
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -64,8 +62,7 @@ const send = async (web3, account, transaction) => {
             const signed = await web3.eth.accounts.signTransaction(options, account.privateKey);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
-        }
-        catch (error) {
+        } catch (error) {
             console.log(error.message);
             const receipt = await getTransactionReceipt(web3);
             if (receipt) {
@@ -87,17 +84,20 @@ const run = async () => {
     });
     const contract = new web3.eth.Contract(JSON.parse(abi));
     const options = {
-        data: '0x' + bin, arguments: CONTRACT_ARGS
+        data: '0x' + bin,
+        arguments: CONTRACT_ARGS
     };
     const transaction = contract.deploy(options);
     const receipt = await send(web3, account, transaction);
-    console.log(JSON.stringify({
-        [CONTRACT_NAME]: {
-            name: CONTRACT_NAME,
-            addr: receipt.contractAddress,
-            args: transaction.encodeABI().slice(options.data.length)
-        }
-    }));
+    console.log(
+        JSON.stringify({
+            [CONTRACT_NAME]: {
+                name: CONTRACT_NAME,
+                addr: receipt.contractAddress,
+                args: transaction.encodeABI().slice(options.data.length)
+            }
+        })
+    );
     web3.currentProvider.disconnect();
 };
 

@@ -17,15 +17,25 @@ fileList.forEach((filename) => {
         const { abi, bytecode } = jsonData;
 
         if (abi) {
-            fs.writeFileSync(path.format({
-                dir: BUILD_DIR, name: basename, ext: ABI_EXT
-            }), JSON.stringify(abi));
+            fs.writeFileSync(
+                path.format({
+                    dir: BUILD_DIR,
+                    name: basename,
+                    ext: ABI_EXT
+                }),
+                JSON.stringify(abi)
+            );
         }
 
         if (bytecode) {
-            fs.writeFileSync(path.format({
-                dir: BUILD_DIR, name: basename, ext: BIN_EXT
-            }), bytecode.substring(2));
+            fs.writeFileSync(
+                path.format({
+                    dir: BUILD_DIR,
+                    name: basename,
+                    ext: BIN_EXT
+                }),
+                bytecode.substring(2)
+            );
         }
     }
 });

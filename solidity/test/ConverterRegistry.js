@@ -36,8 +36,12 @@ contract('ConverterRegistry', (accounts) => {
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
 
-        await converterFactory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
-        await converterFactory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
+        await converterFactory.registerTypedConverterAnchorFactory(
+            (await LiquidityPoolV2ConverterAnchorFactory.new()).address
+        );
+        await converterFactory.registerTypedConverterCustomFactory(
+            (await LiquidityPoolV2ConverterCustomFactory.new()).address
+        );
     });
 
     beforeEach(async () => {
@@ -65,8 +69,7 @@ contract('ConverterRegistry', (accounts) => {
 
         if (count.gt(new BN(1))) {
             expectEvent(res, `LiquidityPool${suffix}`, { _liquidityPool: anchor });
-        }
-        else {
+        } else {
             expectEvent(res, `ConvertibleToken${suffix}`, { _convertibleToken: anchor, _smartToken: anchor });
         }
 
@@ -117,13 +120,69 @@ contract('ConverterRegistry', (accounts) => {
             tokenC = await DSToken.new('TokenC', 'TKNC', 18);
             tokenE = await DSToken.new('TokenE', 'TKNE', 18);
 
-            converter1 = await ConverterHelper.new(0, token1.address, contractRegistry.address, 0, etherToken.address, 0x1000, 23);
-            converter2 = await ConverterHelper.new(0, token2.address, contractRegistry.address, 0, token4.address, 0x2400, 23);
-            converter3 = await ConverterHelper.new(0, token3.address, contractRegistry.address, 0, token6.address, 0x3600, 23);
-            converter4 = await ConverterHelper.new(0, token4.address, contractRegistry.address, 0, token8.address, 0x4800, 23);
-            converter5 = await ConverterHelper.new(0, token5.address, contractRegistry.address, 0, tokenA.address, 0x5A00, 23);
-            converter6 = await ConverterHelper.new(0, token6.address, contractRegistry.address, 0, tokenC.address, 0x6C00, 23);
-            converter7 = await ConverterHelper.new(0, token7.address, contractRegistry.address, 0, tokenE.address, 0x7E00, 23);
+            converter1 = await ConverterHelper.new(
+                0,
+                token1.address,
+                contractRegistry.address,
+                0,
+                etherToken.address,
+                0x1000,
+                23
+            );
+            converter2 = await ConverterHelper.new(
+                0,
+                token2.address,
+                contractRegistry.address,
+                0,
+                token4.address,
+                0x2400,
+                23
+            );
+            converter3 = await ConverterHelper.new(
+                0,
+                token3.address,
+                contractRegistry.address,
+                0,
+                token6.address,
+                0x3600,
+                23
+            );
+            converter4 = await ConverterHelper.new(
+                0,
+                token4.address,
+                contractRegistry.address,
+                0,
+                token8.address,
+                0x4800,
+                23
+            );
+            converter5 = await ConverterHelper.new(
+                0,
+                token5.address,
+                contractRegistry.address,
+                0,
+                tokenA.address,
+                0x5a00,
+                23
+            );
+            converter6 = await ConverterHelper.new(
+                0,
+                token6.address,
+                contractRegistry.address,
+                0,
+                tokenC.address,
+                0x6c00,
+                23
+            );
+            converter7 = await ConverterHelper.new(
+                0,
+                token7.address,
+                contractRegistry.address,
+                0,
+                tokenE.address,
+                0x7e00,
+                23
+            );
 
             await converter2.addReserve(token1.address, 0x2100);
             await converter3.addReserve(token1.address, 0x3100);
@@ -197,56 +256,177 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token4.address], [0x2400, 0x2100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token6.address], [0x3600, 0x3100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenA.address], [0x5A00, 0x5100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token8.address], [0x4800, 0x4100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenC.address], [0x6C00, 0x6100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token2.address, tokenE.address], [0x7E00, 0x7200]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token4.address, token1.address], [0x2100, 0x2400]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token6.address, token1.address], [0x3100, 0x3600]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token8.address, token1.address], [0x4100, 0x4800]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenA.address, token1.address], [0x5100, 0x5A00]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenC.address, token1.address], [0x6100, 0x6C00]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenE.address, token2.address], [0x7200, 0x7E00]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token4.address], [0x2100, 0x2400]))
-                    .to.eql(token2.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token6.address], [0x3100, 0x3600]))
-                    .to.eql(token3.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token8.address], [0x4100, 0x4800]))
-                    .to.eql(token4.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenA.address], [0x5100, 0x5A00]))
-                    .to.eql(token5.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenC.address], [0x6100, 0x6C00]))
-                    .to.eql(token6.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token2.address, tokenE.address], [0x7200, 0x7E00]))
-                    .to.eql(token7.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token4.address, token1.address], [0x2400, 0x2100]))
-                    .to.eql(token2.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token6.address, token1.address], [0x3600, 0x3100]))
-                    .to.eql(token3.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token8.address, token1.address], [0x4800, 0x4100]))
-                    .to.eql(token4.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenA.address, token1.address], [0x5A00, 0x5100]))
-                    .to.eql(token5.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenC.address, token1.address], [0x6C00, 0x6100]))
-                    .to.eql(token6.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenE.address, token2.address], [0x7E00, 0x7200]))
-                    .to.eql(token7.address);
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])).to.eql(
+                    ZERO_ADDRESS
+                );
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, token4.address],
+                        [0x2400, 0x2100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, token6.address],
+                        [0x3600, 0x3100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, tokenA.address],
+                        [0x5a00, 0x5100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, token8.address],
+                        [0x4800, 0x4100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, tokenC.address],
+                        [0x6c00, 0x6100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token2.address, tokenE.address],
+                        [0x7e00, 0x7200]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token4.address, token1.address],
+                        [0x2100, 0x2400]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token6.address, token1.address],
+                        [0x3100, 0x3600]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token8.address, token1.address],
+                        [0x4100, 0x4800]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [tokenA.address, token1.address],
+                        [0x5100, 0x5a00]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [tokenC.address, token1.address],
+                        [0x6100, 0x6c00]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [tokenE.address, token2.address],
+                        [0x7200, 0x7e00]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, token4.address],
+                        [0x2100, 0x2400]
+                    )
+                ).to.eql(token2.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, token6.address],
+                        [0x3100, 0x3600]
+                    )
+                ).to.eql(token3.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, token8.address],
+                        [0x4100, 0x4800]
+                    )
+                ).to.eql(token4.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, tokenA.address],
+                        [0x5100, 0x5a00]
+                    )
+                ).to.eql(token5.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token1.address, tokenC.address],
+                        [0x6100, 0x6c00]
+                    )
+                ).to.eql(token6.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token2.address, tokenE.address],
+                        [0x7200, 0x7e00]
+                    )
+                ).to.eql(token7.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token4.address, token1.address],
+                        [0x2400, 0x2100]
+                    )
+                ).to.eql(token2.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token6.address, token1.address],
+                        [0x3600, 0x3100]
+                    )
+                ).to.eql(token3.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [token8.address, token1.address],
+                        [0x4800, 0x4100]
+                    )
+                ).to.eql(token4.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [tokenA.address, token1.address],
+                        [0x5a00, 0x5100]
+                    )
+                ).to.eql(token5.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [tokenC.address, token1.address],
+                        [0x6c00, 0x6100]
+                    )
+                ).to.eql(token6.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [tokenE.address, token2.address],
+                        [0x7e00, 0x7200]
+                    )
+                ).to.eql(token7.address);
             });
 
             it('should return a list of converters for a list of tokens', async () => {
@@ -276,56 +456,177 @@ contract('ConverterRegistry', (accounts) => {
                 });
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token4.address], [0x2400, 0x2100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token6.address], [0x3600, 0x3100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token8.address], [0x4800, 0x4100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenA.address], [0x5A00, 0x5100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenC.address], [0x6C00, 0x6100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token2.address, tokenE.address], [0x7E00, 0x7200]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token4.address, token1.address], [0x2100, 0x2400]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token6.address, token1.address], [0x3100, 0x3600]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token8.address, token1.address], [0x4100, 0x4800]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenA.address, token1.address], [0x5100, 0x5A00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenC.address, token1.address], [0x6100, 0x6C00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenE.address, token2.address], [0x7200, 0x7E00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token4.address], [0x2100, 0x2400]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token6.address], [0x3100, 0x3600]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, token8.address], [0x4100, 0x4800]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenA.address], [0x5100, 0x5A00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token1.address, tokenC.address], [0x6100, 0x6C00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token2.address, tokenE.address], [0x7200, 0x7E00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token4.address, token1.address], [0x2400, 0x2100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token6.address, token1.address], [0x3600, 0x3100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [token8.address, token1.address], [0x4800, 0x4100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenA.address, token1.address], [0x5A00, 0x5100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenC.address, token1.address], [0x6C00, 0x6100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [tokenE.address, token2.address], [0x7E00, 0x7200]))
-                        .to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, token4.address],
+                            [0x2400, 0x2100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, token6.address],
+                            [0x3600, 0x3100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, token8.address],
+                            [0x4800, 0x4100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, tokenA.address],
+                            [0x5a00, 0x5100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, tokenC.address],
+                            [0x6c00, 0x6100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token2.address, tokenE.address],
+                            [0x7e00, 0x7200]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token4.address, token1.address],
+                            [0x2100, 0x2400]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token6.address, token1.address],
+                            [0x3100, 0x3600]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token8.address, token1.address],
+                            [0x4100, 0x4800]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [tokenA.address, token1.address],
+                            [0x5100, 0x5a00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [tokenC.address, token1.address],
+                            [0x6100, 0x6c00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [tokenE.address, token2.address],
+                            [0x7200, 0x7e00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, token4.address],
+                            [0x2100, 0x2400]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, token6.address],
+                            [0x3100, 0x3600]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, token8.address],
+                            [0x4100, 0x4800]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, tokenA.address],
+                            [0x5100, 0x5a00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token1.address, tokenC.address],
+                            [0x6100, 0x6c00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token2.address, tokenE.address],
+                            [0x7200, 0x7e00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token4.address, token1.address],
+                            [0x2400, 0x2100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token6.address, token1.address],
+                            [0x3600, 0x3100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [token8.address, token1.address],
+                            [0x4800, 0x4100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [tokenA.address, token1.address],
+                            [0x5a00, 0x5100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [tokenC.address, token1.address],
+                            [0x6c00, 0x6100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [tokenE.address, token2.address],
+                            [0x7e00, 0x7200]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
                 });
             });
         });
@@ -384,9 +685,9 @@ contract('ConverterRegistry', (accounts) => {
             await converter2.addReserve(anchor4.address, 0x2400);
             await converter3.addReserve(anchor6.address, 0x3600);
             await converter4.addReserve(anchor8.address, 0x4800);
-            await converter5.addReserve(anchorA.address, 0x5A00);
-            await converter6.addReserve(anchorC.address, 0x6C00);
-            await converter7.addReserve(anchorE.address, 0x7E00);
+            await converter5.addReserve(anchorA.address, 0x5a00);
+            await converter6.addReserve(anchorC.address, 0x6c00);
+            await converter7.addReserve(anchorE.address, 0x7e00);
 
             await converter2.addReserve(anchor1.address, 0x2100);
             await converter3.addReserve(anchor1.address, 0x3100);
@@ -452,56 +753,177 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor4.address], [0x2400, 0x2100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor6.address], [0x3600, 0x3100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorA.address], [0x5A00, 0x5100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor8.address], [0x4800, 0x4100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorC.address], [0x6C00, 0x6100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor2.address, anchorE.address], [0x7E00, 0x7200]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor4.address, anchor1.address], [0x2100, 0x2400]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor6.address, anchor1.address], [0x3100, 0x3600]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor8.address, anchor1.address], [0x4100, 0x4800]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorA.address, anchor1.address], [0x5100, 0x5A00]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorC.address, anchor1.address], [0x6100, 0x6C00]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorE.address, anchor2.address], [0x7200, 0x7E00]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor4.address], [0x2100, 0x2400]))
-                    .to.eql(anchor2.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor6.address], [0x3100, 0x3600]))
-                    .to.eql(anchor3.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor8.address], [0x4100, 0x4800]))
-                    .to.eql(anchor4.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorA.address], [0x5100, 0x5A00]))
-                    .to.eql(anchor5.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorC.address], [0x6100, 0x6C00]))
-                    .to.eql(anchor6.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor2.address, anchorE.address], [0x7200, 0x7E00]))
-                    .to.eql(anchor7.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor4.address, anchor1.address], [0x2400, 0x2100]))
-                    .to.eql(anchor2.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor6.address, anchor1.address], [0x3600, 0x3100]))
-                    .to.eql(anchor3.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor8.address, anchor1.address], [0x4800, 0x4100]))
-                    .to.eql(anchor4.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorA.address, anchor1.address], [0x5A00, 0x5100]))
-                    .to.eql(anchor5.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorC.address, anchor1.address], [0x6C00, 0x6100]))
-                    .to.eql(anchor6.address);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorE.address, anchor2.address], [0x7E00, 0x7200]))
-                    .to.eql(anchor7.address);
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])).to.eql(
+                    ZERO_ADDRESS
+                );
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchor4.address],
+                        [0x2400, 0x2100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchor6.address],
+                        [0x3600, 0x3100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchorA.address],
+                        [0x5a00, 0x5100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchor8.address],
+                        [0x4800, 0x4100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchorC.address],
+                        [0x6c00, 0x6100]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor2.address, anchorE.address],
+                        [0x7e00, 0x7200]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor4.address, anchor1.address],
+                        [0x2100, 0x2400]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor6.address, anchor1.address],
+                        [0x3100, 0x3600]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor8.address, anchor1.address],
+                        [0x4100, 0x4800]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchorA.address, anchor1.address],
+                        [0x5100, 0x5a00]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchorC.address, anchor1.address],
+                        [0x6100, 0x6c00]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchorE.address, anchor2.address],
+                        [0x7200, 0x7e00]
+                    )
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchor4.address],
+                        [0x2100, 0x2400]
+                    )
+                ).to.eql(anchor2.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchor6.address],
+                        [0x3100, 0x3600]
+                    )
+                ).to.eql(anchor3.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchor8.address],
+                        [0x4100, 0x4800]
+                    )
+                ).to.eql(anchor4.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchorA.address],
+                        [0x5100, 0x5a00]
+                    )
+                ).to.eql(anchor5.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor1.address, anchorC.address],
+                        [0x6100, 0x6c00]
+                    )
+                ).to.eql(anchor6.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor2.address, anchorE.address],
+                        [0x7200, 0x7e00]
+                    )
+                ).to.eql(anchor7.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor4.address, anchor1.address],
+                        [0x2400, 0x2100]
+                    )
+                ).to.eql(anchor2.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor6.address, anchor1.address],
+                        [0x3600, 0x3100]
+                    )
+                ).to.eql(anchor3.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchor8.address, anchor1.address],
+                        [0x4800, 0x4100]
+                    )
+                ).to.eql(anchor4.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchorA.address, anchor1.address],
+                        [0x5a00, 0x5100]
+                    )
+                ).to.eql(anchor5.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchorC.address, anchor1.address],
+                        [0x6c00, 0x6100]
+                    )
+                ).to.eql(anchor6.address);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [anchorE.address, anchor2.address],
+                        [0x7e00, 0x7200]
+                    )
+                ).to.eql(anchor7.address);
             });
 
             it('should return a list of converters for a list of anchors', async () => {
@@ -531,56 +953,177 @@ contract('ConverterRegistry', (accounts) => {
                 });
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor4.address], [0x2400, 0x2100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor6.address], [0x3600, 0x3100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor8.address], [0x4800, 0x4100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorA.address], [0x5A00, 0x5100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorC.address], [0x6C00, 0x6100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor2.address, anchorE.address], [0x7E00, 0x7200]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor4.address, anchor1.address], [0x2100, 0x2400]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor6.address, anchor1.address], [0x3100, 0x3600]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor8.address, anchor1.address], [0x4100, 0x4800]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorA.address, anchor1.address], [0x5100, 0x5A00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorC.address, anchor1.address], [0x6100, 0x6C00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorE.address, anchor2.address], [0x7200, 0x7E00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor4.address], [0x2100, 0x2400]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor6.address], [0x3100, 0x3600]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchor8.address], [0x4100, 0x4800]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorA.address], [0x5100, 0x5A00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor1.address, anchorC.address], [0x6100, 0x6C00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor2.address, anchorE.address], [0x7200, 0x7E00]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor4.address, anchor1.address], [0x2400, 0x2100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor6.address, anchor1.address], [0x3600, 0x3100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchor8.address, anchor1.address], [0x4800, 0x4100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorA.address, anchor1.address], [0x5A00, 0x5100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorC.address, anchor1.address], [0x6C00, 0x6100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [anchorE.address, anchor2.address], [0x7E00, 0x7200]))
-                        .to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchor4.address],
+                            [0x2400, 0x2100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchor6.address],
+                            [0x3600, 0x3100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchor8.address],
+                            [0x4800, 0x4100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchorA.address],
+                            [0x5a00, 0x5100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchorC.address],
+                            [0x6c00, 0x6100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor2.address, anchorE.address],
+                            [0x7e00, 0x7200]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor4.address, anchor1.address],
+                            [0x2100, 0x2400]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor6.address, anchor1.address],
+                            [0x3100, 0x3600]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor8.address, anchor1.address],
+                            [0x4100, 0x4800]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchorA.address, anchor1.address],
+                            [0x5100, 0x5a00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchorC.address, anchor1.address],
+                            [0x6100, 0x6c00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchorE.address, anchor2.address],
+                            [0x7200, 0x7e00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchor4.address],
+                            [0x2100, 0x2400]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchor6.address],
+                            [0x3100, 0x3600]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchor8.address],
+                            [0x4100, 0x4800]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchorA.address],
+                            [0x5100, 0x5a00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor1.address, anchorC.address],
+                            [0x6100, 0x6c00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor2.address, anchorE.address],
+                            [0x7200, 0x7e00]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor4.address, anchor1.address],
+                            [0x2400, 0x2100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor6.address, anchor1.address],
+                            [0x3600, 0x3100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchor8.address, anchor1.address],
+                            [0x4800, 0x4100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchorA.address, anchor1.address],
+                            [0x5a00, 0x5100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchorC.address, anchor1.address],
+                            [0x6c00, 0x6100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [anchorE.address, anchor2.address],
+                            [0x7e00, 0x7200]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
                 });
             });
         });
@@ -588,8 +1131,15 @@ contract('ConverterRegistry', (accounts) => {
 
     describe('create new converters', () => {
         const testCreate = async (type, name, symbol, decimals, maxConversionFee, reserveTokens, reserveWeights) => {
-            const res = await converterRegistry.newConverter(type, name, symbol, decimals, maxConversionFee,
-                reserveTokens, reserveWeights);
+            const res = await converterRegistry.newConverter(
+                type,
+                name,
+                symbol,
+                decimals,
+                maxConversionFee,
+                reserveTokens,
+                reserveWeights
+            );
             const converter = await ConverterBase.at(await converterRegistry.createdConverter.call());
             await testEvents(res, converter, 'Added');
 
@@ -634,9 +1184,9 @@ contract('ConverterRegistry', (accounts) => {
                 await createConverters();
 
                 anchors = await converterRegistry.getAnchors();
-                const converterAnchors = await Promise.all(anchors.map(anchor => IConverterAnchor.at(anchor)));
-                const converterAddresses = await Promise.all(converterAnchors.map(anchor => anchor.owner.call()));
-                converters = await Promise.all(converterAddresses.map(address => ConverterBase.at(address)));
+                const converterAnchors = await Promise.all(anchors.map((anchor) => IConverterAnchor.at(anchor)));
+                const converterAddresses = await Promise.all(converterAnchors.map((anchor) => anchor.owner.call()));
+                converters = await Promise.all(converterAddresses.map((address) => ConverterBase.at(address)));
             });
 
             it('should not allow to add the same converter twice', async () => {
@@ -646,28 +1196,63 @@ contract('ConverterRegistry', (accounts) => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [ETH_RESERVE_ADDRESS], [0x1000]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token1.address], [0x2100]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token2.address], [0x3200]))
-                    .to.eql(ZERO_ADDRESS);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]))
-                    .to.eql(anchors[3]);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]))
-                    .to.eql(anchors[4]);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]))
-                    .to.eql(anchors[5]);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]))
-                    .to.eql(anchors[6]);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]))
-                    .to.eql(anchors[7]);
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]))
-                    .to.eql(anchors[8]);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(0, [ETH_RESERVE_ADDRESS], [0x1000])
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token1.address], [0x2100])
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token2.address], [0x3200])
+                ).to.eql(ZERO_ADDRESS);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                        [0x4000, 0x4100]
+                    )
+                ).to.eql(anchors[3]);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [erc20Token1.address, erc20Token2.address],
+                        [0x5100, 0x5200]
+                    )
+                ).to.eql(anchors[4]);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        1,
+                        [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                        [0x6200, 0x6000]
+                    )
+                ).to.eql(anchors[5]);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        2,
+                        [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                        [0x4000, 0x4100]
+                    )
+                ).to.eql(anchors[6]);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        2,
+                        [erc20Token1.address, erc20Token2.address],
+                        [0x5100, 0x5200]
+                    )
+                ).to.eql(anchors[7]);
+                expect(
+                    await converterRegistry.getLiquidityPoolByConfig.call(
+                        2,
+                        [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                        [0x6200, 0x6000]
+                    )
+                ).to.eql(anchors[8]);
             });
 
             it('should return a list of converters for a list of anchors', async () => {
-                expect(await converterRegistry.getConvertersByAnchors.call(anchors)).to.have.members(converters.map(converter => converter.address));
+                expect(await converterRegistry.getConvertersByAnchors.call(anchors)).to.have.members(
+                    converters.map((converter) => converter.address)
+                );
             });
 
             it('should remove converters', async () => {
@@ -686,24 +1271,57 @@ contract('ConverterRegistry', (accounts) => {
                 });
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [ETH_RESERVE_ADDRESS], [0x1000]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token1.address], [0x2100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token2.address], [0x3200]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(1, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]))
-                        .to.eql(ZERO_ADDRESS);
-                    expect(await converterRegistry.getLiquidityPoolByConfig.call(2, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]))
-                        .to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(0, [ETH_RESERVE_ADDRESS], [0x1000])
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token1.address], [0x2100])
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(0, [erc20Token2.address], [0x3200])
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                            [0x4000, 0x4100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [erc20Token1.address, erc20Token2.address],
+                            [0x5100, 0x5200]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            1,
+                            [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                            [0x6200, 0x6000]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            2,
+                            [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                            [0x4000, 0x4100]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            2,
+                            [erc20Token1.address, erc20Token2.address],
+                            [0x5100, 0x5200]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
+                    expect(
+                        await converterRegistry.getLiquidityPoolByConfig.call(
+                            2,
+                            [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                            [0x6200, 0x6000]
+                        )
+                    ).to.eql(ZERO_ADDRESS);
                 });
             });
         });
