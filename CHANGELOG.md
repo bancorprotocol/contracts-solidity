@@ -1,9 +1,18 @@
-### 0.6.23
-LiquidityProtection
-* Improved accuracy of the return/fee calculations
+### 0.6.24
+General
+* Added prettier
 
+LiquidityProtection
+* Fixed a potential overflow exception in `removeLiquidityTargetAmount`
+* Binary size optimization
+
+
+### 0.6.23
 General
 * Many other minor changes and cleanups
+
+LiquidityProtection
+* Improved accuracy of the return/fee calculations
 
 
 ### 0.6.22

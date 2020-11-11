@@ -5,7 +5,7 @@ const { ZERO_ADDRESS } = constants;
 
 const DSToken = artifacts.require('DSToken');
 
-contract('DSToken', accounts => {
+contract('DSToken', (accounts) => {
     let token;
     const name = 'Token1';
     const symbol = 'TKN1';

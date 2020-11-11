@@ -7,7 +7,10 @@ import "./IERC20Token.sol";
 */
 interface IEtherToken is IERC20Token {
     function deposit() external payable;
+
     function withdraw(uint256 _amount) external;
+
     function depositTo(address _to) external payable;
+
     function withdrawTo(address payable _to, uint256 _amount) external;
 }

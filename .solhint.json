@@ -7,9 +7,6 @@
         "not-rely-on-time": "off",
         "no-empty-blocks": "off",
         "mark-callable-contracts": "off",
-        "compiler-version": [
-            "error",
-            "0.6.12"
-        ]
+        "compiler-version": ["error", "0.6.12"]
     }
 }

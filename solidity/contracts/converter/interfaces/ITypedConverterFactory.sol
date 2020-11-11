@@ -9,5 +9,10 @@ import "../../utility/interfaces/IContractRegistry.sol";
 */
 interface ITypedConverterFactory {
     function converterType() external pure returns (uint16);
-    function createConverter(IConverterAnchor _anchor, IContractRegistry _registry, uint32 _maxConversionFee) external returns (IConverter);
+
+    function createConverter(
+        IConverterAnchor _anchor,
+        IContractRegistry _registry,
+        uint32 _maxConversionFee
+    ) external returns (IConverter);
 }

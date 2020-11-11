@@ -4,11 +4,7 @@
         "mocha": true
     },
     "rules": {
-        "max-len": [
-            "error",
-            150,
-            2
-        ],
+        "max-len": ["error", 150, 2],
         "indent": [
             "error",
             4,
@@ -16,18 +12,12 @@
                 "SwitchCase": 1
             }
         ],
-        "semi": [
-            "error",
-            "always"
-        ],
-        "brace-style": [ "error", "stroustrup" ],
+        "semi": ["error", "always"],
+        "brace-style": ["error", "stroustrup"],
         "no-plusplus": "off",
         "no-await-in-loop": "off",
         "no-restricted-syntax": "off",
-        "function-paren-newline": [
-            "error",
-            "consistent"
-        ],
+        "function-paren-newline": ["error", "consistent"],
         "space-before-function-paren": "error",
         "no-continue": "off",
         "arrow-body-style": "off",

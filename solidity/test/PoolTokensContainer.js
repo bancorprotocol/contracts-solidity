@@ -4,7 +4,7 @@ const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 const PoolTokensContainer = artifacts.require('PoolTokensContainer');
 const DSToken = artifacts.require('DSToken');
 
-contract('PoolTokensContainer', accounts => {
+contract('PoolTokensContainer', (accounts) => {
     const MAX_POOL_TOKENS = 5;
     const sender = accounts[1];
     const nonOwner = accounts[2];
