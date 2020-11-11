@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { BN, constants } = require('@openzeppelin/test-helpers');
-const { registry } = require('./helpers/Constants');
+const { registry, governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 
@@ -51,9 +51,6 @@ const DECIMAL_COMBINATIONS = cartesian([12, 24], [12, 24], [15, 21], [15, 21]);
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
-
-const GOVERNOR_ROLE = web3.utils.keccak256('GOVERNOR_ROLE');
-const MINTER_ROLE = web3.utils.keccak256('MINTER_ROLE');
 
 contract('LiquidityProtectionEdgeCases', (accounts) => {
     const addProtectedLiquidity = async (token, amount) => {
@@ -130,13 +127,13 @@ contract('LiquidityProtectionEdgeCases', (accounts) => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
         await networkToken.issue(owner, new BN('1'.padEnd(40, '0')));
         networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await networkTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         govToken = await DSToken.new('vBNT', 'vBNT', 18);
         govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await govTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
@@ -166,8 +163,8 @@ contract('LiquidityProtectionEdgeCases', (accounts) => {
 
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await networkTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
 
         await liquidityProtection.whitelistPool(poolToken.address, true);
         await liquidityProtection.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);

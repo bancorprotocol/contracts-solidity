@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const { BN } = require('@openzeppelin/test-helpers');
+const { governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const DSToken = artifacts.require('DSToken');
@@ -27,22 +28,19 @@ function assertAlmostEqual(actual, expected) {
     }
 }
 
-const GOVERNOR_ROLE = web3.utils.keccak256('GOVERNOR_ROLE');
-const MINTER_ROLE = web3.utils.keccak256('MINTER_ROLE');
-
 contract('LiquidityProtectionStateless', (accounts) => {
     before(async () => {
         const governor = accounts[1];
 
         const networkToken = await DSToken.new('BNT', 'BNT', 18);
         const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await networkTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         const govToken = await DSToken.new('vBNT', 'vBNT', 18);
         const govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await govTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
@@ -53,8 +51,8 @@ contract('LiquidityProtectionStateless', (accounts) => {
             accounts[0]
         );
 
-        await networkTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
     });
 
     for (const factorList of FACTOR_LISTS) {

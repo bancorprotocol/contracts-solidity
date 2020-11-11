@@ -14,5 +14,10 @@ module.exports = {
         CHAINLINK_ORACLE_WHITELIST: web3.utils.asciiToHex('ChainlinkOracleWhitelist')
     },
 
+    governance: {
+        GOVERNOR_ROLE: web3.utils.keccak256('GOVERNOR_ROLE'),
+        MINTER_ROLE: web3.utils.keccak256('MINTER_ROLE')
+    },
+
     ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 };
