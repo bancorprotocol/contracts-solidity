@@ -13,7 +13,7 @@ const ConverterFactory = artifacts.require('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
+const TokenGovernance = artifacts.require('TestTokenGovernance');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -28,6 +28,9 @@ function percentageToPPM(value) {
 
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
+
+const GOVERNOR_ROLE = web3.utils.keccak256('GOVERNOR_ROLE');
+const MINTER_ROLE = web3.utils.keccak256('MINTER_ROLE');
 
 contract('LiquidityProtectionTokenRate', (accounts) => {
     const convert = async (sourceToken, targetToken, amount) => {
@@ -50,12 +53,30 @@ contract('LiquidityProtectionTokenRate', (accounts) => {
         const converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+
+        const governor = accounts[1];
+
+        const networkToken = await DSToken.new('BNT', 'BNT', 18);
+        const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
+        await networkTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await networkToken.transferOwnership(networkTokenGovernance.address);
+        await networkTokenGovernance.acceptTokenOwnership();
+
+        const govToken = await DSToken.new('vBNT', 'vBNT', 18);
+        const govTokenGovernance = await TokenGovernance.new(govToken.address);
+        await govTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await govToken.transferOwnership(govTokenGovernance.address);
+        await govTokenGovernance.acceptTokenOwnership();
+
         liquidityProtection = await LiquidityProtection.new(
             accounts[0],
-            accounts[0],
-            accounts[0],
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
             contractRegistry.address
         );
+
+        await networkTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
 
         const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
         const converterFactory = await ConverterFactory.new();

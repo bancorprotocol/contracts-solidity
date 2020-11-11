@@ -2,7 +2,9 @@ const { expect } = require('chai');
 const { BN } = require('@openzeppelin/test-helpers');
 const Decimal = require('decimal.js');
 
+const DSToken = artifacts.require('DSToken');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
+const TokenGovernance = artifacts.require('TestTokenGovernance');
 
 const FACTOR_LISTS = [
     [9, 12, 15].map((x) => new BN(10).pow(new BN(x))),
@@ -25,9 +27,34 @@ function assertAlmostEqual(actual, expected) {
     }
 }
 
+const GOVERNOR_ROLE = web3.utils.keccak256('GOVERNOR_ROLE');
+const MINTER_ROLE = web3.utils.keccak256('MINTER_ROLE');
+
 contract('LiquidityProtectionStateless', (accounts) => {
     before(async () => {
-        liquidityProtection = await LiquidityProtection.new(accounts[0], accounts[0], accounts[0], accounts[0]);
+        const governor = accounts[1];
+
+        const networkToken = await DSToken.new('BNT', 'BNT', 18);
+        const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
+        await networkTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await networkToken.transferOwnership(networkTokenGovernance.address);
+        await networkTokenGovernance.acceptTokenOwnership();
+
+        const govToken = await DSToken.new('vBNT', 'vBNT', 18);
+        const govTokenGovernance = await TokenGovernance.new(govToken.address);
+        await govTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await govToken.transferOwnership(govTokenGovernance.address);
+        await govTokenGovernance.acceptTokenOwnership();
+
+        liquidityProtection = await LiquidityProtection.new(
+            accounts[0],
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
+            accounts[0]
+        );
+
+        await networkTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
     });
 
     for (const factorList of FACTOR_LISTS) {

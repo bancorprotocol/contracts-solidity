@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "@bancor/token-governance/contracts/ITokenGovernance.sol";
+
 import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/Owned.sol";
@@ -68,7 +70,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     ILiquidityProtectionStore public immutable store;
     IERC20Token public immutable networkToken;
+    ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
+    ITokenGovernance public immutable govTokenGovernance;
 
     // system network token balance limits
     uint256 public maxSystemNetworkTokenAmount = 500000e18;
@@ -157,32 +161,35 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     /**
      * @dev initializes a new LiquidityProtection contract
      *
-     * @param _store           liquidity protection store
-     * @param _networkToken    network token
-     * @param _govToken        governance token
-     * @param _registry        contract registry
+     * @param _store                    liquidity protection store
+     * @param _networkTokenGovernance   network token governance
+     * @param _govTokenGovernance       governance token governance
+     * @param _registry                 contract registry
      */
     constructor(
         ILiquidityProtectionStore _store,
-        IERC20Token _networkToken,
-        IERC20Token _govToken,
+        ITokenGovernance _networkTokenGovernance,
+        ITokenGovernance _govTokenGovernance,
         IContractRegistry _registry
     )
         public
         ContractRegistryClient(_registry)
         validAddress(address(_store))
-        validAddress(address(_networkToken))
-        validAddress(address(_govToken))
+        validAddress(address(_networkTokenGovernance))
+        validAddress(address(_govTokenGovernance))
         validAddress(address(_registry))
         notThis(address(_store))
-        notThis(address(_networkToken))
-        notThis(address(_govToken))
+        notThis(address(_networkTokenGovernance))
+        notThis(address(_govTokenGovernance))
         notThis(address(_registry))
     {
         whitelistAdmin = msg.sender;
         store = _store;
-        networkToken = _networkToken;
-        govToken = _govToken;
+
+        networkTokenGovernance = _networkTokenGovernance;
+        networkToken = IERC20Token(address(_networkTokenGovernance.token()));
+        govTokenGovernance = _govTokenGovernance;
+        govToken = IERC20Token(address(_govTokenGovernance.token()));
     }
 
     // ensures that the contract is currently removing liquidity from a converter
@@ -241,42 +248,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      */
     function acceptStoreOwnership() external {
         acceptOwnership(store);
-    }
-
-    /**
-     * @dev transfers the ownership of the network token
-     * can only be called by the contract owner
-     *
-     * @param _newOwner    the new owner of the network token
-     */
-    function transferNetworkTokenOwnership(address _newOwner) external {
-        transferOwnership(networkToken, _newOwner);
-    }
-
-    /**
-     * @dev accepts the ownership of the network token
-     * can only be called by the contract owner
-     */
-    function acceptNetworkTokenOwnership() external {
-        acceptOwnership(networkToken);
-    }
-
-    /**
-     * @dev transfers the ownership of the governance token
-     * can only be called by the contract owner
-     *
-     * @param _newOwner    the new owner of the governance token
-     */
-    function transferGovTokenOwnership(address _newOwner) external {
-        transferOwnership(govToken, _newOwner);
-    }
-
-    /**
-     * @dev accepts the ownership of the governance token
-     * can only be called by the contract owner
-     */
-    function acceptGovTokenOwnership() external {
-        acceptOwnership(govToken);
     }
 
     /**
@@ -477,11 +448,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             "ERR_PROTECTIONS_MISMATCH"
         );
 
-        // burn the governance tokens from the caller
-        govToken.destroy(
-            msg.sender,
-            liquidity1.reserveToken == networkToken ? liquidity1.reserveAmount : liquidity2.reserveAmount
-        );
+        // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
+        // token owners can burn their tokens
+        uint256 amount = liquidity1.reserveToken == networkToken ? liquidity1.reserveAmount : liquidity2.reserveAmount;
+        safeTransferFrom(govToken, msg.sender, address(this), amount);
+        govTokenGovernance.burn(address(this), amount);
 
         // remove the protected liquidities from the store
         store.removeProtectedLiquidity(_id1);
@@ -539,11 +510,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // add protected liquidity for the caller
         uint256 id = addProtectedLiquidity(msg.sender, poolToken, networkToken, poolTokenAmount, _amount);
 
-        // burns the network tokens from the caller
-        networkToken.destroy(msg.sender, _amount);
+        // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
+        // token owners can burn their tokens
+        safeTransferFrom(networkToken, msg.sender, address(this), _amount);
+        networkTokenGovernance.burn(address(this), _amount);
 
         // mint governance tokens to the caller
-        govToken.issue(msg.sender, _amount);
+        govTokenGovernance.mint(msg.sender, _amount);
 
         return id;
     }
@@ -588,7 +561,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         );
 
         // issue new network tokens to the system
-        networkToken.issue(address(this), networkLiquidityAmount);
+        networkTokenGovernance.mint(address(this), networkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
         ensureAllowance(networkToken, address(converter), networkLiquidityAmount);
@@ -780,9 +753,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // add the pool tokens to the system
         store.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
 
-        // if removing network token liquidity, burn the governance tokens from the caller
+        // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
+        // tokens to the contract itself, since only token owners can burn their tokens
         if (liquidity.reserveToken == networkToken) {
-            govToken.destroy(msg.sender, liquidity.reserveAmount);
+            safeTransferFrom(govToken, msg.sender, address(this), liquidity.reserveAmount);
+            govTokenGovernance.burn(address(this), liquidity.reserveAmount);
         }
 
         // get the various rates between the reserves upon adding liquidity and now
@@ -807,7 +782,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // remove network token liquidity
         if (liquidity.reserveToken == networkToken) {
             // mint network tokens for the caller and lock them
-            networkToken.issue(address(store), targetAmount);
+            networkTokenGovernance.mint(address(store), targetAmount);
             lockTokens(msg.sender, targetAmount);
             return;
         }
@@ -853,7 +828,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
                 // check if there's enough network token balance, otherwise mint more
                 uint256 networkBalance = networkToken.balanceOf(address(this));
                 if (networkBalance < delta) {
-                    networkToken.issue(address(this), delta - networkBalance);
+                    networkTokenGovernance.mint(address(this), delta - networkBalance);
                 }
 
                 // lock network tokens for the caller
@@ -865,7 +840,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // if the contract still holds network token, burn them
         uint256 networkBalance = networkToken.balanceOf(address(this));
         if (networkBalance > 0) {
-            networkToken.destroy(address(this), networkBalance);
+            networkTokenGovernance.burn(address(this), networkBalance);
         }
     }
 
@@ -1027,7 +1002,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // for network token liquidity, mint governance tokens to the caller
         if (reserveToken == networkToken) {
-            govToken.issue(msg.sender, reserveAmount);
+            govTokenGovernance.mint(msg.sender, reserveAmount);
         }
     }
 

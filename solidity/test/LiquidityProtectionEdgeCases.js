@@ -15,6 +15,7 @@ const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1Co
 const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
+const TokenGovernance = artifacts.require('TestTokenGovernance');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -50,6 +51,9 @@ const DECIMAL_COMBINATIONS = cartesian([12, 24], [12, 24], [15, 21], [15, 21]);
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
+
+const GOVERNOR_ROLE = web3.utils.keccak256('GOVERNOR_ROLE');
+const MINTER_ROLE = web3.utils.keccak256('MINTER_ROLE');
 
 contract('LiquidityProtectionEdgeCases', (accounts) => {
     const addProtectedLiquidity = async (token, amount) => {
@@ -121,11 +125,20 @@ contract('LiquidityProtectionEdgeCases', (accounts) => {
 
     beforeEach(async () => {
         baseToken = await DSToken.new('TKN', 'TKN', 18);
-        networkToken = await DSToken.new('BNT', 'BNT', 18);
-        govToken = await DSToken.new('vBNT', 'vBNT', 18);
-
         await baseToken.issue(owner, new BN('1'.padEnd(40, '0')));
+
+        networkToken = await DSToken.new('BNT', 'BNT', 18);
         await networkToken.issue(owner, new BN('1'.padEnd(40, '0')));
+        networkTokenGovernance = await TokenGovernance.new(networkToken.address);
+        await networkTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await networkToken.transferOwnership(networkTokenGovernance.address);
+        await networkTokenGovernance.acceptTokenOwnership();
+
+        govToken = await DSToken.new('vBNT', 'vBNT', 18);
+        govTokenGovernance = await TokenGovernance.new(govToken.address);
+        await govTokenGovernance.grantRole(GOVERNOR_ROLE, governor);
+        await govToken.transferOwnership(govTokenGovernance.address);
+        await govTokenGovernance.acceptTokenOwnership();
 
         await converterRegistry.newConverter(
             1,
@@ -146,16 +159,16 @@ contract('LiquidityProtectionEdgeCases', (accounts) => {
         liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionStore.address,
-            networkToken.address,
-            govToken.address,
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
             contractRegistry.address
         );
+
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
-        await networkToken.transferOwnership(liquidityProtection.address);
-        await govToken.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await liquidityProtection.acceptNetworkTokenOwnership();
-        await liquidityProtection.acceptGovTokenOwnership();
+        await networkTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(MINTER_ROLE, liquidityProtection.address, { from: governor });
+
         await liquidityProtection.whitelistPool(poolToken.address, true);
         await liquidityProtection.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
         await liquidityProtection.setAverageRateMaxDeviation(FULL_PPM);
