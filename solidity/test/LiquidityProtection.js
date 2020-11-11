@@ -462,7 +462,7 @@ contract('LiquidityProtection', (accounts) => {
     it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
         await expectRevert(
             liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }),
-            'ERR_INVALID_PORTION'
+            'ERR_ACCESS_DENIED.'
         );
     });
 
@@ -1180,13 +1180,13 @@ contract('LiquidityProtection', (accounts) => {
     });
 
     it('should revert when calling removeLiquidityReturn with zero portion of the liquidity', async () => {
-        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PERCENT');
+        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PORTION');
     });
 
     it('should revert when calling removeLiquidityReturn with remove more than 100% of the liquidity', async () => {
         await expectRevert(
             liquidityProtection.removeLiquidityReturn('1234', PPM_RESOLUTION.add(new BN(1)), now),
-            'ERR_INVALID_PERCENT'
+            'ERR_INVALID_PORTION'
         );
     });
 
@@ -1345,7 +1345,7 @@ contract('LiquidityProtection', (accounts) => {
                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 const protectionId = protectionIds[0];
 
-                await expectRevert(liquidityProtection.removeLiquidity(protectionId, 0), 'ERR_INVALID_PERCENT');
+                await expectRevert(liquidityProtection.removeLiquidity(protectionId, 0), 'ERR_INVALID_PORTION');
             });
 
             it('should revert when attempting to remove more than 100% of the liquidity', async () => {
@@ -1362,7 +1362,7 @@ contract('LiquidityProtection', (accounts) => {
 
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION.add(new BN(1))),
-                    'ERR_INVALID_PERCENT'
+                    'ERR_INVALID_PORTION'
                 );
             });
 
