@@ -314,11 +314,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @param _maxSystemNetworkTokenAmount  maximum absolute balance in a pool
       * @param _maxSystemNetworkTokenRatio   maximum balance out of the total balance in a pool (in PPM units)
     */
-    function setSystemNetworkTokenLimits(uint256 _maxSystemNetworkTokenAmount, uint32 _maxSystemNetworkTokenRatio) external ownerOnly {
-        require(_maxSystemNetworkTokenRatio <= PPM_RESOLUTION, "ERR_INVALID_MAX_RATIO");
-
-        emit SystemNetworkTokenLimitsUpdated(maxSystemNetworkTokenAmount, _maxSystemNetworkTokenAmount, maxSystemNetworkTokenRatio,
-            _maxSystemNetworkTokenRatio);
+    function setSystemNetworkTokenLimits(uint256 _maxSystemNetworkTokenAmount, uint32 _maxSystemNetworkTokenRatio)
+        external
+        ownerOnly
+        validPortion(_maxSystemNetworkTokenRatio)
+    {
+        emit SystemNetworkTokenLimitsUpdated(
+            maxSystemNetworkTokenAmount,
+            _maxSystemNetworkTokenAmount,
+            maxSystemNetworkTokenRatio,
+            _maxSystemNetworkTokenRatio
+        );
 
         maxSystemNetworkTokenAmount = _maxSystemNetworkTokenAmount;
         maxSystemNetworkTokenRatio = _maxSystemNetworkTokenRatio;
@@ -370,8 +376,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       *
       * @param _averageRateMaxDeviation maximum deviation of the average rate from the spot rate
     */
-    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external ownerOnly {
-        require(_averageRateMaxDeviation <= PPM_RESOLUTION, "ERR_INVALID_MAX_DEVIATION");
+    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation)
+        external
+        ownerOnly
+        validPortion(_averageRateMaxDeviation)
+    {
         emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
 
         averageRateMaxDeviation = _averageRateMaxDeviation;
