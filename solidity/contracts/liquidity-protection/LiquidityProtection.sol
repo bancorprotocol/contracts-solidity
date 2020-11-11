@@ -452,7 +452,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // token holders can burn their tokens
         uint256 amount = liquidity1.reserveToken == networkToken ? liquidity1.reserveAmount : liquidity2.reserveAmount;
         safeTransferFrom(govToken, msg.sender, address(this), amount);
-        govTokenGovernance.burn(address(this), amount);
+        govTokenGovernance.burn(amount);
 
         // remove the protected liquidities from the store
         store.removeProtectedLiquidity(_id1);
@@ -513,7 +513,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
         safeTransferFrom(networkToken, msg.sender, address(this), _amount);
-        networkTokenGovernance.burn(address(this), _amount);
+        networkTokenGovernance.burn(_amount);
 
         // mint governance tokens to the caller
         govTokenGovernance.mint(msg.sender, _amount);
@@ -757,7 +757,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // tokens to the contract itself, since only token holders can burn their tokens
         if (liquidity.reserveToken == networkToken) {
             safeTransferFrom(govToken, msg.sender, address(this), liquidity.reserveAmount);
-            govTokenGovernance.burn(address(this), liquidity.reserveAmount);
+            govTokenGovernance.burn(liquidity.reserveAmount);
         }
 
         // get the various rates between the reserves upon adding liquidity and now
@@ -840,7 +840,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // if the contract still holds network token, burn them
         uint256 networkBalance = networkToken.balanceOf(address(this));
         if (networkBalance > 0) {
-            networkTokenGovernance.burn(address(this), networkBalance);
+            networkTokenGovernance.burn(networkBalance);
         }
     }
 
