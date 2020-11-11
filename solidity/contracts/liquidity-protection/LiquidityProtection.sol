@@ -449,7 +449,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         );
 
         // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
-        // token owners can burn their tokens
+        // token holders can burn their tokens
         uint256 amount = liquidity1.reserveToken == networkToken ? liquidity1.reserveAmount : liquidity2.reserveAmount;
         safeTransferFrom(govToken, msg.sender, address(this), amount);
         govTokenGovernance.burn(address(this), amount);
@@ -511,7 +511,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 id = addProtectedLiquidity(msg.sender, poolToken, networkToken, poolTokenAmount, _amount);
 
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
-        // token owners can burn their tokens
+        // token holders can burn their tokens
         safeTransferFrom(networkToken, msg.sender, address(this), _amount);
         networkTokenGovernance.burn(address(this), _amount);
 
@@ -754,7 +754,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         store.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
 
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
-        // tokens to the contract itself, since only token owners can burn their tokens
+        // tokens to the contract itself, since only token holders can burn their tokens
         if (liquidity.reserveToken == networkToken) {
             safeTransferFrom(govToken, msg.sender, address(this), liquidity.reserveAmount);
             govTokenGovernance.burn(address(this), liquidity.reserveAmount);
