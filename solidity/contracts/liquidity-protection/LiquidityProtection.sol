@@ -1292,8 +1292,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
       * @return compensation amount
     */
     function compensationAmount(uint256 _amount, uint256 _total, Fraction memory _loss, Fraction memory _level) internal pure returns (uint256) {
-        (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
-        return _total.mul(_loss.d.sub(_loss.n)).div(_loss.d).add(_amount.mul(compN).div(compD));
+        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT128);
+        return _total.mul(lossD.sub(lossN)).div(lossD).add(_amount.mul(lossN.mul(_level.n)).div(lossD.mul(_level.d)));
     }
 
     /**
