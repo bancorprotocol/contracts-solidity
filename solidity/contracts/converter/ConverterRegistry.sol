@@ -403,7 +403,6 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenH
         // verify that the input parameters represent a valid liquidity pool
         if (_reserveTokens.length == _reserveWeights.length && _reserveTokens.length > 1) {
             // get the anchors of the least frequent token (optimization)
-
             address[] memory convertibleTokenAnchors = getLeastFrequentTokenAnchors(_reserveTokens);
             // search for a converter with the same configuration
             for (uint256 i = 0; i < convertibleTokenAnchors.length; i++) {

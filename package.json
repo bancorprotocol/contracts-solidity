@@ -23,7 +23,7 @@
         "lint": "npm run lint:js && npm run lint:sol",
         "lint:js": "eslint .",
         "lint:sol": "solhint --max-warnings 0 \"solidity/contracts/**/*.sol\"",
-        "format": "prettier --check --write **/*.sol **/*.js --config .prettierrc",
+        "format": "prettier --check --write solidity/**/*.sol solidity/**/*.js scripts/**/*.js *.js --config .prettierrc",
         "deploy": "node scripts/deploy-one.js",
         "verify": "node scripts/verify-all.js",
         "flatten": "node scripts/flatten.js",
