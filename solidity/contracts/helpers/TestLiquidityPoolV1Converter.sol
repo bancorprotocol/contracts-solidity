@@ -9,11 +9,7 @@ contract TestLiquidityPoolV1Converter is LiquidityPoolV1Converter {
         IDSToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
-    )
-        LiquidityPoolV1Converter(_token, _registry, _maxConversionFee)
-        public
-    {
-    }
+    ) public LiquidityPoolV1Converter(_token, _registry, _maxConversionFee) {}
 
     function time() internal view override returns (uint256) {
         return currentTime;

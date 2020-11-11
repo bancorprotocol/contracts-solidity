@@ -7,5 +7,10 @@ import "./IConverterAnchor.sol";
 */
 interface ITypedConverterAnchorFactory {
     function converterType() external pure returns (uint16);
-    function createAnchor(string memory _name, string memory _symbol, uint8 _decimals) external returns (IConverterAnchor);
+
+    function createAnchor(
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals
+    ) external returns (IConverterAnchor);
 }

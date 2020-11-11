@@ -4,7 +4,7 @@ const TestTokenHandler = artifacts.require('TestTokenHandler');
 const TestStandardToken = artifacts.require('TestStandardToken');
 const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 
-contract('TokenHandler', async accounts => {
+contract('TokenHandler', async (accounts) => {
     let tokenHandler;
     const sender = accounts[0];
 
@@ -36,7 +36,10 @@ contract('TokenHandler', async accounts => {
                     });
 
                     it(`transferFrom should ${ok && ret ? 'not ' : ''}revert`, async () => {
-                        await test(ok && ret, tokenHandler.testSafeTransferFrom(standardToken.address, sender, sender, 0));
+                        await test(
+                            ok && ret,
+                            tokenHandler.testSafeTransferFrom(standardToken.address, sender, sender, 0)
+                        );
                     });
                 });
             }

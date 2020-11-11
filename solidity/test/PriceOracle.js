@@ -9,7 +9,7 @@ const TestNonStandardTokenWithoutDecimals = artifacts.require('TestNonStandardTo
 const PriceOracle = artifacts.require('PriceOracle');
 const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
 
-contract('PriceOracle', accounts => {
+contract('PriceOracle', (accounts) => {
     let tokenA;
     let tokenB;
     const decimalsTokenA = new BN(18);
@@ -31,7 +31,12 @@ contract('PriceOracle', accounts => {
         await chainlinkOracleA.setTimestamp(5000);
         await chainlinkOracleB.setTimestamp(5010);
 
-        oracle = await PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, chainlinkOracleB.address);
+        oracle = await PriceOracle.new(
+            tokenA.address,
+            tokenB.address,
+            chainlinkOracleA.address,
+            chainlinkOracleB.address
+        );
     });
 
     it('verifies oracle state after construction', async () => {
@@ -45,13 +50,17 @@ contract('PriceOracle', accounts => {
     });
 
     it('should revert when attempting to construct a price oracle with zero token A address', async () => {
-        await expectRevert(PriceOracle.new(ZERO_ADDRESS, tokenB.address, chainlinkOracleA.address, chainlinkOracleB.address),
-            'ERR_INVALID_ADDRESS');
+        await expectRevert(
+            PriceOracle.new(ZERO_ADDRESS, tokenB.address, chainlinkOracleA.address, chainlinkOracleB.address),
+            'ERR_INVALID_ADDRESS'
+        );
     });
 
     it('should revert when attempting to construct a price oracle with zero token B address', async () => {
-        await expectRevert(PriceOracle.new(tokenA.address, ZERO_ADDRESS, chainlinkOracleA.address, chainlinkOracleB.address),
-            'ERR_INVALID_ADDRESS');
+        await expectRevert(
+            PriceOracle.new(tokenA.address, ZERO_ADDRESS, chainlinkOracleA.address, chainlinkOracleB.address),
+            'ERR_INVALID_ADDRESS'
+        );
     });
 
     it('should revert when attempting to construct a price oracle with same tokens', async () => {
@@ -61,44 +70,56 @@ contract('PriceOracle', accounts => {
         await chainlinkOracleB.setAnswer(20000);
         await chainlinkOracleA.setTimestamp(5000);
         await chainlinkOracleB.setTimestamp(5010);
-        await expectRevert(PriceOracle.new(tokenA.address, tokenA.address, chainlinkOracleA.address, chainlinkOracleB.address),
-            'ERR_SAME_ADDRESS');
+        await expectRevert(
+            PriceOracle.new(tokenA.address, tokenA.address, chainlinkOracleA.address, chainlinkOracleB.address),
+            'ERR_SAME_ADDRESS'
+        );
     });
 
     it('should revert when attempting to construct a price oracle with zero chainlink oracle A address', async () => {
-        await expectRevert(PriceOracle.new(tokenA.address, tokenB.address, ZERO_ADDRESS, chainlinkOracleB.address),
-            'ERR_INVALID_ADDRESS');
+        await expectRevert(
+            PriceOracle.new(tokenA.address, tokenB.address, ZERO_ADDRESS, chainlinkOracleB.address),
+            'ERR_INVALID_ADDRESS'
+        );
     });
 
     it('should revert when attempting to construct a price oracle with zero chainlink oracle B address', async () => {
-        await expectRevert(PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, ZERO_ADDRESS),
-            'ERR_INVALID_ADDRESS');
+        await expectRevert(
+            PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, ZERO_ADDRESS),
+            'ERR_INVALID_ADDRESS'
+        );
     });
 
     it('should revert when attempting to construct a price oracle with same chainlink oracles', async () => {
         const chainlinkOracleA = await ChainlinkPriceOracle.new();
         await chainlinkOracleA.setAnswer(10000);
         await chainlinkOracleA.setTimestamp(5000);
-        await expectRevert(PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, chainlinkOracleA.address),
-            'ERR_SAME_ADDRESS');
+        await expectRevert(
+            PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, chainlinkOracleA.address),
+            'ERR_SAME_ADDRESS'
+        );
     });
 
     it('should revert when attempting to construct a price oracle with a non-standard token A', async () => {
-        await expectRevert.unspecified(PriceOracle.new(accounts[5], tokenB.address, chainlinkOracleA.address,
-            chainlinkOracleB.address));
+        await expectRevert.unspecified(
+            PriceOracle.new(accounts[5], tokenB.address, chainlinkOracleA.address, chainlinkOracleB.address)
+        );
 
         const token = await TestNonStandardTokenWithoutDecimals.new('ERC Token 3', 'ERC3', 10000000000);
-        await expectRevert.unspecified(PriceOracle.new(token.address, tokenB.address, chainlinkOracleA.address,
-            chainlinkOracleB.address));
+        await expectRevert.unspecified(
+            PriceOracle.new(token.address, tokenB.address, chainlinkOracleA.address, chainlinkOracleB.address)
+        );
     });
 
     it('should revert when attempting to construct a price oracle with a non-standard token B', async () => {
-        await expectRevert.unspecified(PriceOracle.new(tokenA.address, accounts[5], chainlinkOracleA.address,
-            chainlinkOracleB.address));
+        await expectRevert.unspecified(
+            PriceOracle.new(tokenA.address, accounts[5], chainlinkOracleA.address, chainlinkOracleB.address)
+        );
 
         const token = await TestNonStandardTokenWithoutDecimals.new('ERC Token 3', 'ERC3', 10000000000);
-        await expectRevert.unspecified(PriceOracle.new(tokenA.address, token.address, chainlinkOracleA.address,
-            chainlinkOracleB.address));
+        await expectRevert.unspecified(
+            PriceOracle.new(tokenA.address, token.address, chainlinkOracleA.address, chainlinkOracleB.address)
+        );
     });
 
     it('should revert when attempting to get the rate with zero token A address', async () => {
@@ -154,7 +175,12 @@ contract('PriceOracle', accounts => {
                     tokenA = await ERC20Token.new('ERC Token 1', 'ERC1', new BN(decimalsA), 10000000000);
                     tokenB = await ERC20Token.new('ERC Token 2', 'ERC2', new BN(decimalsB), 10000000000);
 
-                    oracle = await PriceOracle.new(tokenA.address, tokenB.address, chainlinkOracleA.address, chainlinkOracleB.address);
+                    oracle = await PriceOracle.new(
+                        tokenA.address,
+                        tokenB.address,
+                        chainlinkOracleA.address,
+                        chainlinkOracleB.address
+                    );
                 });
 
                 it('verifies that latestRate returns the rates from both oracles in the correct order', async () => {

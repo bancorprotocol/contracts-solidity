@@ -5,8 +5,8 @@ import "./Utils.sol";
 import "./interfaces/IContractRegistry.sol";
 
 /**
-  * @dev This is the base contract for ContractRegistry clients.
-*/
+ * @dev This is the base contract for ContractRegistry clients.
+ */
 contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant CONTRACT_REGISTRY = "ContractRegistry";
     bytes32 internal constant BANCOR_NETWORK = "BancorNetwork";
@@ -21,15 +21,15 @@ contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";
     bytes32 internal constant CHAINLINK_ORACLE_WHITELIST = "ChainlinkOracleWhitelist";
 
-    IContractRegistry public registry;      // address of the current contract-registry
-    IContractRegistry public prevRegistry;  // address of the previous contract-registry
+    IContractRegistry public registry; // address of the current contract-registry
+    IContractRegistry public prevRegistry; // address of the previous contract-registry
     bool public onlyOwnerCanUpdateRegistry; // only an owner can update the contract-registry
 
     /**
-      * @dev verifies that the caller is mapped to the given contract name
-      *
-      * @param _contractName    contract name
-    */
+     * @dev verifies that the caller is mapped to the given contract name
+     *
+     * @param _contractName    contract name
+     */
     modifier only(bytes32 _contractName) {
         _only(_contractName);
         _;
@@ -41,17 +41,17 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev initializes a new ContractRegistryClient instance
-      *
-      * @param  _registry   address of a contract-registry contract
-    */
+     * @dev initializes a new ContractRegistryClient instance
+     *
+     * @param  _registry   address of a contract-registry contract
+     */
     constructor(IContractRegistry _registry) internal validAddress(address(_registry)) {
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
     }
 
     /**
-      * @dev updates to the new contract-registry
+     * @dev updates to the new contract-registry
      */
     function updateRegistry() public {
         // verify that this function is permitted
@@ -74,30 +74,30 @@ contract ContractRegistryClient is Owned, Utils {
     }
 
     /**
-      * @dev restores the previous contract-registry
-    */
+     * @dev restores the previous contract-registry
+     */
     function restoreRegistry() public ownerOnly {
         // restore the previous contract-registry
         registry = prevRegistry;
     }
 
     /**
-      * @dev restricts the permission to update the contract-registry
-      *
-      * @param _onlyOwnerCanUpdateRegistry  indicates whether or not permission is restricted to owner only
-    */
+     * @dev restricts the permission to update the contract-registry
+     *
+     * @param _onlyOwnerCanUpdateRegistry  indicates whether or not permission is restricted to owner only
+     */
     function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) public ownerOnly {
         // change the permission to update the contract-registry
         onlyOwnerCanUpdateRegistry = _onlyOwnerCanUpdateRegistry;
     }
 
     /**
-      * @dev returns the address associated with the given contract name
-      *
-      * @param _contractName    contract name
-      *
-      * @return contract address
-    */
+     * @dev returns the address associated with the given contract name
+     *
+     * @param _contractName    contract name
+     *
+     * @return contract address
+     */
     function addressOf(bytes32 _contractName) internal view returns (address) {
         return registry.addressOf(_contractName);
     }
