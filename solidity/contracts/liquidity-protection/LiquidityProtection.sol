@@ -86,7 +86,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     uint256 public lockDuration = 24 hours;
 
     // maximum deviation of the average rate from the spot rate
-    uint32 public averageRateMaxDeviation = 20000; // PPM units
+    uint32 public averageRateMaxDeviation = 5000; // PPM units
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
