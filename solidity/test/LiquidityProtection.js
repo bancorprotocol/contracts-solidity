@@ -331,7 +331,7 @@ contract('LiquidityProtection', accounts => {
     });
 
     it('should revert when the owner attempts to set a system network token ratio that is larger than 100%', async () => {
-        await expectRevert(liquidityProtection.setSystemNetworkTokenLimits(200, PPM_RESOLUTION.add(new BN(1))), 'ERR_INVALID_MAX_RATIO');
+        await expectRevert(liquidityProtection.setSystemNetworkTokenLimits(200, PPM_RESOLUTION.add(new BN(1))), 'ERR_INVALID_PORTION');
     });
 
     it('verifies that the owner can set the protection delays', async () => {
@@ -423,7 +423,7 @@ contract('LiquidityProtection', accounts => {
     });
 
     it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
-        await expectRevert(liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }), 'ERR_ACCESS_DENIED');
+        await expectRevert(liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }), 'ERR_INVALID_PORTION');
     });
 
     describe('whitelist', () => {
