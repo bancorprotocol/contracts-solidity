@@ -378,6 +378,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @return true if the pool is supported, false otherwise
      */
     function isPoolSupported(IConverterAnchor _poolAnchor) public view returns (bool) {
+        // save a local copy of `networkToken`
+        IERC20Token _networkToken = networkToken;
+
         // verify that the pool exists in the registry
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
         require(converterRegistry.isAnchor(address(_poolAnchor)), "ERR_INVALID_ANCHOR");
@@ -393,7 +396,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // verify that one of the reserves is the network token
         IERC20Token reserve0Token = converter.connectorTokens(0);
         IERC20Token reserve1Token = converter.connectorTokens(1);
-        if (reserve0Token != networkToken && reserve1Token != networkToken) {
+        if (reserve0Token != _networkToken && reserve1Token != _networkToken) {
             return false;
         }
 
@@ -424,10 +427,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // get the converter
         IConverter converter = IConverter(payable(_poolAnchor.owner()));
 
+        // save a local copy of `networkToken`
+        IERC20Token _networkToken = networkToken;
+
         // protect both reserves
         IDSToken poolToken = IDSToken(address(_poolAnchor));
-        protectLiquidity(poolToken, converter, 0, _amount / 2);
-        protectLiquidity(poolToken, converter, 1, _amount - _amount / 2);
+        protectLiquidity(poolToken, converter, _networkToken, 0, _amount / 2);
+        protectLiquidity(poolToken, converter, _networkToken, 1, _amount - _amount / 2);
 
         // transfer the pool tokens from the caller directly to the store
         safeTransferFrom(poolToken, msg.sender, address(store), _amount);
@@ -447,11 +453,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         ProtectedLiquidity memory liquidity1 = protectedLiquidity(_id1, msg.sender);
         ProtectedLiquidity memory liquidity2 = protectedLiquidity(_id2, msg.sender);
 
+        // save a local copy of `networkToken`
+        IERC20Token _networkToken = networkToken;
+
         // verify that the two protections were added together (using `protect`)
         require(
             liquidity1.poolToken == liquidity2.poolToken &&
                 liquidity1.reserveToken != liquidity2.reserveToken &&
-                (liquidity1.reserveToken == networkToken || liquidity2.reserveToken == networkToken) &&
+                (liquidity1.reserveToken == _networkToken || liquidity2.reserveToken == _networkToken) &&
                 liquidity1.timestamp == liquidity2.timestamp &&
                 liquidity1.poolAmount <= liquidity2.poolAmount.add(1) &&
                 liquidity2.poolAmount <= liquidity1.poolAmount.add(1),
@@ -460,7 +469,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        uint256 amount = liquidity1.reserveToken == networkToken ? liquidity1.reserveAmount : liquidity2.reserveAmount;
+        uint256 amount = liquidity1.reserveToken == _networkToken ? liquidity1.reserveAmount : liquidity2.reserveAmount;
         safeTransferFrom(govToken, msg.sender, address(this), amount);
         govTokenGovernance.burn(amount);
 
@@ -486,30 +495,34 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IERC20Token _reserveToken,
         uint256 _amount
     ) external payable protected poolSupportedAndWhitelisted(_poolAnchor) greaterThanZero(_amount) returns (uint256) {
-        if (_reserveToken == networkToken) {
+        // save a local copy of `networkToken`
+        IERC20Token _networkToken = networkToken;
+
+        if (_reserveToken == _networkToken) {
             require(msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");
-            return addNetworkTokenLiquidity(_poolAnchor, _amount);
+            return addNetworkTokenLiquidity(_poolAnchor, _networkToken, _amount);
         }
 
         // verify that ETH was passed with the call if needed
         uint256 val = _reserveToken == ETH_RESERVE_ADDRESS ? _amount : 0;
         require(msg.value == val, "ERR_ETH_AMOUNT_MISMATCH");
-        return addBaseTokenLiquidity(_poolAnchor, _reserveToken, _amount);
+        return addBaseTokenLiquidity(_poolAnchor, _reserveToken, _networkToken, _amount);
     }
 
     /**
      * @dev adds protected network token liquidity to a pool
      * also mints new governance tokens for the caller
      *
-     * @param _poolAnchor  anchor of the pool
-     * @param _amount      amount of tokens to add to the pool
+     * @param _poolAnchor   anchor of the pool
+     * @param _networkToken the network reserve token of the pool
+     * @param _amount       amount of tokens to add to the pool
      * @return new protected liquidity id
      */
-    function addNetworkTokenLiquidity(IConverterAnchor _poolAnchor, uint256 _amount) internal returns (uint256) {
+    function addNetworkTokenLiquidity(IConverterAnchor _poolAnchor, IERC20Token _networkToken, uint256 _amount) internal returns (uint256) {
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the rate between the pool token and the reserve
-        Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
+        Fraction memory poolRate = poolTokenRate(poolToken, _networkToken);
 
         // calculate the amount of pool tokens based on the amount of reserve tokens
         uint256 poolTokenAmount = _amount.mul(poolRate.d).div(poolRate.n);
@@ -518,11 +531,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         store.decSystemBalance(poolToken, poolTokenAmount);
 
         // add protected liquidity for the caller
-        uint256 id = addProtectedLiquidity(msg.sender, poolToken, networkToken, poolTokenAmount, _amount);
+        uint256 id = addProtectedLiquidity(msg.sender, poolToken, _networkToken, poolTokenAmount, _amount);
 
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        safeTransferFrom(networkToken, msg.sender, address(this), _amount);
+        safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
         networkTokenGovernance.burn(_amount);
 
         // mint governance tokens to the caller
@@ -534,14 +547,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     /**
      * @dev adds protected base token liquidity to a pool
      *
-     * @param _poolAnchor  anchor of the pool
-     * @param _baseToken   the base reserve token of the pool
-     * @param _amount      amount of tokens to add to the pool
+     * @param _poolAnchor   anchor of the pool
+     * @param _baseToken    the base reserve token of the pool
+     * @param _networkToken the network reserve token of the pool
+     * @param _amount       amount of tokens to add to the pool
      * @return new protected liquidity id
      */
     function addBaseTokenLiquidity(
         IConverterAnchor _poolAnchor,
         IERC20Token _baseToken,
+        IERC20Token _networkToken,
         uint256 _amount
     ) internal returns (uint256) {
         IDSToken poolToken = IDSToken(address(_poolAnchor));
@@ -551,7 +566,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) = converterReserveBalances(
             converter,
             _baseToken,
-            networkToken
+            _networkToken
         );
 
         // calculate and mint the required amount of network tokens for adding liquidity
@@ -559,7 +574,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // verify network token limits
         // note that the amount is divided by 2 since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
+        Fraction memory poolRate = poolTokenRate(poolToken, _networkToken);
         uint256 newSystemBalance = store.systemBalance(poolToken);
         newSystemBalance = (newSystemBalance.mul(poolRate.n / 2).div(poolRate.d)).add(networkLiquidityAmount);
 
@@ -574,14 +589,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         networkTokenGovernance.mint(address(this), networkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
-        ensureAllowance(networkToken, address(converter), networkLiquidityAmount);
+        ensureAllowance(_networkToken, address(converter), networkLiquidityAmount);
         if (_baseToken != ETH_RESERVE_ADDRESS) {
             safeTransferFrom(_baseToken, msg.sender, address(this), _amount);
             ensureAllowance(_baseToken, address(converter), _amount);
         }
 
         // add liquidity
-        addLiquidity(converter, _baseToken, networkToken, _amount, networkLiquidityAmount, msg.value);
+        addLiquidity(converter, _baseToken, _networkToken, _amount, networkLiquidityAmount, msg.value);
 
         // transfer the new pool tokens to the store
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
@@ -716,6 +731,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function removeLiquidity(uint256 _id, uint32 _portion) external validPortion(_portion) protected {
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
 
+        // save a local copy of `networkToken`
+        IERC20Token _networkToken = networkToken;
+
         // verify that the pool is whitelisted
         require(store.isPoolWhitelisted(liquidity.poolToken), "ERR_POOL_NOT_WHITELISTED");
 
@@ -741,7 +759,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
         // tokens to the contract itself, since only token holders can burn their tokens
-        if (liquidity.reserveToken == networkToken) {
+        if (liquidity.reserveToken == _networkToken) {
             safeTransferFrom(govToken, msg.sender, address(this), liquidity.reserveAmount);
             govTokenGovernance.burn(liquidity.reserveAmount);
         }
@@ -766,7 +784,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         );
 
         // remove network token liquidity
-        if (liquidity.reserveToken == networkToken) {
+        if (liquidity.reserveToken == _networkToken) {
             // mint network tokens for the caller and lock them
             networkTokenGovernance.mint(address(store), targetAmount);
             lockTokens(msg.sender, targetAmount);
@@ -789,7 +807,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         store.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
-        removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, networkToken);
+        removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, _networkToken);
 
         // transfer the base tokens to the caller
         uint256 baseBalance;
@@ -805,18 +823,18 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 delta = getNetworkCompensation(targetAmount, baseBalance, packedRates);
         if (delta > 0) {
             // check if there's enough network token balance, otherwise mint more
-            uint256 networkBalance = networkToken.balanceOf(address(this));
+            uint256 networkBalance = _networkToken.balanceOf(address(this));
             if (networkBalance < delta) {
                 networkTokenGovernance.mint(address(this), delta - networkBalance);
             }
 
             // lock network tokens for the caller
-            safeTransfer(networkToken, address(store), delta);
+            safeTransfer(_networkToken, address(store), delta);
             lockTokens(msg.sender, delta);
         }
 
         // if the contract still holds network token, burn them
-        uint256 networkBalance = networkToken.balanceOf(address(this));
+        uint256 networkBalance = _networkToken.balanceOf(address(this));
         if (networkBalance > 0) {
             networkTokenGovernance.burn(networkBalance);
         }
@@ -956,12 +974,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      *
      * @param _poolAnchor      pool anchor
      * @param _converter       pool converter
+     * @param _networkToken    the network reserve token of the pool
      * @param _reserveIndex    index of the reserve to protect
      * @param _poolAmount      amount of pool tokens to protect
      */
     function protectLiquidity(
         IDSToken _poolAnchor,
         IConverter _converter,
+        IERC20Token _networkToken,
         uint256 _reserveIndex,
         uint256 _poolAmount
     ) internal {
@@ -979,7 +999,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         addProtectedLiquidity(msg.sender, poolToken, reserveToken, _poolAmount, reserveAmount);
 
         // for network token liquidity, mint governance tokens to the caller
-        if (reserveToken == networkToken) {
+        if (reserveToken == _networkToken) {
             govTokenGovernance.mint(msg.sender, reserveAmount);
         }
     }
