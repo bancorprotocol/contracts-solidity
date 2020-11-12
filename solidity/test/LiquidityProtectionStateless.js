@@ -34,13 +34,13 @@ contract('LiquidityProtectionStateless', (accounts) => {
 
         const networkToken = await DSToken.new('BNT', 'BNT', 18);
         const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
+        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         const govToken = await DSToken.new('vBNT', 'vBNT', 18);
         const govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
+        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
@@ -51,8 +51,8 @@ contract('LiquidityProtectionStateless', (accounts) => {
             accounts[0]
         );
 
-        await networkTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
     });
 
     for (const factorList of FACTOR_LISTS) {

@@ -256,13 +256,13 @@ contract('LiquidityProtection', (accounts) => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
         await networkToken.issue(owner, 1000000000);
         networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
+        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         govToken = await DSToken.new('vBNT', 'vBNT', 18);
         govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.GOVERNOR_ROLE, governor);
+        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
@@ -276,8 +276,8 @@ contract('LiquidityProtection', (accounts) => {
         );
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await networkTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.MINTER_ROLE, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         now = await latest();
         await liquidityProtection.setTime(now);

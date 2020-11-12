@@ -10,7 +10,7 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 const MIN_GAS_LIMIT = 100000;
 
-const MINTER_ROLE = web3.utils.keccak256('MINTER_ROLE');
+const ROLE_MINTER = web3.utils.keccak256('ROLE_MINTER');
 
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
@@ -422,8 +422,8 @@ const run = async () => {
     // Granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role.
     const bntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.BNTTokenGovernance.address);
     const vbntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.VBNTTokenGovernance.address);
-    await execute(bntTokenGovernance.methods.grantRole(MINTER_ROLE, liquidityProtectionStore._address));
-    await execute(vbntTokenGovernance.methods.grantRole(MINTER_ROLE, liquidityProtectionStore._address));
+    await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtectionStore._address));
+    await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtectionStore._address));
 
     await execute(
         contractRegistry.methods.registerAddress(

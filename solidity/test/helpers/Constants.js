@@ -15,8 +15,8 @@ module.exports = {
     },
 
     governance: {
-        GOVERNOR_ROLE: web3.utils.keccak256('GOVERNOR_ROLE'),
-        MINTER_ROLE: web3.utils.keccak256('MINTER_ROLE')
+        ROLE_GOVERNOR: web3.utils.keccak256('ROLE_GOVERNOR'),
+        ROLE_MINTER: web3.utils.keccak256('ROLE_MINTER')
     },
 
     ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
