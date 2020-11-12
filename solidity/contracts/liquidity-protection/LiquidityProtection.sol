@@ -61,6 +61,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
+    uint256 internal constant MAX_UINT256 = uint256(-1);
 
     // the address of the whitelist administrator
     address public whitelistAdmin;
@@ -1056,7 +1057,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _poolToken       pool token
      * @param _reserveToken    reserve token
      */
-    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (Fraction memory) {
+    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view virtual returns (Fraction memory) {
         // get the pool token supply
         uint256 poolTokenSupply = _poolToken.totalSupply();
 
@@ -1304,8 +1305,15 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
 
         (uint256 hi, uint256 lo) = n > _poolAmount ? (n, _poolAmount) : (_poolAmount, n);
-        (uint256 p, uint256 q) = Math.reducedRatio(hi, d, uint256(-1) / lo);
-        return (p * lo) / q;
+        (uint256 p, uint256 q) = Math.reducedRatio(hi, d, MAX_UINT256 / lo);
+
+        if (q != 0) {
+            return p * lo / q;
+        }
+        if (p == 0) {
+            return lo;
+        }
+        return MAX_UINT256;
     }
 
     /**
@@ -1361,8 +1369,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory _loss,
         Fraction memory _level
     ) internal pure returns (uint256) {
-        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT128);
-        return _total.mul(lossD.sub(lossN)).div(lossD).add(_amount.mul(lossN.mul(_level.n)).div(lossD.mul(_level.d)));
+        uint256 levelN = _level.n.mul(_amount);
+        uint256 levelD = _level.d;
+        uint256 max = _total;
+        if (max < levelN) max = levelN;
+        if (max < levelD) max = levelD;
+        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT256 / max);
+        return _total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).div(lossD.mul(levelD)));
     }
 
     function getNetworkCompensation(

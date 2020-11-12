@@ -4,6 +4,9 @@ import "../liquidity-protection/LiquidityProtection.sol";
 
 contract TestLiquidityProtection is LiquidityProtection {
     uint256 public currentTime = 1;
+    bool private poolTokenRateOverride;
+    uint256 private poolTokenRateN;
+    uint256 private poolTokenRateD;
 
     constructor(
         ILiquidityProtectionStore _store,
@@ -39,5 +42,45 @@ contract TestLiquidityProtection is LiquidityProtection {
     function averageRateTest(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256, uint256) {
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken);
         return (rate.n, rate.d);
+    }
+
+    function removeLiquidityTargetAmountTest(
+        uint256 _poolTokenRateN,
+        uint256 _poolTokenRateD,
+        uint256 _poolAmount,
+        uint256 _reserveAmount,
+        uint128 _addSpotRateN,
+        uint128 _addSpotRateD,
+        uint128 _removeSpotRateN,
+        uint128 _removeSpotRateD,
+        uint128 _removeAverageRateN,
+        uint128 _removeAverageRateD,
+        uint256 _addTimestamp,
+        uint256 _removeTimestamp)
+        external returns (uint256)
+    {
+        poolTokenRateOverride = true;
+        poolTokenRateN = _poolTokenRateN;
+        poolTokenRateD = _poolTokenRateD;
+
+        PackedRates memory packedRates = PackedRates({
+            addSpotRateN: _addSpotRateN,
+            addSpotRateD: _addSpotRateD,
+            removeSpotRateN: _removeSpotRateN,
+            removeSpotRateD: _removeSpotRateD,
+            removeAverageRateN: _removeAverageRateN,
+            removeAverageRateD: _removeAverageRateD
+        });
+
+        uint256 targetAmount = removeLiquidityTargetAmount(IDSToken(0), IERC20Token(0), _poolAmount, _reserveAmount, packedRates, _addTimestamp, _removeTimestamp);
+        poolTokenRateOverride = false;
+        return targetAmount;
+    }
+
+    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view override returns (Fraction memory) {
+        if (poolTokenRateOverride) {
+            return Fraction({ n: poolTokenRateN, d: poolTokenRateD });
+        }
+        return super.poolTokenRate(_poolToken, _reserveToken);
     }
 }
