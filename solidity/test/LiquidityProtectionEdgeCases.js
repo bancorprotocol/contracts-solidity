@@ -121,6 +121,8 @@ contract('LiquidityProtectionEdgeCases', (accounts) => {
     });
 
     beforeEach(async () => {
+        const governor = accounts[1];
+
         baseToken = await DSToken.new('TKN', 'TKN', 18);
         await baseToken.issue(owner, new BN('1'.padEnd(40, '0')));
 
