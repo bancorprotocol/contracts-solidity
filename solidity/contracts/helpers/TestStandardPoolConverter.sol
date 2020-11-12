@@ -9,11 +9,7 @@ contract TestStandardPoolConverter is StandardPoolConverter {
         IDSToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
-    )
-        StandardPoolConverter(_token, _registry, _maxConversionFee)
-        public
-    {
-    }
+    ) public StandardPoolConverter(_token, _registry, _maxConversionFee) {}
 
     function time() internal view override returns (uint256) {
         return currentTime;

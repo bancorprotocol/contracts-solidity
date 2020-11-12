@@ -13,15 +13,27 @@ contract TestMath {
         return Math.ceilSqrt(_num);
     }
 
-    function reducedRatioTest(uint256 _n, uint256 _d, uint256 _max) external pure returns (uint256, uint256) {
+    function reducedRatioTest(
+        uint256 _n,
+        uint256 _d,
+        uint256 _max
+    ) external pure returns (uint256, uint256) {
         return Math.reducedRatio(_n, _d, _max);
     }
 
-    function normalizedRatioTest(uint256 _a, uint256 _b, uint256 _scale) external pure returns (uint256, uint256) {
+    function normalizedRatioTest(
+        uint256 _a,
+        uint256 _b,
+        uint256 _scale
+    ) external pure returns (uint256, uint256) {
         return Math.normalizedRatio(_a, _b, _scale);
     }
 
-    function accurateRatioTest(uint256 _a, uint256 _b, uint256 _scale) external pure returns (uint256, uint256) {
+    function accurateRatioTest(
+        uint256 _a,
+        uint256 _b,
+        uint256 _scale
+    ) external pure returns (uint256, uint256) {
         return Math.accurateRatio(_a, _b, _scale);
     }
 

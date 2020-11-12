@@ -21,10 +21,16 @@ contract TestConverterRegistry is ConverterRegistry {
         uint32 _maxConversionFee,
         IERC20Token[] memory _reserveTokens,
         uint32[] memory _reserveWeights
-    )
-    public override returns (IConverter) {
-        createdConverter = super.newConverter(_type, _name, _symbol, _decimals, _maxConversionFee, _reserveTokens,
-            _reserveWeights);
+    ) public override returns (IConverter) {
+        createdConverter = super.newConverter(
+            _type,
+            _name,
+            _symbol,
+            _decimals,
+            _maxConversionFee,
+            _reserveTokens,
+            _reserveWeights
+        );
 
         return createdConverter;
     }

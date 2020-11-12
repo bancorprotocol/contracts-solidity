@@ -3,7 +3,7 @@ const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 
 const XTransferRerouter = artifacts.require('XTransferRerouter');
 
-contract('XTransferRerouter', accounts => {
+contract('XTransferRerouter', (accounts) => {
     const owner = accounts[0];
     const nonOwner = accounts[5];
     const receiver = accounts[1];

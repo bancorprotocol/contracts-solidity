@@ -6,7 +6,7 @@ const { registry } = require('./helpers/Constants');
 const ContractRegistry = artifacts.require('ContractRegistry');
 const ContractRegistryClient = artifacts.require('TestContractRegistryClient');
 
-contract('ContractRegistryClient', accounts => {
+contract('ContractRegistryClient', (accounts) => {
     let contractRegistry;
     let contractRegistryClient;
     const owner = accounts[0];

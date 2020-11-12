@@ -38,8 +38,7 @@ const getPathNames = (dirName) => {
     for (const fileName of fs.readdirSync(WORK_DIR + '/' + dirName)) {
         if (fs.statSync(WORK_DIR + '/' + dirName + '/' + fileName).isDirectory()) {
             pathNames = pathNames.concat(getPathNames(dirName + '/' + fileName));
-        }
-        else if (fileName.endsWith('.sol')) {
+        } else if (fileName.endsWith('.sol')) {
             pathNames.push(dirName + '/' + fileName);
         }
     }
@@ -52,41 +51,41 @@ const getSourceCode = (pathName) => {
     // removing all occurrences of SPDX license identifiers except first
     // TODO: this is only ok if all files have the same license
     let i = 0;
-    const source = result.output.toString().replace(/\/\/ SPDX-License-Identifier.*/g, m => !i++ ? m : '');
+    const source = result.output.toString().replace(/\/\/ SPDX-License-Identifier.*/g, (m) => (!i++ ? m : ''));
     return source.slice(1, -1);
 };
 
 const post = (contractId, sourceCode) => {
     console.log(contractId + ': sending verification request...');
-    request.post({
-        url: 'https://' + input.network + '.etherscan.io/api',
-        form: {
-            module: 'contract',
-            action: 'verifysourcecode',
-            sourceCode: sourceCode,
-            apikey: input.apiKey,
-            compilerversion: input.compilerVersion,
-            optimizationUsed: input.optimization.used,
-            runs: input.optimization.runs,
-            contractname: input.contracts[contractId].name,
-            contractaddress: input.contracts[contractId].addr,
-            constructorArguements: input.contracts[contractId].args
-        }
-    },
-    (error, response, body) => {
-        if (error) {
-            console.log(contractId + ': ' + error);
-        }
-        else {
-            body = parse(body);
-            if (body.status === '1') {
-                get(contractId, body.result);
+    request.post(
+        {
+            url: 'https://' + input.network + '.etherscan.io/api',
+            form: {
+                module: 'contract',
+                action: 'verifysourcecode',
+                sourceCode: sourceCode,
+                apikey: input.apiKey,
+                compilerversion: input.compilerVersion,
+                optimizationUsed: input.optimization.used,
+                runs: input.optimization.runs,
+                contractname: input.contracts[contractId].name,
+                contractaddress: input.contracts[contractId].addr,
+                constructorArguements: input.contracts[contractId].args
             }
-            else {
-                console.log(contractId + ': ' + body.result);
+        },
+        (error, response, body) => {
+            if (error) {
+                console.log(contractId + ': ' + error);
+            } else {
+                body = parse(body);
+                if (body.status === '1') {
+                    get(contractId, body.result);
+                } else {
+                    console.log(contractId + ': ' + body.result);
+                }
             }
         }
-    });
+    );
 };
 
 const get = (contractId, guid) => {
@@ -96,13 +95,14 @@ const get = (contractId, guid) => {
         (error, response, body) => {
             if (error) {
                 console.log(contractId + ': ' + error);
-            }
-            else {
+            } else {
                 body = parse(body);
-                if (body.result === 'Pending in queue' || (body.result && body.result.startsWith('Max rate limit reached'))) {
+                if (
+                    body.result === 'Pending in queue' ||
+                    (body.result && body.result.startsWith('Max rate limit reached'))
+                ) {
                     get(contractId, guid);
-                }
-                else {
+                } else {
                     console.log(contractId + ': ' + body.result);
                 }
             }
@@ -113,8 +113,7 @@ const get = (contractId, guid) => {
 const parse = (str) => {
     try {
         return JSON.parse(str);
-    }
-    catch (error) {
+    } catch (error) {
         return {};
     }
 };

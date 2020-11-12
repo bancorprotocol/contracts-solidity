@@ -2,9 +2,9 @@
 pragma solidity 0.6.12;
 
 /**
-  * @dev This contract provides protection against calling a function
-  * (directly or indirectly) from within itself.
-*/
+ * @dev This contract provides protection against calling a function
+ * (directly or indirectly) from within itself.
+ */
 contract ReentrancyGuard {
     uint256 private constant UNLOCKED = 1;
     uint256 private constant LOCKED = 2;
@@ -13,8 +13,8 @@ contract ReentrancyGuard {
     uint256 private state = UNLOCKED;
 
     /**
-      * @dev ensures instantiation only by sub-contracts
-    */
+     * @dev ensures instantiation only by sub-contracts
+     */
     constructor() internal {}
 
     // protects a function against reentrancy attacks

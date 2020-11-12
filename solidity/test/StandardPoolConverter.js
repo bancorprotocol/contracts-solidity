@@ -17,7 +17,7 @@ const TestNonStandardToken = artifacts.require('TestNonStandardToken');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const ConverterUpgrader = artifacts.require('ConverterUpgrader');
 
-contract('StandardPoolConverter', accounts => {
+contract('StandardPoolConverter', (accounts) => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
         return StandardPoolConverter.new(tokenAddress, registryAddress, maxConversionFee);
     };
@@ -34,8 +34,7 @@ contract('StandardPoolConverter', accounts => {
 
         if (isETHReserve) {
             await converter.send(5000);
-        }
-        else {
+        } else {
             await reserveToken.transfer(converter.address, 5000);
         }
 
@@ -136,7 +135,11 @@ contract('StandardPoolConverter', accounts => {
         await reserveToken.approve(converter.address, value, { from: sender });
         await reserveToken2.approve(converter.address, value, { from: sender });
 
-        const res = await converter.addLiquidity([reserveToken.address, reserveToken2.address], [value, value], MIN_RETURN);
+        const res = await converter.addLiquidity(
+            [reserveToken.address, reserveToken2.address],
+            [value, value],
+            MIN_RETURN
+        );
 
         const poolTokenSupply = await token.totalSupply.call();
         const reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
@@ -160,7 +163,11 @@ contract('StandardPoolConverter', accounts => {
     it('verifies the TokenRateUpdate event after removing liquidity', async () => {
         const converter = await initConverter(true, false);
 
-        const res = await converter.removeLiquidity(100, [reserveToken.address, reserveToken2.address], [MIN_RETURN, MIN_RETURN]);
+        const res = await converter.removeLiquidity(
+            100,
+            [reserveToken.address, reserveToken2.address],
+            [MIN_RETURN, MIN_RETURN]
+        );
 
         const poolTokenSupply = await token.totalSupply.call();
         const reserve1Balance = await converter.reserveBalance.call(reserveToken.address);
@@ -193,13 +200,23 @@ contract('StandardPoolConverter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                }
-                else {
+                } else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
-                const purchaseAmount = (await converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), reserveToken2.address, amount))[0];
-                const res = await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value });
+                const purchaseAmount = (
+                    await converter.targetAmountAndFee.call(
+                        getReserve1Address(isETHReserve),
+                        reserveToken2.address,
+                        amount
+                    )
+                )[0];
+                const res = await convert(
+                    [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
+                    amount,
+                    MIN_RETURN,
+                    { value }
+                );
                 expectEvent(res, 'Conversion', {
                     _smartToken: token.address,
                     _fromToken: getReserve1Address(isETHReserve),
@@ -217,12 +234,16 @@ contract('StandardPoolConverter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                }
-                else {
+                } else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
-                const res = await convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value });
+                const res = await convert(
+                    [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
+                    amount,
+                    MIN_RETURN,
+                    { value }
+                );
 
                 const poolTokenSupply = await token.totalSupply.call();
                 const reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
@@ -262,13 +283,16 @@ contract('StandardPoolConverter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                }
-                else {
+                } else {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
                 }
 
-                await expectRevert(convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
-                    amount, 200000, { value }), 'ERR_RETURN_TOO_LOW');
+                await expectRevert(
+                    convert([getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address], amount, 200000, {
+                        value
+                    }),
+                    'ERR_RETURN_TOO_LOW'
+                );
             });
 
             it('verifies that fund executes', async () => {
@@ -283,8 +307,7 @@ contract('StandardPoolConverter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                }
-                else {
+                } else {
                     await reserveToken.approve(converter.address, amount, { from: sender });
                 }
 
@@ -317,8 +340,7 @@ contract('StandardPoolConverter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                }
-                else {
+                } else {
                     await reserveToken.approve(converter.address, amount, { from: sender2 });
                 }
 
@@ -352,8 +374,7 @@ contract('StandardPoolConverter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                }
-                else {
+                } else {
                     await reserveToken.approve(converter.address, amount, { from: sender2 });
                 }
 
@@ -380,8 +401,7 @@ contract('StandardPoolConverter', accounts => {
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
-                }
-                else {
+                } else {
                     await reserveToken.approve(converter.address, amount, { from: sender2 });
                 }
 
@@ -491,7 +511,9 @@ contract('StandardPoolConverter', accounts => {
                 const token2Balance = await reserveToken2.balanceOf.call(sender2);
 
                 expect(supply).to.be.bignumber.equal(new BN(0));
-                expect(token1PrevBalance.add(reserve1Balance).sub(transactionCost)).to.be.bignumber.equal(token1Balance);
+                expect(token1PrevBalance.add(reserve1Balance).sub(transactionCost)).to.be.bignumber.equal(
+                    token1Balance
+                );
                 expect(token2PrevBalance.add(reserve2Balance)).to.be.bignumber.equal(token2Balance);
             });
 
@@ -561,13 +583,7 @@ contract('StandardPoolConverter', accounts => {
             [2000, 1000]
         ];
 
-        const removePercents = [
-            [100],
-            [50, 50],
-            [25, 75],
-            [75, 25],
-            [10, 20, 30, 40]
-        ];
+        const removePercents = [[100], [50, 50], [25, 75], [75, 25], [10, 20, 30, 40]];
 
         for (const amounts of addAmounts) {
             for (const percents of removePercents) {
@@ -586,13 +602,22 @@ contract('StandardPoolConverter', accounts => {
                         await reserveToken2.transfer(sender2, amount, { from: sender });
                         await reserveToken1.approve(converter.address, amount, { from: sender2 });
                         await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                        await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [amount, amount], MIN_RETURN, { from: sender2 });
+                        await converter.addLiquidity(
+                            [reserveToken1.address, reserveToken2.address],
+                            [amount, amount],
+                            MIN_RETURN,
+                            { from: sender2 }
+                        );
                         const balance = await token.balanceOf.call(sender2);
                         lastAmount = balance.sub(lastAmount);
                     }
                     for (const percent of percents) {
-                        await converter.removeLiquidity(lastAmount.mul(new BN(percent)).div(new BN(100)),
-                            [reserveToken1.address, reserveToken2.address], [MIN_RETURN, MIN_RETURN], { from: sender2 });
+                        await converter.removeLiquidity(
+                            lastAmount.mul(new BN(percent)).div(new BN(100)),
+                            [reserveToken1.address, reserveToken2.address],
+                            [MIN_RETURN, MIN_RETURN],
+                            { from: sender2 }
+                        );
                     }
                     const balance1 = await reserveToken1.balanceOf.call(sender2);
                     const balance2 = await reserveToken2.balanceOf.call(sender2);
@@ -621,7 +646,9 @@ contract('StandardPoolConverter', accounts => {
                 return currentRate;
             }
 
-            const newAverageRateN = prevAverageRate.n.mul(currentRate.d).mul(AVERAGE_RATE_PERIOD.sub(timeElapsed))
+            const newAverageRateN = prevAverageRate.n
+                .mul(currentRate.d)
+                .mul(AVERAGE_RATE_PERIOD.sub(timeElapsed))
                 .add(prevAverageRate.d.mul(currentRate.n).mul(timeElapsed));
             const newAverageRateD = AVERAGE_RATE_PERIOD.mul(prevAverageRate.d).mul(currentRate.d);
 
@@ -672,16 +699,20 @@ contract('StandardPoolConverter', accounts => {
         it('should change after a conversion', async () => {
             const amount = new BN(500);
 
-            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                value: amount
+            });
             const prevAverageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
             const prevAverageRateUpdateTime = await getPrevAverageRateUpdateTime();
 
             await converter.setTime(now.add(duration.seconds(10)));
 
-            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                value: amount
+            });
             const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
-            const averageRateUpdateTime = await getPrevAverageRateUpdateTime()
-            
+            const averageRateUpdateTime = await getPrevAverageRateUpdateTime();
+
             expect(averageRate.n).not.to.be.bignumber.equal(prevAverageRate.n);
             expect(averageRate.d).not.to.be.bignumber.equal(prevAverageRate.d);
             expect(averageRateUpdateTime).not.to.be.bignumber.equal(prevAverageRateUpdateTime);
@@ -691,22 +722,26 @@ contract('StandardPoolConverter', accounts => {
             const amount = new BN(500);
 
             // set initial rate
-            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                value: amount
+            });
 
             let converterTime = now.add(duration.seconds(10));
             await converter.setTime(converterTime);
-            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+            await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                value: amount
+            });
 
             const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
             let averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
 
             expect(averageRate.n).not.to.be.bignumber.equal(currentRate.n);
             expect(averageRate.d).not.to.be.bignumber.equal(currentRate.d);
-            
+
             converterTime = converterTime.add(AVERAGE_RATE_PERIOD);
             await converter.setTime(converterTime);
             averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
-            
+
             expect(averageRate.n).to.be.bignumber.equal(currentRate.n);
             expect(averageRate.d).to.be.bignumber.equal(currentRate.d);
         });
@@ -719,13 +754,17 @@ contract('StandardPoolConverter', accounts => {
 
                     // set initial rate (a second ago)
                     await converter.setTime(now.sub(duration.seconds(1)));
-                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                        value: amount
+                    });
 
                     // reset converter time to current time
                     await converter.setTime(now);
 
                     // convert
-                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                        value: amount
+                    });
 
                     // increase the current time
                     await converter.setTime(now.add(timeElapsed));
@@ -737,20 +776,26 @@ contract('StandardPoolConverter', accounts => {
                     const prevAverageRate = await getPrevAverageRate();
                     const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
                     const expectedAverageRate = getExpectedAverageRate(prevAverageRate, currentRate, timeElapsed);
-                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                        value: amount
+                    });
                     const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
-                    
+
                     expectRatesAlmostEqual(averageRate, expectedAverageRate);
                 });
 
                 it('should not change more than once in a block', async () => {
                     const amount = new BN(1000);
 
-                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                    await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                        value: amount
+                    });
                     const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
 
                     for (let i = 0; i < 5; i++) {
-                        await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, { value: amount });
+                        await convert([ETH_RESERVE_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+                            value: amount
+                        });
                         let averageRate2 = await getAverageRate(ETH_RESERVE_ADDRESS);
 
                         expect(averageRate.n).to.be.bignumber.equal(averageRate2.n);
@@ -768,7 +813,11 @@ contract('StandardPoolConverter', accounts => {
                         const totalElapsedTime = timeElapsed.add(delta);
                         await converter.setTime(now.add(totalElapsedTime));
 
-                        const expectedAverageRate = getExpectedAverageRate(prevAverageRate, currentRate, totalElapsedTime);
+                        const expectedAverageRate = getExpectedAverageRate(
+                            prevAverageRate,
+                            currentRate,
+                            totalElapsedTime
+                        );
                         const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
 
                         expectRatesAlmostEqual(averageRate, expectedAverageRate);
@@ -830,19 +879,25 @@ contract('StandardPoolConverter', accounts => {
                 return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
             }
 
-            return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount)));
+            return await Promise.all(
+                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount))
+            );
         };
 
         const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
             if (firstTime) {
-                const length = Math.round(reserveAmounts.map(reserveAmount => reserveAmount.toString()).join('').length / reserveAmounts.length);
+                const length = Math.round(
+                    reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length /
+                        reserveAmounts.length
+                );
                 const retVal = new BN('1'.padEnd(length, '0'));
                 return reserveAmounts.map((reserveAmount, i) => retVal);
             }
 
-            return await Promise.all(reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount)));
+            return await Promise.all(
+                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
+            );
         };
-
 
         const test = async (hasETH) => {
             const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
@@ -850,17 +905,43 @@ contract('StandardPoolConverter', accounts => {
             const state = [];
             let expected = [];
             let prevSupply = new BN(0);
-            let prevBalances = reserveTokens.map(reserveToken => new BN(0));
+            let prevBalances = reserveTokens.map((reserveToken) => new BN(0));
 
             for (const supplyAmount of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
-                const reserveAmounts = reserveTokens.map((reserveToken, i) => new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100)));
-                await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))));
-                await Promise.all(reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))));
-                const liquidityCosts = await getLiquidityCosts(state.length == 0, converter, reserveTokens, reserveAmounts);
-                const liquidityReturns = await getLiquidityReturns(state.length == 0, converter, reserveTokens, reserveAmounts);
-                await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, { value: hasETH ? reserveAmounts.slice(-1)[0] : 0 });
-                const allowances = await Promise.all(reserveTokens.map(reserveToken => getAllowance(reserveToken, converter)));
-                const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
+                const reserveAmounts = reserveTokens.map((reserveToken, i) =>
+                    new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100))
+                );
+                await Promise.all(
+                    reserveTokens.map((reserveToken, i) =>
+                        approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))
+                    )
+                );
+                await Promise.all(
+                    reserveTokens.map((reserveToken, i) =>
+                        approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))
+                    )
+                );
+                const liquidityCosts = await getLiquidityCosts(
+                    state.length == 0,
+                    converter,
+                    reserveTokens,
+                    reserveAmounts
+                );
+                const liquidityReturns = await getLiquidityReturns(
+                    state.length == 0,
+                    converter,
+                    reserveTokens,
+                    reserveAmounts
+                );
+                await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, {
+                    value: hasETH ? reserveAmounts.slice(-1)[0] : 0
+                });
+                const allowances = await Promise.all(
+                    reserveTokens.map((reserveToken) => getAllowance(reserveToken, converter))
+                );
+                const balances = await Promise.all(
+                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                );
                 const supply = await poolToken.totalSupply.call();
 
                 state.push({ supply: supply, balances: balances });
@@ -870,7 +951,7 @@ contract('StandardPoolConverter', accounts => {
                     expect(diff.eq('0')).to.be.true();
                 }
 
-                const actual = balances.map(balance => Decimal(balance.toString()).div(supply.toString()));
+                const actual = balances.map((balance) => Decimal(balance.toString()).div(supply.toString()));
                 for (let i = 0; i < expected.length; i++) {
                     const diff = expected[i].div(actual[i]);
                     expect(diff.eq('1')).to.be.true();
@@ -891,8 +972,14 @@ contract('StandardPoolConverter', accounts => {
             for (let n = state.length - 1; n > 0; n--) {
                 const supplyAmount = state[n].supply.sub(new BN(state[n - 1].supply));
                 const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
-                await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
-                const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
+                await converter.removeLiquidity(
+                    supplyAmount,
+                    reserveTokens,
+                    reserveTokens.map((reserveTokens) => 1)
+                );
+                const balances = await Promise.all(
+                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                );
                 for (let i = 0; i < balances.length; i++) {
                     const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
                     expect(diff.eq('1')).to.be.true();
@@ -903,8 +990,14 @@ contract('StandardPoolConverter', accounts => {
 
             const supplyAmount = state[0].supply;
             const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
-            await converter.removeLiquidity(supplyAmount, reserveTokens, reserveTokens.map(reserveTokens => 1));
-            const balances = await Promise.all(reserveTokens.map(reserveToken => getBalance(reserveToken, converter)));
+            await converter.removeLiquidity(
+                supplyAmount,
+                reserveTokens,
+                reserveTokens.map((reserveTokens) => 1)
+            );
+            const balances = await Promise.all(
+                reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+            );
             for (let i = 0; i < balances.length; i++) {
                 expect(balances[i]).to.be.bignumber.equal(new BN(0));
                 expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
