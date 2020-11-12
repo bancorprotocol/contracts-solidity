@@ -61,7 +61,7 @@ contract('ConverterLiquidity', (accounts) => {
             it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
                 await expectRevert(
                     converter.addLiquidity(reserveTokens.slice(0, -1), reserveAmounts, MIN_RETURN),
-                    'ERR_INVALID_RESERVE'
+                    'ERR_INVALID_RESERVES'
                 );
             });
 
@@ -111,7 +111,7 @@ contract('ConverterLiquidity', (accounts) => {
             it('should revert if any of the input reserve amounts is not larger than zero', async () => {
                 await expectRevert(
                     converter.addLiquidity(reserveTokens, [...reserveAmounts.slice(0, -1), 0], MIN_RETURN),
-                    'ERR_INVALID_AMOUNT'
+                    'ERR_ZERO_AMOUNT'
                 );
             });
 
