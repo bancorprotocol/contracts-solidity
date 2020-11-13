@@ -27,6 +27,18 @@ interface ILiquidityPoolV1Converter is IConverter {
         uint256[] memory _reserveMinReturnAmounts
     ) external;
 
+    function addLiquidity(
+        IERC20Token[2] memory _reserveTokens,
+        uint256[2] memory _reserveAmounts,
+        uint256 _minReturn
+    ) external payable;
+
+    function removeLiquidity(
+        uint256 _amount,
+        IERC20Token[2] memory _reserveTokens,
+        uint256[2] memory _reserveMinReturnAmounts
+    ) external;
+
     function recentAverageRate(IERC20Token _reserveToken) external view returns (uint256, uint256);
 }
 
@@ -1207,16 +1219,29 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _reserveAmount2,
         uint256 _value
     ) internal {
-        IERC20Token[] memory reserveTokens = new IERC20Token[](2);
-        uint256[] memory amounts = new uint256[](2);
-        reserveTokens[0] = _reserveToken1;
-        reserveTokens[1] = _reserveToken2;
-        amounts[0] = _reserveAmount1;
-        amounts[1] = _reserveAmount2;
-
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
-        _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
+
+        if (isStandardPool(_converter)) {
+            IERC20Token[2] memory reserveTokens;
+            uint256[2] memory amounts;
+            reserveTokens[0] = _reserveToken1;
+            reserveTokens[1] = _reserveToken2;
+            amounts[0] = _reserveAmount1;
+            amounts[1] = _reserveAmount2;
+            _converter.addLiquidity{value: _value}(reserveTokens, amounts, 1);
+        }
+        else {
+            IERC20Token[] memory reserveTokens = new IERC20Token[](2);
+            uint256[] memory amounts = new uint256[](2);
+            reserveTokens[0] = _reserveToken1;
+            reserveTokens[1] = _reserveToken2;
+            amounts[0] = _reserveAmount1;
+            amounts[1] = _reserveAmount2;
+            _converter.addLiquidity{value: _value}(reserveTokens, amounts, 1);
+        }
+
+        // ensure that the contract can receive ETH
         updatingLiquidity = false;
     }
 
@@ -1236,16 +1261,29 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     ) internal {
         ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
 
-        IERC20Token[] memory reserveTokens = new IERC20Token[](2);
-        uint256[] memory minReturns = new uint256[](2);
-        reserveTokens[0] = _reserveToken1;
-        reserveTokens[1] = _reserveToken2;
-        minReturns[0] = 1;
-        minReturns[1] = 1;
-
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
-        converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
+
+        if (isStandardPool(converter)) {
+            IERC20Token[2] memory reserveTokens;
+            uint256[2] memory minReturns;
+            reserveTokens[0] = _reserveToken1;
+            reserveTokens[1] = _reserveToken2;
+            minReturns[0] = 1;
+            minReturns[1] = 1;
+            converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
+        }
+        else {
+            IERC20Token[] memory reserveTokens = new IERC20Token[](2);
+            uint256[] memory minReturns = new uint256[](2);
+            reserveTokens[0] = _reserveToken1;
+            reserveTokens[1] = _reserveToken2;
+            minReturns[0] = 1;
+            minReturns[1] = 1;
+            converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
+        }
+
+        // ensure that the contract can receive ETH
         updatingLiquidity = false;
     }
 
@@ -1449,5 +1487,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      */
     function time() internal view virtual returns (uint256) {
         return block.timestamp;
+    }
+
+    /**
+     * @dev checks whether or not a given converter implements a standard pool
+     *
+     * @param _converter   converter
+     *
+     * @return true if the given converter implements a standard pool, false otherwise
+     */
+    function isStandardPool(ILiquidityPoolV1Converter _converter) internal pure returns (bool) {
+        return _converter.converterType() == 3;
     }
 }
