@@ -5,7 +5,6 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/interfaces/IWhitelist.sol";
-import "../token/interfaces/IEtherToken.sol";
 import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
 
 /**
@@ -22,8 +21,8 @@ import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
   * and then the upgrader 'upgrade' function should be executed directly.
 */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
+    uint32 private constant PPM_RESOLUTION = 1000000;
     IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-    IEtherToken public etherToken;
 
     /**
       * @dev triggered when the contract accept a converter ownership
@@ -46,8 +45,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       *
       * @param _registry    address of a contract registry contract
     */
-    constructor(IContractRegistry _registry, IEtherToken _etherToken) ContractRegistryClient(_registry) public {
-        etherToken = _etherToken;
+    constructor(IContractRegistry _registry) ContractRegistryClient(_registry) public {
     }
 
     /**
@@ -147,6 +145,14 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         else if (reserveTokenCount > 1)
             newType = 1;
 
+        if (newType == 1 && reserveTokenCount == 2) {
+            (, uint32 weight0, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(0));
+            (, uint32 weight1, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(1));
+            if (weight0 == PPM_RESOLUTION / 2 && weight1 == PPM_RESOLUTION / 2) {
+                newType = 3;
+            }
+        }
+
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
         IConverter converter = converterFactory.createConverter(newType, anchor, registry, maxConversionFee);
 
@@ -170,10 +176,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
             // Ether reserve
             if (reserveAddress == ETH_RESERVE_ADDRESS) {
-                _newConverter.addReserve(ETH_RESERVE_ADDRESS, weight);
-            }
-            // Ether reserve token
-            else if (reserveAddress == etherToken) {
                 _newConverter.addReserve(ETH_RESERVE_ADDRESS, weight);
             }
             // ERC20 reserve token
@@ -212,12 +214,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             if (reserveAddress == ETH_RESERVE_ADDRESS) {
                 _oldConverter.withdrawETH(address(_newConverter));
             }
-            // Ether reserve token
-            else if (reserveAddress == etherToken) {
-                reserveBalance = etherToken.balanceOf(address(_oldConverter));
-                _oldConverter.withdrawTokens(etherToken, address(this), reserveBalance);
-                etherToken.withdrawTo(address(_newConverter), reserveBalance);
-            }
             // ERC20 reserve token
             else {
                 IERC20Token connector = reserveAddress;
@@ -235,8 +231,9 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _activate        activate the new converter
     */
     function handleTypeSpecificData(IConverter _oldConverter, IConverter _newConverter, bool _activate) private {
-        if (!isV28OrHigherConverter(_oldConverter))
+        if (!isV28OrHigherConverter(_oldConverter)) {
             return;
+        }
 
         uint16 converterType = _oldConverter.converterType();
         if (converterType == 2) {

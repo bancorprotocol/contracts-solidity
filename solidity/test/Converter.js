@@ -19,9 +19,11 @@ const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
+const StandardPoolConverter = artifacts.require('StandardPoolConverter');
 const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
 const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
+const StandardPoolConverterFactory = artifacts.require('StandardPoolConverterFactory');
 const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
 const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
 const DSToken = artifacts.require('DSToken');
@@ -43,6 +45,8 @@ contract('Converter', (accounts) => {
                 return LiquidityPoolV1Converter.new(anchorAddress, registryAddress, maxConversionFee);
             case 2:
                 return LiquidityPoolV2Converter.new(anchorAddress, registryAddress, maxConversionFee);
+            case 3:
+                return StandardPoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
         }
     };
 
@@ -54,6 +58,8 @@ contract('Converter', (accounts) => {
                 return 'LiquidityPoolV1Converter';
             case 2:
                 return 'LiquidityPoolV2Converter';
+            case 3:
+                return 'StandardPoolConverter';
         }
 
         return 'Unknown';
@@ -67,6 +73,8 @@ contract('Converter', (accounts) => {
                 return [getReserve1Address(isETHReserve), reserveToken2.address];
             case 2:
                 return [getReserve1Address(isETHReserve), reserveToken2.address];
+            case 3:
+                return [getReserve1Address(isETHReserve), reserveToken2.address];
         }
 
         return 'Unknown';
@@ -79,6 +87,8 @@ contract('Converter', (accounts) => {
             case 1:
                 return [250000, 150000];
             case 2:
+                return [500000, 500000];
+            case 3:
                 return [500000, 500000];
         }
 
@@ -102,6 +112,7 @@ contract('Converter', (accounts) => {
                 break;
 
             case 1:
+            case 3:
                 await reserveToken2.transfer(converter.address, 8000);
                 await anchor.issue(owner, 20000);
                 break;
@@ -140,6 +151,7 @@ contract('Converter', (accounts) => {
                 break;
 
             case 1:
+            case 3:
                 anchor = await DSToken.new('Pool1', 'POOL1', 2);
                 break;
 
@@ -189,7 +201,7 @@ contract('Converter', (accounts) => {
     const nonOwner = accounts[1];
     const receiver = accounts[3];
 
-    const NUM_CONVERTER_TYPES = 3;
+    const NUM_CONVERTER_TYPES = 4;
     const MIN_RETURN = new BN(1);
     const WEIGHT_10_PERCENT = new BN(100000);
     const MAX_CONVERSION_FEE = new BN(200000);
@@ -208,6 +220,7 @@ contract('Converter', (accounts) => {
         await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
+        await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
 
         await factory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
         await factory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
@@ -226,7 +239,7 @@ contract('Converter', (accounts) => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        upgrader = await ConverterUpgrader.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
@@ -300,43 +313,45 @@ contract('Converter', (accounts) => {
                     );
                 });
 
-                it('verifies the owner can update the conversion whitelist contract address', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-                    const prevWhitelist = await converter.conversionWhitelist.call();
+                if (type != 3) {
+                    it('verifies the owner can update the conversion whitelist contract address', async () => {
+                        const converter = await initConverter(type, false, isETHReserve);
+                        const prevWhitelist = await converter.conversionWhitelist.call();
 
-                    await converter.setConversionWhitelist(receiver);
+                        await converter.setConversionWhitelist(receiver);
 
-                    const newWhitelist = await converter.conversionWhitelist.call();
-                    expect(prevWhitelist).not.to.eql(newWhitelist);
-                });
+                        const newWhitelist = await converter.conversionWhitelist.call();
+                        expect(prevWhitelist).not.to.eql(newWhitelist);
+                    });
 
-                it('should revert when a non owner attempts update the conversion whitelist contract address', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
+                    it('should revert when a non owner attempts update the conversion whitelist contract address', async () => {
+                        const converter = await initConverter(type, false, isETHReserve);
 
-                    await expectRevert(
-                        converter.setConversionWhitelist(receiver, { from: nonOwner }),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
+                        await expectRevert(
+                            converter.setConversionWhitelist(receiver, { from: nonOwner }),
+                            'ERR_ACCESS_DENIED'
+                        );
+                    });
 
-                it('verifies the owner can remove the conversion whitelist contract address', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-                    await converter.setConversionWhitelist(receiver);
+                    it('verifies the owner can remove the conversion whitelist contract address', async () => {
+                        const converter = await initConverter(type, false, isETHReserve);
+                        await converter.setConversionWhitelist(receiver);
 
-                    let whitelist = await converter.conversionWhitelist.call();
-                    expect(whitelist).to.eql(receiver);
+                        let whitelist = await converter.conversionWhitelist.call();
+                        expect(whitelist).to.eql(receiver);
 
-                    await converter.setConversionWhitelist(ZERO_ADDRESS);
-                    whitelist = await converter.conversionWhitelist.call();
+                        await converter.setConversionWhitelist(ZERO_ADDRESS);
+                        whitelist = await converter.conversionWhitelist.call();
 
-                    expect(whitelist).to.eql(ZERO_ADDRESS);
-                });
+                        expect(whitelist).to.eql(ZERO_ADDRESS);
+                    });
 
-                it('should revert when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
+                    it('should revert when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
+                        const converter = await initConverter(type, false, isETHReserve);
 
-                    await expectRevert(converter.setConversionWhitelist(converter.address), 'ERR_ADDRESS_IS_SELF');
-                });
+                        await expectRevert(converter.setConversionWhitelist(converter.address), 'ERR_ADDRESS_IS_SELF');
+                    });
+                }
 
                 it('verifies the owner can update the fee', async () => {
                     const converter = await initConverter(type, false, isETHReserve, MAX_CONVERSION_FEE);
@@ -387,76 +402,86 @@ contract('Converter', (accounts) => {
                     }
                 });
 
-                it('should revert when a non owner attempts to add a reserve', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
+                if (type != 3) {
+                    it('should revert when a non owner attempts to add a reserve', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
 
-                    await expectRevert(
-                        converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT, { from: nonOwner }),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
+                        await expectRevert(
+                            converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT, {
+                                from: nonOwner
+                            }),
+                            'ERR_ACCESS_DENIED'
+                        );
+                    });
 
-                it('should revert when attempting to add a reserve with invalid address', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
+                    it('should revert when attempting to add a reserve with invalid address', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
 
-                    await expectRevert(converter.addReserve(ZERO_ADDRESS, WEIGHT_10_PERCENT), 'ERR_INVALID_ADDRESS');
-                });
+                        await expectRevert(
+                            converter.addReserve(ZERO_ADDRESS, WEIGHT_10_PERCENT),
+                            'ERR_INVALID_ADDRESS'
+                        );
+                    });
 
-                it('should revert when attempting to add a reserve with weight = 0', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
+                    it('should revert when attempting to add a reserve with weight = 0', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
 
-                    await expectRevert(
-                        converter.addReserve(getReserve1Address(isETHReserve), 0),
-                        'ERR_INVALID_RESERVE_WEIGHT'
-                    );
-                });
+                        await expectRevert(
+                            converter.addReserve(getReserve1Address(isETHReserve), 0),
+                            'ERR_INVALID_RESERVE_WEIGHT'
+                        );
+                    });
 
-                it('should revert when attempting to add a reserve with weight greater than 100%', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
+                    it('should revert when attempting to add a reserve with weight greater than 100%', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
 
-                    await expectRevert(
-                        converter.addReserve(getReserve1Address(isETHReserve), 1000001),
-                        'ERR_INVALID_RESERVE_WEIGHT'
-                    );
-                });
+                        await expectRevert(
+                            converter.addReserve(getReserve1Address(isETHReserve), 1000001),
+                            'ERR_INVALID_RESERVE_WEIGHT'
+                        );
+                    });
 
-                it('should revert when attempting to add the anchor as a reserve', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
+                    it('should revert when attempting to add the anchor as a reserve', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
 
-                    await expectRevert(converter.addReserve(anchorAddress, WEIGHT_10_PERCENT), 'ERR_INVALID_RESERVE');
-                });
+                        await expectRevert(
+                            converter.addReserve(anchorAddress, WEIGHT_10_PERCENT),
+                            'ERR_INVALID_RESERVE'
+                        );
+                    });
 
-                it('should revert when attempting to add the converter as a reserve', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
+                    it('should revert when attempting to add the converter as a reserve', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
 
-                    await expectRevert(
-                        converter.addReserve(converter.address, WEIGHT_10_PERCENT),
-                        'ERR_ADDRESS_IS_SELF'
-                    );
-                });
+                        await expectRevert(
+                            converter.addReserve(converter.address, WEIGHT_10_PERCENT),
+                            'ERR_ADDRESS_IS_SELF'
+                        );
+                    });
 
-                it('verifies that the correct reserve weight is returned', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
-                    await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
+                    it('verifies that the correct reserve weight is returned', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
+                        await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
-                    const reserveWeight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
-                    expect(reserveWeight).to.be.bignumber.equal(WEIGHT_10_PERCENT);
-                });
+                        const reserveWeight = await converter.reserveWeight.call(getReserve1Address(isETHReserve));
+                        expect(reserveWeight).to.be.bignumber.equal(WEIGHT_10_PERCENT);
+                    });
 
-                it('should revert when attempting to retrieve the balance for a reserve that does not exist', async () => {
-                    await createAnchor(type);
-                    const converter = await createConverter(type, anchorAddress);
-                    await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
+                    it('should revert when attempting to retrieve the balance for a reserve that does not exist', async () => {
+                        await createAnchor(type);
+                        const converter = await createConverter(type, anchorAddress);
+                        await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
-                    await expectRevert(converter.reserveBalance.call(reserveToken2.address), 'ERR_INVALID_RESERVE');
-                });
+                        await expectRevert(converter.reserveBalance.call(reserveToken2.address), 'ERR_INVALID_RESERVE');
+                    });
+                }
 
                 it('verifies that the converter can accept the anchor ownership', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
@@ -694,7 +719,12 @@ contract('Converter', (accounts) => {
                             getReserve1Address(isETHReserve),
                             500
                         ),
-                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_SAME_SOURCE_TARGET'
+                        [
+                            'ERR_INVALID_TOKEN',
+                            'ERR_SAME_SOURCE_TARGET',
+                            'ERR_SAME_SOURCE_TARGET',
+                            'ERR_INVALID_RESERVE'
+                        ][type]
                     );
                 });
 

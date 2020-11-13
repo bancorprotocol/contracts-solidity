@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+import "./ConverterVersion.sol";
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterAnchor.sol";
 import "./interfaces/IConverterUpgrader.sol";
@@ -36,7 +37,14 @@ import "../utility/interfaces/IWhitelist.sol";
  *
  * Note that converters don't currently support tokens with transfer fees.
  */
-abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, ContractRegistryClient, ReentrancyGuard {
+abstract contract ConverterBase is
+    ConverterVersion,
+    IConverter,
+    TokenHandler,
+    TokenHolder,
+    ContractRegistryClient,
+    ReentrancyGuard
+{
     using SafeMath for uint256;
 
     uint32 internal constant PPM_RESOLUTION = 1000000;
@@ -49,11 +57,6 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
         bool deprecated2; // deprecated
         bool isSet; // true if the reserve is valid, false otherwise
     }
-
-    /**
-     * @dev version number
-     */
-    uint16 public constant version = 43;
 
     IConverterAnchor public override anchor; // converter anchor contract
     IWhitelist public conversionWhitelist; // whitelist contract with list of addresses that are allowed to use the converter

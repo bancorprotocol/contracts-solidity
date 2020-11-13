@@ -8,7 +8,7 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorFormula = artifacts.require('BancorFormula');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterRegistry = artifacts.require('TestConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
@@ -51,7 +51,7 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
-contract('LiquidityProtectionEdgeCases', (accounts) => {
+contract('LiquidityProtectionV1EdgeCases', (accounts) => {
     const addProtectedLiquidity = async (token, amount) => {
         await token.approve(liquidityProtection.address, amount);
         await liquidityProtection.addLiquidity(poolToken.address, token.address, amount);
@@ -117,6 +117,8 @@ contract('LiquidityProtectionEdgeCases', (accounts) => {
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+
+        await converterRegistry.enableTypeChanging(false);
     });
 
     beforeEach(async () => {

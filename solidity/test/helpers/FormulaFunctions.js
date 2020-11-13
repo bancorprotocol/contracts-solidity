@@ -24,7 +24,7 @@ const purchaseTargetAmount = (supply, reserveBalance, reserveWeight, amount) => 
     }
 
     // return supply * ((1 + amount / reserveBalance) ^ (reserveWeight / MAX_WEIGHT) - 1)
-    return supply.mul((ONE.add(amount.div(reserveBalance))).pow(reserveWeight.div(MAX_WEIGHT)).sub(ONE));
+    return supply.mul(ONE.add(amount.div(reserveBalance)).pow(reserveWeight.div(MAX_WEIGHT)).sub(ONE));
 };
 
 const saleTargetAmount = (supply, reserveBalance, reserveWeight, amount) => {
@@ -49,10 +49,16 @@ const saleTargetAmount = (supply, reserveBalance, reserveWeight, amount) => {
     }
 
     // return reserveBalance * (1 - (1 - amount / supply) ^ (MAX_WEIGHT / reserveWeight))
-    return reserveBalance.mul(ONE.sub(ONE.sub(amount.div(supply)).pow((MAX_WEIGHT.div(reserveWeight)))));
+    return reserveBalance.mul(ONE.sub(ONE.sub(amount.div(supply)).pow(MAX_WEIGHT.div(reserveWeight))));
 };
 
-const crossReserveTargetAmount = (sourceReserveBalance, sourceReserveWeight, targetReserveBalance, targetReserveWeight, amount) => {
+const crossReserveTargetAmount = (
+    sourceReserveBalance,
+    sourceReserveWeight,
+    targetReserveBalance,
+    targetReserveWeight,
+    amount
+) => {
     sourceReserveBalance = Decimal(sourceReserveBalance.toString());
     sourceReserveWeight = Decimal(sourceReserveWeight.toString());
     targetReserveBalance = Decimal(targetReserveBalance.toString());
@@ -65,8 +71,11 @@ const crossReserveTargetAmount = (sourceReserveBalance, sourceReserveWeight, tar
     }
 
     // return targetReserveBalance * (1 - (sourceReserveBalance / (sourceReserveBalance + amount)) ^ (sourceReserveWeight / targetReserveWeight))
-    return targetReserveBalance.mul(ONE.sub(sourceReserveBalance.div(sourceReserveBalance.add(amount))
-        .pow(sourceReserveWeight.div(targetReserveWeight))));
+    return targetReserveBalance.mul(
+        ONE.sub(
+            sourceReserveBalance.div(sourceReserveBalance.add(amount)).pow(sourceReserveWeight.div(targetReserveWeight))
+        )
+    );
 };
 
 const fundCost = (supply, reserveBalance, reserveRatio, amount) => {
@@ -82,14 +91,14 @@ const fundCost = (supply, reserveBalance, reserveRatio, amount) => {
 
     // special case if the reserve ratio = 100%
     if (reserveRatio.eq(MAX_WEIGHT)) {
-        return (amount.mul(reserveBalance).sub(ONE)).div(supply.add(ONE));
+        return amount.mul(reserveBalance).sub(ONE).div(supply.add(ONE));
     }
 
     // return reserveBalance * (((supply + amount) / supply) ^ (MAX_WEIGHT / reserveRatio) - 1)
     return reserveBalance.mul(supply.add(amount).div(supply).pow(MAX_WEIGHT.div(reserveRatio)).sub(ONE));
 };
 
-function liquidateReserveAmount (supply, reserveBalance, reserveRatio, amount) {
+function liquidateReserveAmount(supply, reserveBalance, reserveRatio, amount) {
     supply = Decimal(supply.toString());
     reserveBalance = Decimal(reserveBalance.toString());
     reserveRatio = Decimal(reserveRatio.toString());
@@ -114,8 +123,13 @@ function liquidateReserveAmount (supply, reserveBalance, reserveRatio, amount) {
     return reserveBalance.mul(ONE.sub(supply.sub(amount).div(supply).pow(MAX_WEIGHT.div(reserveRatio))));
 }
 
-const balancedWeights = (primaryReserveStakedBalance, primaryReserveBalance, secondaryReserveBalance,
-    reserveRateNumerator, reserveRateDenominator) => {
+const balancedWeights = (
+    primaryReserveStakedBalance,
+    primaryReserveBalance,
+    secondaryReserveBalance,
+    reserveRateNumerator,
+    reserveRateDenominator
+) => {
     const t = Decimal(primaryReserveStakedBalance.toString());
     const s = Decimal(primaryReserveBalance.toString());
     const r = Decimal(secondaryReserveBalance.toString());
@@ -124,8 +138,7 @@ const balancedWeights = (primaryReserveStakedBalance, primaryReserveBalance, sec
 
     if (t.eq(s)) {
         expect(t.gt(0) || r.gt(0)).to.be.true('ERR_INVALID_RESERVE_BALANCE');
-    }
-    else {
+    } else {
         expect(t.gt(0) && s.gt(0) && r.gt(0)).to.be.true('ERR_INVALID_RESERVE_BALANCE');
     }
     expect(q.gt(0) && p.gt(0)).to.be.true('ERR_INVALID_RESERVE_RATE');

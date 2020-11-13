@@ -7,7 +7,7 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorFormula = artifacts.require('BancorFormula');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterRegistry = artifacts.require('TestConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
@@ -29,7 +29,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-contract('LiquidityProtectionTokenRate', (accounts) => {
+contract('LiquidityProtectionV1TokenRate', (accounts) => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];
@@ -69,6 +69,8 @@ contract('LiquidityProtectionTokenRate', (accounts) => {
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+
+        await converterRegistry.enableTypeChanging(false);
 
         reserveToken1 = await DSToken.new('RT1', 'RT1', 18);
         reserveToken2 = await DSToken.new('RT2', 'RT2', 18);

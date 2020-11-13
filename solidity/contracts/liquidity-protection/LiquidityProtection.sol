@@ -86,7 +86,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     uint256 public lockDuration = 24 hours;
 
     // maximum deviation of the average rate from the spot rate
-    uint32 public averageRateMaxDeviation = 5000; // PPM units
+    uint32 public averageRateMaxDeviation = 20000; // PPM units
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
@@ -311,8 +311,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function setSystemNetworkTokenLimits(uint256 _maxSystemNetworkTokenAmount, uint32 _maxSystemNetworkTokenRatio)
         external
         ownerOnly
-        validPortion(_maxSystemNetworkTokenRatio)
     {
+        require(_maxSystemNetworkTokenRatio <= PPM_RESOLUTION, "ERR_INVALID_MAX_RATIO");
+
         emit SystemNetworkTokenLimitsUpdated(
             maxSystemNetworkTokenAmount,
             _maxSystemNetworkTokenAmount,
@@ -370,11 +371,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      *
      * @param _averageRateMaxDeviation maximum deviation of the average rate from the spot rate
      */
-    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation)
-        external
-        ownerOnly
-        validPortion(_averageRateMaxDeviation)
-    {
+    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external ownerOnly {
+        require(_averageRateMaxDeviation <= PPM_RESOLUTION, "ERR_INVALID_MAX_DEVIATION");
         emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
 
         averageRateMaxDeviation = _averageRateMaxDeviation;
@@ -472,8 +470,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function unprotectLiquidity(uint256 _id1, uint256 _id2) external protected {
         require(_id1 != _id2, "ERR_SAME_ID");
 
-        ProtectedLiquidity memory liquidity1 = protectedLiquidity(_id1, msg.sender);
-        ProtectedLiquidity memory liquidity2 = protectedLiquidity(_id2, msg.sender);
+        ProtectedLiquidity memory liquidity1 = protectedLiquidity(_id1);
+        ProtectedLiquidity memory liquidity2 = protectedLiquidity(_id2);
+
+        // verify input & permissions
+        require(liquidity1.provider == msg.sender && liquidity2.provider == msg.sender, "ERR_ACCESS_DENIED");
 
         // verify that the two protections were added together (using `protect`)
         require(
@@ -633,7 +634,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         notThis(_newProvider)
         returns (uint256)
     {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
+
+        // verify input & permissions
+        require(liquidity.provider == msg.sender, "ERR_ACCESS_DENIED");
 
         // remove the protected liquidity from the current provider
         store.removeProtectedLiquidity(_id);
@@ -740,7 +744,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _portion portion of liquidity to remove, in PPM
      */
     function removeLiquidity(uint256 _id, uint32 _portion) external validPortion(_portion) protected {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
+
+        // verify input & permissions
+        require(liquidity.provider == msg.sender, "ERR_ACCESS_DENIED");
 
         // verify that the pool is whitelisted
         require(store.isPoolWhitelisted(liquidity.poolToken), "ERR_POOL_NOT_WHITELISTED");
@@ -1265,19 +1272,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-     * @dev returns a protected liquidity from the store
-     *
-     * @param _id          protected liquidity id
-     * @param _provider    authorized provider
-     * @return protected liquidity
-     */
-    function protectedLiquidity(uint256 _id, address _provider) internal view returns (ProtectedLiquidity memory) {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id);
-        require(liquidity.provider == _provider, "ERR_ACCESS_DENIED");
-        return liquidity;
-    }
-
-    /**
      * @dev returns the protected amount of reserve tokens plus accumulated fee before compensation
      *
      * @param _poolToken       pool token
@@ -1361,8 +1355,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory _loss,
         Fraction memory _level
     ) internal pure returns (uint256) {
-        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT128);
-        return _total.mul(lossD.sub(lossN)).div(lossD).add(_amount.mul(lossN.mul(_level.n)).div(lossD.mul(_level.d)));
+        (uint256 compN, uint256 compD) = Math.reducedRatio(_loss.n.mul(_level.n), _loss.d.mul(_level.d), MAX_UINT128);
+        return _total.mul(_loss.d.sub(_loss.n)).div(_loss.d).add(_amount.mul(compN).div(compD));
     }
 
     function getNetworkCompensation(
@@ -1370,19 +1364,17 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _baseAmount,
         PackedRates memory _packedRates
     ) internal view returns (uint256) {
-        if (_targetAmount <= _baseAmount) {
-            return 0;
-        }
+        if (_targetAmount > _baseAmount) {
+            // calculate the delta in network tokens
+            uint256 delta = (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(
+                _packedRates.removeAverageRateD
+            );
 
-        // calculate the delta in network tokens
-        uint256 delta = (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(
-            _packedRates.removeAverageRateD
-        );
-
-        // the delta might be very small due to precision loss
-        // in which case no compensation will take place (gas optimization)
-        if (delta >= _minNetworkCompensation()) {
-            return delta;
+            // the delta might be very small due to precision loss
+            // in which case no compensation will take place (gas optimization)
+            if (delta >= _minNetworkCompensation()) {
+                return delta;
+            }
         }
 
         return 0;

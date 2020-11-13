@@ -13,8 +13,8 @@ const DSToken = artifacts.require('DSToken');
 const ConverterRegistry = artifacts.require('ConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
+const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverterFactory');
+const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
 
@@ -28,8 +28,8 @@ const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
 
-contract('LiquidityProtection', (accounts) => {
-    const initPool = async (isETH = false, whitelist = true, standard = true) => {
+contract('LiquidityProtectionStandardPool', (accounts) => {
+    const initPool = async (isETH = false, whitelist = true) => {
         if (isETH) {
             baseTokenAddress = ETH_RESERVE_ADDRESS;
         } else {
@@ -39,25 +39,20 @@ contract('LiquidityProtection', (accounts) => {
             baseTokenAddress = baseToken.address;
         }
 
-        let weights = [500000, 500000];
-        if (!standard) {
-            weights = [450000, 550000];
-        }
-
         await converterRegistry.newConverter(
-            1,
+            3,
             'PT',
             'PT',
             18,
             PPM_RESOLUTION,
             [baseTokenAddress, networkToken.address],
-            weights
+            [500000, 500000]
         );
         const anchorCount = await converterRegistry.getAnchorCount.call();
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
         poolToken = await DSToken.at(poolTokenAddress);
         converterAddress = await poolToken.owner.call();
-        converter = await LiquidityPoolV1Converter.at(converterAddress);
+        converter = await StandardPoolConverter.at(converterAddress);
         await converter.setTime(now);
         await converter.acceptOwnership();
         await networkToken.approve(converter.address, RESERVE2_AMOUNT);
@@ -234,9 +229,9 @@ contract('LiquidityProtection', (accounts) => {
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
-        const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
+        const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
         converterFactory = await ConverterFactory.new();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
@@ -363,7 +358,7 @@ contract('LiquidityProtection', (accounts) => {
     it('should revert when the owner attempts to set a system network token ratio that is larger than 100%', async () => {
         await expectRevert(
             liquidityProtection.setSystemNetworkTokenLimits(200, PPM_RESOLUTION.add(new BN(1))),
-            'ERR_INVALID_PORTION'
+            'ERR_INVALID_MAX_RATIO'
         );
     });
 
@@ -448,11 +443,11 @@ contract('LiquidityProtection', (accounts) => {
     });
 
     it('verifies that the owner can set the maximum deviation of the average rate from the actual rate', async () => {
-        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('5000');
+        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('20000');
 
         const res = await liquidityProtection.setAverageRateMaxDeviation('30000');
         expectEvent(res, 'AverageRateMaxDeviationUpdated', {
-            _prevAverageRateMaxDeviation: '5000',
+            _prevAverageRateMaxDeviation: '20000',
             _newAverageRateMaxDeviation: '30000'
         });
 
@@ -462,7 +457,7 @@ contract('LiquidityProtection', (accounts) => {
     it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
         await expectRevert(
             liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }),
-            'ERR_ACCESS_DENIED.'
+            'ERR_ACCESS_DENIED'
         );
     });
 
@@ -492,12 +487,6 @@ contract('LiquidityProtection', (accounts) => {
                 liquidityProtection.setWhitelistAdmin(newWhitelistAdmin, { from: accounts[1] }),
                 'ERR_ACCESS_DENIED'
             );
-        });
-
-        it('should revert when attempting to add a non standard pool to the whitelist', async () => {
-            await initPool(false, false, false);
-
-            await expectRevert(liquidityProtection.whitelistPool(poolToken.address, true), 'ERR_POOL_NOT_SUPPORTED');
         });
 
         context('with a non-default whitelist admin', async () => {
@@ -563,51 +552,16 @@ contract('LiquidityProtection', (accounts) => {
         await expectRevert(liquidityProtection.isPoolSupported(accounts[2]), 'ERR_INVALID_ANCHOR');
     });
 
-    it('verifies that isPoolSupported returns false for a pool with 3 reserves', async () => {
-        const reserveToken = await DSToken.new('RSV1', 'RSV1', 18);
-        await converterRegistry.newConverter(
-            1,
-            'PT',
-            'PT',
-            18,
-            5000,
-            [ETH_RESERVE_ADDRESS, networkToken.address, reserveToken.address],
-            [100000, 100000, 100000]
-        );
-        const anchorCount = await converterRegistry.getAnchorCount.call();
-        const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolTokenAddress);
-        expect(isSupported).to.be.false;
-    });
-
     it('verifies that isPoolSupported returns false for a pool that does not have the network token as reserve', async () => {
         const reserveToken = await DSToken.new('RSV1', 'RSV1', 18);
         await converterRegistry.newConverter(
-            1,
+            3,
             'PT',
             'PT',
             18,
             5000,
             [ETH_RESERVE_ADDRESS, reserveToken.address],
             [500000, 500000]
-        );
-        const anchorCount = await converterRegistry.getAnchorCount.call();
-        const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolTokenAddress);
-        expect(isSupported).to.be.false;
-    });
-
-    it('verifies that isPoolSupported returns false for a pool with reserve weights that are not 50%/50%', async () => {
-        await converterRegistry.newConverter(
-            1,
-            'PT',
-            'PT',
-            18,
-            5000,
-            [ETH_RESERVE_ADDRESS, networkToken.address],
-            [450000, 550000]
         );
         const anchorCount = await converterRegistry.getAnchorCount.call();
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
@@ -654,14 +608,8 @@ contract('LiquidityProtection', (accounts) => {
         expect(govBalance).to.be.bignumber.equal(RESERVE2_AMOUNT);
     });
 
-    it('should revert when attempting to protect pool tokens for an unsupported pool', async () => {
-        await initPool(false, false, false);
-
-        await expectRevert(liquidityProtection.protectLiquidity(poolToken.address, '100'), 'ERR_POOL_NOT_SUPPORTED');
-    });
-
     it('should revert when attempting to protect pool tokens for a non whitelisted pool', async () => {
-        await initPool(false, false, true);
+        await initPool(false, false);
 
         await expectRevert(liquidityProtection.protectLiquidity(poolToken.address, '100'), 'ERR_POOL_NOT_WHITELISTED');
     });
@@ -891,16 +839,6 @@ contract('LiquidityProtection', (accounts) => {
                 );
             });
 
-            it('should revert when attempting to add liquidity to an unsupported pool', async () => {
-                await initPool(isETHReserve, false, false);
-
-                const reserveAmount = new BN(1000);
-                await expectRevert(
-                    addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount, isETHReserve),
-                    'ERR_POOL_NOT_SUPPORTED'
-                );
-            });
-
             it('should revert when attempting to add liquidity to a non whitelisted pool', async () => {
                 await liquidityProtection.whitelistPool(poolToken.address, false);
 
@@ -1038,16 +976,6 @@ contract('LiquidityProtection', (accounts) => {
             );
         });
 
-        it('should revert when attempting to add liquidity to an unsupported pool', async () => {
-            await initPool(false, false, false);
-
-            const reserveAmount = new BN(1000);
-            await expectRevert(
-                addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount),
-                'ERR_POOL_NOT_SUPPORTED'
-            );
-        });
-
         it('should revert when attempting to add liquidity to a non whitelisted pool', async () => {
             await liquidityProtection.whitelistPool(poolToken.address, false);
 
@@ -1180,13 +1108,13 @@ contract('LiquidityProtection', (accounts) => {
     });
 
     it('should revert when calling removeLiquidityReturn with zero portion of the liquidity', async () => {
-        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PORTION');
+        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PERCENT');
     });
 
     it('should revert when calling removeLiquidityReturn with remove more than 100% of the liquidity', async () => {
         await expectRevert(
             liquidityProtection.removeLiquidityReturn('1234', PPM_RESOLUTION.add(new BN(1)), now),
-            'ERR_INVALID_PORTION'
+            'ERR_INVALID_PERCENT'
         );
     });
 
@@ -1345,7 +1273,7 @@ contract('LiquidityProtection', (accounts) => {
                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 const protectionId = protectionIds[0];
 
-                await expectRevert(liquidityProtection.removeLiquidity(protectionId, 0), 'ERR_INVALID_PORTION');
+                await expectRevert(liquidityProtection.removeLiquidity(protectionId, 0), 'ERR_INVALID_PERCENT');
             });
 
             it('should revert when attempting to remove more than 100% of the liquidity', async () => {
@@ -1362,7 +1290,7 @@ contract('LiquidityProtection', (accounts) => {
 
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION.add(new BN(1))),
-                    'ERR_INVALID_PORTION'
+                    'ERR_INVALID_PERCENT'
                 );
             });
 
