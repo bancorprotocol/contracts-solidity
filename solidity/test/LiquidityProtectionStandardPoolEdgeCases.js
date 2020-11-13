@@ -7,7 +7,7 @@ const ContractRegistry = artifacts.require('ContractRegistry');
 const BancorFormula = artifacts.require('BancorFormula');
 const BancorNetwork = artifacts.require('BancorNetwork');
 const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
+const ConverterRegistry = artifacts.require('TestConverterRegistry');
 const ConverterRegistryData = artifacts.require('ConverterRegistryData');
 const ConverterFactory = artifacts.require('ConverterFactory');
 const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverterFactory');
@@ -116,6 +116,8 @@ contract('LiquidityProtectionStandardPoolEdgeCases', (accounts) => {
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+
+        await converterRegistry.enableTypeChanging(false);
     });
 
     beforeEach(async () => {
