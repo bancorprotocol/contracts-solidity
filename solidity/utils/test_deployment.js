@@ -10,6 +10,8 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 const MIN_GAS_LIMIT = 100000;
 
+const ROLE_MINTER = web3.utils.keccak256('ROLE_MINTER');
+
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
 };
@@ -94,13 +96,21 @@ const deploy = async (web3, account, gasPrice, contractId, contractName, contrac
         const receipt = await send(web3, account, gasPrice, transaction);
         const args = transaction.encodeABI().slice(options.data.length);
         console.log(`${contractId} deployed at ${receipt.contractAddress}`);
-        setConfig({ [contractId]: { name: contractName, addr: receipt.contractAddress, args: args } });
+        setConfig({
+            [contractId]: {
+                name: contractName,
+                addr: receipt.contractAddress,
+                args: args
+            }
+        });
     }
     return deployed(web3, contractName, getConfig()[contractId].addr);
 };
 
 const deployed = (web3, contractName, contractAddr) => {
-    const abi = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + '.abi'), { encoding: 'utf8' });
+    const abi = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + '.abi'), {
+        encoding: 'utf8'
+    });
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 };
 
@@ -384,7 +394,10 @@ const run = async () => {
             }
         }
 
-        reserves[converter.symbol] = { address: converterAnchor._address, decimals: decimals };
+        reserves[converter.symbol] = {
+            address: converterAnchor._address,
+            decimals: decimals
+        };
     }
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BNTToken'), reserves.BNT.address));
@@ -394,16 +407,23 @@ const run = async () => {
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
     const liquidityProtectionParams = [
         liquidityProtectionStore._address,
-        reserves.BNT.address,
-        reserves.vBNT.address,
+        reserves.BNTTokenGovernance.address,
+        reserves.VBNTTokenGovernance.address,
         contractRegistry._address
     ];
+
     const liquidityProtection = await web3Func(
         deploy,
         'liquidityProtection',
         'LiquidityProtection',
         liquidityProtectionParams
     );
+
+    // Granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role.
+    const bntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.BNTTokenGovernance.address);
+    const vbntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.VBNTTokenGovernance.address);
+    await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtectionStore._address));
+    await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtectionStore._address));
 
     await execute(
         contractRegistry.methods.registerAddress(
@@ -419,15 +439,7 @@ const run = async () => {
     );
 
     await execute(liquidityProtectionStore.methods.transferOwnership(liquidityProtection._address));
-    await execute(
-        deployed(web3, 'DSToken', reserves.BNT.address).methods.transferOwnership(liquidityProtection._address)
-    );
-    await execute(
-        deployed(web3, 'DSToken', reserves.vBNT.address).methods.transferOwnership(liquidityProtection._address)
-    );
     await execute(liquidityProtection.methods.acceptStoreOwnership());
-    await execute(liquidityProtection.methods.acceptNetworkTokenOwnership());
-    await execute(liquidityProtection.methods.acceptGovTokenOwnership());
 
     const params = getConfig().liquidityProtectionParams;
     const maxSystemNetworkTokenRatio = percentageToPPM(params.maxSystemNetworkTokenRatio);
