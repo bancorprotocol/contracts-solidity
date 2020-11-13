@@ -362,7 +362,7 @@ contract('LiquidityProtectionV1', (accounts) => {
     it('should revert when the owner attempts to set a system network token ratio that is larger than 100%', async () => {
         await expectRevert(
             liquidityProtection.setSystemNetworkTokenLimits(200, PPM_RESOLUTION.add(new BN(1))),
-            'ERR_INVALID_MAX_RATIO'
+            'ERR_INVALID_PORTION'
         );
     });
 
