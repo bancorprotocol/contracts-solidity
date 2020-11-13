@@ -1229,16 +1229,15 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             reserveTokens[1] = _reserveToken2;
             amounts[0] = _reserveAmount1;
             amounts[1] = _reserveAmount2;
-            _converter.addLiquidity{value: _value}(reserveTokens, amounts, 1);
-        }
-        else {
+            _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
+        } else {
             IERC20Token[] memory reserveTokens = new IERC20Token[](2);
             uint256[] memory amounts = new uint256[](2);
             reserveTokens[0] = _reserveToken1;
             reserveTokens[1] = _reserveToken2;
             amounts[0] = _reserveAmount1;
             amounts[1] = _reserveAmount2;
-            _converter.addLiquidity{value: _value}(reserveTokens, amounts, 1);
+            _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
         }
 
         // ensure that the contract can receive ETH
@@ -1272,8 +1271,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             minReturns[0] = 1;
             minReturns[1] = 1;
             converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
-        }
-        else {
+        } else {
             IERC20Token[] memory reserveTokens = new IERC20Token[](2);
             uint256[] memory minReturns = new uint256[](2);
             reserveTokens[0] = _reserveToken1;
