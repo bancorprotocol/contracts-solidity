@@ -10,6 +10,7 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 const MIN_GAS_LIMIT = 100000;
 
+const ROLE_GOVERNOR = web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = web3.utils.keccak256('ROLE_MINTER');
 
 const getConfig = () => {
@@ -404,11 +405,17 @@ const run = async () => {
     await execute(conversionPathFinder.methods.setAnchorToken(reserves.BNT.address));
     await execute(bancorFormula.methods.init());
 
+    const bntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.BNT.address);
+    const vbntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.vBNT.address);
+
+    await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account));
+    await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account));
+
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
     const liquidityProtectionParams = [
         liquidityProtectionStore._address,
-        reserves.BNTTokenGovernance.address,
-        reserves.VBNTTokenGovernance.address,
+        bntTokenGovernance._address,
+        vbntTokenGovernance._address,
         contractRegistry._address
     ];
 
@@ -420,10 +427,8 @@ const run = async () => {
     );
 
     // Granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role.
-    const bntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.BNTTokenGovernance.address);
-    const vbntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.VBNTTokenGovernance.address);
-    await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtectionStore._address));
-    await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtectionStore._address));
+    await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
+    await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
 
     await execute(
         contractRegistry.methods.registerAddress(
