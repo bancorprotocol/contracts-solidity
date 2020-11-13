@@ -10,8 +10,8 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 const MIN_GAS_LIMIT = 100000;
 
-const ROLE_GOVERNOR = web3.utils.keccak256('ROLE_GOVERNOR');
-const ROLE_MINTER = web3.utils.keccak256('ROLE_MINTER');
+const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
+const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
 
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
@@ -405,8 +405,8 @@ const run = async () => {
     await execute(conversionPathFinder.methods.setAnchorToken(reserves.BNT.address));
     await execute(bancorFormula.methods.init());
 
-    const bntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.BNT.address);
-    const vbntTokenGovernance = deployed(web3, 'TokenGovernance', reserves.vBNT.address);
+    const bntTokenGovernance = await web3Func(deploy, 'bntTokenGovernance', 'TokenGovernance', [reserves.BNT.address]);
+    const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [reserves.vBNT.address]);
 
     await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account));
