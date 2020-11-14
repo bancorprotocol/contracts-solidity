@@ -828,7 +828,7 @@ contract('LiquidityProtectionV1', (accounts) => {
 
         await expectRevert(
             liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]),
-            'ERR_TRANSFER_FROM_FAILED.'
+            'ERR_TRANSFER_FROM_FAILED'
         );
     });
 
