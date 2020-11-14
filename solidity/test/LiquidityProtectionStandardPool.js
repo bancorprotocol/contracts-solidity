@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { expectRevert, expectEvent, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { ETH_RESERVE_ADDRESS, registry, governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
@@ -17,6 +17,7 @@ const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverte
 const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
+const TokenGovernance = artifacts.require('TestTokenGovernance');
 
 const PPM_RESOLUTION = new BN(1000000);
 
@@ -212,7 +213,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
     let contractRegistry;
     let bancorNetwork;
     let networkToken;
+    let networkTokenGovernance;
     let govToken;
+    let govTokenGovernance;
     let poolToken;
     let converterRegistry;
     let converter;
@@ -222,6 +225,7 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
     let baseTokenAddress;
 
     const owner = accounts[0];
+    const governor = accounts[1];
 
     before(async () => {
         contractRegistry = await ContractRegistry.new();
@@ -245,23 +249,30 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
 
     beforeEach(async () => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
-        govToken = await DSToken.new('vBNT', 'vBNT', 18);
         await networkToken.issue(owner, 1000000000);
+        networkTokenGovernance = await TokenGovernance.new(networkToken.address);
+        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkToken.transferOwnership(networkTokenGovernance.address);
+        await networkTokenGovernance.acceptTokenOwnership();
+
+        govToken = await DSToken.new('vBNT', 'vBNT', 18);
+        govTokenGovernance = await TokenGovernance.new(govToken.address);
+        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govToken.transferOwnership(govTokenGovernance.address);
+        await govTokenGovernance.acceptTokenOwnership();
 
         // initialize liquidity protection
         liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionStore.address,
-            networkToken.address,
-            govToken.address,
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
             contractRegistry.address
         );
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
-        await networkToken.transferOwnership(liquidityProtection.address);
-        await govToken.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await liquidityProtection.acceptNetworkTokenOwnership();
-        await liquidityProtection.acceptGovTokenOwnership();
+        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         now = await latest();
         await liquidityProtection.setTime(now);
@@ -277,8 +288,14 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
         const store = await liquidityProtection.store.call();
         expect(store).to.eql(liquidityProtectionStore.address);
 
+        const networkTknGovernance = await liquidityProtection.networkTokenGovernance.call();
+        expect(networkTknGovernance).to.eql(networkTokenGovernance.address);
+
         const networkTkn = await liquidityProtection.networkToken.call();
         expect(networkTkn).to.eql(networkToken.address);
+
+        const govTknGovernance = await liquidityProtection.govTokenGovernance.call();
+        expect(govTknGovernance).to.eql(govTokenGovernance.address);
 
         const govTkn = await liquidityProtection.govToken.call();
         expect(govTkn).to.eql(govToken.address);
@@ -291,31 +308,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
 
     it('should revert when a non owner attempts to transfer the store ownership', async () => {
         await expectRevert(
-            liquidityProtection.transferStoreOwnership(accounts[2], { from: accounts[1] }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('verifies that the owner can transfer the network token ownership', async () => {
-        await liquidityProtection.transferNetworkTokenOwnership(accounts[1]);
-        networkToken.acceptOwnership({ from: accounts[1] });
-    });
-
-    it('should revert when a non owner attempts to transfer the network token ownership', async () => {
-        await expectRevert(
-            liquidityProtection.transferNetworkTokenOwnership(accounts[2], { from: accounts[1] }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('verifies that the owner can transfer the governance token ownership', async () => {
-        await liquidityProtection.transferGovTokenOwnership(accounts[1]);
-        govToken.acceptOwnership({ from: accounts[1] });
-    });
-
-    it('should revert when a non owner attempts to transfer the governance token ownership', async () => {
-        await expectRevert(
-            liquidityProtection.transferGovTokenOwnership(accounts[2], { from: accounts[1] }),
+            liquidityProtection.transferStoreOwnership(accounts[2], {
+                from: accounts[1]
+            }),
             'ERR_ACCESS_DENIED'
         );
     });
@@ -350,7 +345,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
 
     it('should revert when a non owner attempts to set the system network token limits', async () => {
         await expectRevert(
-            liquidityProtection.setSystemNetworkTokenLimits(100, 200, { from: accounts[1] }),
+            liquidityProtection.setSystemNetworkTokenLimits(100, 200, {
+                from: accounts[1]
+            }),
             'ERR_ACCESS_DENIED'
         );
     });
@@ -398,7 +395,7 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
         await expectRevert(liquidityProtection.setProtectionDelays(200, 100), 'ERR_INVALID_PROTECTION_DELAY');
     });
 
-    it('verifies that the owner can set the minimum network compenstation', async () => {
+    it('verifies that the owner can set the minimum network compensation', async () => {
         const prevMinNetworkCompensation = await liquidityProtection.minNetworkCompensation.call();
         const newMinNetworkCompensation = new BN(100);
 
@@ -484,7 +481,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
             const newWhitelistAdmin = accounts[3];
 
             await expectRevert(
-                liquidityProtection.setWhitelistAdmin(newWhitelistAdmin, { from: accounts[1] }),
+                liquidityProtection.setWhitelistAdmin(newWhitelistAdmin, {
+                    from: accounts[1]
+                }),
                 'ERR_ACCESS_DENIED'
             );
         });
@@ -501,7 +500,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
 
                 expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.false;
 
-                await liquidityProtection.whitelistPool(poolToken.address, true, { from: whitelistAdmin });
+                await liquidityProtection.whitelistPool(poolToken.address, true, {
+                    from: whitelistAdmin
+                });
 
                 expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
             });
@@ -509,7 +510,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
             it('verifies that the whitelist admin can remove a pool from the whitelist', async () => {
                 expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
 
-                await liquidityProtection.whitelistPool(poolToken.address, false, { from: whitelistAdmin });
+                await liquidityProtection.whitelistPool(poolToken.address, false, {
+                    from: whitelistAdmin
+                });
 
                 expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken.address)).to.be.false;
             });
@@ -519,7 +522,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
 
                 expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.false;
 
-                await liquidityProtection.whitelistPool(poolToken.address, true, { from: owner });
+                await liquidityProtection.whitelistPool(poolToken.address, true, {
+                    from: owner
+                });
 
                 expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
             });
@@ -527,7 +532,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
             it('verifies that the owner can remove a pool from the whitelist', async () => {
                 expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
 
-                await liquidityProtection.whitelistPool(poolToken.address, false, { from: owner });
+                await liquidityProtection.whitelistPool(poolToken.address, false, {
+                    from: owner
+                });
 
                 expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken.address)).to.be.false;
             });
@@ -536,7 +543,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                 await initPool(false, false);
 
                 await expectRevert(
-                    liquidityProtection.whitelistPool(poolToken.address, true, { from: accounts[1] }),
+                    liquidityProtection.whitelistPool(poolToken.address, true, {
+                        from: accounts[1]
+                    }),
                     'ERR_ACCESS_DENIED'
                 );
             });
@@ -624,7 +633,15 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
 
         await liquidityProtection.protectLiquidity(poolToken.address, balance);
         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
+        protection1 = getProtection(protection1);
+        let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
+        protection2 = getProtection(protection2);
 
+        const amount =
+            protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
+
+        await govToken.approve(liquidityProtection.address, amount);
         await liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]);
         protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
         expect(protectionIds.length).to.eql(0);
@@ -755,7 +772,10 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
         const govBalance = await govToken.balanceOf.call(owner);
         await govToken.transfer(accounts[1], govBalance);
 
-        await expectRevert(liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]), 'ERR_UNDERFLOW');
+        await expectRevert(
+            liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]),
+            'ERR_TRANSFER_FROM_FAILED'
+        );
     });
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
@@ -1076,7 +1096,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
         const protectionId = protectionIds[0];
 
         await expectRevert(
-            liquidityProtection.transferLiquidity(protectionId, accounts[2], { from: accounts[1] }),
+            liquidityProtection.transferLiquidity(protectionId, accounts[2], {
+                from: accounts[1]
+            }),
             'ERR_ACCESS_DENIED'
         );
     });
@@ -1158,13 +1180,17 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                 const prevBalance = await getBalance(baseToken, baseTokenAddress, owner);
                 const prevGovBalance = await govToken.balanceOf(owner);
 
+                let transactionCost = new BN(0);
+                if (protection.reserveToken === networkToken.address) {
+                    const res = await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
+                }
                 const res = await liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION);
                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 expect(protectionIds.length).to.eql(0);
 
-                let transactionCost = new BN(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
                 }
 
                 // verify balances
@@ -1215,7 +1241,17 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                 const prevBalance = await getBalance(baseToken, baseTokenAddress, owner);
                 const prevGovBalance = await govToken.balanceOf(owner);
 
-                const res = await liquidityProtection.removeLiquidity(protectionId, 800000);
+                const portion = new BN(800000);
+                let transactionCost = new BN(0);
+                if (prevProtection.reserveAddress === networkToken.address) {
+                    const res = await govToken.approve(
+                        liquidityProtection.address,
+                        prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
+                    );
+
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
+                }
+                const res = await liquidityProtection.removeLiquidity(protectionId, portion);
                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 expect(protectionIds.length).to.eql(1);
 
@@ -1225,9 +1261,8 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                 expect(protection.poolAmount).to.be.bignumber.equal(prevProtection.poolAmount.div(new BN(5)));
                 expect(protection.reserveAmount).to.be.bignumber.equal(prevProtection.reserveAmount.div(new BN(5)));
 
-                let transactionCost = new BN(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = transactionCost.add(await getTransactionCost(res));
                 }
 
                 // verify balances
@@ -1312,7 +1347,9 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                 const protectionId = protectionIds[0];
 
                 await expectRevert(
-                    liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION, { from: accounts[1] }),
+                    liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION, {
+                        from: accounts[1]
+                    }),
                     'ERR_ACCESS_DENIED'
                 );
             });
@@ -1365,6 +1402,7 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
             const prevBalance = await getBalance(networkToken, networkToken.address, owner);
             const prevGovBalance = await govToken.balanceOf(owner);
 
+            await govToken.approve(liquidityProtection.address, protection.reserveAmount);
             await liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION);
             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
             expect(protectionIds.length).to.eql(0);
@@ -1416,7 +1454,12 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
             const prevBalance = await getBalance(networkToken, networkToken.address, owner);
             const prevGovBalance = await govToken.balanceOf(owner);
 
-            await liquidityProtection.removeLiquidity(protectionId, 800000);
+            const portion = new BN(800000);
+            await govToken.approve(
+                liquidityProtection.address,
+                prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
+            );
+            await liquidityProtection.removeLiquidity(protectionId, portion);
             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
             expect(protectionIds.length).to.eql(1);
 
@@ -1458,8 +1501,13 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
             await addProtectedLiquidity(poolToken.address, networkToken, networkToken.address, new BN(2000));
             let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
             const protectionId = protectionIds[protectionIds.length - 1];
-            await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION / 2);
-            await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION / 2);
+
+            const portion = PPM_RESOLUTION.div(new BN(2));
+            const amount = new BN(2000).mul(portion).div(PPM_RESOLUTION);
+            await govToken.approve(liquidityProtection.address, amount);
+            await liquidityProtection.removeLiquidity(protectionId, portion);
+            await govToken.approve(liquidityProtection.address, amount);
+            await liquidityProtection.removeLiquidity(protectionId, portion);
         });
 
         it('verifies that locked balance owner can claim locked tokens if sufficient time has passed', async () => {
@@ -1623,8 +1671,13 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                                     it('verifies that removeLiquidity returns an amount that is smaller than the initial amount', async () => {
                                         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                                         const protectionId = protectionIds[protectionIds.length - 1];
+                                        let protection = await liquidityProtectionStore.protectedLiquidity.call(
+                                            protectionId
+                                        );
+                                        protection = getProtection(protection);
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
+                                        await govToken.approve(liquidityProtection.address, protection.reserveAmount);
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1657,8 +1710,13 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                                     it('verifies that removeLiquidity returns an amount that is larger than the initial amount', async () => {
                                         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                                         const protectionId = protectionIds[protectionIds.length - 1];
+                                        let protection = await liquidityProtectionStore.protectedLiquidity.call(
+                                            protectionId
+                                        );
+                                        protection = getProtection(protection);
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
+                                        await govToken.approve(liquidityProtection.address, protection.reserveAmount);
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1691,8 +1749,13 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                                     it('verifies that removeLiquidity returns an amount that is almost equal to the initial amount', async () => {
                                         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                                         const protectionId = protectionIds[protectionIds.length - 1];
+                                        let protection = await liquidityProtectionStore.protectedLiquidity.call(
+                                            protectionId
+                                        );
+                                        protection = getProtection(protection);
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
+                                        await govToken.approve(liquidityProtection.address, protection.reserveAmount);
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1710,7 +1773,12 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                                     it('verifies that removeLiquidity locks network tokens for the caller', async () => {
                                         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                                         const protectionId = protectionIds[protectionIds.length - 1];
+                                        let protection = await liquidityProtectionStore.protectedLiquidity.call(
+                                            protectionId
+                                        );
+                                        protection = getProtection(protection);
 
+                                        await govToken.approve(liquidityProtection.address, protection.reserveAmount);
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
 
                                         const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
@@ -1725,7 +1793,12 @@ contract('LiquidityProtectionStandardPool', (accounts) => {
                                     it('verifies that removeLiquidity does not lock network tokens for the caller', async () => {
                                         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                                         const protectionId = protectionIds[protectionIds.length - 1];
+                                        let protection = await liquidityProtectionStore.protectedLiquidity.call(
+                                            protectionId
+                                        );
+                                        protection = getProtection(protection);
 
+                                        await govToken.approve(liquidityProtection.address, protection.reserveAmount);
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
 
                                         const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(

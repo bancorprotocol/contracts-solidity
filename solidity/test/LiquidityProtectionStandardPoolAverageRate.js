@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { expectRevert, BN, constants } = require('@openzeppelin/test-helpers');
-const { registry } = require('./helpers/Constants');
+const { registry, governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const ContractRegistry = artifacts.require('ContractRegistry');
@@ -13,7 +13,7 @@ const ConverterFactory = artifacts.require('ConverterFactory');
 const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverterFactory');
 const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
+const TokenGovernance = artifacts.require('TestTokenGovernance');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -50,12 +50,30 @@ contract('LiquidityProtectionStandardPoolTokenRate', (accounts) => {
         const converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
 
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+
+        const governor = accounts[1];
+
+        const networkToken = await DSToken.new('BNT', 'BNT', 18);
+        const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
+        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkToken.transferOwnership(networkTokenGovernance.address);
+        await networkTokenGovernance.acceptTokenOwnership();
+
+        const govToken = await DSToken.new('vBNT', 'vBNT', 18);
+        const govTokenGovernance = await TokenGovernance.new(govToken.address);
+        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govToken.transferOwnership(govTokenGovernance.address);
+        await govTokenGovernance.acceptTokenOwnership();
+
         liquidityProtection = await LiquidityProtection.new(
             accounts[0],
-            accounts[0],
-            accounts[0],
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
             contractRegistry.address
         );
+
+        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
