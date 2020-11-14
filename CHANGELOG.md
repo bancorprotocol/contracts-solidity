@@ -1,3 +1,9 @@
+### 0.6.25
+LiquidityProtection
+* Updated to use the TokenGovernance contract for both the network token & the governance token
+* Minor gas optimization
+
+
 ### 0.6.24
 General
 * Added prettier

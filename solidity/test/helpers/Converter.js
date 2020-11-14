@@ -12,7 +12,15 @@ const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
 const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
 const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
 
-module.exports.new = async (type, tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight, version) => {
+module.exports.new = async (
+    type,
+    tokenAddress,
+    registryAddress,
+    maxConversionFee,
+    reserveTokenAddress,
+    weight,
+    version
+) => {
     if (version) {
         const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
         const bin = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.bin`));
