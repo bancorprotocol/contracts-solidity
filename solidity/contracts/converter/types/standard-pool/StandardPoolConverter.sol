@@ -829,14 +829,17 @@ contract StandardPoolConverter is
 
         IDSToken poolToken = IDSToken(address(anchor));
         uint256 supply = poolToken.totalSupply();
+
+        uint256[2] memory oldReserveBalances;
         uint256[2] memory newReserveBalances;
+
+        (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
 
         // iterate through the reserve tokens and transfer a percentage equal to the weight between
         // _amount and the total supply in each reserve from the caller to the converter
         for (uint256 i = 0; i < 2; i++) {
             IERC20Token reserveToken = __reserveTokens[i];
-            uint256 rsvBalance = reserveBalance(i + 1);
-            uint256 reserveAmount = fundCost(supply, rsvBalance, _amount);
+            uint256 reserveAmount = fundCost(supply, oldReserveBalances[i], _amount);
 
             // transfer funds from the caller in the reserve token
             if (reserveToken == ETH_RESERVE_ADDRESS) {
@@ -850,7 +853,7 @@ contract StandardPoolConverter is
             }
 
             // save the new reserve balance
-            newReserveBalances[i] = rsvBalance.add(reserveAmount);
+            newReserveBalances[i] = oldReserveBalances[i].add(reserveAmount);
 
             uint256 newPoolTokenSupply = supply.add(_amount);
 
