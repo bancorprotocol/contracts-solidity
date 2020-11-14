@@ -164,11 +164,10 @@ contract('LiquidityProtectionStandardPoolEdgeCases', (accounts) => {
         );
 
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
-        await networkToken.transferOwnership(liquidityProtection.address);
-        await govToken.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await liquidityProtection.acceptNetworkTokenOwnership();
-        await liquidityProtection.acceptGovTokenOwnership();
+        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+
         await liquidityProtection.whitelistPool(poolToken.address, true);
         await liquidityProtection.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
         await liquidityProtection.setAverageRateMaxDeviation(FULL_PPM);
