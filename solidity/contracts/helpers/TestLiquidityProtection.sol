@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "../liquidity-protection/LiquidityProtection.sol";
 
 contract TestLiquidityProtection is LiquidityProtection {
@@ -10,10 +11,10 @@ contract TestLiquidityProtection is LiquidityProtection {
 
     constructor(
         ILiquidityProtectionStore _store,
-        IDSToken _networkToken,
-        IDSToken _govToken,
+        ITokenGovernance _networkTokenGovernance,
+        ITokenGovernance _govTokenGovernance,
         IContractRegistry _registry
-    ) public LiquidityProtection(_store, _networkToken, _govToken, _registry) {}
+    ) public LiquidityProtection(_store, _networkTokenGovernance, _govTokenGovernance, _registry) {}
 
     function time() internal view override returns (uint256) {
         return currentTime;

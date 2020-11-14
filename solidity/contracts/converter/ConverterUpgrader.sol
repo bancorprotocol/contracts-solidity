@@ -235,8 +235,9 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _activate        activate the new converter
     */
     function handleTypeSpecificData(IConverter _oldConverter, IConverter _newConverter, bool _activate) private {
-        if (!isV28OrHigherConverter(_oldConverter))
+        if (!isV28OrHigherConverter(_oldConverter)) {
             return;
+        }
 
         uint16 converterType = _oldConverter.converterType();
         if (converterType == 2) {
