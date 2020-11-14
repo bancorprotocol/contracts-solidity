@@ -1204,13 +1204,13 @@ contract('LiquidityProtectionV1', (accounts) => {
     });
 
     it('should revert when calling removeLiquidityReturn with zero portion of the liquidity', async () => {
-        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PERCENT');
+        await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PORTION');
     });
 
     it('should revert when calling removeLiquidityReturn with remove more than 100% of the liquidity', async () => {
         await expectRevert(
             liquidityProtection.removeLiquidityReturn('1234', PPM_RESOLUTION.add(new BN(1)), now),
-            'ERR_INVALID_PERCENT'
+            'ERR_INVALID_PORTION'
         );
     });
 
@@ -1382,7 +1382,7 @@ contract('LiquidityProtectionV1', (accounts) => {
                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 const protectionId = protectionIds[0];
 
-                await expectRevert(liquidityProtection.removeLiquidity(protectionId, 0), 'ERR_INVALID_PERCENT');
+                await expectRevert(liquidityProtection.removeLiquidity(protectionId, 0), 'ERR_INVALID_PORTION');
             });
 
             it('should revert when attempting to remove more than 100% of the liquidity', async () => {
@@ -1399,7 +1399,7 @@ contract('LiquidityProtectionV1', (accounts) => {
 
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION.add(new BN(1))),
-                    'ERR_INVALID_PERCENT'
+                    'ERR_INVALID_PORTION'
                 );
             });
 
