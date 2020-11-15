@@ -22,8 +22,9 @@ function ceilSqrt(n) {
 
 function reducedRatio(a, b, max) {
     [a, b, max] = [...arguments].map((x) => Decimal(x));
-    if (a.gt(max) || b.gt(max)) return normalizedRatio(a, b, max);
-    return [a, b].map((x) => x.toFixed());
+    if (a.gt(max) || b.gt(max))
+        [a, b] = normalizedRatio(a, b, max).map((x) => Decimal(x));
+    return !a.eq(b) ? [a, b].map((x) => x.toFixed()) : ['1', '1'];
 }
 
 function normalizedRatio(a, b, scale) {

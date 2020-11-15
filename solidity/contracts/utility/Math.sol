@@ -56,8 +56,10 @@ library Math {
         uint256 _d,
         uint256 _max
     ) internal pure returns (uint256, uint256) {
-        if (_n > _max || _d > _max) return normalizedRatio(_n, _d, _max);
-        return (_n, _d);
+        (uint256 n, uint256 d) = (_n, _d);
+        if (n > _max || d > _max) (n, d) = normalizedRatio(n, d, _max);
+        if (n != d) return (n, d);
+        return (1, 1);
     }
 
     /**
