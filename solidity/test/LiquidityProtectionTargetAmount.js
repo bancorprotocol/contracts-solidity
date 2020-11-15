@@ -2,6 +2,7 @@ const { expect } = require('chai');
 const { BN } = require('@openzeppelin/test-helpers');
 const Decimal = require('decimal.js');
 
+const TokenGovernance = artifacts.require('TestTokenGovernance');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 
 const MIN_AMOUNT = new BN(1);
@@ -14,7 +15,14 @@ contract('LiquidityProtectionTargetAmount', accounts => {
     let liquidityProtection;
 
     before(async () => {
-        liquidityProtection = await LiquidityProtection.new(accounts[0], accounts[0], accounts[0], accounts[0]);
+        const networkTokenGovernance = await TokenGovernance.new(accounts[0]);
+        const govTokenGovernance = await TokenGovernance.new(accounts[0]);
+        liquidityProtection = await LiquidityProtection.new(
+            accounts[0],
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
+            accounts[0]
+        );
     });
 
     describe('sanity', () => {
