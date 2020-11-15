@@ -605,7 +605,7 @@ contract('LiquidityProtection', (accounts) => {
         it('should revert when the owner attempts to remove a high tier pool that is not defined as a high tier one', async () => {
             await expectRevert(
                 liquidityProtection.removeHighTierPool(poolToken.address, { from: owner }),
-                'ERR_POOL_DOESNT_EXIST'
+                'ERR_POOL_DOES_NOT_EXIST'
             );
         });
     });

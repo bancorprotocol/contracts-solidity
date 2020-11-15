@@ -414,7 +414,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     {
         // validate input
         PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
-        require(poolIndex.isValid, "ERR_POOL_DOESNT_EXIST");
+        require(poolIndex.isValid, "ERR_POOL_DOES_NOT_EXIST");
 
         uint256 index = poolIndex.value;
         uint256 length = _highTierPools.length;
