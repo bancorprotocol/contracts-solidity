@@ -824,7 +824,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IERC20Token networkTokenLocal = networkToken;
 
         // verify that the pool is whitelisted
-        require(store.isPoolWhitelisted(liquidity.poolToken), "ERR_POOL_NOT_WHITELISTED");
+        _poolWhitelisted(liquidity.poolToken);
 
         if (_portion == PPM_RESOLUTION) {
             // remove the pool tokens from the provider
