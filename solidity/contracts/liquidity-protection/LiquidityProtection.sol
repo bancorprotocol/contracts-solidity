@@ -235,15 +235,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
     }
 
-    // ensures that the pool is supported and whitelisted
-    modifier poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) {
-        _poolSupportedAndWhitelisted(_poolAnchor);
+    // ensures that the pool is whitelisted
+    modifier poolWhitelisted(IConverterAnchor _poolAnchor) {
+        _poolWhitelisted(_poolAnchor);
         _;
     }
 
     // error message binary size optimization
-    function _poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) internal view {
-        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
+    function _poolWhitelisted(IConverterAnchor _poolAnchor) internal view {
         require(store.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
     }
 
@@ -502,7 +501,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function protectLiquidity(IConverterAnchor _poolAnchor, uint256 _amount)
         external
         protected
-        poolSupportedAndWhitelisted(_poolAnchor)
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
     {
         // get the converter
@@ -571,11 +571,15 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount          amount of tokens to add to the pool
      * @return new protected liquidity id
      */
-    function addLiquidity(
-        IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
-        uint256 _amount
-    ) external payable protected poolSupportedAndWhitelisted(_poolAnchor) greaterThanZero(_amount) returns (uint256) {
+    function addLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, uint256 _amount)
+        external
+        payable
+        protected
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        greaterThanZero(_amount)
+        returns (uint256)
+    {
         // save a local copy of `networkToken`
         IERC20Token networkTokenLocal = networkToken;
 
