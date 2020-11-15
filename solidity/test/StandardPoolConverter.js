@@ -49,6 +49,17 @@ contract('StandardPoolConverter', (accounts) => {
         return converter;
     };
 
+    const removeLiquidityTest = async (poolTokenAmount, reserveTokens) => {
+        const inputAmount = new BN(poolTokenAmount);
+        const converter = await initConverter(true, false);
+        const poolTokenSupply = await token.totalSupply.call();
+        const reserveBalances = await Promise.all(reserveTokens.map((reserveToken) => converter.reserveBalance.call(reserveToken.address)));
+        const expectedOutputAmounts = reserveBalances.map((reserveBalance) => reserveBalance.mul(inputAmount).div(poolTokenSupply));
+        await converter.removeLiquidityTest(inputAmount, reserveTokens.map((reserveToken) => reserveToken.address), [MIN_RETURN, MIN_RETURN]);
+        const actualOutputAmounts = await Promise.all(reserveTokens.map((reserveToken, i) => converter.reserveAmountsRemoved(i)));
+        reserveTokens.map((reserveToken, i) => expect(actualOutputAmounts[i]).to.be.bignumber.equal(expectedOutputAmounts[i]));
+    };
+
     const getReserve1Address = (isETH) => {
         return isETH ? ETH_RESERVE_ADDRESS : reserveToken.address;
     };
@@ -188,6 +199,14 @@ contract('StandardPoolConverter', (accounts) => {
             _rateN: reserve2Balance,
             _rateD: poolTokenSupply
         });
+    });
+
+    it('verifies function removeLiquidity when the reserves tokens are passed in the initial order', async () => {
+        await removeLiquidityTest(100, [reserveToken, reserveToken2]);
+    });
+
+    it('verifies function removeLiquidity when the reserves tokens are passed in the opposite order', async () => {
+        await removeLiquidityTest(100, [reserveToken2, reserveToken]);
     });
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
