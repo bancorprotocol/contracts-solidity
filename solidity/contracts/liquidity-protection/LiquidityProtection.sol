@@ -61,12 +61,22 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
+    struct PoolIndex {
+        bool isValid;
+        uint256 value;
+    }
+
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
 
     // the address of the whitelist administrator
     address public whitelistAdmin;
+
+    // list of pools with less minting restrictions
+    // mapping of pool anchor address -> index in the list of pools for quick access
+    IConverterAnchor[] private _highTierPools;
+    mapping(IConverterAnchor => PoolIndex) private highTierPoolIndices;
 
     ILiquidityProtectionStore public immutable store;
     IERC20Token public immutable networkToken;
@@ -75,7 +85,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     ITokenGovernance public immutable govTokenGovernance;
 
     // system network token balance limits
-    uint256 public maxSystemNetworkTokenAmount = 500000e18;
+    uint256 public maxSystemNetworkTokenAmount = 1000000e18;
     uint32 public maxSystemNetworkTokenRatio = 500000; // PPM units
 
     // number of seconds until any protection is in effect
@@ -370,6 +380,77 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
+     * @dev adds a high tier pool
+     * can only be called by the contract owner
+     *
+     * @param _poolAnchor pool anchor
+     */
+    function addHighTierPool(IConverterAnchor _poolAnchor)
+        external
+        ownerOnly
+        validAddress(address(_poolAnchor))
+        notThis(address(_poolAnchor))
+    {
+        // validate input
+        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
+        require(!poolIndex.isValid, "ERR_POOL_ALREADY_EXISTS");
+
+        poolIndex.value = _highTierPools.length;
+        _highTierPools.push(_poolAnchor);
+        poolIndex.isValid = true;
+    }
+
+    /**
+     * @dev removes a high tier pool
+     * can only be called by the contract owner
+     *
+     * @param _poolAnchor pool anchor
+     */
+    function removeHighTierPool(IConverterAnchor _poolAnchor)
+        external
+        ownerOnly
+        validAddress(address(_poolAnchor))
+        notThis(address(_poolAnchor))
+    {
+        // validate input
+        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
+        require(poolIndex.isValid, "ERR_POOL_DOES_NOT_EXIST");
+
+        uint256 index = poolIndex.value;
+        uint256 length = _highTierPools.length;
+        assert(length > 0);
+
+        uint256 lastIndex = length - 1;
+        if (index < lastIndex) {
+            IConverterAnchor lastAnchor = _highTierPools[lastIndex];
+            highTierPoolIndices[lastAnchor].value = index;
+            _highTierPools[index] = lastAnchor;
+        }
+
+        _highTierPools.pop();
+        delete highTierPoolIndices[_poolAnchor];
+    }
+
+    /**
+     * @dev returns the list of high tier pools
+     *
+     * @return list of high tier pools
+     */
+    function highTierPools() external view returns (IConverterAnchor[] memory) {
+        return _highTierPools;
+    }
+
+    /**
+     * @dev checks whether a given pool is a high tier one
+     *
+     * @param _poolAnchor pool anchor
+     * @return true if the given pool is a high tier one, false otherwise
+     */
+    function isHighTierPool(IConverterAnchor _poolAnchor) public view returns (bool) {
+        return highTierPoolIndices[_poolAnchor].isValid;
+    }
+
+    /**
      * @dev checks if protection is supported for the given pool
      * only standard pools are supported (2 reserves, 50%/50% weights)
      * note that the pool should still be whitelisted
@@ -579,11 +660,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         newSystemBalance = (newSystemBalance.mul(poolRate.n / 2).div(poolRate.d)).add(networkLiquidityAmount);
 
         require(newSystemBalance <= maxSystemNetworkTokenAmount, "ERR_MAX_AMOUNT_REACHED");
-        require(
-            newSystemBalance.mul(PPM_RESOLUTION) <=
-                newSystemBalance.add(reserveBalanceNetwork).mul(maxSystemNetworkTokenRatio),
-            "ERR_MAX_RATIO_REACHED"
-        );
+
+        if (!isHighTierPool(_poolAnchor)) {
+            require(
+                newSystemBalance.mul(PPM_RESOLUTION) <=
+                    newSystemBalance.add(reserveBalanceNetwork).mul(maxSystemNetworkTokenRatio),
+                "ERR_MAX_RATIO_REACHED"
+            );
+        }
 
         // issue new network tokens to the system
         networkTokenGovernance.mint(address(this), networkLiquidityAmount);
