@@ -33,7 +33,7 @@ function normalizedRatio(a, b, scale) {
     if (a.lt(b)) {
         return accurateRatio(a, b, scale);
     }
-    return accurateRatio(b, a, scale);
+    return accurateRatio(b, a, scale).slice().reverse();
 }
 
 function accurateRatio(a, b, scale) {
