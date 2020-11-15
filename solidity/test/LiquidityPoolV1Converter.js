@@ -211,11 +211,11 @@ contract('LiquidityPoolV1Converter', (accounts) => {
         });
     });
 
-    it('function removeLiquidity when the reserves tokens are passed in the initial order', async () => {
+    it('verifies function removeLiquidity when the reserves tokens are passed in the initial order', async () => {
         await removeLiquidityTest(100, [reserveToken, reserveToken2]);
     });
 
-    it('function removeLiquidity when the reserves tokens are passed in the opposite order', async () => {
+    it('verifies function removeLiquidity when the reserves tokens are passed in the opposite order', async () => {
         await removeLiquidityTest(100, [reserveToken2, reserveToken]);
     });
 
