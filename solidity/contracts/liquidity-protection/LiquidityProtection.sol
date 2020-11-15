@@ -84,7 +84,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     ITokenGovernance public immutable govTokenGovernance;
 
     // system network token balance limits
-    uint256 public maxSystemNetworkTokenAmount = 500000e18;
+    uint256 public maxSystemNetworkTokenAmount = 1000000e18;
     uint32 public maxSystemNetworkTokenRatio = 500000; // PPM units
 
     // number of seconds until any protection is in effect
