@@ -799,7 +799,7 @@ contract StandardPoolConverter is
         uint256[2] memory _reserveMinReturnAmounts
     ) public protected active returns (uint256[2] memory) {
         // verify the user input
-        verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
+        bool inputRearranged = verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
         // save a local copy of the pool token
         IDSToken poolToken = IDSToken(address(anchor));
@@ -811,7 +811,15 @@ contract StandardPoolConverter is
         poolToken.destroy(msg.sender, _amount);
 
         // transfer to the user an equivalent amount of each one of the reserve tokens
-        return removeLiquidityFromPool(poolToken, _reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
+        uint256[2] memory reserveAmounts = removeLiquidityFromPool(poolToken, _reserveTokens, _reserveMinReturnAmounts, totalSupply, _amount);
+
+        if (inputRearranged) {
+            uint256 tempReserveAmount = reserveAmounts[0];
+            reserveAmounts[0] = reserveAmounts[1];
+            reserveAmounts[1] = tempReserveAmount;
+        }
+
+        return reserveAmounts;
     }
 
     /**
@@ -970,12 +978,14 @@ contract StandardPoolConverter is
      * @param _reserveTokens   array of reserve tokens
      * @param _reserveAmounts  array of reserve amounts
      * @param _amount          token amount
+     *
+     * @return true if the function has rearranged the input arrays; false otherwise
      */
     function verifyLiquidityInput(
         IERC20Token[2] memory _reserveTokens,
         uint256[2] memory _reserveAmounts,
         uint256 _amount
-    ) private view {
+    ) private view returns (bool) {
         require(_reserveAmounts[0] > 0 && _reserveAmounts[1] > 0 && _amount > 0, "ERR_ZERO_AMOUNT");
 
         uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
@@ -988,9 +998,11 @@ contract StandardPoolConverter is
             uint256 tempReserveAmount = _reserveAmounts[0];
             _reserveAmounts[0] = _reserveAmounts[1];
             _reserveAmounts[1] = tempReserveAmount;
-        } else {
-            require(reserve0Id == 1 && reserve1Id == 2, "ERR_INVALID_RESERVE");
+            return true;
         }
+
+        require(reserve0Id == 1 && reserve1Id == 2, "ERR_INVALID_RESERVE");
+        return false;
     }
 
     /**
