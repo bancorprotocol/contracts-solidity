@@ -22,16 +22,18 @@ function ceilSqrt(n) {
 
 function reducedRatio(a, b, max) {
     [a, b, max] = [...arguments].map((x) => Decimal(x));
-    if (a.gt(max) || b.gt(max))
+    if (a.gt(max) || b.gt(max)) {
         [a, b] = normalizedRatio(a, b, max).map((x) => Decimal(x));
+    }
     return !a.eq(b) ? [a, b].map((x) => x.toFixed()) : ['1', '1'];
 }
 
 function normalizedRatio(a, b, scale) {
     [a, b, scale] = [...arguments].map((x) => Decimal(x));
-    const x = a.mul(scale).div(a.add(b)).toFixed(0, Decimal.ROUND_HALF_UP);
-    const y = scale.sub(x).toFixed();
-    return [x, y];
+    if (a.lt(b)) {
+        return accurateRatio(a, b, scale);
+    }
+    return accurateRatio(b, a, scale);
 }
 
 function accurateRatio(a, b, scale) {
