@@ -4,6 +4,7 @@ import "../converter/types/liquidity-pool-v1/LiquidityPoolV1Converter.sol";
 
 contract TestLiquidityPoolV1Converter is LiquidityPoolV1Converter {
     uint256 public currentTime = 1;
+    uint256[] public reserveAmountsRemoved;
 
     constructor(
         IDSToken _token,
@@ -17,5 +18,13 @@ contract TestLiquidityPoolV1Converter is LiquidityPoolV1Converter {
 
     function setTime(uint256 _currentTime) public {
         currentTime = _currentTime;
+    }
+
+    function removeLiquidityTest(
+        uint256 _amount,
+        IERC20Token[] memory _reserveTokens,
+        uint256[] memory _reserveMinReturnAmounts
+    ) public {
+        reserveAmountsRemoved = removeLiquidity(_amount, _reserveTokens, _reserveMinReturnAmounts);
     }
 }
