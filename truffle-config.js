@@ -10,9 +10,9 @@ const Decimal = require('decimal.js');
 Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
 
 const ganache = require('ganache-core');
-/* eslint-enable import/no-extraneous-dependencies */
-
 const memdown = require('memdown');
+
+/* eslint-enable import/no-extraneous-dependencies */
 
 module.exports = {
     contracts_directory: './solidity',
