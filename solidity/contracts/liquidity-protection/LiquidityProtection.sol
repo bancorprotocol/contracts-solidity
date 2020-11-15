@@ -73,7 +73,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // the address of the whitelist administrator
     address public whitelistAdmin;
 
-    // list of pools with less minting restrictions and mapping of pool anchor address -> index in the list of pools for quick access
+    // list of pools with less minting restrictions
+    // mapping of pool anchor address -> index in the list of pools for quick access
     IConverterAnchor[] private _highTierPools;
     mapping(IConverterAnchor => PoolIndex) private highTierPoolIndices;
 
