@@ -563,6 +563,53 @@ contract('LiquidityProtection', (accounts) => {
         });
     });
 
+    describe('high tier pools', () => {
+        it('should allow the owner to add a high tier pool', async () => {
+            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
+            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
+            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
+        });
+
+        it('should allow the owner to remove a high tier pool', async () => {
+            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
+            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
+            await liquidityProtection.removeHighTierPool(poolToken.address, { from: owner });
+            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
+        });
+
+        it('should revert when a non owner attempts to add a high tier pool', async () => {
+            await expectRevert(
+                liquidityProtection.addHighTierPool(poolToken.address, { from: accounts[1] }),
+                'ERR_ACCESS_DENIED'
+            );
+            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
+        });
+
+        it('should revert when a non owner attempts to remove a high tier pool', async () => {
+            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
+            await expectRevert(
+                liquidityProtection.removeHighTierPool(poolToken.address, { from: accounts[1] }),
+                'ERR_ACCESS_DENIED'
+            );
+            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
+        });
+
+        it('should revert when the owner attempts to add a high tier pool that is already defined as high tier one', async () => {
+            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
+            await expectRevert(
+                liquidityProtection.addHighTierPool(poolToken.address, { from: owner }),
+                'ERR_POOL_ALREADY_EXISTS'
+            );
+        });
+
+        it('should revert when the owner attempts to remove a high tier pool that is not defined as a high tier one', async () => {
+            await expectRevert(
+                liquidityProtection.removeHighTierPool(poolToken.address, { from: owner }),
+                'ERR_POOL_DOES_NOT_EXIST'
+            );
+        });
+    });
+
     it('verifies that isPoolSupported returns true for a standard pool', async () => {
         const isSupported = await liquidityProtection.isPoolSupported.call(poolToken.address);
         expect(isSupported).to.be.true;
@@ -981,6 +1028,23 @@ contract('LiquidityProtection', (accounts) => {
                     addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount, isETHReserve),
                     'ERR_MAX_RATIO_REACHED'
                 );
+            });
+
+            it('should allow adding liquidity which will increase the system network token balance above the max ratio for a high tier pool', async () => {
+                let reserveAmount = new BN(10000);
+                await addProtectedLiquidity(
+                    poolToken.address,
+                    baseToken,
+                    baseTokenAddress,
+                    reserveAmount,
+                    isETHReserve
+                );
+
+                await liquidityProtection.setSystemNetworkTokenLimits(500000, 20000);
+                await liquidityProtection.addHighTierPool(poolToken.address);
+                reserveAmount = new BN(40000);
+
+                await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount, isETHReserve);
             });
         });
     }
