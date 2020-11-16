@@ -235,15 +235,14 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
     }
 
-    // ensures that the pool is supported and whitelisted
-    modifier poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) {
-        _poolSupportedAndWhitelisted(_poolAnchor);
+    // ensures that the pool is whitelisted
+    modifier poolWhitelisted(IConverterAnchor _poolAnchor) {
+        _poolWhitelisted(_poolAnchor);
         _;
     }
 
     // error message binary size optimization
-    function _poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) internal view {
-        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
+    function _poolWhitelisted(IConverterAnchor _poolAnchor) internal view {
         require(store.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
     }
 
@@ -502,7 +501,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function protectLiquidity(IConverterAnchor _poolAnchor, uint256 _amount)
         external
         protected
-        poolSupportedAndWhitelisted(_poolAnchor)
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
     {
         // get the converter
@@ -571,11 +571,15 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount          amount of tokens to add to the pool
      * @return new protected liquidity id
      */
-    function addLiquidity(
-        IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
-        uint256 _amount
-    ) external payable protected poolSupportedAndWhitelisted(_poolAnchor) greaterThanZero(_amount) returns (uint256) {
+    function addLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, uint256 _amount)
+        external
+        payable
+        protected
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        greaterThanZero(_amount)
+        returns (uint256)
+    {
         // save a local copy of `networkToken`
         IERC20Token networkTokenLocal = networkToken;
 
@@ -819,7 +823,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IERC20Token networkTokenLocal = networkToken;
 
         // verify that the pool is whitelisted
-        require(store.isPoolWhitelisted(liquidity.poolToken), "ERR_POOL_NOT_WHITELISTED");
+        _poolWhitelisted(liquidity.poolToken);
 
         if (_portion == PPM_RESOLUTION) {
             // remove the pool tokens from the provider
@@ -1399,7 +1403,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 ratioN = _newRate.n.mul(_prevRate.d);
         uint256 ratioD = _newRate.d.mul(_prevRate.n);
 
-        // no need for SafeMath - can't overflow
         uint256 prod = ratioN * ratioD;
         uint256 root = prod / ratioN == ratioD ? Math.floorSqrt(prod) : Math.floorSqrt(ratioN) * Math.floorSqrt(ratioD);
         uint256 sum = ratioN.add(ratioD);
