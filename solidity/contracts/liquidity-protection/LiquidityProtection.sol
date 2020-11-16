@@ -1411,7 +1411,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 prod = ratioN * ratioD;
         uint256 root = prod / ratioN == ratioD ? Math.floorSqrt(prod) : Math.floorSqrt(ratioN) * Math.floorSqrt(ratioD);
         uint256 sum = ratioN.add(ratioD);
-        return Fraction({ n: sum.sub(root.mul(2)), d: sum });
+
+        // the arithmetic below is safe because `x + y >= sqrt(x * y) * 2`
+        if (sum % 2 == 0) {
+            sum /= 2;
+            return Fraction({ n: sum - root, d: sum });
+        }
+        return Fraction({ n: sum - root * 2, d: sum });
     }
 
     /**
