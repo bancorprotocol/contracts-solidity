@@ -1408,7 +1408,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 ratioN = _newRate.n.mul(_prevRate.d);
         uint256 ratioD = _newRate.d.mul(_prevRate.n);
 
-        // no need for SafeMath - can't overflow
         uint256 prod = ratioN * ratioD;
         uint256 root = prod / ratioN == ratioD ? Math.floorSqrt(prod) : Math.floorSqrt(ratioN) * Math.floorSqrt(ratioD);
         uint256 sum = ratioN.add(ratioD);
