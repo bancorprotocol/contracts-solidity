@@ -1,3 +1,9 @@
+### 0.6.26
+LiquidityProtection
+* Added support for high tier pools
+* Fixed an issue in the system ratio limit
+
+
 ### 0.6.25
 LiquidityProtection
 * Updated to use the TokenGovernance contract for both the network token & the governance token
