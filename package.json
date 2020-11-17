@@ -16,9 +16,9 @@
         "npm": "^3.0.0"
     },
     "scripts": {
-        "build": "NODE_OPTIONS=--max-old-space-size=4096 truffle compile",
-        "test": "NODE_OPTIONS=--max-old-space-size=4096 truffle test",
-        "coverage": "NODE_OPTIONS=--max-old-space-size=4096 truffle run coverage",
+        "build": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js compile",
+        "test": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js truffle test",
+        "coverage": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js run coverage",
         "export": "node scripts/export.js",
         "lint": "npm run lint:js && npm run lint:sol",
         "lint:js": "eslint .",
