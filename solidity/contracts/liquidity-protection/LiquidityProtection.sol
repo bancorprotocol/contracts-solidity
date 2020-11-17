@@ -773,7 +773,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.poolToken,
             liquidity.reserveToken,
             liquidity.reserveRateN,
-            liquidity.reserveRateD
+            liquidity.reserveRateD,
+            false
         );
 
         uint256 targetAmount = removeLiquidityTargetAmount(
@@ -858,7 +859,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             liquidity.poolToken,
             liquidity.reserveToken,
             liquidity.reserveRateN,
-            liquidity.reserveRateD
+            liquidity.reserveRateD,
+            true
         );
 
         // get the target token amount
@@ -1037,7 +1039,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
         // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = packRates(_poolToken, _reserveToken, _reserveRateN, _reserveRateD);
+        PackedRates memory packedRates = packRates(
+            _poolToken,
+            _reserveToken,
+            _reserveRateN,
+            _reserveRateD,
+            false
+        );
 
         // get the current return
         uint256 protectedReturn = removeLiquidityTargetAmount(
@@ -1107,7 +1115,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _poolAmount,
         uint256 _reserveAmount
     ) internal returns (uint256) {
-        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken);
+        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
         return
             store.addProtectedLiquidity(
                 _provider,
@@ -1153,25 +1161,27 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     /**
      * @dev returns the average rate of 1 reserve token in the other reserve token units
      *
-     * @param _poolToken       pool token
-     * @param _reserveToken    reserve token
+     * @param _poolToken            pool token
+     * @param _reserveToken         reserve token
+     * @param _validateAverageRate  true to validate the average rate; false otherwise
      */
-    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken)
+    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken, bool _validateAverageRate)
         internal
         view
         returns (Fraction memory)
     {
-        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(_poolToken, _reserveToken);
+        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
         return Fraction(averageRateN, averageRateD);
     }
 
     /**
      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
      *
-     * @param _poolToken       pool token
-     * @param _reserveToken    reserve token
+     * @param _poolToken            pool token
+     * @param _reserveToken         reserve token
+     * @param _validateAverageRate  true to validate the average rate; false otherwise
      */
-    function reserveTokenRates(IDSToken _poolToken, IERC20Token _reserveToken)
+    function reserveTokenRates(IDSToken _poolToken, IERC20Token _reserveToken, bool _validateAverageRate)
         internal
         view
         returns (
@@ -1192,7 +1202,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
 
         require(
-            averageRateInRange(spotRateN, spotRateD, averageRateN, averageRateD, averageRateMaxDeviation),
+            !_validateAverageRate ||
+                averageRateInRange(spotRateN, spotRateD, averageRateN, averageRateD, averageRateMaxDeviation),
             "ERR_INVALID_RATE"
         );
 
@@ -1202,24 +1213,26 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     /**
      * @dev returns the various rates between the reserves
      *
-     * @param _poolToken       pool token
-     * @param _reserveToken    reserve token
-     * @param _addSpotRateN    add spot rate numerator
-     * @param _addSpotRateD    add spot rate denominator
+     * @param _poolToken            pool token
+     * @param _reserveToken         reserve token
+     * @param _addSpotRateN         add spot rate numerator
+     * @param _addSpotRateD         add spot rate denominator
+     * @param _validateAverageRate  true to validate the average rate; false otherwise
      * @return see `struct PackedRates`
      */
     function packRates(
         IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _addSpotRateN,
-        uint256 _addSpotRateD
+        uint256 _addSpotRateD,
+        bool _validateAverageRate
     ) internal view returns (PackedRates memory) {
         (
             uint256 removeSpotRateN,
             uint256 removeSpotRateD,
             uint256 removeAverageRateN,
             uint256 removeAverageRateD
-        ) = reserveTokenRates(_poolToken, _reserveToken);
+        ) = reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
 
         require(
             (_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128) &&
@@ -1256,12 +1269,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _averageRateD,
         uint32 _maxDeviation
     ) internal pure returns (bool) {
-        uint256 minVal = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(
-            PPM_RESOLUTION - _maxDeviation
-        );
-        uint256 midVal = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
-        uint256 maxVal = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
-        return minVal <= midVal && midVal <= maxVal;
+        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
+        uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
+        uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
+        return min <= mid && mid <= max;
     }
 
     /**
