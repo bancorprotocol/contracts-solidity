@@ -1117,7 +1117,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _poolAmount,
         uint256 _reserveAmount
     ) internal returns (uint256) {
-        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken);
+        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
         return
             store.addProtectedLiquidity(
                 _provider,
@@ -1163,15 +1163,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     /**
      * @dev returns the average rate of 1 reserve token in the other reserve token units
      *
-     * @param _poolToken       pool token
-     * @param _reserveToken    reserve token
+     * @param _poolToken            pool token
+     * @param _reserveToken         reserve token
+     * @param _validateAverageRate  true to validate the average rate; false otherwise
      */
-    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken)
+    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken, bool _validateAverageRate)
         internal
         view
         returns (Fraction memory)
     {
-        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(_poolToken, _reserveToken, true);
+        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
         return Fraction(averageRateN, averageRateD);
     }
 
