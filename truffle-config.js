@@ -10,6 +10,8 @@ const Decimal = require('decimal.js');
 Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
 
 const ganache = require('ganache-core');
+const memdown = require('memdown');
+
 /* eslint-enable import/no-extraneous-dependencies */
 
 module.exports = {
@@ -24,6 +26,7 @@ module.exports = {
             gasPrice: 20000000000,
             gas: 9500000,
             provider: ganache.provider({
+                db: memdown(),
                 gasLimit: 9500000,
                 gasPrice: 20000000000,
                 default_balance_ether: 10000000000000000000
