@@ -680,7 +680,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         if (!isHighTierPool(_poolAnchor)) {
             require(
                 newSystemBalance.mul(PPM_RESOLUTION) <=
-                    newSystemBalance.add(reserveBalanceNetwork).mul(maxSystemNetworkTokenRatio),
+                    reserveBalanceNetwork.add(networkLiquidityAmount).mul(maxSystemNetworkTokenRatio),
                 "ERR_MAX_RATIO_REACHED"
             );
         }
