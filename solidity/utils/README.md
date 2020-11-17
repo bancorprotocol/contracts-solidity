@@ -126,66 +126,6 @@ Here is an example of the initial configuration file which should be provided to
                     "balance": "920"
                 }
             ]
-        },
-        {
-            "type": 2,
-            "symbol": "WBTCBNTv2",
-            "decimals": 18,
-            "fee": "0.05%",
-            "reserves": [
-                {
-                    "symbol": "WBTC",
-                    "weight": "50%",
-                    "balance": "1.5",
-                    "oracle": "0x5b8B87A0abA4be247e660B0e0143bB30Cdf566AF"
-                },
-                {
-                    "symbol": "BNT",
-                    "weight": "50%",
-                    "balance": "12918",
-                    "oracle": "0xC1FCa03a77AD6f708789c1d193418780330709dd"
-                }
-            ]
-        },
-        {
-            "type": 2,
-            "symbol": "BATBNTv2",
-            "decimals": 18,
-            "fee": "0.1%",
-            "reserves": [
-                {
-                    "symbol": "BAT",
-                    "weight": "50%",
-                    "balance": "15000",
-                    "oracle": "0xAfd8186C962daf599f171B8600f3e19Af7B52c92"
-                },
-                {
-                    "symbol": "BNT",
-                    "weight": "50%",
-                    "balance": "8173",
-                    "oracle": "0xC1FCa03a77AD6f708789c1d193418780330709dd"
-                }
-            ]
-        },
-        {
-            "type": 2,
-            "symbol": "LINKBNTv2",
-            "decimals": 18,
-            "fee": "0.08%",
-            "reserves": [
-                {
-                    "symbol": "LINK",
-                    "weight": "50%",
-                    "balance": "216",
-                    "oracle": "0xb8c99b98913bE2ca4899CdcaF33a3e519C20EeEc"
-                },
-                {
-                    "symbol": "BNT",
-                    "weight": "50%",
-                    "balance": "9017",
-                    "oracle": "0xC1FCa03a77AD6f708789c1d193418780330709dd"
-                }
-            ]
         }
     ],
     "liquidityProtectionParams": {
