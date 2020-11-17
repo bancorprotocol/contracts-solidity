@@ -141,4 +141,14 @@ library Math {
     function roundDivUnsafe(uint256 _n, uint256 _d) internal pure returns (uint256) {
         return (_n + _d / 2) / _d;
     }
+
+    /**
+     * @dev returns the larger of two values
+     *
+     * @param _val1 the first value
+     * @param _val2 the second value
+     */
+    function max(uint256 _val1, uint256 _val2) internal pure returns (uint256) {
+        return _val1 > _val2 ? _val1 : _val2;
+    }
 }

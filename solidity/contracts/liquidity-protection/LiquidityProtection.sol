@@ -972,7 +972,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
 
         // calculate the compensation amount
-        return compensationAmount(_reserveAmount, max(_reserveAmount, total), loss, level);
+        return compensationAmount(_reserveAmount, Math.max(_reserveAmount, total), loss, level);
     }
 
     /**
@@ -1468,7 +1468,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     ) internal pure returns (uint256) {
         uint256 levelN = _level.n.mul(_amount);
         uint256 levelD = _level.d;
-        uint256 maxVal = max(max(levelN, levelD), _total);
+        uint256 maxVal = Math.max(Math.max(levelN, levelD), _total);
         (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT256 / maxVal);
         return _total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).div(lossD.mul(levelD)));
     }
@@ -1494,16 +1494,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         }
 
         return 0;
-    }
-
-    /**
-     * @dev returns the larger of two values
-     *
-     * @param _val1 the first value
-     * @param _val2 the second value
-     */
-    function max(uint256 _val1, uint256 _val2) internal pure returns (uint256) {
-        return _val1 > _val2 ? _val1 : _val2;
     }
 
     /**
