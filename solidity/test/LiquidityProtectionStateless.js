@@ -11,7 +11,7 @@ const MAX_AMOUNT = new BN(2).pow(new BN(127));
 const MIN_DURATION = 30 * 24 * 60 * 60;
 const MAX_DURATION = 100 * 24 * 60 * 60;
 
-contract('LiquidityProtectionTargetAmount', accounts => {
+contract('LiquidityProtectionStateless', accounts => {
     let liquidityProtection;
 
     before(async () => {
