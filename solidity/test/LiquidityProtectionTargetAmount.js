@@ -34,7 +34,7 @@ contract('LiquidityProtectionTargetAmount', accounts => {
             MIN_DURATION,
             MAX_DURATION - 1,
         ];
-        test(amounts, durations);
+        removeLiquidityTargetAmountTest(amounts, durations);
     });
 
     describe('accuracy', () => {
@@ -49,7 +49,7 @@ contract('LiquidityProtectionTargetAmount', accounts => {
             maxAbsoluteError: '0',
             maxRelativeError: '0',
         };
-        test(amounts, durations, range);
+        removeLiquidityTargetAmountTest(amounts, durations, range);
     });
 
     describe('accuracy', () => {
@@ -64,10 +64,24 @@ contract('LiquidityProtectionTargetAmount', accounts => {
             maxAbsoluteError: '1.6',
             maxRelativeError: '0.000000000000000003',
         };
-        test(amounts, durations, range);
+        removeLiquidityTargetAmountTest(amounts, durations, range);
     });
 
-    function test(amounts, durations, range) {
+    describe('accuracy', () => {
+        const factorLists = [
+            [9, 12, 15].map((x) => new BN(10).pow(new BN(x))),
+            [18, 24, 30].map((x) => new BN(10).pow(new BN(x))),
+            [23, 47, 95].map((x) => new BN(x).pow(new BN(10))),
+            [7, 9, 11, 13].map((x) => new BN(x).pow(new BN(10))),
+        ];
+        const range = {
+            maxAbsoluteError: '0.0',
+            maxRelativeError: '0.000000000000000000003',
+        };
+        impLossTest(factorLists, range);
+    });
+
+    function removeLiquidityTargetAmountTest(amounts, durations, range) {
         let testNum = 0;
         const numOfTest = amounts.length ** 10 * durations.length ** 1;
 
@@ -141,6 +155,34 @@ contract('LiquidityProtectionTargetAmount', accounts => {
         }
     }
 
+    function impLossTest(factorLists, range) {
+        let testNum = 0;
+        const numOfTest = factorLists.reduce((a, b) => a + b.length ** 4, 0);
+
+        for (const factorList of factorLists) {
+            for (const initialRateN of factorList) {
+                for (const initialRateD of factorList) {
+                    for (const currentRateN of factorList) {
+                        for (const currentRateD of factorList) {
+                            testNum += 1;
+                            const testDesc = `impLoss(${initialRateN}/${initialRateD}, ${currentRateN}/${currentRateD})`;
+                            it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
+                                const expected = impLoss(initialRateN, initialRateD, currentRateN, currentRateD);
+                                const actual = await liquidityProtection.impLossTest(
+                                    initialRateN,
+                                    initialRateD,
+                                    currentRateN,
+                                    currentRateD
+                                );
+                                assertAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function removeLiquidityTargetAmount(
         poolTokenRateN,
         poolTokenRateD,
@@ -177,12 +219,19 @@ contract('LiquidityProtectionTargetAmount', accounts => {
         return total.mul(Decimal(1).sub(loss)).add(reserveAmount.mul(loss).mul(level));
     }
 
+    function impLoss(initialRateN, initialRateD, currentRateN, currentRateD) {
+        const ratioN = currentRateN.mul(initialRateD);
+        const ratioD = currentRateD.mul(initialRateN);
+        const ratio = Decimal(ratioN.toString()).div(ratioD.toString());
+        return ratio.sqrt().mul(2).div(ratio.add(1)).sub(1).neg();
+    }
+
     function assertAlmostEqual(actual, expected, range) {
         if (!actual.eq(expected)) {
             const absoluteError = actual.sub(expected).abs();
             const relativeError = actual.div(expected).sub(1).abs();
             expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true(
-                `\nabsoluteError = ${absoluteError.toFixed(20)}\nrelativeError = ${relativeError.toFixed(20)}`
+                `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
             );
         }
     }
