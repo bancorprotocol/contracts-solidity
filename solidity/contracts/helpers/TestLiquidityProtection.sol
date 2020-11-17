@@ -38,7 +38,7 @@ contract TestLiquidityProtection is LiquidityProtection {
     }
 
     function averageRateTest(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256, uint256) {
-        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken);
+        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
         return (rate.n, rate.d);
     }
 }
