@@ -4,7 +4,6 @@ import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
-import "../utility/interfaces/IWhitelist.sol";
 import "../token/interfaces/IEtherToken.sol";
 
 /**
@@ -95,15 +94,10 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         transferReserveBalances(converter, newConverter);
         IConverterAnchor anchor = converter.token();
 
-        // get the activation status before it's being invalidated
-        bool activate = isV28OrHigherConverter(converter) && converter.isActive();
-
         if (anchor.owner() == address(converter)) {
             converter.transferTokenOwnership(address(newConverter));
             newConverter.acceptAnchorOwnership();
         }
-
-        handleTypeSpecificData(converter, newConverter, activate);
 
         converter.transferOwnership(prevOwner);
         newConverter.transferOwnership(prevOwner);
@@ -224,24 +218,6 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
                 _oldConverter.withdrawTokens(connector, address(_newConverter), reserveBalance);
             }
         }
-    }
-
-    /**
-      * @dev handles upgrading custom (type specific) data from the old converter to the new one
-      *
-      * @param _oldConverter    old converter contract address
-      * @param _newConverter    new converter contract address
-      * @param _activate        activate the new converter
-    */
-    function handleTypeSpecificData(IConverter _oldConverter, IConverter _newConverter, bool _activate) private pure {
-        _oldConverter; // prevent compiler warning
-        _newConverter; // prevent compiler warning
-        _activate; // prevent compiler warning
-        /*if (!isV28OrHigherConverter(_oldConverter)) {
-            return;
-        }
-
-        uint16 converterType = _oldConverter.converterType();*/
     }
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
