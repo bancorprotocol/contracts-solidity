@@ -478,7 +478,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         require(converterRegistry.isAnchor(address(_poolAnchor)), "ERR_INVALID_ANCHOR");
 
         // get the converter
-        IConverter converter = IConverter(payable(_poolAnchor.owner()));
+        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
 
         // verify that the converter has 2 reserves
         if (converter.connectorTokenCount() != 2) {
@@ -518,7 +518,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         greaterThanZero(_amount)
     {
         // get the converter
-        IConverter converter = IConverter(payable(_poolAnchor.owner()));
+        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
 
         // save a local copy of `networkToken`
         IERC20Token networkTokenLocal = networkToken;
@@ -659,7 +659,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the reserve balances
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolAnchor.owner()));
+        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolAnchor)));
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) = converterReserveBalances(
             converter,
             _baseToken,
@@ -1165,7 +1165,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 poolTokenSupply = _poolToken.totalSupply();
 
         // get the reserve balance
-        IConverter converter = IConverter(payable(_poolToken.owner()));
+        IConverter converter = IConverter(payable(ownedBy(_poolToken)));
         uint256 reserveBalance = converter.getConnectorBalance(_reserveToken);
 
         // for standard pools, 50% of the pool supply value equals the value of each reserve
@@ -1205,7 +1205,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             uint256
         )
     {
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
+        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolToken)));
 
         IERC20Token otherReserve = converter.connectorTokens(0);
         if (otherReserve == _reserveToken) {
@@ -1346,7 +1346,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IERC20Token _reserveToken1,
         IERC20Token _reserveToken2
     ) internal {
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(_poolToken.owner()));
+        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolToken)));
 
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
@@ -1568,6 +1568,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     function converterReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
         (, uint32 weight, , , ) = _converter.connectors(_reserveToken);
         return weight;
+    }
+
+    // utility to get the owner
+    function ownedBy(IOwned _owned) private view returns (address) {
+        return _owned.owner();
     }
 
     /**
