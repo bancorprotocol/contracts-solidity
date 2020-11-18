@@ -1374,7 +1374,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @dev returns the protected amount of reserve tokens plus accumulated fee before compensation
      *
      * @param _poolAmount      pool token amount when the liquidity was added
-     * @param _poolRate        rate of 1 pool token in the reserve token units when the liquidity was added
+     * @param _poolRate        rate of 1 pool token in the related reserve token units
      * @param _addRate         rate of 1 reserve token in the other reserve token units when the liquidity was added
      * @param _removeRate      rate of 1 reserve token in the other reserve token units when the liquidity is removed
      * @return protected amount of reserve tokens plus accumulated fee = sqrt(_removeRate / _addRate) * _poolRate * _poolAmount
