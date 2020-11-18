@@ -52,7 +52,6 @@
         "eslint-plugin-standard": "^4.0.1",
         "ganache-core": "^2.10.2",
         "husky": "^4.2.5",
-        "memdown": "^5.1.0",
         "mocha": "^8.2.1",
         "prettier": "^2.1.2",
         "prettier-package-json": "^2.1.3",
