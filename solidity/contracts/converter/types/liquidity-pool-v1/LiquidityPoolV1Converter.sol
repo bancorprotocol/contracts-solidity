@@ -619,33 +619,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-     * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
-     *
-     * @param _amount          amount of pool tokens
-     * @param _reserveTokens   address of each reserve token
-     * @param _totalSupply     token total supply
-     * @param _formula         formula contract
-     *
-     * @return the amount of each reserve token entitled for the given amount of pool tokens
-     */
-    function removeLiquidityReserveAmounts(
-        uint256 _amount,
-        IERC20Token[] memory _reserveTokens,
-        uint256 _totalSupply,
-        IBancorFormula _formula
-    ) private view returns (uint256[] memory) {
-        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
-        for (uint256 i = 0; i < reserveAmounts.length; i++)
-            reserveAmounts[i] = _formula.liquidateReserveAmount(
-                _totalSupply,
-                reserves[_reserveTokens[i]].balance,
-                reserveRatio,
-                _amount
-            );
-        return reserveAmounts;
-    }
-
-    /**
      * @dev removes liquidity (reserve) from the pool
      *
      * @param _reserveTokens           address of each reserve token
@@ -694,6 +667,33 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
 
         // return the amount of each reserve token granted for the given amount of pool tokens
+        return reserveAmounts;
+    }
+
+    /**
+     * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
+     *
+     * @param _amount          amount of pool tokens
+     * @param _reserveTokens   address of each reserve token
+     * @param _totalSupply     token total supply
+     * @param _formula         formula contract
+     *
+     * @return the amount of each reserve token entitled for the given amount of pool tokens
+     */
+    function removeLiquidityReserveAmounts(
+        uint256 _amount,
+        IERC20Token[] memory _reserveTokens,
+        uint256 _totalSupply,
+        IBancorFormula _formula
+    ) private view returns (uint256[] memory) {
+        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
+        for (uint256 i = 0; i < reserveAmounts.length; i++)
+            reserveAmounts[i] = _formula.liquidateReserveAmount(
+                _totalSupply,
+                reserves[_reserveTokens[i]].balance,
+                reserveRatio,
+                _amount
+            );
         return reserveAmounts;
     }
 
