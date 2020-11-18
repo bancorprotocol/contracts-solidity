@@ -4,7 +4,6 @@ import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
-import "../utility/interfaces/IWhitelist.sol";
 import "../token/interfaces/IEtherToken.sol";
 
 /**
