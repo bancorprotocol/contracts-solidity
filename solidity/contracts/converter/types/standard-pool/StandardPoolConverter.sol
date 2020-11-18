@@ -1079,32 +1079,6 @@ contract StandardPoolConverter is
     }
 
     /**
-     * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
-     *
-     * @param _amount          amount of pool tokens
-     * @param _reserveTokens   address of each reserve token
-     * @param _totalSupply     token total supply
-     *
-     * @return the amount of each reserve token entitled for the given amount of pool tokens
-     */
-    function removeLiquidityReserveAmounts(
-        uint256 _amount,
-        IERC20Token[2] memory _reserveTokens,
-        uint256 _totalSupply
-    ) private view returns (uint256[2] memory) {
-        uint256[2] memory _reserveAmounts;
-        uint256[2] memory _reserveBalances;
-
-        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
-        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
-        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
-
-        for (uint256 i = 0; i < 2; i++)
-            _reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
-        return _reserveAmounts;
-    }
-
-    /**
      * @dev removes liquidity (reserve) from the pool
      *
      * @param _poolToken               address of the pool token
@@ -1158,6 +1132,32 @@ contract StandardPoolConverter is
 
         // return the amount of each reserve token granted for the given amount of pool tokens
         return reserveAmounts;
+    }
+
+    /**
+     * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
+     *
+     * @param _amount          amount of pool tokens
+     * @param _reserveTokens   address of each reserve token
+     * @param _totalSupply     token total supply
+     *
+     * @return the amount of each reserve token entitled for the given amount of pool tokens
+     */
+    function removeLiquidityReserveAmounts(
+        uint256 _amount,
+        IERC20Token[2] memory _reserveTokens,
+        uint256 _totalSupply
+    ) private view returns (uint256[2] memory) {
+        uint256[2] memory _reserveAmounts;
+        uint256[2] memory _reserveBalances;
+
+        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
+        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
+        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
+
+        for (uint256 i = 0; i < 2; i++)
+            _reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
+        return _reserveAmounts;
     }
 
     /**
