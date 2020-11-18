@@ -1267,6 +1267,16 @@ contract('LiquidityProtectionV1', (accounts) => {
         expect(amount).to.be.bignumber.equal(new BN(800));
     });
 
+    it('verifies that removeLiquidityReturn can be called even if the average rate is invalid', async () => {
+        const reserveAmount = new BN(1000);
+        await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
+        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+
+        await increaseRate(baseTokenAddress);
+        await liquidityProtection.setAverageRateMaxDeviation(1);
+        await liquidityProtection.removeLiquidityReturn(protectionIds[0], PPM_RESOLUTION, now);
+    });
+
     it('should revert when calling removeLiquidityReturn with zero portion of the liquidity', async () => {
         await expectRevert(liquidityProtection.removeLiquidityReturn('1234', 0, now), 'ERR_INVALID_PORTION');
     });
@@ -1465,6 +1475,23 @@ contract('LiquidityProtectionV1', (accounts) => {
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION.add(new BN(1))),
                     'ERR_INVALID_PORTION'
                 );
+            });
+
+            it('should revert when attempting to remove while the average rate is invalid', async () => {
+                const reserveAmount = new BN(1000);
+                await addProtectedLiquidity(
+                    poolToken.address,
+                    baseToken,
+                    baseTokenAddress,
+                    reserveAmount,
+                    isETHReserve
+                );
+                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+                const protectionId = protectionIds[0];
+
+                await increaseRate(baseTokenAddress);
+                await liquidityProtection.setAverageRateMaxDeviation(1);
+                await expectRevert(liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION), 'ERR_INVALID_RATE');
             });
 
             it('should revert when attempting to remove liquidity that does not exist', async () => {
