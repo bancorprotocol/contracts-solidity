@@ -1021,70 +1021,6 @@ contract StandardPoolConverter is
         uint256[2] memory _reserveAmounts,
         uint256 _totalSupply
     ) private returns (uint256) {
-        if (_totalSupply == 0) {
-            return addLiquidityToEmptyPool(_poolToken, _reserveTokens, _reserveAmounts);
-        }
-        return addLiquidityToNonEmptyPool(_poolToken, _reserveTokens, _reserveAmounts, _totalSupply);
-    }
-
-    /**
-     * @dev adds liquidity (reserve) to the pool when it's empty
-     *
-     * @param _poolToken       address of the pool token
-     * @param _reserveTokens   address of each reserve token
-     * @param _reserveAmounts  amount of each reserve token
-     *
-     * @return amount of pool tokens issued
-     */
-    function addLiquidityToEmptyPool(
-        IDSToken _poolToken,
-        IERC20Token[2] memory _reserveTokens,
-        uint256[2] memory _reserveAmounts
-    ) private returns (uint256) {
-        // calculate the geometric-mean of the reserve amounts approved by the user
-        uint256[] memory reserveAmounts = new uint256[](2);
-        for (uint256 i = 0; i < 2; i++) reserveAmounts[i] = _reserveAmounts[i];
-        uint256 amount = Math.geometricMean(reserveAmounts);
-
-        // transfer each one of the reserve amounts from the user to the pool
-        for (uint256 i = 0; i < 2; i++) {
-            IERC20Token reserveToken = _reserveTokens[i];
-            uint256 reserveAmount = _reserveAmounts[i];
-
-            if (reserveToken != ETH_RESERVE_ADDRESS) {
-                // ETH has already been transferred as part of the transaction
-                safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
-            }
-
-            emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, reserveAmount, amount);
-
-            // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(_poolToken, reserveToken, reserveAmount, amount);
-        }
-
-        // set the reserve balances
-        setReserveBalances(1, 2, _reserveAmounts[0], _reserveAmounts[1]);
-
-        // return the amount of pool tokens issued
-        return amount;
-    }
-
-    /**
-     * @dev adds liquidity (reserve) to the pool when it's not empty
-     *
-     * @param _poolToken       address of the pool token
-     * @param _reserveTokens   address of each reserve token
-     * @param _reserveAmounts  amount of each reserve token
-     * @param _totalSupply     token total supply
-     *
-     * @return amount of pool tokens issued
-     */
-    function addLiquidityToNonEmptyPool(
-        IDSToken _poolToken,
-        IERC20Token[2] memory _reserveTokens,
-        uint256[2] memory _reserveAmounts,
-        uint256 _totalSupply
-    ) private returns (uint256) {
         syncReserveBalances(msg.value);
 
         uint256[2] memory oldReserveBalances;
@@ -1092,12 +1028,28 @@ contract StandardPoolConverter is
 
         (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
 
-        uint256 amount = getMinShare(_totalSupply, _reserveAmounts, oldReserveBalances);
+        uint256 amount;
+        uint256[] memory reserveAmounts = new uint256[](2);
+
+        if (_totalSupply == 0) {
+            for (uint256 i = 0; i < 2; i++) {
+                reserveAmounts[i] = _reserveAmounts[i];
+            }
+            amount = Math.geometricMean(reserveAmounts);
+        }
+        else {
+            uint256 index = (_reserveAmounts[0].mul(oldReserveBalances[1]) < _reserveAmounts[1].mul(oldReserveBalances[0])) ? 0 : 1;
+            amount = fundSupplyAmount(_totalSupply, oldReserveBalances[index], _reserveAmounts[index]);
+            for (uint256 i = 0; i < 2; i++) {
+                reserveAmounts[i] = fundCost(_totalSupply, oldReserveBalances[i], amount);
+            }
+        }
+
         uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
         for (uint256 i = 0; i < 2; i++) {
             IERC20Token reserveToken = _reserveTokens[i];
-            uint256 reserveAmount = fundCost(_totalSupply, oldReserveBalances[i], amount);
+            uint256 reserveAmount = reserveAmounts[i];
             require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
             assert(reserveAmount <= _reserveAmounts[i]);
 
