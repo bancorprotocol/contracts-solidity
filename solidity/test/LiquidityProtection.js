@@ -1,23 +1,24 @@
-const { expect } = require('chai');
+const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
 const { duration, latest } = time;
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorFormula = artifacts.require('BancorFormula');
-const BancorNetwork = artifacts.require('BancorNetwork');
-const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
-const TokenGovernance = artifacts.require('TestTokenGovernance');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const DSToken = contract.fromArtifact('DSToken');
+const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
+const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const PPM_RESOLUTION = new BN(1000000);
 
@@ -29,7 +30,7 @@ const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
 
-contract('LiquidityProtection', (accounts) => {
+describe('LiquidityProtection', () => {
     const initPool = async (isETH = false, whitelist = true, standard = true) => {
         if (isETH) {
             baseTokenAddress = ETH_RESERVE_ADDRESS;
@@ -1044,7 +1045,13 @@ contract('LiquidityProtection', (accounts) => {
                 await liquidityProtection.addHighTierPool(poolToken.address);
                 reserveAmount = new BN(40000);
 
-                await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount, isETHReserve);
+                await addProtectedLiquidity(
+                    poolToken.address,
+                    baseToken,
+                    baseTokenAddress,
+                    reserveAmount,
+                    isETHReserve
+                );
             });
         });
     }
@@ -1489,7 +1496,10 @@ contract('LiquidityProtection', (accounts) => {
 
                 await increaseRate(baseTokenAddress);
                 await liquidityProtection.setAverageRateMaxDeviation(1);
-                await expectRevert(liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION), 'ERR_INVALID_RATE');
+                await expectRevert(
+                    liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION),
+                    'ERR_INVALID_RATE'
+                );
             });
 
             it('should revert when attempting to remove liquidity that does not exist', async () => {

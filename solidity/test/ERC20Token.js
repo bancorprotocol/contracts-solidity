@@ -1,11 +1,12 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ZERO_ADDRESS } = constants;
 
-const ERC20Token = artifacts.require('ERC20Token');
+const ERC20Token = contract.fromArtifact('ERC20Token');
 
-contract('ERC20Token', (accounts) => {
+describe('ERC20Token', () => {
     let token;
     const name = 'Token1';
     const symbol = 'TKN1';

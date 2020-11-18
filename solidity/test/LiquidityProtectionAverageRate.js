@@ -1,19 +1,20 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, constants } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const { registry, governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorFormula = artifacts.require('BancorFormula');
-const BancorNetwork = artifacts.require('BancorNetwork');
-const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const TokenGovernance = artifacts.require('TestTokenGovernance');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const DSToken = contract.fromArtifact('DSToken');
+const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
+const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -29,7 +30,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-contract('LiquidityProtectionTokenRate', (accounts) => {
+describe('LiquidityProtectionTokenRate', () => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];

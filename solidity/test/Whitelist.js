@@ -1,11 +1,12 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
+const { expect } = require('../../chai-local');
 const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
 
 const { ZERO_ADDRESS } = constants;
 
-const Whitelist = artifacts.require('Whitelist');
+const Whitelist = contract.fromArtifact('Whitelist');
 
-contract('Whitelist', (accounts) => {
+describe('Whitelist', () => {
     let whitelist;
     const address1 = accounts[1];
     const address2 = accounts[2];

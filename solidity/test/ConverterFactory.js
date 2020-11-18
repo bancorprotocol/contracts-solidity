@@ -1,16 +1,16 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ConverterFactory = artifacts.require('TestConverterFactory');
-const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const TypedConverterAnchorFactory = artifacts.require('TestTypedConverterAnchorFactory');
-const ConverterBase = artifacts.require('ConverterBase');
-const DSToken = artifacts.require('DSToken');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ConverterFactory = contract.fromArtifact('TestConverterFactory');
+const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const TypedConverterAnchorFactory = contract.fromArtifact('TestTypedConverterAnchorFactory');
+const ConverterBase = contract.fromArtifact('ConverterBase');
+const DSToken = contract.fromArtifact('DSToken');
 
-contract('ConverterFactory', (accounts) => {
+describe('ConverterFactory', () => {
     let contractRegistry;
     let converterFactory;
     let anchorFactory;
@@ -20,11 +20,7 @@ contract('ConverterFactory', (accounts) => {
 
     const MAX_CONVERSION_FEE = new BN(10000);
 
-    for (const Factory of [
-        LiquidTokenConverterFactory,
-        LiquidityPoolV1ConverterFactory,
-        LiquidityPoolV2ConverterFactory
-    ]) {
+    for (const Factory of [LiquidTokenConverterFactory, LiquidityPoolV1ConverterFactory]) {
         describe(Factory.contractName, () => {
             before(async () => {
                 // The following contracts are unaffected by the underlying tests, this can be shared.

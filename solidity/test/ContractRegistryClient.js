@@ -1,12 +1,13 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { registry } = require('./helpers/Constants');
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ContractRegistryClient = artifacts.require('TestContractRegistryClient');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ContractRegistryClient = contract.fromArtifact('TestContractRegistryClient');
 
-contract('ContractRegistryClient', (accounts) => {
+describe('ContractRegistryClient', () => {
     let contractRegistry;
     let contractRegistryClient;
     const owner = accounts[0];

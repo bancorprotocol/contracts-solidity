@@ -1,11 +1,12 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ZERO_ADDRESS } = constants;
 
-const Owned = artifacts.require('Owned');
+const Owned = contract.fromArtifact('Owned');
 
-contract('Owned', (accounts) => {
+describe('Owned', () => {
     let contract;
     const owner = accounts[0];
     const newOwner = accounts[1];

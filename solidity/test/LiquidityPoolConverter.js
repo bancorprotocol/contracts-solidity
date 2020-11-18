@@ -1,31 +1,26 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, constants, BN, time } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
 const { latest } = time;
 const { ZERO_ADDRESS } = constants;
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ERC20Token = artifacts.require('ERC20Token');
-const TestNonStandardToken = artifacts.require('TestNonStandardToken');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterUpgrader = artifacts.require('ConverterUpgrader');
-const Whitelist = artifacts.require('Whitelist');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
+const Whitelist = contract.fromArtifact('Whitelist');
 
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
-const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
-const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
-const DSToken = artifacts.require('DSToken');
-const PoolTokensContainer = artifacts.require('PoolTokensContainer');
-const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
+const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const DSToken = contract.fromArtifact('DSToken');
 
-contract('LiquidityPoolConverter', (accounts) => {
+describe('LiquidityPoolConverter', () => {
     const createConverter = async (
         type,
         anchorAddress,
@@ -35,8 +30,6 @@ contract('LiquidityPoolConverter', (accounts) => {
         switch (type) {
             case 1:
                 return LiquidityPoolV1Converter.new(anchorAddress, registryAddress, maxConversionFee);
-            case 2:
-                return LiquidityPoolV2Converter.new(anchorAddress, registryAddress, maxConversionFee);
         }
     };
 
@@ -44,8 +37,6 @@ contract('LiquidityPoolConverter', (accounts) => {
         switch (type) {
             case 1:
                 return await DSToken.new('Pool1', 'POOL1', 2);
-            case 2:
-                return await PoolTokensContainer.new('Pool', 'POOL', 2);
         }
     };
 
@@ -59,24 +50,11 @@ contract('LiquidityPoolConverter', (accounts) => {
                 await converter.addReserve(getReserve1Address(isETHReserve), 250000);
                 await converter.addReserve(reserveToken2.address, 150000);
                 break;
-
-            case 2:
-                await converter.addReserve(getReserve1Address(isETHReserve), 500000);
-                await converter.addReserve(reserveToken2.address, 500000);
-                break;
         }
 
         if (activate) {
             await anchor.transferOwnership(converter.address);
             await converter.acceptAnchorOwnership();
-
-            if (type === 2) {
-                await converter.activate(
-                    getReserve1Address(isETHReserve),
-                    chainlinkPriceOracleA.address,
-                    chainlinkPriceOracleB.address
-                );
-            }
         }
 
         if (addLiquidity) {
@@ -94,12 +72,6 @@ contract('LiquidityPoolConverter', (accounts) => {
                         { value: isETHReserve ? 10000 : 0 }
                     );
                     break;
-                case 2:
-                    await converter.addLiquidity(getReserve1Address(isETHReserve), 10000, MIN_RETURN, {
-                        value: isETHReserve ? 10000 : 0
-                    });
-                    await converter.addLiquidity(reserveToken2.address, 12000, MIN_RETURN);
-                    break;
             }
         }
 
@@ -110,8 +82,6 @@ contract('LiquidityPoolConverter', (accounts) => {
         switch (type) {
             case 1:
                 return 'LiquidityPoolV1Converter';
-            case 2:
-                return 'LiquidityPoolV2Converter';
         }
 
         return 'Unknown';
@@ -135,14 +105,6 @@ contract('LiquidityPoolConverter', (accounts) => {
         return bancorNetwork.convertByPath.call(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
     };
 
-    const createChainlinkOracle = async (answer) => {
-        const chainlinkOracle = await ChainlinkPriceOracle.new();
-        await chainlinkOracle.setAnswer(answer);
-        await chainlinkOracle.setTimestamp(await latest());
-
-        return chainlinkOracle;
-    };
-
     let bancorNetwork;
     let anchor;
     let anchorAddress;
@@ -151,13 +113,11 @@ contract('LiquidityPoolConverter', (accounts) => {
     let reserveToken2;
     let reserveToken3;
     let upgrader;
-    let chainlinkPriceOracleA;
-    let chainlinkPriceOracleB;
     const sender = accounts[0];
     const whitelisted = accounts[1];
     const beneficiary = accounts[2];
 
-    const CONVERTER_TYPES = [1, 2];
+    const CONVERTER_TYPES = [1];
     const MIN_RETURN = new BN(1);
     const WEIGHT_10_PERCENT = new BN(100000);
     const WEIGHT_20_PERCENT = new BN(200000);
@@ -175,19 +135,6 @@ contract('LiquidityPoolConverter', (accounts) => {
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
-        await factory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
-
-        await factory.registerTypedConverterAnchorFactory((await LiquidityPoolV2ConverterAnchorFactory.new()).address);
-        await factory.registerTypedConverterCustomFactory((await LiquidityPoolV2ConverterCustomFactory.new()).address);
-
-        const oracleWhitelist = await Whitelist.new();
-        await contractRegistry.registerAddress(registry.CHAINLINK_ORACLE_WHITELIST, oracleWhitelist.address);
-
-        chainlinkPriceOracleA = await createChainlinkOracle(10000);
-        chainlinkPriceOracleB = await createChainlinkOracle(20000);
-
-        await oracleWhitelist.addAddress(chainlinkPriceOracleA.address);
-        await oracleWhitelist.addAddress(chainlinkPriceOracleB.address);
     });
 
     beforeEach(async () => {

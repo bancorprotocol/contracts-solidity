@@ -1,12 +1,13 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
-const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
-const ERC20Token = artifacts.require('ERC20Token');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const ERC20Token = contract.fromArtifact('ERC20Token');
 
 const DUMMY_ADDRESS = '0x'.padEnd(42, 'f');
 
-contract('LiquidityProtectionStore', (accounts) => {
+describe('LiquidityProtectionStore', () => {
     let liquidityProtectionStore;
 
     const owner = accounts[0];

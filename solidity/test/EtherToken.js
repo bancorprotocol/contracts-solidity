@@ -1,9 +1,10 @@
-const { expect } = require('chai');
+const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
-const EtherToken = artifacts.require('EtherToken');
+const EtherToken = contract.fromArtifact('EtherToken');
 
-contract('EtherToken', (accounts) => {
+describe('EtherToken', () => {
     let token;
     const name = 'Ether Token';
     const symbol = 'ETH';

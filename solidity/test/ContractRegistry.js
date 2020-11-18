@@ -1,18 +1,19 @@
-const { expect } = require('chai');
+const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { registry } = require('./helpers/Constants');
 
 const { ZERO_ADDRESS } = constants;
 
-const ContractRegistry = artifacts.require('ContractRegistry');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
 const trimNull = (str) => {
     // eslint-disable-next-line no-control-regex
     return str.replace(/\u0000*$/, '');
 };
 
-contract('ContractRegistry', (accounts) => {
+describe('ContractRegistry', () => {
     let contractRegistry;
     const contractName1 = 'red';
     const contractName2 = 'blue';

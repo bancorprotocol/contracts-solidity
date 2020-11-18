@@ -1,14 +1,15 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { registry } = require('./helpers/Constants');
 const ConverterHelper = require('./helpers/Converter');
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const TestBancorNetwork = artifacts.require('TestBancorNetwork');
-const DSToken = artifacts.require('DSToken');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const TestBancorNetwork = contract.fromArtifact('TestBancorNetwork');
+const DSToken = contract.fromArtifact('DSToken');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
 /*
 Token network structure:
@@ -19,7 +20,7 @@ Token network structure:
 
 */
 
-contract('BancorNetworkWithOldConverter', (accounts) => {
+describe('BancorNetworkWithOldConverter', () => {
     const OLD_CONVERTER_VERSION = 9;
 
     let poolToken1;

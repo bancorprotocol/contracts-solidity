@@ -1,15 +1,16 @@
-const { expect } = require('chai');
+const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { expect } = require('../../chai-local');
 const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const BancorX = artifacts.require('BancorX');
-const DSToken = artifacts.require('DSToken');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorNetwork = artifacts.require('BancorNetwork');
-const BancorFormula = artifacts.require('BancorFormula');
-const ERC20Token = artifacts.require('ERC20Token');
+const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const BancorX = contract.fromArtifact('BancorX');
+const DSToken = contract.fromArtifact('DSToken');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ERC20Token = contract.fromArtifact('ERC20Token');
 
 const MAX_LOCK_LIMIT = new BN('1000000000000000000000'); // 1000 bnt
 const MAX_RELEASE_LIMIT = new BN('1000000000000000000000'); // 1000 bnt
@@ -23,7 +24,7 @@ const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c00000000000000
 const MIN_RETURN = new BN(1);
 const TX_ID = new BN(0);
 
-contract('XConversions', (accounts) => {
+describe('XConversions', () => {
     let bancorFormula;
     let contractRegistry;
     let bancorX;
