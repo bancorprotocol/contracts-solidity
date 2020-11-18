@@ -16,6 +16,8 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     struct TokenData {
         uint256 firstSampleTime;
         uint256 lastSampleTime;
+        uint256 prevAccumulatorTime;
+        Fraction prevAccumulator;
         mapping(uint256 => Fraction) accumulators;
         mapping(uint256 => bool) timestamps;
     }
@@ -239,8 +241,8 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         // make sure that the samples are added in the correct order
         require(_time >= lastSampleTime, "ERR_WRONG_ORDER");
 
+        // if this is the initialization sample for this contract, set it as the first sample and return
         if (tokenData.firstSampleTime == 0) {
-            // if this is the initialization sample for this contract, set it as the first sample and return
             tokenData.firstSampleTime = _time;
             tokenData.lastSampleTime = _time;
 
@@ -248,37 +250,36 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
             tokenData.timestamps[_time] = true;
 
             emit SampleAdded(_token, _sample.n, _sample.d, _time);
-        }
-
-        // if we already have a sample for this timestamp - use the backup of the previous accumulator use it in
-        // combination with the new sample
-        if (_time == lastSampleTime) {
-            // TODO: don't have the previous acc value!!! Need to maintain an array?!
-            // TODO: accumul
-            // TODO: tokenData.accumulator = ??
-            // Need to add prevAccumulator value for the block?
-            // Need to add ACC test to the code
-            tokenData.timestamps[_time] = true;
-
-            emit SampleAdded(_token, _sample.n, _sample.d, _time);
 
             return;
         }
 
-        // otherwise, accumulate the current value in combination with the last accumulator
         Fraction memory lastAccumulator = tokenData.accumulators[lastSampleTime];
 
-        // acc[x] = acc[x - t] + value * t
-        uint256 n = _sample.d.mul(lastAccumulator.n).add(_sample.n.mul(lastAccumulator.d)).mul(_time);
+        // update the previous accumulator value once per-block. we would need it in order to accumulate
+        // same-block changes
+        if (_time > tokenData.prevAccumulatorTime) {
+            tokenData.prevAccumulatorTime = _time;
+            tokenData.prevAccumulator = lastAccumulator;
+        }
+
+        // if we already have a sample for this timestamp - use the backup of the previous accumulator and use it in
+        // combination with the new sample
+        if (_time == lastSampleTime) {
+            lastAccumulator = tokenData.prevAccumulator;
+        }
+
+        // accumulate the current value in combination with the last accumulator using the TWA formuls:
+        //  ACC[time] = ACC[time - timeDiff] + value * timeDiff
+        uint256 n = _sample.d.mul(lastAccumulator.n).add(
+            _sample.n.mul(lastAccumulator.d).mul(_time.sub(lastSampleTime))
+        );
         uint256 d = _sample.d.mul(lastAccumulator.d);
         (n, d) = Math.reducedRatio(n, d, MAX_UINT128);
 
         tokenData.accumulators[_time] = Fraction({ n: n, d: d });
         tokenData.timestamps[_time] = true;
-
-        if (lastSampleTime < _time) {
-            tokenData.lastSampleTime = _time;
-        }
+        tokenData.lastSampleTime = _time;
 
         emit SampleAdded(_token, _sample.n, _sample.d, _time);
     }
@@ -294,8 +295,8 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         TokenData storage tokenData = data[_token];
         uint256 firstSampleTime = tokenData.firstSampleTime;
 
-        Fraction memory firstSample = tokenData.samples[firstSampleTime];
-        return firstSampleTime > 0 && firstSample.n == INITIAL_SAMPLE_N && firstSample.d == INITIAL_SAMPLE_D;
+        Fraction memory firstAccumulator = tokenData.accumulators[firstSampleTime];
+        return firstSampleTime > 0 && firstAccumulator.n == INITIAL_SAMPLE_N && firstAccumulator.d == INITIAL_SAMPLE_D;
     }
 
     /**

@@ -9,10 +9,49 @@ const TokenTimeWeightedAverage = artifacts.require('TestTokenTimeWeightedAverage
 const ROLE_OWNER = web3.utils.keccak256('ROLE_OWNER');
 const ROLE_SEEDER = web3.utils.keccak256('ROLE_SEEDER');
 
-const initTWA = (start) => {};
+const initTWA = (start) => {
+    return {
+        firstSampleTime: Decimal(start.toString()),
+        lastSampleTime: Decimal(start.toString()),
+        accumulators: {
+            [start]: Decimal(0)
+        },
+        lastAccumulator: Decimal(0),
+        lastAccumulatorTime: Decimal(0)
+    };
+};
 
-contract.only('TokenTimeWeightedAverage', (accounts) => {
+const addTWASample = (acc, n, d, time) => {
+    const sampleTime = time.toNumber();
+    const value = Decimal(n.toString()).div(Decimal(d.toString()));
+    const { accumulators, lastSampleTime } = acc;
+
+    acc.lastAccumulator = accumulators[lastSampleTime];
+    acc.lastAccumulatorTime = sampleTime;
+
+    accumulators[sampleTime] = acc.lastAccumulator.add(Decimal(sampleTime).sub(lastSampleTime).mul(value));
+    acc.lastSampleTime = sampleTime;
+};
+
+const revertTWALastSample = (acc) => {
+    const { lastAccumulator, lastAccumulatorTime } = acc;
+    acc.accumulators[lastAccumulatorTime] = lastAccumulator;
+};
+
+const getTWAAccumulator = (acc, time) => {
+    return acc.accumulators[time];
+};
+
+const getTWA = (acc, start, end) => {
+    const { accumulators } = acc;
+    const startAccumulator = accumulators[start];
+    const endAccumulator = accumulators[end];
+    return endAccumulator.sub(startAccumulator).div(Decimal(end.toString()).sub(Decimal(start.toString())));
+};
+
+contract('TokenTimeWeightedAverage', (accounts) => {
     const owner = accounts[0];
+    const seeder = accounts[1];
     const nonOwner = accounts[5];
     let twa;
     let now;
@@ -37,8 +76,49 @@ contract.only('TokenTimeWeightedAverage', (accounts) => {
         });
     });
 
-    describe.only('adding samples', () => {
+    describe('adding samples', () => {
         const token = accounts[8];
+        let acc;
+
+        const testSample = async (n, d) => {
+            const res = await twa.addSample(token, n, d, { from: owner });
+            addTWASample(acc, n, d, now);
+
+            const lastSampleTime = now;
+            expectEvent(res, 'SampleAdded', { _token: token, _n: n, _d: d, _time: lastSampleTime });
+
+            expect(await twa.sampleExists.call(token, now)).to.be.true();
+
+            const range = await twa.sampleRange.call(token);
+            const firstSampleTime = new BN(acc.firstSampleTime.toString());
+            expect(range[0]).to.be.bignumber.equal(firstSampleTime);
+            expect(range[1]).to.be.bignumber.equal(lastSampleTime);
+
+            const s = await twa.accumulator.call(token, lastSampleTime);
+            const ac = getTWAAccumulator(acc, lastSampleTime);
+            const sv = Decimal(s[0].toString()).div(Decimal(s[1].toString()));
+            expect(sv.toString()).to.be.eql(ac.toString());
+        };
+
+        const testPastSample = async (n, d, time) => {
+            const res = await twa.addPastSample(token, n, d, time, { from: seeder });
+            addTWASample(acc, n, d, time);
+
+            const lastSampleTime = time;
+            expectEvent(res, 'SampleAdded', { _token: token, _n: n, _d: d, _time: lastSampleTime });
+
+            expect(await twa.sampleExists.call(token, time)).to.be.true();
+
+            const range = await twa.sampleRange.call(token);
+            const firstSampleTime = new BN(acc.firstSampleTime.toString());
+            expect(range[0]).to.be.bignumber.equal(firstSampleTime);
+            expect(range[1]).to.be.bignumber.equal(lastSampleTime);
+
+            const s = await twa.accumulator.call(token, lastSampleTime);
+            const ac = getTWAAccumulator(acc, lastSampleTime);
+            const sv = Decimal(s[0].toString()).div(Decimal(s[1].toString()));
+            expect(sv.toString()).to.be.eql(ac.toString());
+        };
 
         it('should allow to initialize the accumulator', async () => {
             const res = await twa.initialize(token, now);
@@ -48,7 +128,7 @@ contract.only('TokenTimeWeightedAverage', (accounts) => {
             expect(range[0]).to.be.bignumber.equal(now);
             expect(range[1]).to.be.bignumber.equal(now);
 
-            const s = await twa.sample.call(token, now);
+            const s = await twa.accumulator.call(token, now);
             expect(s[0]).to.be.bignumber.equal(new BN(0));
             expect(s[1]).to.be.bignumber.equal(new BN(1));
         });
@@ -73,101 +153,35 @@ contract.only('TokenTimeWeightedAverage', (accounts) => {
                 initTime = now;
 
                 await twa.initialize(token, initTime, { from: owner });
+                acc = initTWA(initTime);
 
                 now = now.add(new BN(10000));
                 await twa.setTime(now);
             });
 
             it('should allow an owner to add samples', async () => {
-                const n = new BN(1000);
-                const d = new BN(500);
-                let res = await twa.addSample(token, n, d, { from: owner });
-
-                let lastSampleTime = now;
-                const firstSampleTime = initTime;
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n, _d: d, _time: lastSampleTime });
-
-                let range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                let s = await twa.sample.call(token, lastSampleTime);
-                expect(s[0]).to.be.bignumber.equal(n);
-                expect(s[1]).to.be.bignumber.equal(d);
-                expect(await twa.sampleExists.call(token, now)).to.be.true();
+                await testSample(new BN(1000), new BN(500));
 
                 now = now.add(new BN(1));
                 await twa.setTime(now);
-
-                const n2 = new BN(10000);
-                const d2 = new BN(2);
-                res = await twa.addSample(token, n2, d2, { from: owner });
-
-                lastSampleTime = now;
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n2, _d: d2, _time: lastSampleTime });
-
-                range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-
-                s = await twa.sample.call(token, lastSampleTime);
-                expect(s[0]).to.be.bignumber.equal(n2);
-                expect(s[1]).to.be.bignumber.equal(d2);
-                expect(await twa.sampleExists.call(token, lastSampleTime)).to.be.true();
+                await testSample(new BN(10000), new BN(2));
 
                 now = now.add(new BN(5000));
                 await twa.setTime(now);
-
-                const n3 = new BN(10000);
-                const d3 = new BN(200);
-                res = await twa.addSample(token, n3, d3, { from: owner });
-
-                lastSampleTime = now;
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n3, _d: d3, _time: lastSampleTime });
-
-                range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                s = await twa.sample.call(token, lastSampleTime);
-                expect(s[0]).to.be.bignumber.equal(n3);
-                expect(s[1]).to.be.bignumber.equal(d3);
-                expect(await twa.sampleExists.call(token, lastSampleTime)).to.be.true();
+                await testSample(new BN(10000), new BN(200));
             });
 
             it('should allow adding multiple samples with the same timestamp', async () => {
-                const n = new BN(1000);
-                const d = new BN(500);
-                let res = await twa.addSample(token, n, d, { from: owner });
+                await testSample(new BN(1000), new BN(500));
 
-                let lastSampleTime = now;
-                const firstSampleTime = initTime;
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n, _d: d, _time: lastSampleTime });
+                revertTWALastSample(acc);
+                await testSample(new BN(10000), new BN(500));
 
-                let range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                let s = await twa.sample.call(token, now);
-                expect(s[0]).to.be.bignumber.equal(n);
-                expect(s[1]).to.be.bignumber.equal(d);
-                expect(await twa.sampleExists.call(token, now)).to.be.true();
-
-                const n2 = new BN(10000);
-                const d2 = new BN(2);
-                res = await twa.addSample(token, n2, d2, { from: owner });
-
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n, _d: d, _time: lastSampleTime });
-
-                range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                s = await twa.sample.call(token, now);
-                expect(s[0]).to.be.bignumber.equal(n2);
-                expect(s[1]).to.be.bignumber.equal(d2);
-                expect(await twa.sampleExists.call(token, now)).to.be.true();
+                revertTWALastSample(acc);
+                await testSample(new BN(100), new BN(500));
             });
 
             it('should revert when a non-owner attempts to initialize the accumulator', async () => {
-                const n = new BN(1000);
-                const d = new BN(500);
                 await expectRevert(twa.initialize(token, now, { from: nonOwner }), 'ERR_ACCESS_DENIED');
             });
 
@@ -199,7 +213,6 @@ contract.only('TokenTimeWeightedAverage', (accounts) => {
         });
 
         context('seeder', async () => {
-            const seeder = accounts[1];
             const nonSeeder = accounts[2];
             let initTime;
 
@@ -209,82 +222,33 @@ contract.only('TokenTimeWeightedAverage', (accounts) => {
                 await twa.grantRole(ROLE_SEEDER, seeder, { from: owner });
 
                 await twa.initialize(token, initTime, { from: seeder });
+                acc = initTWA(initTime);
             });
 
             it('should allow a seeder to add past samples', async () => {
                 let past = now.sub(new BN(20000));
-
-                const n = new BN(1000);
-                const d = new BN(500);
-                let res = await twa.addPastSample(token, n, d, past, { from: seeder });
-
-                let lastSampleTime = past;
-                const firstSampleTime = initTime;
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n, _d: d, _time: lastSampleTime });
-
-                let range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                let s = await twa.sample.call(token, past);
-                expect(s[0]).to.be.bignumber.equal(n);
-                expect(s[1]).to.be.bignumber.equal(d);
-                expect(await twa.sampleExists.call(token, past)).to.be.true();
+                await testPastSample(new BN(1000), new BN(500), past);
 
                 past = past.add(new BN(1000));
+                await testPastSample(new BN(10000), new BN(2), past);
 
-                const n2 = new BN(10000);
-                const d2 = new BN(2);
-                res = await twa.addPastSample(token, n2, d2, past, { from: seeder });
-
-                lastSampleTime = past;
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n2, _d: d2, _time: lastSampleTime });
-
-                range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                s = await twa.sample.call(token, past);
-                expect(s[0]).to.be.bignumber.equal(n2);
-                expect(s[1]).to.be.bignumber.equal(d2);
-                expect(await twa.sampleExists.call(token, past)).to.be.true();
+                past = past.add(new BN(5000));
+                await testPastSample(new BN(100), new BN(3), past);
             });
 
             it('should allow adding multiple past samples with the same timestamp', async () => {
                 const past = now.sub(new BN(1));
 
-                const n = new BN(1000);
-                const d = new BN(500);
-                let res = await twa.addPastSample(token, n, d, past, { from: seeder });
+                await testPastSample(new BN(1000), new BN(500), past);
 
-                const lastSampleTime = past;
-                const firstSampleTime = initTime;
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n, _d: d, _time: lastSampleTime });
+                revertTWALastSample(acc);
+                await testPastSample(new BN(10000), new BN(2), past);
 
-                let range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                let s = await twa.sample.call(token, past);
-                expect(s[0]).to.be.bignumber.equal(n);
-                expect(s[1]).to.be.bignumber.equal(d);
-                expect(await twa.sampleExists.call(token, past)).to.be.true();
-
-                const n2 = new BN(10000);
-                const d2 = new BN(2);
-                res = await twa.addPastSample(token, n2, d2, past, { from: seeder });
-
-                expectEvent(res, 'SampleAdded', { _token: token, _n: n2, _d: d2, _time: lastSampleTime });
-
-                range = await twa.sampleRange.call(token);
-                expect(range[0]).to.be.bignumber.equal(firstSampleTime);
-                expect(range[1]).to.be.bignumber.equal(lastSampleTime);
-                s = await twa.sample.call(token, past);
-                expect(s[0]).to.be.bignumber.equal(n2);
-                expect(s[1]).to.be.bignumber.equal(d2);
-                expect(await twa.sampleExists.call(token, past)).to.be.true();
+                revertTWALastSample(acc);
+                await testPastSample(new BN(1), new BN(2), past);
             });
 
             it('should revert when a non-seeder attempts to initialize the accumulator', async () => {
-                const n = new BN(1000);
-                const d = new BN(500);
                 await expectRevert(twa.initialize(token, now, { from: nonSeeder }), 'ERR_ACCESS_DENIED');
             });
 
