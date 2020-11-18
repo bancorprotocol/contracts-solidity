@@ -1160,17 +1160,6 @@ contract StandardPoolConverter is
         return reserveAmounts;
     }
 
-    function getMinShare(
-        uint256 _totalSupply,
-        uint256[2] memory _reserveAmounts,
-        uint256[2] memory _reserveBalances
-    ) private pure returns (uint256) {
-        uint256 index = (_reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]))
-            ? 0
-            : 1;
-        return fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
-    }
-
     /**
      * @dev dispatches token rate update events for the reserve tokens and the pool token
      *
