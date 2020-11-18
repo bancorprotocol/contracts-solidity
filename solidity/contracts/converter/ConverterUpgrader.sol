@@ -5,7 +5,6 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/interfaces/IWhitelist.sol";
-import "./types/liquidity-pool-v2/interfaces/ILiquidityPoolV2Converter.sol";
 
 /**
   * @dev This contract contract allows upgrading an older converter contract (0.4 and up)
@@ -230,39 +229,15 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
       * @param _newConverter    new converter contract address
       * @param _activate        activate the new converter
     */
-    function handleTypeSpecificData(IConverter _oldConverter, IConverter _newConverter, bool _activate) private {
-        if (!isV28OrHigherConverter(_oldConverter)) {
+    function handleTypeSpecificData(IConverter _oldConverter, IConverter _newConverter, bool _activate) private pure {
+        _oldConverter; // prevent compiler warning
+        _newConverter; // prevent compiler warning
+        _activate; // prevent compiler warning
+        /*if (!isV28OrHigherConverter(_oldConverter)) {
             return;
         }
 
-        uint16 converterType = _oldConverter.converterType();
-        if (converterType == 2) {
-            ILiquidityPoolV2Converter oldConverter = ILiquidityPoolV2Converter(address(_oldConverter));
-            ILiquidityPoolV2Converter newConverter = ILiquidityPoolV2Converter(address(_newConverter));
-
-            uint16 reserveTokenCount = oldConverter.connectorTokenCount();
-            for (uint16 i = 0; i < reserveTokenCount; i++) {
-                // copy reserve staked balance
-                IERC20Token reserveTokenAddress = oldConverter.connectorTokens(i);
-                uint256 balance = oldConverter.reserveStakedBalance(reserveTokenAddress);
-                newConverter.setReserveStakedBalance(reserveTokenAddress, balance);
-            }
-
-            if (!_activate) {
-                return;
-            }
-
-            // get the primary reserve token
-            IERC20Token primaryReserveToken = oldConverter.primaryReserveToken();
-
-            // get the chainlink price oracles
-            IPriceOracle priceOracle = oldConverter.priceOracle();
-            IChainlinkPriceOracle oracleA = priceOracle.tokenAOracle();
-            IChainlinkPriceOracle oracleB = priceOracle.tokenBOracle();
-
-            // activate the new converter
-            newConverter.activate(primaryReserveToken, oracleA, oracleB);
-        }
+        uint16 converterType = _oldConverter.converterType();*/
     }
 
     bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
