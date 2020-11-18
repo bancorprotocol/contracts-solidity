@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { expectRevert, expectEvent, constants, BN, time } = require('@openzeppelin/test-helpers');
 const Decimal = require('decimal.js');
 const { ZERO_ADDRESS } = constants;
-const { latest } = time;
+const { latest, duration } = time;
 
 const TokenTimeWeightedAverage = artifacts.require('TestTokenTimeWeightedAverage');
 
@@ -314,7 +314,7 @@ contract('TokenTimeWeightedAverage', (accounts) => {
     });
 
     describe('accumulating TWA', () => {
-        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.00001)) => {
+        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.00000001)) => {
             if (!amount1.eq(amount2)) {
                 const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
                 expect(error.lte(maxError)).to.be.true(`error = ${error.toFixed(maxError.length)}`);
@@ -322,40 +322,52 @@ contract('TokenTimeWeightedAverage', (accounts) => {
         };
 
         const token = accounts[8];
+        let acc;
+
+        const test = async (valueStepFunction, timeStepFunction) => {
+            let value = { n: new BN(0), d: new BN(0) };
+            let time = now;
+            const time0 = now;
+
+            for (let i = 1; i < 100; ++i) {
+                time = timeStepFunction(time);
+                await twa.setTime(time);
+
+                value = valueStepFunction(value);
+
+                await twa.addSample(token, value.n, value.d, { from: owner });
+                addTWASample(acc, value.n, value.d, time);
+
+                const twaValue = await twa.timeWeightedAverage.call(token, time0);
+                const testTwaValue = getTWA(acc, time0, time);
+                const twaDecValue = Decimal(twaValue[0].toString()).div(Decimal(twaValue[1].toString()));
+                expectAlmostEqual(twaDecValue, testTwaValue);
+            }
+        };
 
         beforeEach(async () => {
             await twa.initialize(token, now);
+            acc = initTWA(now);
         });
 
         it('should properly accumulate large values', async () => {
-            const valueStep = new BN(10 ** 10).mul(new BN(10).pow(new BN(18)));
-            const timeStep = new BN(3600);
-            let value = new BN(0);
-            const sample0 = value;
-            const time0 = now;
-            let time = time0;
-            let acc = new BN(0);
-
-            for (let i = 1; i < 1000; ++i) {
-                console.log(`Testing step ${i}...`);
-
-                value = value.add(valueStep);
-                await twa.addSample(token, value, new BN(1), { from: owner });
-
-                const twaValue = await twa.timeWeightedAverage.call(token, time0);
-                console.log(`twaValue at ${i}: ${twaValue[0].toString()}, ${twaValue[1].toString()}`);
-
-                acc = acc.add(value.mul(new BN(timeStep)));
-                const testTwaValue = acc.sub(sample0).div(time.sub(time0));
-                console.log(`testTwaValue at ${i}: ${testTwaValue.toString()}`);
-
-                expect(twaValue[0].div(twaValue[1])).to.be.bignumber.equal(testTwaValue);
-
-                time = time.add(timeStep);
-                await twa.setTime(time);
-            }
+            await test(
+                (value) => ({
+                    n: value.n.add(new BN(10 ** 10).mul(new BN(10).pow(new BN(18)))),
+                    d: new BN(1)
+                }),
+                (time) => time.add(duration.days(1))
+            );
         });
 
-        it('should properly accumulate infinitesimal values', async () => {});
+        it('should properly accumulate infinitesimal values', async () => {
+            await test(
+                (value) => ({
+                    n: new BN(1),
+                    d: value.d.add(new BN(10 ** 10).mul(new BN(10).pow(new BN(18))))
+                }),
+                (time) => time.add(duration.days(1))
+            );
+        });
     });
 });

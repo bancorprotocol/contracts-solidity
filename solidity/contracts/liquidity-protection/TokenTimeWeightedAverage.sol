@@ -139,8 +139,8 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
      */
     function timeWeightedAverage(IERC20Token _token, uint256 _startTime)
         external
+        view
         override
-        /*view*/
         validAddress(address(_token))
         returns (uint256, uint256)
     {
@@ -158,7 +158,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         Fraction memory startAccumulator = tokenData.accumulators[_startTime];
 
         // TWA = (lastAccumulator - startAccumulator) / (lastSampleTime - _startTime)
-        uint256 n = (startAccumulator.d.mul(lastAccumulator.n)).sub(lastAccumulator.d.mul(startAccumulator.n)).mul(
+        uint256 n = (startAccumulator.d.mul(lastAccumulator.n).sub(lastAccumulator.d.mul(startAccumulator.n))).div(
             lastSampleTime.sub(_startTime)
         );
         uint256 d = lastAccumulator.d.mul(startAccumulator.d);

@@ -22,7 +22,7 @@ interface ITokenTimeWeightedAverage {
         uint256 _time
     ) external;
 
-    function timeWeightedAverage(IERC20Token _token, uint256 _startTime) external returns (uint256, uint256);
+    function timeWeightedAverage(IERC20Token _token, uint256 _startTime) external view returns (uint256, uint256);
 
     function accumulator(IERC20Token _token, uint256 _time) external view returns (uint256, uint256);
 
