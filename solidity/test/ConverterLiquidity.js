@@ -55,7 +55,7 @@ contract('ConverterLiquidity', (accounts) => {
         context('without ether reserve', async () => {
             beforeEach(async () => {
                 [converter, poolToken] = await initLiquidityPool(false, ...weights);
-                reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+                reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
             });
 
             it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
@@ -128,7 +128,7 @@ contract('ConverterLiquidity', (accounts) => {
         context('with ether reserve', async () => {
             beforeEach(async () => {
                 [converter, poolToken] = await initLiquidityPool(true, ...weights);
-                reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+                reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
             });
 
             it('should revert if the input value is not equal to the input amount of ether', async () => {
@@ -146,7 +146,7 @@ contract('ConverterLiquidity', (accounts) => {
         const test = (hasETH, ...weights) => {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
                 const [converter, poolToken] = await initLiquidityPool(hasETH, ...weights);
-                const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+                const reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
 
                 const state = [];
                 let expected = [];
