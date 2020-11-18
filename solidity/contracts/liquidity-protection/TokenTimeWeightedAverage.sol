@@ -10,6 +10,9 @@ import "../utility/SafeMath.sol";
 import "../utility/Math.sol";
 import "../utility/Utils.sol";
 
+/**
+ * @dev Token Time-Weighted Average contract
+ */
 contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, Utils {
     using SafeMath for uint256;
 
