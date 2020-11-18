@@ -187,7 +187,6 @@ const run = async () => {
         'StandardPoolConverterFactory',
         []
     );
-    const whitelist = await web3Func(deploy, 'whitelist', 'Whitelist', []);
 
     // contract deployment for etherscan verification only
     const poolToken1 = await web3Func(deploy, 'poolToken1', 'DSToken', ['Token1', 'TKN1', 18]);
