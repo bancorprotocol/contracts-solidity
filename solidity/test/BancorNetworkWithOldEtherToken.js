@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -47,7 +47,7 @@ describe('BancorNetworkWithOldEtherToken', () => {
     let anchor2SellPath;
     let anchor3SellPath;
     let etherToErc20ConvertPath;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const sender2 = accounts[1];
     const nonOwner = accounts[5];
     const affiliate = accounts[8];

@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -29,7 +29,7 @@ describe('BancorNetworkWithOldConverter', () => {
     let contractRegistry;
     let converter;
     let bancorNetwork;
-    const owner = accounts[0];
+    const owner = defaultSender;
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
