@@ -1,11 +1,12 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const { governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const DSToken = artifacts.require('DSToken');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const TokenGovernance = artifacts.require('TestTokenGovernance');
+const DSToken = contract.fromArtifact('DSToken');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const FACTOR_LISTS = [
     [9, 12, 15].map((x) => new BN(10).pow(new BN(x))),
@@ -28,7 +29,7 @@ function assertAlmostEqual(actual, expected) {
     }
 }
 
-contract('LiquidityProtectionStateless', (accounts) => {
+describe('LiquidityProtectionStateless', () => {
     before(async () => {
         const governor = accounts[1];
 
@@ -45,10 +46,10 @@ contract('LiquidityProtectionStateless', (accounts) => {
         await govTokenGovernance.acceptTokenOwnership();
 
         liquidityProtection = await LiquidityProtection.new(
-            accounts[0],
+            defaultSender,
             networkTokenGovernance.address,
             govTokenGovernance.address,
-            accounts[0]
+            defaultSender
         );
 
         await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });

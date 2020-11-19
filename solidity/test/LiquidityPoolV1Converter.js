@@ -1,5 +1,6 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
@@ -7,18 +8,18 @@ const { ZERO_ADDRESS } = constants;
 
 const { duration, latest } = time;
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
-const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const DSToken = artifacts.require('DSToken');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ERC20Token = artifacts.require('ERC20Token');
-const TestNonStandardToken = artifacts.require('TestNonStandardToken');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterUpgrader = artifacts.require('ConverterUpgrader');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const DSToken = contract.fromArtifact('DSToken');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 
-contract('LiquidityPoolV1Converter', (accounts) => {
+describe('LiquidityPoolV1Converter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
         return LiquidityPoolV1Converter.new(tokenAddress, registryAddress, maxConversionFee);
     };
@@ -54,11 +55,23 @@ contract('LiquidityPoolV1Converter', (accounts) => {
         const inputAmount = new BN(poolTokenAmount);
         const converter = await initConverter(true, false, 0, true);
         const poolTokenSupply = await token.totalSupply.call();
-        const reserveBalances = await Promise.all(reserveTokens.map((reserveToken) => converter.reserveBalance.call(reserveToken.address)));
-        const expectedOutputAmounts = reserveBalances.map((reserveBalance) => reserveBalance.mul(inputAmount).div(poolTokenSupply));
-        await converter.removeLiquidityTest(inputAmount, reserveTokens.map((reserveToken) => reserveToken.address), [MIN_RETURN, MIN_RETURN]);
-        const actualOutputAmounts = await Promise.all(reserveTokens.map((reserveToken, i) => converter.reserveAmountsRemoved(i)));
-        reserveTokens.map((reserveToken, i) => expect(actualOutputAmounts[i]).to.be.bignumber.equal(expectedOutputAmounts[i]));
+        const reserveBalances = await Promise.all(
+            reserveTokens.map((reserveToken) => converter.reserveBalance.call(reserveToken.address))
+        );
+        const expectedOutputAmounts = reserveBalances.map((reserveBalance) =>
+            reserveBalance.mul(inputAmount).div(poolTokenSupply)
+        );
+        await converter.removeLiquidityTest(
+            inputAmount,
+            reserveTokens.map((reserveToken) => reserveToken.address),
+            [MIN_RETURN, MIN_RETURN]
+        );
+        const actualOutputAmounts = await Promise.all(
+            reserveTokens.map((reserveToken, i) => converter.reserveAmountsRemoved(i))
+        );
+        reserveTokens.map((reserveToken, i) =>
+            expect(actualOutputAmounts[i]).to.be.bignumber.equal(expectedOutputAmounts[i])
+        );
     };
 
     const getReserve1Address = (isETH) => {
@@ -100,7 +113,7 @@ contract('LiquidityPoolV1Converter', (accounts) => {
     let reserveToken2;
     let reserveToken3;
     let upgrader;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const sender2 = accounts[9];
 
     const MIN_RETURN = new BN(1);

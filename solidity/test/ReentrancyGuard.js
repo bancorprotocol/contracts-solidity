@@ -1,10 +1,11 @@
-const { expect } = require('chai');
+const { contract } = require('@openzeppelin/test-environment');
+const { expect } = require('../../chai-local');
 const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 
-const TestReentrancyGuard = artifacts.require('TestReentrancyGuard');
-const TestReentrancyGuardAttacker = artifacts.require('TestReentrancyGuardAttacker');
+const TestReentrancyGuard = contract.fromArtifact('TestReentrancyGuard');
+const TestReentrancyGuardAttacker = contract.fromArtifact('TestReentrancyGuardAttacker');
 
-contract('ReentrancyGuard', () => {
+describe('ReentrancyGuard', () => {
     let guard;
     let attacker;
 

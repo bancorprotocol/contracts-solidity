@@ -1,5 +1,6 @@
-const { expect } = require('chai');
+const { contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 // We will be using BigNumber in some of formula tests, since it'd be much more convenient to work implicitily with
 // decimal numbers.
@@ -9,9 +10,9 @@ const Decimal = require('decimal.js');
 const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
 const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctions');
 
-const TestBancorFormula = artifacts.require('TestBancorFormula');
+const TestBancorFormula = contract.fromArtifact('TestBancorFormula');
 
-contract('BancorFormula', () => {
+describe('BancorFormula', () => {
     let formula;
     before(async () => {
         formula = await TestBancorFormula.new();
