@@ -1,21 +1,22 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN, constants } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const { registry, governance } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorFormula = artifacts.require('BancorFormula');
-const BancorNetwork = artifacts.require('BancorNetwork');
-const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
-const TokenGovernance = artifacts.require('TestTokenGovernance');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const DSToken = contract.fromArtifact('DSToken');
+const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
+const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -52,7 +53,7 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
-contract('LiquidityProtectionEdgeCases', (accounts) => {
+describe('LiquidityProtectionEdgeCases', () => {
     const addProtectedLiquidity = async (token, amount) => {
         await token.approve(liquidityProtection.address, amount);
         await liquidityProtection.addLiquidity(poolToken.address, token.address, amount);
@@ -97,7 +98,7 @@ contract('LiquidityProtectionEdgeCases', (accounts) => {
     let liquidityProtectionStore;
     let liquidityProtection;
 
-    const owner = accounts[0];
+    const owner = defaultSender;
 
     before(async () => {
         contractRegistry = await ContractRegistry.new();

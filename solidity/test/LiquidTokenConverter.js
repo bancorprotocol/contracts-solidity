@@ -1,21 +1,22 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
-const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
-const DSToken = artifacts.require('DSToken');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ERC20Token = artifacts.require('ERC20Token');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterUpgrader = artifacts.require('ConverterUpgrader');
-const Whitelist = artifacts.require('Whitelist');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
+const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
+const DSToken = contract.fromArtifact('DSToken');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
+const Whitelist = contract.fromArtifact('Whitelist');
 
-contract('LiquidTokenConverter', (accounts) => {
+describe('LiquidTokenConverter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
         return LiquidTokenConverter.new(tokenAddress, registryAddress, maxConversionFee);
     };
@@ -81,7 +82,7 @@ contract('LiquidTokenConverter', (accounts) => {
     let reserveToken;
     let erc20Token;
     let upgrader;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const whitelisted = accounts[1];
     const beneficiary = accounts[2];
 

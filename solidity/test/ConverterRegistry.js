@@ -1,28 +1,26 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
-const ERC20Token = artifacts.require('ERC20Token');
-const EtherToken = artifacts.require('EtherToken');
-const DSToken = artifacts.require('DSToken');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterBase = artifacts.require('ConverterBase');
-const IConverterAnchor = artifacts.require('IConverterAnchor');
-const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
-const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConverterRegistry = artifacts.require('TestConverterRegistry');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const EtherToken = contract.fromArtifact('EtherToken');
+const DSToken = contract.fromArtifact('DSToken');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterBase = contract.fromArtifact('ConverterBase');
+const IConverterAnchor = contract.fromArtifact('IConverterAnchor');
+const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
+const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConverterRegistry = contract.fromArtifact('TestConverterRegistry');
 const ConverterHelper = require('./helpers/Converter');
 
-contract('ConverterRegistry', (accounts) => {
+describe('ConverterRegistry', () => {
     let contractRegistry;
     let converterFactory;
     let converterRegistry;
@@ -34,14 +32,6 @@ contract('ConverterRegistry', (accounts) => {
 
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
-        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
-
-        await converterFactory.registerTypedConverterAnchorFactory(
-            (await LiquidityPoolV2ConverterAnchorFactory.new()).address
-        );
-        await converterFactory.registerTypedConverterCustomFactory(
-            (await LiquidityPoolV2ConverterCustomFactory.new()).address
-        );
     });
 
     beforeEach(async () => {
@@ -1161,9 +1151,6 @@ contract('ConverterRegistry', (accounts) => {
             await testCreate(1, 'Pool1', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
             await testCreate(1, 'Pool2', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
             await testCreate(1, 'Pool3', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
-            await testCreate(2, 'Pool4', 'ST7', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
-            await testCreate(2, 'Pool5', 'ST8', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
-            await testCreate(2, 'Pool6', 'ST9', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
         };
 
         it('should create converters', async () => {
@@ -1226,27 +1213,6 @@ contract('ConverterRegistry', (accounts) => {
                         [0x6200, 0x6000]
                     )
                 ).to.eql(anchors[5]);
-                expect(
-                    await converterRegistry.getLiquidityPoolByConfig.call(
-                        2,
-                        [ETH_RESERVE_ADDRESS, erc20Token1.address],
-                        [0x4000, 0x4100]
-                    )
-                ).to.eql(anchors[6]);
-                expect(
-                    await converterRegistry.getLiquidityPoolByConfig.call(
-                        2,
-                        [erc20Token1.address, erc20Token2.address],
-                        [0x5100, 0x5200]
-                    )
-                ).to.eql(anchors[7]);
-                expect(
-                    await converterRegistry.getLiquidityPoolByConfig.call(
-                        2,
-                        [erc20Token2.address, ETH_RESERVE_ADDRESS],
-                        [0x6200, 0x6000]
-                    )
-                ).to.eql(anchors[8]);
             });
 
             it('should return a list of converters for a list of anchors', async () => {
