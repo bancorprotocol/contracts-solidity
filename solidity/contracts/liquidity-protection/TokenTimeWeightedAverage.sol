@@ -113,7 +113,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     }
 
     /**
-     * @dev adds a new sample to the accumulator
+     * @dev adds a past sample to the accumulator
      * can only be called by a seeder to add past samples
      *
      * @param _token the token the data is accumulated for
@@ -131,6 +131,38 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         require(_time <= time(), "ERR_INVALID_TIME");
 
         addSample(_token, Fraction({ n: _n, d: _d }), _time);
+    }
+
+    /**
+     * @dev adds past sample to the accumulator
+     * can only be called by a seeder to add past samples
+     *
+     * @param _token the token the data is accumulated for
+     * @param _ns ratio numerators
+     * @param _ds ratio denominators
+     * @param _times sampling timestamps
+     */
+    function addPastSamples(
+        IERC20Token _token,
+        uint256[] calldata _ns,
+        uint256[] calldata _ds,
+        uint256[] calldata _times
+    ) external override validAddress(address(_token)) initialized(_token) {
+        require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
+
+        uint256 length = _ns.length;
+        require(length == _ds.length && length == _times.length, "ERR_INVALID_LENGTH");
+
+        for (uint256 i = 0; i < length; ++i) {
+            uint256 n = _ns[i];
+            uint256 d = _ds[i];
+            uint256 t = _times[i];
+
+            _greaterThanZero(d);
+            require(t <= time(), "ERR_INVALID_TIME");
+
+            addSample(_token, Fraction({ n: n, d: d }), t);
+        }
     }
 
     /**

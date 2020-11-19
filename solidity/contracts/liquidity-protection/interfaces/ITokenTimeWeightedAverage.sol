@@ -22,6 +22,13 @@ interface ITokenTimeWeightedAverage {
         uint256 _time
     ) external;
 
+    function addPastSamples(
+        IERC20Token _token,
+        uint256[] calldata _ns,
+        uint256[] calldata _ds,
+        uint256[] calldata _times
+    ) external;
+
     function timeWeightedAverage(IERC20Token _token, uint256 _startTime) external view returns (uint256, uint256);
 
     function timeWeightedAverage(

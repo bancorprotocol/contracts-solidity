@@ -83,7 +83,7 @@ describe('TokenTimeWeightedAverage', () => {
         const token = accounts[8];
         let acc;
 
-        const testSample = async (n, d) => {
+        const testSample = async (n, d, revert) => {
             const res = await twa.addSample(token, n, d, { from: owner });
             addTWASample(acc, n, d, now);
 
@@ -101,9 +101,13 @@ describe('TokenTimeWeightedAverage', () => {
             const ac = getTWAAccumulator(acc, lastSampleTime);
             const sv = Decimal(s[0].toString()).div(Decimal(s[1].toString()));
             expect(sv.toString()).to.be.eql(ac.toString());
+
+            if (revert) {
+                revertTWALastSample(acc);
+            }
         };
 
-        const testPastSample = async (n, d, time) => {
+        const testPastSample = async (n, d, time, revert) => {
             const res = await twa.addPastSample(token, n, d, time, { from: seeder });
             addTWASample(acc, n, d, time);
 
@@ -112,6 +116,37 @@ describe('TokenTimeWeightedAverage', () => {
 
             expect(await twa.sampleExists.call(token, time)).to.be.true();
 
+            const range = await twa.sampleRange.call(token);
+            const firstSampleTime = new BN(acc.firstSampleTime.toString());
+            expect(range[0]).to.be.bignumber.equal(firstSampleTime);
+            expect(range[1]).to.be.bignumber.equal(lastSampleTime);
+
+            const s = await twa.accumulator.call(token, lastSampleTime);
+            const ac = getTWAAccumulator(acc, lastSampleTime);
+            const sv = Decimal(s[0].toString()).div(Decimal(s[1].toString()));
+            expect(sv.toString()).to.be.eql(ac.toString());
+
+            if (revert) {
+                revertTWALastSample(acc);
+            }
+        };
+
+        const testPastSamples = async (ns, ds, times, revert) => {
+            const res = await twa.addPastSamples(token, ns, ds, times, { from: seeder });
+
+            for (let i = 0; i < ns.length; ++i) {
+                addTWASample(acc, ns[i], ds[i], times[i]);
+
+                expectEvent(res, 'SampleAdded', { _token: token, _n: ns[i], _d: ds[i], _time: times[i] });
+
+                expect(await twa.sampleExists.call(token, times[i])).to.be.true();
+
+                if (revert) {
+                    revertTWALastSample(acc);
+                }
+            }
+
+            const lastSampleTime = times[times.length - 1];
             const range = await twa.sampleRange.call(token);
             const firstSampleTime = new BN(acc.firstSampleTime.toString());
             expect(range[0]).to.be.bignumber.equal(firstSampleTime);
@@ -175,13 +210,9 @@ describe('TokenTimeWeightedAverage', () => {
             });
 
             it('should allow adding multiple samples with the same timestamp', async () => {
-                await testSample(new BN(1000), new BN(500));
-
-                revertTWALastSample(acc);
-                await testSample(new BN(10000), new BN(500));
-
-                revertTWALastSample(acc);
-                await testSample(new BN(100), new BN(500));
+                await testSample(new BN(1000), new BN(500), true);
+                await testSample(new BN(10000), new BN(500), true);
+                await testSample(new BN(100), new BN(500), true);
             });
 
             it('should revert when a non-owner attempts to initialize the accumulator', async () => {
@@ -210,8 +241,7 @@ describe('TokenTimeWeightedAverage', () => {
 
             it('should revert when an owner attempts to add a sample with a zero denominator', async () => {
                 const n = new BN(1000);
-                const d = new BN(0);
-                await expectRevert(twa.addSample(token, n, d, { from: owner }), 'ERR_ZERO_VALUE');
+                await expectRevert(twa.addSample(token, n, new BN(0), { from: owner }), 'ERR_ZERO_VALUE');
             });
         });
 
@@ -242,13 +272,30 @@ describe('TokenTimeWeightedAverage', () => {
             it('should allow adding multiple past samples with the same timestamp', async () => {
                 const past = now.sub(new BN(1));
 
-                await testPastSample(new BN(1000), new BN(500), past);
+                await testPastSample(new BN(1000), new BN(500), past, true);
+                await testPastSample(new BN(10000), new BN(2), past, true);
+                await testPastSample(new BN(1), new BN(2), past, true);
+            });
 
-                revertTWALastSample(acc);
-                await testPastSample(new BN(10000), new BN(2), past);
+            it('should allow a seeder to batch add past samples', async () => {
+                const past = now.sub(new BN(20000));
 
-                revertTWALastSample(acc);
-                await testPastSample(new BN(1), new BN(2), past);
+                await testPastSamples(
+                    [new BN(1000), new BN(10000), new BN(100)],
+                    [new BN(500), new BN(2), new BN(3)],
+                    [past, past.add(new BN(1000)), past.add(new BN(5000))]
+                );
+            });
+
+            it('should allow batch adding multiple past samples with the same timestamp', async () => {
+                const past = now.sub(new BN(20000));
+
+                await testPastSamples(
+                    [new BN(1000), new BN(10000), new BN(100)],
+                    [new BN(500), new BN(2), new BN(3)],
+                    [past, past, past],
+                    true
+                );
             });
 
             it('should revert when a non-seeder attempts to initialize the accumulator', async () => {
@@ -263,6 +310,12 @@ describe('TokenTimeWeightedAverage', () => {
                 const n = new BN(1000);
                 const d = new BN(500);
                 await expectRevert(twa2.addPastSample(token, n, d, past, { from: seeder }), 'ERR_NOT_INITIALIZED');
+                await expectRevert(
+                    twa2.addPastSamples(token, [n, n.add(new BN(1))], [d, d], [past, past.add(new BN(1))], {
+                        from: seeder
+                    }),
+                    'ERR_NOT_INITIALIZED'
+                );
             });
 
             it('should revert when a seeder attempts to add past samples in an incorrect order', async () => {
@@ -277,6 +330,7 @@ describe('TokenTimeWeightedAverage', () => {
                 const n2 = new BN(10000);
                 const d2 = new BN(2);
                 await expectRevert(twa.addPastSample(token, n2, d2, past, { from: seeder }), 'ERR_WRONG_ORDER');
+                await expectRevert(twa.addPastSamples(token, [n2], [d2], [past], { from: seeder }), 'ERR_WRONG_ORDER');
             });
 
             it('should revert when a non-seeder attempts to add past samples', async () => {
@@ -285,6 +339,10 @@ describe('TokenTimeWeightedAverage', () => {
                 const n = new BN(1000);
                 const d = new BN(500);
                 await expectRevert(twa.addPastSample(token, n, d, past, { from: nonSeeder }), 'ERR_ACCESS_DENIED');
+                await expectRevert(
+                    twa.addPastSamples(token, [n], [d], [past], { from: nonSeeder }),
+                    'ERR_ACCESS_DENIED'
+                );
             });
 
             it('should revert when a seeder attempts to add a past sample for the zero address', async () => {
@@ -296,14 +354,21 @@ describe('TokenTimeWeightedAverage', () => {
                     twa.addPastSample(ZERO_ADDRESS, n, d, past, { from: seeder }),
                     'ERR_INVALID_ADDRESS'
                 );
+                await expectRevert(
+                    twa.addPastSamples(ZERO_ADDRESS, [n], [d], [past], { from: seeder }),
+                    'ERR_INVALID_ADDRESS'
+                );
             });
 
             it('should revert when a seeder attempts to add a sample with a zero denominator', async () => {
                 const past = now.sub(new BN(1));
 
                 const n = new BN(1000);
-                const d = new BN(0);
-                await expectRevert(twa.addPastSample(token, n, d, past, { from: seeder }), 'ERR_ZERO_VALUE');
+                await expectRevert(twa.addPastSample(token, n, new BN(0), past, { from: seeder }), 'ERR_ZERO_VALUE');
+                await expectRevert(
+                    twa.addPastSamples(token, [n, n], [new BN(0), n], [past, past], { from: seeder }),
+                    'ERR_ZERO_VALUE'
+                );
             });
 
             it('should revert when a seeder attempts to add a future sample', async () => {
@@ -312,6 +377,27 @@ describe('TokenTimeWeightedAverage', () => {
                 const n = new BN(1000);
                 const d = new BN(2000);
                 await expectRevert(twa.addPastSample(token, n, d, future, { from: seeder }), 'ERR_INVALID_TIME');
+                await expectRevert(
+                    twa.addPastSamples(token, [n, n], [d, d], [now, future], { from: seeder }),
+                    'ERR_INVALID_TIME'
+                );
+            });
+
+            it('should revert when a seeder attempts to add batch samples in an invalid length', async () => {
+                const n = new BN(1000);
+                const d = new BN(2000);
+                await expectRevert(
+                    twa.addPastSamples(token, [n], [d, d], [now], { from: seeder }),
+                    'ERR_INVALID_LENGTH'
+                );
+                await expectRevert(
+                    twa.addPastSamples(token, [n, n], [d], [now], { from: seeder }),
+                    'ERR_INVALID_LENGTH'
+                );
+                await expectRevert(
+                    twa.addPastSamples(token, [n, n], [d, d], [now], { from: seeder }),
+                    'ERR_INVALID_LENGTH'
+                );
             });
         });
     });
