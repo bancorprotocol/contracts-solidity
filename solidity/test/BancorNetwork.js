@@ -17,6 +17,10 @@ const ERC20Token = contract.fromArtifact('ERC20Token');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterHelper = require('./helpers/Converter');
 const TestBancorNetwork = contract.fromArtifact('TestBancorNetwork');
+const ConverterV27OrLowerWithoutFallback = contract.fromArtifact('ConverterV27OrLowerWithoutFallback');
+const ConverterV27OrLowerWithFallback = contract.fromArtifact('ConverterV27OrLowerWithFallback');
+const ConverterV28OrHigherWithoutFallback = contract.fromArtifact('ConverterV28OrHigherWithoutFallback');
+const ConverterV28OrHigherWithFallback = contract.fromArtifact('ConverterV28OrHigherWithFallback');
 
 const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
@@ -322,6 +326,26 @@ describe('BancorNetwork', () => {
             await converterRegistry.addConverter(converter4.address);
 
             initPaths([bntToken, erc20Token1, erc20Token2, anchor1, anchor2, anchor3, anchor4]);
+        });
+
+        it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithoutFallback', async () => {
+            const converter = await ConverterV27OrLowerWithoutFallback.new();
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.false();
+        });
+
+        it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithFallback', async () => {
+            const converter = await ConverterV27OrLowerWithFallback.new();
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.false();
+        });
+
+        it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithoutFallback', async () => {
+            const converter = await ConverterV28OrHigherWithoutFallback.new();
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.true();
+        });
+
+        it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithFallback', async () => {
+            const converter = await ConverterV28OrHigherWithFallback.new();
+            expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.true();
         });
 
         for (const sourceSymbol in pathsTokens) {
