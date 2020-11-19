@@ -317,7 +317,7 @@ describe('TokenTimeWeightedAverage', () => {
     });
 
     describe('accumulating TWA', () => {
-        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.001)) => {
+        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.0001)) => {
             if (!amount1.eq(amount2)) {
                 const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
                 expect(error.lte(maxError)).to.be.true(`error = ${error.toFixed(maxError.length)}`);
@@ -330,6 +330,36 @@ describe('TokenTimeWeightedAverage', () => {
         beforeEach(async () => {
             await twa.initialize(token, now);
             acc = initTWA(now);
+        });
+
+        it('should revert when retrieving the TWA for non-existing sample points', async () => {
+            const n = new BN(1000);
+            const d = new BN(500);
+            await twa.addSample(token, n, d, { from: owner });
+
+            await expectRevert(twa.timeWeightedAverage.call(token, now.add(new BN(1))), 'ERR_NO_DATA');
+            await expectRevert(twa.timeWeightedAverage.call(token, now.sub(new BN(1))), 'ERR_NO_DATA');
+            await expectRevert(twa.timeWeightedAverageEx.call(token, now, now.add(new BN(1))), 'ERR_NO_DATA');
+            await expectRevert(
+                twa.timeWeightedAverageEx.call(token, now.add(new BN(1)), now.add(new BN(10))),
+                'ERR_NO_DATA'
+            );
+        });
+
+        it('should revert when retrieving the TWA for with invalid time', async () => {
+            const n = new BN(1000);
+            const d = new BN(500);
+            await twa.addSample(token, n, d, { from: owner });
+
+            await expectRevert(twa.timeWeightedAverageEx.call(token, now, now), 'ERR_INVALID_TIME');
+        });
+
+        it('should revert when retrieving the TWA for a zero address', async () => {
+            const n = new BN(1000);
+            const d = new BN(500);
+            await twa.addSample(token, n, d, { from: owner });
+
+            await expectRevert(twa.timeWeightedAverage.call(ZERO_ADDRESS, now), 'ERR_INVALID_ADDRESS');
         });
 
         const VALUES = [
@@ -348,6 +378,7 @@ describe('TokenTimeWeightedAverage', () => {
                             const time0 = now;
 
                             for (let i = 1; i < 100; ++i) {
+                                const prevTime = time;
                                 time = time.add(duration.days(1));
                                 await twa.setTime(time);
 
@@ -363,6 +394,13 @@ describe('TokenTimeWeightedAverage', () => {
                                     Decimal(twaValue[1].toString())
                                 );
                                 expectAlmostEqual(twaDecValue, testTwaValue);
+
+                                const twaValue2 = await twa.timeWeightedAverageEx.call(token, prevTime, time);
+                                const testTwaValue2 = getTWA(acc, prevTime, time);
+                                const twaDecValue2 = Decimal(twaValue2[0].toString()).div(
+                                    Decimal(twaValue2[1].toString())
+                                );
+                                expectAlmostEqual(twaDecValue2, testTwaValue2);
                             }
                         });
                     });

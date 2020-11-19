@@ -134,7 +134,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     }
 
     /**
-     * @dev calculated the TWA from a specific point in time
+     * @dev calculated the TWA from a specific sample time
      *
      * @param _token the token the data is accumulated for
      * @param _startTime the sampling starting time
@@ -151,21 +151,59 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         TokenData storage tokenData = data[_token];
         require(tokenData.timestamps[_startTime], "ERR_NO_DATA");
 
-        uint256 lastSampleTime = tokenData.lastSampleTime;
-        Fraction memory lastAccumulator = tokenData.accumulators[lastSampleTime];
+        return timeWeightedAverage(tokenData, _startTime, tokenData.lastSampleTime);
+    }
+
+    /**
+     * @dev calculated the TWA between to specific sample times
+     *
+     * @param _token the token the data is accumulated for
+     * @param _startTime the sampling starting time
+     * @param _endTime the sampling ending time
+     *
+     * @return TWA's numerator and denominator
+     */
+    function timeWeightedAverage(
+        IERC20Token _token,
+        uint256 _startTime,
+        uint256 _endTime
+    ) external view override validAddress(address(_token)) returns (uint256, uint256) {
+        require(_startTime < _endTime, "ERR_INVALID_TIME");
+
+        TokenData storage tokenData = data[_token];
+        require(tokenData.timestamps[_startTime] && tokenData.timestamps[_endTime], "ERR_NO_DATA");
+
+        return timeWeightedAverage(tokenData, _startTime, _endTime);
+    }
+
+    /**
+     * @dev calculated the TWA between to specific sample times
+     *
+     * @param _tokenData the token accumulation data
+     * @param _startTime the sampling starting time
+     * @param _endTime the sampling ending time
+     *
+     * @return TWA's numerator and denominator
+     */
+    function timeWeightedAverage(
+        TokenData storage _tokenData,
+        uint256 _startTime,
+        uint256 _endTime
+    ) private view returns (uint256, uint256) {
+        Fraction memory endAccumulator = _tokenData.accumulators[_endTime];
 
         // if we have received only a single sample - just return it
-        if (tokenData.firstSampleTime == lastSampleTime) {
-            return (lastAccumulator.n, lastAccumulator.d);
+        if (_tokenData.firstSampleTime == _endTime) {
+            return (endAccumulator.n, endAccumulator.d);
         }
 
-        Fraction memory startAccumulator = tokenData.accumulators[_startTime];
+        Fraction memory startAccumulator = _tokenData.accumulators[_startTime];
 
-        // TWA = (lastAccumulator - startAccumulator) / (lastSampleTime - _startTime)
-        uint256 n = (startAccumulator.d.mul(lastAccumulator.n).sub(lastAccumulator.d.mul(startAccumulator.n))).div(
-            lastSampleTime.sub(_startTime)
+        // TWA = (endAccumulator - startAccumulator) / (_endTime - _startTime)
+        uint256 n = (startAccumulator.d.mul(endAccumulator.n).sub(endAccumulator.d.mul(startAccumulator.n))).div(
+            _endTime.sub(_startTime)
         );
-        uint256 d = lastAccumulator.d.mul(startAccumulator.d);
+        uint256 d = endAccumulator.d.mul(startAccumulator.d);
         (n, d) = Math.reducedRatio(n, d, MAX_UINT128);
 
         return (n, d);
