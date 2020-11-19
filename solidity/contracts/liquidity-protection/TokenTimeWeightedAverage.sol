@@ -20,7 +20,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     struct TokenData {
         uint256 firstSampleTime;
         uint256 lastSampleTime;
-        uint256 prevAccumulatorTime;
+        uint256 prevAccumulatorUpdateTime;
         Fraction prevAccumulator;
         mapping(uint256 => Fraction) accumulators;
         mapping(uint256 => bool) timestamps;
@@ -262,8 +262,8 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
 
         // update the previous accumulator value once per-block. we would need it in order to accumulate
         // same-block changes
-        if (_time > tokenData.prevAccumulatorTime) {
-            tokenData.prevAccumulatorTime = _time;
+        if (_time > tokenData.prevAccumulatorUpdateTime) {
+            tokenData.prevAccumulatorUpdateTime = _time;
             tokenData.prevAccumulator = lastAccumulator;
         }
 
