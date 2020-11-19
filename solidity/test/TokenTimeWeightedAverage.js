@@ -1,10 +1,13 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, time } = require('@openzeppelin/test-helpers');
+const { expect } = require('chai');
+
 const Decimal = require('decimal.js');
+
 const { ZERO_ADDRESS } = constants;
 const { latest, duration } = time;
 
-const TokenTimeWeightedAverage = artifacts.require('TestTokenTimeWeightedAverage');
+const TokenTimeWeightedAverage = contract.fromArtifact('TestTokenTimeWeightedAverage');
 
 const ROLE_OWNER = web3.utils.keccak256('ROLE_OWNER');
 const ROLE_SEEDER = web3.utils.keccak256('ROLE_SEEDER');
@@ -49,8 +52,8 @@ const getTWA = (acc, start, end) => {
     return endAccumulator.sub(startAccumulator).div(Decimal(end.toString()).sub(Decimal(start.toString())));
 };
 
-contract('TokenTimeWeightedAverage', (accounts) => {
-    const owner = accounts[0];
+describe('TokenTimeWeightedAverage', () => {
+    const owner = defaultSender;
     const seeder = accounts[1];
     const nonOwner = accounts[5];
     let twa;
