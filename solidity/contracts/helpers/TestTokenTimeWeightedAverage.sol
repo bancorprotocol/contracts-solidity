@@ -2,17 +2,10 @@
 pragma solidity 0.6.12;
 
 import "../liquidity-protection/TokenTimeWeightedAverage.sol";
+import "./TestTime.sol";
 
-contract TestTokenTimeWeightedAverage is TokenTimeWeightedAverage {
-    uint256 public currentTime = 1;
-
-    constructor() public TokenTimeWeightedAverage() {}
-
-    function time() internal view override returns (uint256) {
-        return currentTime;
-    }
-
-    function setTime(uint256 _currentTime) public {
-        currentTime = _currentTime;
+contract TestTokenTimeWeightedAverage is TokenTimeWeightedAverage, TestTime {
+    function time() public view virtual override(Time, TestTime) returns (uint256) {
+        return TestTime.time();
     }
 }

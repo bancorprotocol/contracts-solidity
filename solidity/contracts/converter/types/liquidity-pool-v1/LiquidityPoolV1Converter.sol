@@ -4,6 +4,7 @@ import "../../LiquidityPoolConverter.sol";
 import "../../../token/interfaces/IDSToken.sol";
 import "../../../utility/Math.sol";
 import "../../../utility/Types.sol";
+import "../../../utility/Time.sol";
 
 /**
  * @dev This contract is a specialized version of a converter that manages
@@ -12,7 +13,7 @@ import "../../../utility/Types.sol";
  * Even though pools can have many reserves, the standard pool configuration
  * is 2 reserves with 50%/50% weights.
  */
-contract LiquidityPoolV1Converter is LiquidityPoolConverter {
+contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
     using Math for *;
 
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
@@ -758,13 +759,5 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             _reserveBalance.mul(PPM_RESOLUTION),
             _poolTokenSupply.mul(_reserveWeight)
         );
-    }
-
-    /**
-     * @dev returns the current time
-     * utility to allow overrides for tests
-     */
-    function time() internal view virtual returns (uint256) {
-        return block.timestamp;
     }
 }

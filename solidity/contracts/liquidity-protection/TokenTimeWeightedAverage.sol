@@ -9,11 +9,12 @@ import "../utility/Types.sol";
 import "../utility/SafeMath.sol";
 import "../utility/Math.sol";
 import "../utility/Utils.sol";
+import "../utility/Time.sol";
 
 /**
  * @dev Token Time-Weighted Average contract
  */
-contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, Utils {
+contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, Utils, Time {
     using SafeMath for uint256;
 
     struct TokenData {
@@ -300,13 +301,5 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
 
         Fraction memory firstAccumulator = tokenData.accumulators[firstSampleTime];
         return firstSampleTime > 0 && firstAccumulator.n == INITIAL_SAMPLE_N && firstAccumulator.d == INITIAL_SAMPLE_D;
-    }
-
-    /**
-     * @dev returns the current time
-     * utility to allow overrides for tests
-     */
-    function time() internal view virtual returns (uint256) {
-        return block.timestamp;
     }
 }
