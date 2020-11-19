@@ -317,7 +317,7 @@ describe('TokenTimeWeightedAverage', () => {
     });
 
     describe('accumulating TWA', () => {
-        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.00000001)) => {
+        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.001)) => {
             if (!amount1.eq(amount2)) {
                 const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
                 expect(error.lte(maxError)).to.be.true(`error = ${error.toFixed(maxError.length)}`);
@@ -327,50 +327,47 @@ describe('TokenTimeWeightedAverage', () => {
         const token = accounts[8];
         let acc;
 
-        const test = async (valueStepFunction, timeStepFunction) => {
-            let value = { n: new BN(0), d: new BN(0) };
-            let time = now;
-            const time0 = now;
-
-            for (let i = 1; i < 100; ++i) {
-                time = timeStepFunction(time);
-                await twa.setTime(time);
-
-                value = valueStepFunction(value);
-
-                await twa.addSample(token, value.n, value.d, { from: owner });
-                addTWASample(acc, value.n, value.d, time);
-
-                const twaValue = await twa.timeWeightedAverage.call(token, time0);
-                const testTwaValue = getTWA(acc, time0, time);
-                const twaDecValue = Decimal(twaValue[0].toString()).div(Decimal(twaValue[1].toString()));
-                expectAlmostEqual(twaDecValue, testTwaValue);
-            }
-        };
-
         beforeEach(async () => {
             await twa.initialize(token, now);
             acc = initTWA(now);
         });
 
-        it('should properly accumulate large values', async () => {
-            await test(
-                (value) => ({
-                    n: value.n.add(new BN(10 ** 10).mul(new BN(10).pow(new BN(18)))),
-                    d: new BN(1)
-                }),
-                (time) => time.add(duration.days(1))
-            );
-        });
+        const VALUES = [
+            new BN(1),
+            new BN(2),
+            new BN(10 ** 10).mul(new BN(10).pow(new BN(18))),
+            new BN(10 ** 10).mul(new BN(10).pow(new BN(18))).add(new BN(1))
+        ];
+        for (const n of VALUES) {
+            for (const d of VALUES) {
+                context(`n=${n.toString()}`, async () => {
+                    context(`d=${d.toString()}`, async () => {
+                        it(`should properly accumulate large values`, async () => {
+                            let value = { n: new BN(0), d: new BN(0) };
+                            let time = now;
+                            const time0 = now;
 
-        it('should properly accumulate infinitesimal values', async () => {
-            await test(
-                (value) => ({
-                    n: new BN(1),
-                    d: value.d.add(new BN(10 ** 10).mul(new BN(10).pow(new BN(18))))
-                }),
-                (time) => time.add(duration.days(1))
-            );
-        });
+                            for (let i = 1; i < 100; ++i) {
+                                time = time.add(duration.days(1));
+                                await twa.setTime(time);
+
+                                value.n = value.n.add(n);
+                                value.d = value.d.add(d);
+
+                                await twa.addSample(token, value.n, value.d, { from: owner });
+                                addTWASample(acc, value.n, value.d, time);
+
+                                const twaValue = await twa.timeWeightedAverage.call(token, time0);
+                                const testTwaValue = getTWA(acc, time0, time);
+                                const twaDecValue = Decimal(twaValue[0].toString()).div(
+                                    Decimal(twaValue[1].toString())
+                                );
+                                expectAlmostEqual(twaDecValue, testTwaValue);
+                            }
+                        });
+                    });
+                });
+            }
+        }
     });
 });
