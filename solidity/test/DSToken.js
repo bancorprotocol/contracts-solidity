@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expect } = require('../../chai-local');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
@@ -12,7 +12,7 @@ describe('DSToken', () => {
     const symbol = 'TKN1';
     const decimals = new BN(18);
 
-    const owner = accounts[0];
+    const owner = defaultSender;
     const receiver = accounts[1];
     const nonOwner = accounts[3];
 

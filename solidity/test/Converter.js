@@ -1,10 +1,9 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
-const { latest } = time;
 const { ZERO_ADDRESS } = constants;
 
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
@@ -145,7 +144,7 @@ describe('Converter', () => {
     let reserveToken;
     let reserveToken2;
     let upgrader;
-    const owner = accounts[0];
+    const owner = defaultSender;
     const nonOwner = accounts[1];
     const receiver = accounts[3];
 

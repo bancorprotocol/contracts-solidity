@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { governance } = require('./helpers/Constants');
@@ -46,10 +46,10 @@ describe('LiquidityProtectionStateless', () => {
         await govTokenGovernance.acceptTokenOwnership();
 
         liquidityProtection = await LiquidityProtection.new(
-            accounts[0],
+            defaultSender,
             networkTokenGovernance.address,
             govTokenGovernance.address,
-            accounts[0]
+            defaultSender
         );
 
         await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });

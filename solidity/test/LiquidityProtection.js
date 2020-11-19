@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, governance } = require('./helpers/Constants');
@@ -230,7 +230,7 @@ describe('LiquidityProtection', () => {
     let baseToken;
     let baseTokenAddress;
 
-    const owner = accounts[0];
+    const owner = defaultSender;
     const governor = accounts[1];
 
     before(async () => {

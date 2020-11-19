@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -15,7 +15,7 @@ describe('ConverterFactory', () => {
     let converterFactory;
     let anchorFactory;
     let factory;
-    const owner = accounts[0];
+    const owner = defaultSender;
     const nonOwner = accounts[1];
 
     const MAX_CONVERSION_FEE = new BN(10000);

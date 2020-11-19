@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -12,7 +12,7 @@ describe('ERC20Token', () => {
     const symbol = 'TKN1';
     const decimals = new BN(18);
     const totalSupply = new BN(10000);
-    const sender = accounts[0];
+    const sender = defaultSender;
     const receiver = accounts[1];
     const receiver2 = accounts[2];
 
@@ -37,10 +37,10 @@ describe('ERC20Token', () => {
         await token.transfer(receiver, value);
 
         const senderBalance = await token.balanceOf.call(sender);
-        expect(senderBalance).to.be.bignumber(totalSupply.sub(value));
+        expect(senderBalance).to.be.bignumber.equal(totalSupply.sub(value));
 
         const receiverBalance = await token.balanceOf.call(receiver);
-        expect(receiverBalance).to.be.bignumber(value);
+        expect(receiverBalance).to.be.bignumber.equal(value);
     });
 
     it('verifies that a transfer fires a Transfer event', async () => {
@@ -86,7 +86,7 @@ describe('ERC20Token', () => {
         await token.transferFrom(sender, receiver2, value2, { from: receiver });
 
         const senderBalance = await token.balanceOf.call(sender);
-        expect(senderBalance).to.be.bignumber(totalSupply.sub(value2));
+        expect(senderBalance).to.be.bignumber.equal(totalSupply.sub(value2));
 
         const receiverBalance = await token.balanceOf.call(receiver);
         expect(receiverBalance).to.be.bignumber.equal(new BN(0));

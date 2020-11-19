@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 

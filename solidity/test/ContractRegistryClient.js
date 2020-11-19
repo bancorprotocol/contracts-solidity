@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -10,7 +10,7 @@ const ContractRegistryClient = contract.fromArtifact('TestContractRegistryClient
 describe('ContractRegistryClient', () => {
     let contractRegistry;
     let contractRegistryClient;
-    const owner = accounts[0];
+    const owner = defaultSender;
     const nonOwner = accounts[1];
 
     beforeEach(async () => {

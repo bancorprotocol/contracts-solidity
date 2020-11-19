@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -9,7 +9,7 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 describe('ConverterRegistryData', () => {
     let contractRegistry;
     let converterRegistry;
-    const owner = accounts[0];
+    const owner = defaultSender;
     const nonOwner = accounts[9];
     const address1 = accounts[1];
     const address2 = accounts[2];

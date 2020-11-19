@@ -1,5 +1,5 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
-const { expectRevert, constants, BN, time } = require('@openzeppelin/test-helpers');
+const { defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
+const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const ConverterHelper = require('./helpers/Converter');
@@ -24,7 +24,6 @@ const MAX_CONVERSION_FEE = new BN(30000);
 const RESERVE1_BALANCE = new BN(5000);
 const RESERVE2_BALANCE = new BN(8000);
 const TOKEN_TOTAL_SUPPLY = new BN(20000);
-const MIN_RETURN = new BN(1);
 
 const VERSIONS = [9, 10, 11, 23];
 
@@ -183,13 +182,13 @@ describe('ConverterUpgrader', () => {
 
         // For versions 11 or higher, we just call upgrade on the converter.
         if (converter.upgrade) {
-            res = await converter.upgrade({ from: accounts[0], ...options });
+            res = await converter.upgrade({ from: deployer, ...options });
         } else {
             // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
             // then accept ownership of the new and old converter. The end results should be the same.
             await converter.transferOwnership(upgrader.address);
             res = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''), {
-                from: accounts[0],
+                from: deployer,
                 ...options
             });
             await converter.acceptOwnership();
@@ -237,7 +236,7 @@ describe('ConverterUpgrader', () => {
 
     let contractRegistry;
     let converterFactory;
-    const deployer = accounts[0];
+    const deployer = defaultSender;
     let reserveToken1;
     let reserveToken2;
     let etherToken;

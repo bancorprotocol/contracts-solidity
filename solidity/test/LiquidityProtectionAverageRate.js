@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { registry, governance } = require('./helpers/Constants');
@@ -67,7 +67,7 @@ describe('LiquidityProtectionTokenRate', () => {
         await govTokenGovernance.acceptTokenOwnership();
 
         liquidityProtection = await LiquidityProtection.new(
-            accounts[0],
+            defaultSender,
             networkTokenGovernance.address,
             govTokenGovernance.address,
             contractRegistry.address
@@ -91,8 +91,8 @@ describe('LiquidityProtectionTokenRate', () => {
 
         reserveToken1 = await DSToken.new('RT1', 'RT1', 18);
         reserveToken2 = await DSToken.new('RT2', 'RT2', 18);
-        await reserveToken1.issue(accounts[0], new BN('1'.padEnd(30, '0')));
-        await reserveToken2.issue(accounts[0], new BN('1'.padEnd(30, '0')));
+        await reserveToken1.issue(defaultSender, new BN('1'.padEnd(30, '0')));
+        await reserveToken2.issue(defaultSender, new BN('1'.padEnd(30, '0')));
 
         await converterRegistry.newConverter(
             1,
@@ -151,7 +151,7 @@ describe('LiquidityProtectionTokenRate', () => {
                         );
                     }
                     await converter.removeLiquidity(
-                        await poolToken.balanceOf(accounts[0]),
+                        await poolToken.balanceOf(defaultSender),
                         [reserveToken1.address, reserveToken2.address],
                         [1, 1]
                     );

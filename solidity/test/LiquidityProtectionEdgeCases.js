@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { registry, governance } = require('./helpers/Constants');
@@ -98,7 +98,7 @@ describe('LiquidityProtectionEdgeCases', () => {
     let liquidityProtectionStore;
     let liquidityProtection;
 
-    const owner = accounts[0];
+    const owner = defaultSender;
 
     before(async () => {
         contractRegistry = await ContractRegistry.new();

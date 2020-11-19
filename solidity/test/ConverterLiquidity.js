@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, balance, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
@@ -33,7 +33,7 @@ describe('ConverterLiquidity', () => {
     };
 
     let contractRegistry;
-    const owner = accounts[0];
+    const owner = defaultSender;
 
     const MIN_RETURN = new BN(1);
 

@@ -1,11 +1,11 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expect } = require('../../chai-local');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 
 const XTransferRerouter = contract.fromArtifact('XTransferRerouter');
 
 describe('XTransferRerouter', () => {
-    const owner = accounts[0];
+    const owner = defaultSender;
     const nonOwner = accounts[5];
     const receiver = accounts[1];
     const txId = new BN(123);

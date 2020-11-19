@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -24,7 +24,6 @@ describe('BancorX', () => {
     const reporter1 = accounts[1];
     const reporter2 = accounts[2];
     const reporter3 = accounts[3];
-    const sender = accounts[0];
     const nonOwner = accounts[9];
 
     beforeEach(async () => {
@@ -118,11 +117,15 @@ describe('BancorX', () => {
         await bancorX.setReporter(reporter2, true);
         await bancorX.setReporter(reporter3, true);
 
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter1 });
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter2 });
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, amount, X_TRANSFER_ID, {
+            from: reporter1
+        });
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, amount, X_TRANSFER_ID, {
+            from: reporter2
+        });
 
         await expectRevert(
-            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter3 }),
+            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, amount, X_TRANSFER_ID, { from: reporter3 }),
             'ERR_AMOUNT_TOO_HIGH'
         );
     });
@@ -133,21 +136,25 @@ describe('BancorX', () => {
         await bancorX.setReporter(reporter2, true);
         await bancorX.setReporter(reporter3, true);
 
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter1 });
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter2 });
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, amount, X_TRANSFER_ID, {
+            from: reporter1
+        });
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, amount, X_TRANSFER_ID, {
+            from: reporter2
+        });
 
         await expectRevert(
-            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, amount, X_TRANSFER_ID, { from: reporter3 }),
+            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, amount, X_TRANSFER_ID, { from: reporter3 }),
             'ERR_AMOUNT_TOO_HIGH'
         );
     });
 
-    it('should emit an event when successfuly locking tokens', async () => {
+    it('should emit an event when successfully locking tokens', async () => {
         const amount = TEST_AMOUNT;
         const res = await bancorX.xTransfer(EOS_BLOCKCHAIN, EOS_ADDRESS, amount);
 
         expectEvent(res, 'XTransfer', {
-            _from: sender,
+            _from: defaultSender,
             _toBlockchain: EOS_BLOCKCHAIN,
             _to: EOS_ADDRESS,
             _amount: TEST_AMOUNT,
@@ -177,10 +184,14 @@ describe('BancorX', () => {
 
     it('should not allow a reporter to report the same transaction twice', async () => {
         await bancorX.setReporter(reporter1, true);
-        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID, { from: reporter1 });
+        await bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, TEST_AMOUNT, X_TRANSFER_ID, {
+            from: reporter1
+        });
 
         await expectRevert(
-            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID, { from: reporter1 }),
+            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, TEST_AMOUNT, X_TRANSFER_ID, {
+                from: reporter1
+            }),
             'ERR_ALREADY_REPORTED'
         );
     });
@@ -202,7 +213,9 @@ describe('BancorX', () => {
 
     it('should not allow a non-reporter to report', async () => {
         await expectRevert(
-            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID, { from: reporter1 }),
+            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, TEST_AMOUNT, X_TRANSFER_ID, {
+                from: reporter1
+            }),
             'ERR_ACCESS_DENIED'
         );
     });
@@ -212,7 +225,9 @@ describe('BancorX', () => {
         await bancorX.enableReporting(false);
 
         await expectRevert(
-            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, sender, TEST_AMOUNT, X_TRANSFER_ID, { from: reporter1 }),
+            bancorX.reportTx(EOS_BLOCKCHAIN, TRANSACTION_ID, defaultSender, TEST_AMOUNT, X_TRANSFER_ID, {
+                from: reporter1
+            }),
             'ERR_DISABLED'
         );
     });

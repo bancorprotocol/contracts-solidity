@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -82,7 +82,7 @@ describe('LiquidTokenConverter', () => {
     let reserveToken;
     let erc20Token;
     let upgrader;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const whitelisted = accounts[1];
     const beneficiary = accounts[2];
 

@@ -1,10 +1,9 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, constants, BN, time } = require('@openzeppelin/test-helpers');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
+const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
-const { latest } = time;
 const { ZERO_ADDRESS } = constants;
 
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
@@ -113,7 +112,7 @@ describe('LiquidityPoolConverter', () => {
     let reserveToken2;
     let reserveToken3;
     let upgrader;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const whitelisted = accounts[1];
     const beneficiary = accounts[2];
 

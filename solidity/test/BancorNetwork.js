@@ -1,5 +1,5 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
+const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
@@ -115,7 +115,6 @@ describe('BancorNetwork', () => {
         return new BN(transaction.gasPrice).mul(new BN(txResult.receipt.cumulativeGasUsed));
     };
 
-    let network;
     let bntToken;
     let erc20Token1;
     let erc20Token2;
@@ -131,7 +130,7 @@ describe('BancorNetwork', () => {
     let contractRegistry;
     let pathsTokens;
     let paths;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const nonOwner = accounts[1];
     const sender2 = accounts[2];
     const affiliate = accounts[5];
@@ -261,7 +260,8 @@ describe('BancorNetwork', () => {
             anchor1 = await DSToken.new('Anchor1', 'ANCR1', 2);
             await anchor1.issue(sender, 1000000);
 
-            anchor2 = await DSToken.new('Anchor2', 'ANCR1', 2);
+            anchor2 = await DSToken.new('Anchor2', 'ANCR2', 2);
+            await anchor2.issue(sender, 2000000);
 
             anchor3 = await DSToken.new('Anchor3', 'ANCR3', 2);
             await anchor3.issue(sender, 3000000);
@@ -294,10 +294,12 @@ describe('BancorNetwork', () => {
             await converter4.addReserve(bntToken.address, 220000);
 
             await bntToken.transfer(converter1.address, 40000);
+            await bntToken.transfer(converter2.address, 70000);
             await bntToken.transfer(converter3.address, 110000);
             await bntToken.transfer(converter4.address, 130000);
 
             await web3.eth.sendTransaction({ from: sender, to: converter1.address, value: 50000 });
+            await erc20Token1.transfer(converter2.address, 25000);
             await erc20Token2.transfer(converter3.address, 30000);
 
             await anchor1.transferOwnership(converter1.address);
@@ -305,11 +307,6 @@ describe('BancorNetwork', () => {
 
             await anchor2.transferOwnership(converter2.address);
             await converter2.acceptTokenOwnership();
-
-            await bntToken.approve(converter2.address, 700000, { from: sender });
-            await erc20Token1.approve(converter2.address, 250000, { from: sender });
-            await converter2.addLiquidity(bntToken.address, 700000, MIN_RETURN);
-            await converter2.addLiquidity(erc20Token1.address, 250000, MIN_RETURN);
 
             await anchor3.transferOwnership(converter3.address);
             await converter3.acceptTokenOwnership();
@@ -922,7 +919,10 @@ describe('BancorNetwork', () => {
 
             const balanceBeforeTransfer = await bntToken.balanceOf.call(affiliate);
 
-            await bancorNetwork.convert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE, { from: sender, value });
+            await bancorNetwork.convert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE, {
+                from: sender,
+                value
+            });
 
             const balanceAfterTransfer = await bntToken.balanceOf.call(affiliate);
             expect(balanceAfterTransfer).to.be.bignumber.gt(balanceBeforeTransfer);

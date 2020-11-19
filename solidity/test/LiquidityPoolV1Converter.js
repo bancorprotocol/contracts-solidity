@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
@@ -113,7 +113,7 @@ describe('LiquidityPoolV1Converter', () => {
     let reserveToken2;
     let reserveToken3;
     let upgrader;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const sender2 = accounts[9];
 
     const MIN_RETURN = new BN(1);

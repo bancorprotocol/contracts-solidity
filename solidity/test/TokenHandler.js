@@ -1,4 +1,4 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 
 const TestTokenHandler = contract.fromArtifact('TestTokenHandler');
@@ -7,7 +7,7 @@ const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 
 describe('TokenHandler', async () => {
     let tokenHandler;
-    const sender = accounts[0];
+    const sender = defaultSender;
 
     beforeEach(async () => {
         tokenHandler = await TestTokenHandler.new();

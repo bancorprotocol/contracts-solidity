@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expect } = require('../../chai-local');
 const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
@@ -37,7 +37,7 @@ describe('XConversions', () => {
     let bntEthPath;
     let erc20TokenBntPath;
     let bntErc20Path;
-    const owner = accounts[0];
+    const owner = defaultSender;
     const reporter1 = accounts[1];
     const reporter2 = accounts[2];
     const reporter3 = accounts[3];

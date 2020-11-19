@@ -1,4 +1,4 @@
-const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
@@ -8,7 +8,7 @@ describe('EtherToken', () => {
     let token;
     const name = 'Ether Token';
     const symbol = 'ETH';
-    const sender = accounts[0];
+    const sender = defaultSender;
     const receiver = accounts[1];
 
     beforeEach(async () => {

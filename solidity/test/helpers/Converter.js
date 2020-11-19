@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const truffleContract = require('@truffle/contract');
-
-const { contract } = require('@openzeppelin/test-environment');
+const { contract, web3 } = require('@openzeppelin/test-environment');
 const { constants } = require('@openzeppelin/test-helpers');
+
+const truffleContract = require('@truffle/contract');
 
 const { ZERO_ADDRESS } = constants;
 
