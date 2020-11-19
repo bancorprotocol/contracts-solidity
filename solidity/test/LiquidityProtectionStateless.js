@@ -5,8 +5,11 @@ const Decimal = require('decimal.js');
 const TokenGovernance = artifacts.require('TestTokenGovernance');
 const LiquidityProtection = artifacts.require('TestLiquidityProtection');
 
-const MIN_AMOUNT = new BN(1);
-const MAX_AMOUNT = new BN(2).pow(new BN(127));
+const MIN_AMOUNT = Decimal(2).pow(0);
+const MAX_AMOUNT = Decimal(2).pow(127);
+
+const MIN_RATIO = Decimal(2).pow(256 / 4);
+const MAX_RATIO = Decimal(2).pow(256 / 3);
 
 const MIN_DURATION = 30 * 24 * 60 * 60;
 const MAX_DURATION = 100 * 24 * 60 * 60;
@@ -25,10 +28,10 @@ contract('LiquidityProtectionStateless', accounts => {
         );
     });
 
-    describe('sanity', () => {
+    describe('sanity part 1', () => {
         const amounts = [
-            MIN_AMOUNT,
-            MAX_AMOUNT,
+            new BN(MIN_AMOUNT.toFixed()),
+            new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed()),
         ];
         const durations = [
             MIN_DURATION,
@@ -37,9 +40,21 @@ contract('LiquidityProtectionStateless', accounts => {
         removeLiquidityTargetAmountTest(amounts, durations);
     });
 
-    describe('accuracy', () => {
+    describe('sanity part 2', () => {
         const amounts = [
-            MAX_AMOUNT,
+            new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()),
+            new BN(MAX_AMOUNT.toFixed()),
+        ];
+        const durations = [
+            MIN_DURATION,
+            MAX_DURATION - 1,
+        ];
+        removeLiquidityTargetAmountTest(amounts, durations);
+    });
+
+    describe('accuracy part 1', () => {
+        const amounts = [
+            new BN(MAX_AMOUNT.toFixed()),
         ];
         const durations = [
             MIN_DURATION,
@@ -52,7 +67,7 @@ contract('LiquidityProtectionStateless', accounts => {
         removeLiquidityTargetAmountTest(amounts, durations, range);
     });
 
-    describe('accuracy', () => {
+    describe('accuracy part 2', () => {
         const amounts = [
             new BN('123456789123456789'),
             new BN('987654321987654321'),
@@ -67,7 +82,7 @@ contract('LiquidityProtectionStateless', accounts => {
         removeLiquidityTargetAmountTest(amounts, durations, range);
     });
 
-    describe('accuracy', () => {
+    describe('accuracy part 3', () => {
         const factorLists = [
             [9, 12, 15].map((x) => new BN(10).pow(new BN(x))),
             [18, 24, 30].map((x) => new BN(10).pow(new BN(x))),
