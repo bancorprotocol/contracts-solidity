@@ -1395,7 +1395,12 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         (uint256 hi, uint256 lo) = n > _poolAmount ? (n, _poolAmount) : (_poolAmount, n);
         (uint256 p, uint256 q) = Math.reducedRatio(hi, d, MAX_UINT256 / lo);
-        return (p * lo).div(q);
+        uint256 min = (hi / d).mul(lo);
+
+        if (q > 0) {
+            return Math.max(min, p * lo / q);
+        }
+        return min;
     }
 
     /**
