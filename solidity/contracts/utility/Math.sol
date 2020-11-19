@@ -70,14 +70,13 @@ library Math {
         uint256 _b,
         uint256 _scale
     ) internal pure returns (uint256, uint256) {
-        if (_a == _b) return (_scale / 2, _scale / 2);
-        if (_a < _b) return accurateRatio(_a, _b, _scale);
+        if (_a <= _b) return accurateRatio(_a, _b, _scale);
         (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
         return (x, y);
     }
 
     /**
-     * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a < b".
+     * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a <= b".
      */
     function accurateRatio(
         uint256 _a,
@@ -89,6 +88,9 @@ library Math {
             uint256 c = _a / (maxVal + 1) + 1;
             _a /= c;
             _b /= c;
+        }
+        if (_a == _b) {
+            return (_scale / 2, _scale / 2);
         }
         uint256 x = roundDiv(_a * _scale, _a.add(_b));
         uint256 y = _scale - x;

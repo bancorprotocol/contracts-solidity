@@ -30,7 +30,7 @@ function reducedRatio(a, b, max) {
 
 function normalizedRatio(a, b, scale) {
     [a, b, scale] = [...arguments].map((x) => Decimal(x));
-    if (a.lt(b)) {
+    if (a.lte(b)) {
         return accurateRatio(a, b, scale);
     }
     return accurateRatio(b, a, scale).slice().reverse();
