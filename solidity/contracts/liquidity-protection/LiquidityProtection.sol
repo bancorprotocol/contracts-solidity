@@ -550,7 +550,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        uint256 amount = liquidity1.reserveToken == networkTokenLocal ? liquidity1.reserveAmount : liquidity2.reserveAmount;
+        uint256 amount = liquidity1.reserveToken == networkTokenLocal
+            ? liquidity1.reserveAmount
+            : liquidity2.reserveAmount;
         safeTransferFrom(govToken, msg.sender, address(this), amount);
         govTokenGovernance.burn(amount);
 
@@ -571,7 +573,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount          amount of tokens to add to the pool
      * @return new protected liquidity id
      */
-    function addLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, uint256 _amount)
+    function addLiquidity(
+        IConverterAnchor _poolAnchor,
+        IERC20Token _reserveToken,
+        uint256 _amount
+    )
         external
         payable
         protected
@@ -603,7 +609,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount       amount of tokens to add to the pool
      * @return new protected liquidity id
      */
-    function addNetworkTokenLiquidity(IConverterAnchor _poolAnchor, IERC20Token _networkToken, uint256 _amount) internal returns (uint256) {
+    function addNetworkTokenLiquidity(
+        IConverterAnchor _poolAnchor,
+        IERC20Token _networkToken,
+        uint256 _amount
+    ) internal returns (uint256) {
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the rate between the pool token and the reserve
@@ -959,7 +969,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: _packedRates.addSpotRateN, d: _packedRates.addSpotRateD });
         Fraction memory removeSpotRate = Fraction({ n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD });
-        Fraction memory removeAverageRate = Fraction({ n: _packedRates.removeAverageRateN, d: _packedRates.removeAverageRateD });
+        Fraction memory removeAverageRate = Fraction({
+            n: _packedRates.removeAverageRateN,
+            d: _packedRates.removeAverageRateD
+        });
 
         // calculate the protected amount of reserve tokens plus accumulated fee before compensation
         uint256 total = protectedAmountPlusFee(_poolAmount, poolRate, addSpotRate, removeSpotRate);
@@ -1041,13 +1054,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
         // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = packRates(
-            _poolToken,
-            _reserveToken,
-            _reserveRateN,
-            _reserveRateD,
-            false
-        );
+        PackedRates memory packedRates = packRates(_poolToken, _reserveToken, _reserveRateN, _reserveRateD, false);
 
         // get the current return
         uint256 protectedReturn = removeLiquidityTargetAmount(
@@ -1167,12 +1174,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _reserveToken         reserve token
      * @param _validateAverageRate  true to validate the average rate; false otherwise
      */
-    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken, bool _validateAverageRate)
-        internal
-        view
-        returns (Fraction memory)
-    {
-        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
+    function reserveTokenAverageRate(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        bool _validateAverageRate
+    ) internal view returns (Fraction memory) {
+        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(
+            _poolToken,
+            _reserveToken,
+            _validateAverageRate
+        );
         return Fraction(averageRateN, averageRateD);
     }
 
@@ -1183,7 +1194,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _reserveToken         reserve token
      * @param _validateAverageRate  true to validate the average rate; false otherwise
      */
-    function reserveTokenRates(IDSToken _poolToken, IERC20Token _reserveToken, bool _validateAverageRate)
+    function reserveTokenRates(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        bool _validateAverageRate
+    )
         internal
         view
         returns (
@@ -1271,7 +1286,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _averageRateD,
         uint32 _maxDeviation
     ) internal pure returns (bool) {
-        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
+        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(
+            PPM_RESOLUTION - _maxDeviation
+        );
         uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
         uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
         return min <= mid && mid <= max;
