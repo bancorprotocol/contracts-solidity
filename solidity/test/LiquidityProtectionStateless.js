@@ -154,7 +154,7 @@ contract('LiquidityProtectionStateless', accounts => {
                                                                 removeAverageRateD,
                                                                 timeElapsed
                                                             );
-                                                            assertAlmostEqual(Decimal(actual.toString()), expected, range);
+                                                            exceptAlmostEqual(Decimal(actual.toString()), expected, range);
                                                         }
                                                     });
                                                 }
@@ -189,7 +189,7 @@ contract('LiquidityProtectionStateless', accounts => {
                                     currentRateN,
                                     currentRateD
                                 );
-                                assertAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
+                                exceptAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
                             });
                         }
                     }
@@ -241,7 +241,7 @@ contract('LiquidityProtectionStateless', accounts => {
         return ratio.sqrt().mul(2).div(ratio.add(1)).sub(1).neg();
     }
 
-    function assertAlmostEqual(actual, expected, range) {
+    function exceptAlmostEqual(actual, expected, range) {
         if (!actual.eq(expected)) {
             const absoluteError = actual.sub(expected).abs();
             const relativeError = actual.div(expected).sub(1).abs();
