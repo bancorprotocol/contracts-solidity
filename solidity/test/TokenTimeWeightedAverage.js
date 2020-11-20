@@ -1,6 +1,6 @@
 const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, time } = require('@openzeppelin/test-helpers');
-const { expect } = require('chai');
+const { expect } = require('../../chai-local');
 
 const Decimal = require('decimal.js');
 
