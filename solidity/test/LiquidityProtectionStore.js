@@ -73,53 +73,6 @@ describe('LiquidityProtectionStore', () => {
         });
     });
 
-    describe('whitelisted pools basic verification', () => {
-        it('should revert when a non owner attempts to add a whitelisted pool', async () => {
-            await expectRevert(
-                liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to remove a whitelisted pool', async () => {
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            await expectRevert(
-                liquidityProtectionStore.removePoolFromWhitelist(poolToken, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.true();
-        });
-
-        it('should revert when the owner attempts to add a whitelisted pool which is already whitelisted', async () => {
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            await expectRevert(
-                liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner }),
-                'ERR_POOL_ALREADY_WHITELISTED'
-            );
-        });
-
-        it('should revert when the owner attempts to remove a whitelisted pool which is not yet whitelisted', async () => {
-            await expectRevert(
-                liquidityProtectionStore.removePoolFromWhitelist(poolToken, { from: owner }),
-                'ERR_POOL_NOT_WHITELISTED'
-            );
-        });
-
-        it('should succeed when the owner attempts to add a whitelisted pool', async () => {
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.false();
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.true();
-        });
-
-        it('should succeed when the owner attempts to remove a whitelisted pool', async () => {
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.true();
-            await liquidityProtectionStore.removePoolFromWhitelist(poolToken, { from: owner });
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.false();
-        });
-    });
-
     describe('protected liquidities basic verification', () => {
         it('should revert when a non owner attempts to add a protected-liquidity item', async () => {
             await expectRevert(

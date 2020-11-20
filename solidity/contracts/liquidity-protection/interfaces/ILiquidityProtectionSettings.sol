@@ -7,6 +7,14 @@ import "../../converter/interfaces/IConverterAnchor.sol";
     Liquidity Protection Store Settings interface
 */
 interface ILiquidityProtectionSettings {
+    function addPoolToWhitelist(IConverterAnchor _poolAnchor) external;
+
+    function removePoolFromWhitelist(IConverterAnchor _poolAnchor) external;
+
+    function isPoolWhitelisted(IConverterAnchor _poolAnchor) external view returns (bool);
+
+    function isPoolSupported(IConverterAnchor _poolAnchor) external view returns (bool);
+
     function addHighTierPool(IConverterAnchor _poolAnchor) external;
 
     function removeHighTierPool(IConverterAnchor _poolAnchor) external;

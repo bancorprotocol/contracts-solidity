@@ -13,6 +13,7 @@ const MIN_GAS_LIMIT = 100000;
 const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
+const ROLE_WHITELIST_ADMIN = Web3.utils.keccak256('ROLE_WHITELIST_ADMIN');
 
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
@@ -342,15 +343,14 @@ const run = async () => {
         deploy,
         'liquidityProtectionSettings',
         'LiquidityProtectionSettings',
-        []
+        [reserves.BNT.address, contractRegistry._address]
     );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
     const liquidityProtectionParams = [
         liquidityProtectionSettings._address,
         liquidityProtectionStore._address,
         bntTokenGovernance._address,
-        vbntTokenGovernance._address,
-        contractRegistry._address
+        vbntTokenGovernance._address
     ];
 
     const liquidityProtection = await web3Func(
@@ -361,6 +361,7 @@ const run = async () => {
     );
 
     await execute(liquidityProtectionSettings.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_WHITELIST_ADMIN, account));
 
     // granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
@@ -403,7 +404,7 @@ const run = async () => {
     await execute(LiquidityProtectionSettings.methods.setLockDuration(params.lockDuration));
 
     for (const converter of params.converters) {
-        await execute(liquidityProtection.methods.whitelistPool(reserves[converter].address, true));
+        await execute(liquidityProtectionSettings.methods.addPoolToWhitelist(reserves[converter].address));
     }
 
     web3.currentProvider.disconnect();

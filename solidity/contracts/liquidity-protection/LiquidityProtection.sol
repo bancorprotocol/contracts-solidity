@@ -3,13 +3,14 @@ pragma solidity 0.6.12;
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
-import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/Owned.sol";
 import "../utility/SafeMath.sol";
 import "../utility/Math.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/Types.sol";
+import "../utility/Utils.sol";
+import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
 import "./interfaces/ILiquidityProtectionSettings.sol";
 import "../token/interfaces/IDSToken.sol";
@@ -37,7 +38,7 @@ interface ILiquidityPoolV1Converter is IConverter {
 /**
  * @dev This contract implements the liquidity protection mechanism.
  */
-contract LiquidityProtection is TokenHandler, ContractRegistryClient, ReentrancyGuard {
+contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard {
     using SafeMath for uint256;
     using Math for *;
 
@@ -66,9 +67,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
 
-    // the address of the whitelist administrator
-    address public whitelistAdmin;
-
     ILiquidityProtectionSettings public immutable settings;
     ILiquidityProtectionStore public immutable store;
     IERC20Token public immutable networkToken;
@@ -80,43 +78,29 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     bool private updatingLiquidity = false;
 
     /**
-     * @dev triggered when whitelist admin is updated
-     *
-     * @param _prevWhitelistAdmin  previous whitelist admin
-     * @param _newWhitelistAdmin   new whitelist admin
-     */
-    event WhitelistAdminUpdated(address indexed _prevWhitelistAdmin, address indexed _newWhitelistAdmin);
-
-    /**
      * @dev initializes a new LiquidityProtection contract
      *
      * @param _settings liquidity protection settings
      * @param _store liquidity protection store
      * @param _networkTokenGovernance network token governance
      * @param _govTokenGovernance governance token governance
-     * @param _registry contract registry
      */
     constructor(
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance,
-        IContractRegistry _registry
+        ITokenGovernance _govTokenGovernance
     )
         public
-        ContractRegistryClient(_registry)
         validAddress(address(_settings))
         validAddress(address(_store))
         validAddress(address(_networkTokenGovernance))
         validAddress(address(_govTokenGovernance))
-        validAddress(address(_registry))
         notThis(address(_settings))
         notThis(address(_store))
         notThis(address(_networkTokenGovernance))
         notThis(address(_govTokenGovernance))
-        notThis(address(_registry))
     {
-        whitelistAdmin = msg.sender;
         settings = _settings;
         store = _store;
 
@@ -156,7 +140,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     // error message binary size optimization
     function _poolSupported(IConverterAnchor _poolAnchor) internal view {
-        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
+        require(settings.isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
     }
 
     // ensures that the pool is whitelisted
@@ -167,7 +151,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     // error message binary size optimization
     function _poolWhitelisted(IConverterAnchor _poolAnchor) internal view {
-        require(store.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
+        require(settings.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
     }
 
     /**
@@ -192,77 +176,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      */
     function acceptStoreOwnership() external {
         acceptOwnership(store);
-    }
-
-    /**
-     * @dev set the address of the whitelist admin
-     * can only be called by the contract owner
-     *
-     * @param _whitelistAdmin  the address of the new whitelist admin
-     */
-    function setWhitelistAdmin(address _whitelistAdmin) external ownerOnly validAddress(_whitelistAdmin) {
-        emit WhitelistAdminUpdated(whitelistAdmin, _whitelistAdmin);
-
-        whitelistAdmin = _whitelistAdmin;
-    }
-
-    /**
-     * @dev adds a pool to the whitelist, or removes a pool from the whitelist
-     * note that when a pool is whitelisted, it's not possible to remove liquidity anymore
-     * removing a pool from the whitelist is an extreme measure in case of a base token compromise etc.
-     * can only be called by the whitelist admin
-     *
-     * @param _poolAnchor  anchor of the pool
-     * @param _add         true to add the pool to the whitelist, false to remove it from the whitelist
-     */
-    function whitelistPool(IConverterAnchor _poolAnchor, bool _add) external poolSupported(_poolAnchor) {
-        require(msg.sender == whitelistAdmin || msg.sender == owner, "ERR_ACCESS_DENIED");
-
-        // add or remove the pool to/from the whitelist
-        if (_add) store.addPoolToWhitelist(_poolAnchor);
-        else store.removePoolFromWhitelist(_poolAnchor);
-    }
-
-    /**
-     * @dev checks if protection is supported for the given pool
-     * only standard pools are supported (2 reserves, 50%/50% weights)
-     * note that the pool should still be whitelisted
-     *
-     * @param _poolAnchor  anchor of the pool
-     * @return true if the pool is supported, false otherwise
-     */
-    function isPoolSupported(IConverterAnchor _poolAnchor) public view returns (bool) {
-        // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
-
-        // verify that the pool exists in the registry
-        IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
-        require(converterRegistry.isAnchor(address(_poolAnchor)), "ERR_INVALID_ANCHOR");
-
-        // get the converter
-        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
-
-        // verify that the converter has 2 reserves
-        if (converter.connectorTokenCount() != 2) {
-            return false;
-        }
-
-        // verify that one of the reserves is the network token
-        IERC20Token reserve0Token = converter.connectorTokens(0);
-        IERC20Token reserve1Token = converter.connectorTokens(1);
-        if (reserve0Token != networkTokenLocal && reserve1Token != networkTokenLocal) {
-            return false;
-        }
-
-        // verify that the reserve weights are exactly 50%/50%
-        if (
-            converterReserveWeight(converter, reserve0Token) != PPM_RESOLUTION / 2 ||
-            converterReserveWeight(converter, reserve1Token) != PPM_RESOLUTION / 2
-        ) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -1326,12 +1239,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         IERC20Token _reserveToken2
     ) private view returns (uint256, uint256) {
         return (_converter.getConnectorBalance(_reserveToken1), _converter.getConnectorBalance(_reserveToken2));
-    }
-
-    // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
-    function converterReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
-        (, uint32 weight, , , ) = _converter.connectors(_reserveToken);
-        return weight;
     }
 
     // utility to get the owner

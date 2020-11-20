@@ -10,9 +10,8 @@ contract TestLiquidityProtection is LiquidityProtection {
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance,
-        IContractRegistry _registry
-    ) public LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance, _registry) {}
+        ITokenGovernance _govTokenGovernance
+    ) public LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance) {}
 
     function time() internal view override returns (uint256) {
         return currentTime;

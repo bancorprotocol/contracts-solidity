@@ -69,15 +69,17 @@ describe('LiquidityProtectionTokenRate', () => {
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
-        liquidityProtectionSettings = await LiquidityProtectionSettings.new();
+        liquidityProtectionSettings = await LiquidityProtectionSettings.new(
+            networkToken.address,
+            contractRegistry.address
+        );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
             defaultSender,
             networkTokenGovernance.address,
-            govTokenGovernance.address,
-            contractRegistry.address
+            govTokenGovernance.address
         );
 
         await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {

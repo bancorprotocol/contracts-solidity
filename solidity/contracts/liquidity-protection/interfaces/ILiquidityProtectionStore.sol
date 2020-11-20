@@ -9,12 +9,6 @@ import "../../utility/interfaces/IOwned.sol";
     Liquidity Protection Store interface
 */
 interface ILiquidityProtectionStore is IOwned {
-    function addPoolToWhitelist(IConverterAnchor _anchor) external;
-
-    function removePoolFromWhitelist(IConverterAnchor _anchor) external;
-
-    function isPoolWhitelisted(IConverterAnchor _anchor) external view returns (bool);
-
     function withdrawTokens(
         IERC20Token _token,
         address _to,

@@ -3,7 +3,9 @@ const { BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
+
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
+const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -132,13 +134,13 @@ describe('LiquidityProtectionEdgeCases', () => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
         await networkToken.issue(owner, new BN('1'.padEnd(40, '0')));
         networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         govToken = await DSToken.new('vBNT', 'vBNT', 18);
         govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
@@ -158,26 +160,27 @@ describe('LiquidityProtectionEdgeCases', () => {
         converter = await LiquidityPoolV1Converter.at(converterAddress);
         await converter.acceptOwnership();
 
-        liquidityProtectionSettings = await LiquidityProtectionSettings.new();
+        liquidityProtectionSettings = await LiquidityProtectionSettings.new(
+            networkToken.address,
+            contractRegistry.address
+        );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
-        liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
+        liquidityProtectionStore = await LiquidityProtectionStore.new();
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             networkTokenGovernance.address,
-            govTokenGovernance.address,
-            contractRegistry.address
+            govTokenGovernance.address
         );
 
-        await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {
-            from: owner
-        });
+        await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+        await liquidityProtectionSettings.grantRole(ROLE_WHITELIST_ADMIN, owner, { from: owner });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 
-        await liquidityProtection.whitelistPool(poolToken.address, true);
+        await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
         await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
     });
 

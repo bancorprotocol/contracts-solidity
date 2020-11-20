@@ -4,12 +4,16 @@ pragma solidity 0.6.12;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "./interfaces/ILiquidityProtectionSettings.sol";
+import "../converter/interfaces/IConverter.sol";
+import "../converter/interfaces/IConverterRegistry.sol";
+import "../token/interfaces/IERC20Token.sol";
+import "../utility/ContractRegistryClient.sol";
 import "../utility/Utils.sol";
 
 /**
  * @dev Liquidity Protection Settings contract
  */
-contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessControl, Utils {
+contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessControl, ContractRegistryClient {
     struct PoolIndex {
         bool isValid;
         uint256 value;
@@ -18,7 +22,16 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // the owner role is used to set the values in the store
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
+    // the whitelist admin role is responsible for managing pools whitelist
+    bytes32 public constant ROLE_WHITELIST_ADMIN = keccak256("ROLE_WHITELIST_ADMIN");
+
     uint32 private constant PPM_RESOLUTION = 1000000;
+
+    IERC20Token public immutable networkToken;
+
+    // list of whitelisted pools and mapping of pool anchor address -> index in the pool whitelist for quick access
+    IConverterAnchor[] public poolWhitelist;
+    mapping(IConverterAnchor => PoolIndex) private poolWhitelistIndices;
 
     // list of pools with less minting restrictions
     // mapping of pool anchor address -> index in the list of pools for quick access
@@ -43,6 +56,14 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
 
     // maximum deviation of the average rate from the spot rate
     uint32 public override averageRateMaxDeviation = 5000; // PPM units
+
+    /**
+     * @dev triggered when the pool whitelist is updated
+     *
+     * @param _poolAnchor  pool anchor
+     * @param _added       true if the pool was added to the whitelist, false if it was removed
+     */
+    event PoolWhitelistUpdated(IConverterAnchor indexed _poolAnchor, bool _added);
 
     /**
      * @dev triggered when the system network token balance limits are updated
@@ -98,12 +119,26 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     event AverageRateMaxDeviationUpdated(uint32 _prevAverageRateMaxDeviation, uint32 _newAverageRateMaxDeviation);
 
-    constructor() public {
+    /**
+     * @dev initializes a new LiquidityProtectionSettings contract
+     *
+     * @param _registry contract registry
+     * @param _networkToken the network token
+     */
+    constructor(IERC20Token _networkToken, IContractRegistry _registry)
+        public
+        ContractRegistryClient(_registry)
+        validAddress(address(_networkToken))
+        notThis(address(_networkToken))
+    {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
+        _setRoleAdmin(ROLE_WHITELIST_ADMIN, ROLE_OWNER);
 
         // allow the deployer to initially govern the contract.
         _setupRole(ROLE_OWNER, msg.sender);
+
+        networkToken = _networkToken;
     }
 
     modifier onlyOwner() {
@@ -116,6 +151,16 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
     }
 
+    modifier onlyWhitelistAdmin() {
+        _onlyWhitelistAdmin();
+        _;
+    }
+
+    // error message binary size optimization
+    function _onlyWhitelistAdmin() internal view {
+        require(hasRole(ROLE_WHITELIST_ADMIN, msg.sender), "ERR_ACCESS_DENIED");
+    }
+
     // ensures that the portion is valid
     modifier validPortion(uint32 _portion) {
         _validPortion(_portion);
@@ -125,6 +170,74 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // error message binary size optimization
     function _validPortion(uint32 _portion) internal pure {
         require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
+    }
+
+    /**
+     * @dev adds a pool to the whitelist
+     * can only be called by the contract owner
+     *
+     * @param _poolAnchor pool anchor
+     */
+    function addPoolToWhitelist(IConverterAnchor _poolAnchor)
+        external
+        override
+        onlyWhitelistAdmin
+        validAddress(address(_poolAnchor))
+        notThis(address(_poolAnchor))
+    {
+        // validate input
+        PoolIndex storage poolIndex = poolWhitelistIndices[_poolAnchor];
+        require(!poolIndex.isValid, "ERR_POOL_ALREADY_WHITELISTED");
+
+        poolIndex.value = poolWhitelist.length;
+        poolWhitelist.push(_poolAnchor);
+        poolIndex.isValid = true;
+
+        emit PoolWhitelistUpdated(_poolAnchor, true);
+    }
+
+    /**
+     * @dev removes a pool from the whitelist
+     * can only be called by the contract owner
+     *
+     * @param _poolAnchor pool anchor
+     */
+    function removePoolFromWhitelist(IConverterAnchor _poolAnchor)
+        external
+        override
+        onlyWhitelistAdmin
+        validAddress(address(_poolAnchor))
+        notThis(address(_poolAnchor))
+    {
+        // validate input
+        PoolIndex storage poolIndex = poolWhitelistIndices[_poolAnchor];
+        require(poolIndex.isValid, "ERR_POOL_NOT_WHITELISTED");
+
+        uint256 index = poolIndex.value;
+        uint256 length = poolWhitelist.length;
+        assert(length > 0);
+
+        uint256 lastIndex = length - 1;
+        if (index < lastIndex) {
+            IConverterAnchor lastAnchor = poolWhitelist[lastIndex];
+            poolWhitelistIndices[lastAnchor].value = index;
+            poolWhitelist[index] = lastAnchor;
+        }
+
+        poolWhitelist.pop();
+        delete poolWhitelistIndices[_poolAnchor];
+
+        emit PoolWhitelistUpdated(_poolAnchor, false);
+    }
+
+    /**
+     * @dev checks whether a given pool is whitelisted
+     *
+     * @param _poolAnchor pool anchor
+     * @return true if the given pool is whitelisted, false otherwise
+     */
+    function isPoolWhitelisted(IConverterAnchor _poolAnchor) external view override returns (bool) {
+        return poolWhitelistIndices[_poolAnchor].isValid;
     }
 
     /**
@@ -187,7 +300,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _poolAnchor pool anchor
      * @return true if the given pool is a high tier one, false otherwise
      */
-    function isHighTierPool(IConverterAnchor _poolAnchor) public view override returns (bool) {
+    function isHighTierPool(IConverterAnchor _poolAnchor) external view override returns (bool) {
         return highTierPoolIndices[_poolAnchor].isValid;
     }
 
@@ -274,5 +387,57 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
 
         averageRateMaxDeviation = _averageRateMaxDeviation;
+    }
+
+    /**
+     * @dev checks if protection is supported for the given pool
+     * only standard pools are supported (2 reserves, 50%/50% weights)
+     * note that the pool should still be whitelisted
+     *
+     * @param _poolAnchor  anchor of the pool
+     * @return true if the pool is supported, false otherwise
+     */
+    function isPoolSupported(IConverterAnchor _poolAnchor) external view override returns (bool) {
+        IERC20Token tmpNetworkToken = networkToken;
+
+        // verify that the pool exists in the registry
+        IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
+        require(converterRegistry.isAnchor(address(_poolAnchor)), "ERR_INVALID_ANCHOR");
+
+        // get the converter
+        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
+
+        // verify that the converter has 2 reserves
+        if (converter.connectorTokenCount() != 2) {
+            return false;
+        }
+
+        // verify that one of the reserves is the network token
+        IERC20Token reserve0Token = converter.connectorTokens(0);
+        IERC20Token reserve1Token = converter.connectorTokens(1);
+        if (reserve0Token != tmpNetworkToken && reserve1Token != tmpNetworkToken) {
+            return false;
+        }
+
+        // verify that the reserve weights are exactly 50%/50%
+        if (
+            converterReserveWeight(converter, reserve0Token) != PPM_RESOLUTION / 2 ||
+            converterReserveWeight(converter, reserve1Token) != PPM_RESOLUTION / 2
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
+    function converterReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
+        (, uint32 weight, , , ) = _converter.connectors(_reserveToken);
+        return weight;
+    }
+
+    // utility to get the owner
+    function ownedBy(IOwned _owned) private view returns (address) {
+        return _owned.owner();
     }
 }

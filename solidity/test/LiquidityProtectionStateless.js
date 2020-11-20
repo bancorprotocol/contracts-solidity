@@ -49,8 +49,7 @@ describe('LiquidityProtectionStateless', () => {
             defaultSender,
             defaultSender,
             networkTokenGovernance.address,
-            govTokenGovernance.address,
-            defaultSender
+            govTokenGovernance.address
         );
 
         await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
