@@ -16,7 +16,7 @@
         "npm": "^3.0.0"
     },
     "scripts": {
-        "build": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js compile",
+        "build": "truffle compile",
         "test": "npm run build && npm run qtest",
         "qtest": "mocha solidity/test --exit --recursive",
         "coverage": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js run coverage",
@@ -25,6 +25,7 @@
         "lint:js": "eslint .",
         "lint:sol": "solhint --max-warnings 0 \"solidity/contracts/**/*.sol\"",
         "format": "prettier --check --write solidity/**/*.sol solidity/**/*.js scripts/**/*.js *.js --config .prettierrc",
+        "size": "npm run build && truffle run contract-size",
         "deploy": "node scripts/deploy-one.js",
         "verify": "node scripts/verify-all.js",
         "flatten": "node scripts/flatten.js",
