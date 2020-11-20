@@ -7,18 +7,15 @@ contract TestLiquidityProtection is LiquidityProtection {
     uint256 public currentTime = 1;
 
     constructor(
+        ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance,
         IContractRegistry _registry
-    ) public LiquidityProtection(_store, _networkTokenGovernance, _govTokenGovernance, _registry) {}
+    ) public LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance, _registry) {}
 
     function time() internal view override returns (uint256) {
         return currentTime;
-    }
-
-    function _minNetworkCompensation() internal view override returns (uint256) {
-        return 3;
     }
 
     function setTime(uint256 _currentTime) external {

@@ -1,7 +1,7 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
-const { registry, governance } = require('./helpers/Constants');
+const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 
@@ -15,6 +15,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
@@ -95,6 +96,7 @@ describe('LiquidityProtectionEdgeCases', () => {
     let govToken;
     let poolToken;
     let converter;
+    let liquidityProtectionSettings;
     let liquidityProtectionStore;
     let liquidityProtection;
 
@@ -130,13 +132,13 @@ describe('LiquidityProtectionEdgeCases', () => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
         await networkToken.issue(owner, new BN('1'.padEnd(40, '0')));
         networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         govToken = await DSToken.new('vBNT', 'vBNT', 18);
         govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
@@ -156,21 +158,27 @@ describe('LiquidityProtectionEdgeCases', () => {
         converter = await LiquidityPoolV1Converter.at(converterAddress);
         await converter.acceptOwnership();
 
+        liquidityProtectionSettings = await LiquidityProtectionSettings.new();
+        await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
         liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
         liquidityProtection = await LiquidityProtection.new(
+            liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             networkTokenGovernance.address,
             govTokenGovernance.address,
             contractRegistry.address
         );
 
+        await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {
+            from: owner
+        });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         await liquidityProtection.whitelistPool(poolToken.address, true);
-        await liquidityProtection.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
+        await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
     });
 
     for (const config of CONFIGURATIONS) {

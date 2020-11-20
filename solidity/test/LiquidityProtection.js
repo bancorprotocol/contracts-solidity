@@ -1,7 +1,7 @@
 const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
-const { ETH_RESERVE_ADDRESS, registry, governance } = require('./helpers/Constants');
+const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
@@ -17,6 +17,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
@@ -225,6 +226,7 @@ describe('LiquidityProtection', () => {
     let poolToken;
     let converterRegistry;
     let converter;
+    let liquidityProtectionSettings;
     let liquidityProtectionStore;
     let liquidityProtection;
     let baseToken;
@@ -257,28 +259,36 @@ describe('LiquidityProtection', () => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
         await networkToken.issue(owner, 1000000000);
         networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         govToken = await DSToken.new('vBNT', 'vBNT', 18);
         govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
         // initialize liquidity protection
+        liquidityProtectionSettings = await LiquidityProtectionSettings.new();
+        await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
+
         liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
         liquidityProtection = await LiquidityProtection.new(
+            liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             networkTokenGovernance.address,
             govTokenGovernance.address,
             contractRegistry.address
         );
+
+        await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {
+            from: owner
+        });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         now = await latest();
         await liquidityProtection.setTime(now);
@@ -290,6 +300,9 @@ describe('LiquidityProtection', () => {
     it('verifies the liquidity protection contract after initialization', async () => {
         const whitelistAdmin = await liquidityProtection.whitelistAdmin.call();
         expect(whitelistAdmin).to.eql(owner);
+
+        const settings = await liquidityProtection.settings.call();
+        expect(settings).to.eql(liquidityProtectionSettings.address);
 
         const store = await liquidityProtection.store.call();
         expect(store).to.eql(liquidityProtectionStore.address);
@@ -317,149 +330,6 @@ describe('LiquidityProtection', () => {
             liquidityProtection.transferStoreOwnership(accounts[2], {
                 from: accounts[1]
             }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('verifies that the owner can set the system network token limits', async () => {
-        const prevMaxSystemNetworkTokenAmount = await liquidityProtection.maxSystemNetworkTokenAmount.call();
-        const prevMaxSystemNetworkTokenRatio = await liquidityProtection.maxSystemNetworkTokenRatio.call();
-        const newMaxSystemNetworkTokenAmount = new BN(100);
-        const newMaxSystemNetworkTokenRatio = new BN(200);
-
-        const res = await liquidityProtection.setSystemNetworkTokenLimits(
-            newMaxSystemNetworkTokenAmount,
-            newMaxSystemNetworkTokenRatio
-        );
-
-        expectEvent(res, 'SystemNetworkTokenLimitsUpdated', {
-            _prevMaxSystemNetworkTokenAmount: prevMaxSystemNetworkTokenAmount,
-            _newMaxSystemNetworkTokenAmount: newMaxSystemNetworkTokenAmount,
-            _prevMaxSystemNetworkTokenRatio: prevMaxSystemNetworkTokenRatio,
-            _newMaxSystemNetworkTokenRatio: newMaxSystemNetworkTokenRatio
-        });
-
-        const maxSystemNetworkTokenAmount = await liquidityProtection.maxSystemNetworkTokenAmount.call();
-        const maxSystemNetworkTokenRatio = await liquidityProtection.maxSystemNetworkTokenRatio.call();
-
-        expect(maxSystemNetworkTokenAmount).not.to.be.bignumber.equal(prevMaxSystemNetworkTokenAmount);
-        expect(maxSystemNetworkTokenRatio).not.to.be.bignumber.equal(prevMaxSystemNetworkTokenRatio);
-
-        expect(maxSystemNetworkTokenAmount).to.be.bignumber.equal(newMaxSystemNetworkTokenAmount);
-        expect(maxSystemNetworkTokenRatio).to.be.bignumber.equal(newMaxSystemNetworkTokenRatio);
-    });
-
-    it('should revert when a non owner attempts to set the system network token limits', async () => {
-        await expectRevert(
-            liquidityProtection.setSystemNetworkTokenLimits(100, 200, {
-                from: accounts[1]
-            }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('should revert when the owner attempts to set a system network token ratio that is larger than 100%', async () => {
-        await expectRevert(
-            liquidityProtection.setSystemNetworkTokenLimits(200, PPM_RESOLUTION.add(new BN(1))),
-            'ERR_INVALID_PORTION'
-        );
-    });
-
-    it('verifies that the owner can set the protection delays', async () => {
-        const prevMinProtectionDelay = await liquidityProtection.minProtectionDelay.call();
-        const prevMaxProtectionDelay = await liquidityProtection.maxProtectionDelay.call();
-        const newMinProtectionDelay = new BN(100);
-        const newMaxProtectionDelay = new BN(200);
-
-        const res = await liquidityProtection.setProtectionDelays(newMinProtectionDelay, 200);
-
-        expectEvent(res, 'ProtectionDelaysUpdated', {
-            _prevMinProtectionDelay: prevMinProtectionDelay,
-            _newMinProtectionDelay: newMinProtectionDelay,
-            _prevMaxProtectionDelay: prevMaxProtectionDelay,
-            _newMaxProtectionDelay: newMaxProtectionDelay
-        });
-
-        const minProtectionDelay = await liquidityProtection.minProtectionDelay.call();
-        const maxProtectionDelay = await liquidityProtection.maxProtectionDelay.call();
-
-        expect(minProtectionDelay).not.to.be.bignumber.equal(prevMinProtectionDelay);
-        expect(maxProtectionDelay).not.to.be.bignumber.equal(prevMaxProtectionDelay);
-
-        expect(minProtectionDelay).to.be.bignumber.equal(newMinProtectionDelay);
-        expect(maxProtectionDelay).to.be.bignumber.equal(newMaxProtectionDelay);
-    });
-
-    it('should revert when a non owner attempts to set the protection delays', async () => {
-        await expectRevert(
-            liquidityProtection.setProtectionDelays(100, 200, { from: accounts[1] }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('should revert when the owner attempts to set a minimum protection delay that is larger than the maximum delay', async () => {
-        await expectRevert(liquidityProtection.setProtectionDelays(200, 100), 'ERR_INVALID_PROTECTION_DELAY');
-    });
-
-    it('verifies that the owner can set the minimum network compensation', async () => {
-        const prevMinNetworkCompensation = await liquidityProtection.minNetworkCompensation.call();
-        const newMinNetworkCompensation = new BN(100);
-
-        const res = await liquidityProtection.setMinNetworkCompensation(newMinNetworkCompensation);
-
-        expectEvent(res, 'MinNetworkCompensationUpdated', {
-            _prevMinNetworkCompensation: prevMinNetworkCompensation,
-            _newMinNetworkCompensation: newMinNetworkCompensation
-        });
-
-        const minNetworkCompensation = await liquidityProtection.minNetworkCompensation.call();
-
-        expect(minNetworkCompensation).not.to.be.bignumber.equal(prevMinNetworkCompensation);
-        expect(minNetworkCompensation).to.be.bignumber.equal(newMinNetworkCompensation);
-    });
-
-    it('should revert when a non owner attempts to set the minimum network compensation', async () => {
-        await expectRevert(
-            liquidityProtection.setMinNetworkCompensation(100, { from: accounts[1] }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('verifies that the owner can set the lock duration', async () => {
-        const prevLockDuration = await liquidityProtection.lockDuration.call();
-        const newLockDuration = new BN(100);
-
-        const res = await liquidityProtection.setLockDuration(newLockDuration);
-        expectEvent(res, 'LockDurationUpdated', {
-            _prevLockDuration: prevLockDuration,
-            _newLockDuration: newLockDuration
-        });
-
-        const lockDuration = await liquidityProtection.lockDuration.call();
-
-        expect(lockDuration).not.to.be.bignumber.equal(prevLockDuration);
-        expect(lockDuration).to.be.bignumber.equal(new BN(100));
-    });
-
-    it('should revert when a non owner attempts to set the lock duration', async () => {
-        await expectRevert(liquidityProtection.setLockDuration('100', { from: accounts[1] }), 'ERR_ACCESS_DENIED');
-    });
-
-    it('verifies that the owner can set the maximum deviation of the average rate from the actual rate', async () => {
-        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('5000');
-
-        const res = await liquidityProtection.setAverageRateMaxDeviation('30000');
-        expectEvent(res, 'AverageRateMaxDeviationUpdated', {
-            _prevAverageRateMaxDeviation: '5000',
-            _newAverageRateMaxDeviation: '30000'
-        });
-
-        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('30000');
-    });
-
-    it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
-        await expectRevert(
-            liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }),
             'ERR_ACCESS_DENIED'
         );
     });
@@ -561,53 +431,6 @@ describe('LiquidityProtection', () => {
                     'ERR_ACCESS_DENIED'
                 );
             });
-        });
-    });
-
-    describe('high tier pools', () => {
-        it('should allow the owner to add a high tier pool', async () => {
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
-        });
-
-        it('should allow the owner to remove a high tier pool', async () => {
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
-            await liquidityProtection.removeHighTierPool(poolToken.address, { from: owner });
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to add a high tier pool', async () => {
-            await expectRevert(
-                liquidityProtection.addHighTierPool(poolToken.address, { from: accounts[1] }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to remove a high tier pool', async () => {
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            await expectRevert(
-                liquidityProtection.removeHighTierPool(poolToken.address, { from: accounts[1] }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
-        });
-
-        it('should revert when the owner attempts to add a high tier pool that is already defined as high tier one', async () => {
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            await expectRevert(
-                liquidityProtection.addHighTierPool(poolToken.address, { from: owner }),
-                'ERR_POOL_ALREADY_EXISTS'
-            );
-        });
-
-        it('should revert when the owner attempts to remove a high tier pool that is not defined as a high tier one', async () => {
-            await expectRevert(
-                liquidityProtection.removeHighTierPool(poolToken.address, { from: owner }),
-                'ERR_POOL_DOES_NOT_EXIST'
-            );
         });
     });
 
@@ -1003,7 +826,7 @@ describe('LiquidityProtection', () => {
                     isETHReserve
                 );
 
-                await liquidityProtection.setSystemNetworkTokenLimits(500, PPM_RESOLUTION);
+                await liquidityProtectionSettings.setSystemNetworkTokenLimits(500, PPM_RESOLUTION);
                 reserveAmount = new BN(2000);
 
                 await expectRevert(
@@ -1022,7 +845,7 @@ describe('LiquidityProtection', () => {
                     isETHReserve
                 );
 
-                await liquidityProtection.setSystemNetworkTokenLimits(500000, 20000);
+                await liquidityProtectionSettings.setSystemNetworkTokenLimits(500000, 20000);
                 reserveAmount = new BN(40000);
 
                 await expectRevert(
@@ -1041,8 +864,8 @@ describe('LiquidityProtection', () => {
                     isETHReserve
                 );
 
-                await liquidityProtection.setSystemNetworkTokenLimits(500000, 20000);
-                await liquidityProtection.addHighTierPool(poolToken.address);
+                await liquidityProtectionSettings.setSystemNetworkTokenLimits(500000, 20000);
+                await liquidityProtectionSettings.addHighTierPool(poolToken.address);
                 reserveAmount = new BN(40000);
 
                 await addProtectedLiquidity(
@@ -1278,7 +1101,7 @@ describe('LiquidityProtection', () => {
         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
 
         await increaseRate(baseTokenAddress);
-        await liquidityProtection.setAverageRateMaxDeviation(1);
+        await liquidityProtectionSettings.setAverageRateMaxDeviation(1);
         await liquidityProtection.removeLiquidityReturn(protectionIds[0], PPM_RESOLUTION, now);
     });
 
@@ -1495,7 +1318,7 @@ describe('LiquidityProtection', () => {
                 const protectionId = protectionIds[0];
 
                 await increaseRate(baseTokenAddress);
-                await liquidityProtection.setAverageRateMaxDeviation(1);
+                await liquidityProtectionSettings.setAverageRateMaxDeviation(1);
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION),
                     'ERR_INVALID_RATE'

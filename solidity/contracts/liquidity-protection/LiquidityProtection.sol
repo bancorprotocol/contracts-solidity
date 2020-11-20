@@ -11,6 +11,7 @@ import "../utility/Math.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/Types.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
+import "./interfaces/ILiquidityProtectionSettings.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
@@ -61,11 +62,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
-    struct PoolIndex {
-        bool isValid;
-        uint256 value;
-    }
-
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
@@ -73,35 +69,12 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // the address of the whitelist administrator
     address public whitelistAdmin;
 
-    // list of pools with less minting restrictions
-    // mapping of pool anchor address -> index in the list of pools for quick access
-    IConverterAnchor[] private _highTierPools;
-    mapping(IConverterAnchor => PoolIndex) private highTierPoolIndices;
-
+    ILiquidityProtectionSettings public immutable settings;
     ILiquidityProtectionStore public immutable store;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
     ITokenGovernance public immutable govTokenGovernance;
-
-    // system network token balance limits
-    uint256 public maxSystemNetworkTokenAmount = 1000000e18;
-    uint32 public maxSystemNetworkTokenRatio = 500000; // PPM units
-
-    // number of seconds until any protection is in effect
-    uint256 public minProtectionDelay = 30 days;
-
-    // number of seconds until full protection is in effect
-    uint256 public maxProtectionDelay = 100 days;
-
-    // minimum amount of network tokens the system can mint as compensation for base token losses, default = 0.01 network tokens
-    uint256 public minNetworkCompensation = 1e16;
-
-    // number of seconds from liquidation to full network token release
-    uint256 public lockDuration = 24 hours;
-
-    // maximum deviation of the average rate from the spot rate
-    uint32 public averageRateMaxDeviation = 5000; // PPM units
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
@@ -115,68 +88,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     event WhitelistAdminUpdated(address indexed _prevWhitelistAdmin, address indexed _newWhitelistAdmin);
 
     /**
-     * @dev triggered when the system network token balance limits are updated
-     *
-     * @param _prevMaxSystemNetworkTokenAmount  previous maximum absolute balance in a pool
-     * @param _newMaxSystemNetworkTokenAmount   new maximum absolute balance in a pool
-     * @param _prevMaxSystemNetworkTokenRatio   previos maximum balance out of the total balance in a pool
-     * @param _newMaxSystemNetworkTokenRatio    new maximum balance out of the total balance in a pool
-     */
-    event SystemNetworkTokenLimitsUpdated(
-        uint256 _prevMaxSystemNetworkTokenAmount,
-        uint256 _newMaxSystemNetworkTokenAmount,
-        uint256 _prevMaxSystemNetworkTokenRatio,
-        uint256 _newMaxSystemNetworkTokenRatio
-    );
-
-    /**
-     * @dev triggered when the protection delays are updated
-     *
-     * @param _prevMinProtectionDelay  previous seconds until the protection starts
-     * @param _newMinProtectionDelay   new seconds until the protection starts
-     * @param _prevMaxProtectionDelay  previos seconds until full protection
-     * @param _newMaxProtectionDelay   new seconds until full protection
-     */
-    event ProtectionDelaysUpdated(
-        uint256 _prevMinProtectionDelay,
-        uint256 _newMinProtectionDelay,
-        uint256 _prevMaxProtectionDelay,
-        uint256 _newMaxProtectionDelay
-    );
-
-    /**
-     * @dev triggered when the minimum network token compensation is updated
-     *
-     * @param _prevMinNetworkCompensation  previous minimum network token compensation
-     * @param _newMinNetworkCompensation   new minimum network token compensation
-     */
-    event MinNetworkCompensationUpdated(uint256 _prevMinNetworkCompensation, uint256 _newMinNetworkCompensation);
-
-    /**
-     * @dev triggered when the network token lock duration is updated
-     *
-     * @param _prevLockDuration  previous network token lock duration, in seconds
-     * @param _newLockDuration   new network token lock duration, in seconds
-     */
-    event LockDurationUpdated(uint256 _prevLockDuration, uint256 _newLockDuration);
-
-    /**
-     * @dev triggered when the maximum deviation of the average rate from the spot rate is updated
-     *
-     * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the spot rate
-     * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the spot rate
-     */
-    event AverageRateMaxDeviationUpdated(uint32 _prevAverageRateMaxDeviation, uint32 _newAverageRateMaxDeviation);
-
-    /**
      * @dev initializes a new LiquidityProtection contract
      *
-     * @param _store                    liquidity protection store
-     * @param _networkTokenGovernance   network token governance
-     * @param _govTokenGovernance       governance token governance
-     * @param _registry                 contract registry
+     * @param _settings liquidity protection settings
+     * @param _store liquidity protection store
+     * @param _networkTokenGovernance network token governance
+     * @param _govTokenGovernance governance token governance
+     * @param _registry contract registry
      */
     constructor(
+        ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance,
@@ -184,16 +105,19 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     )
         public
         ContractRegistryClient(_registry)
+        validAddress(address(_settings))
         validAddress(address(_store))
         validAddress(address(_networkTokenGovernance))
         validAddress(address(_govTokenGovernance))
         validAddress(address(_registry))
+        notThis(address(_settings))
         notThis(address(_store))
         notThis(address(_networkTokenGovernance))
         notThis(address(_govTokenGovernance))
         notThis(address(_registry))
     {
         whitelistAdmin = msg.sender;
+        settings = _settings;
         store = _store;
 
         networkTokenGovernance = _networkTokenGovernance;
@@ -283,85 +207,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     }
 
     /**
-     * @dev updates the system network token balance limits
-     * can only be called by the contract owner
-     *
-     * @param _maxSystemNetworkTokenAmount  maximum absolute balance in a pool
-     * @param _maxSystemNetworkTokenRatio   maximum balance out of the total balance in a pool (in PPM units)
-     */
-    function setSystemNetworkTokenLimits(uint256 _maxSystemNetworkTokenAmount, uint32 _maxSystemNetworkTokenRatio)
-        external
-        ownerOnly
-        validPortion(_maxSystemNetworkTokenRatio)
-    {
-        emit SystemNetworkTokenLimitsUpdated(
-            maxSystemNetworkTokenAmount,
-            _maxSystemNetworkTokenAmount,
-            maxSystemNetworkTokenRatio,
-            _maxSystemNetworkTokenRatio
-        );
-
-        maxSystemNetworkTokenAmount = _maxSystemNetworkTokenAmount;
-        maxSystemNetworkTokenRatio = _maxSystemNetworkTokenRatio;
-    }
-
-    /**
-     * @dev updates the protection delays
-     * can only be called by the contract owner
-     *
-     * @param _minProtectionDelay  seconds until the protection starts
-     * @param _maxProtectionDelay  seconds until full protection
-     */
-    function setProtectionDelays(uint256 _minProtectionDelay, uint256 _maxProtectionDelay) external ownerOnly {
-        require(_minProtectionDelay < _maxProtectionDelay, "ERR_INVALID_PROTECTION_DELAY");
-
-        emit ProtectionDelaysUpdated(minProtectionDelay, _minProtectionDelay, maxProtectionDelay, _maxProtectionDelay);
-
-        minProtectionDelay = _minProtectionDelay;
-        maxProtectionDelay = _maxProtectionDelay;
-    }
-
-    /**
-     * @dev updates the minimum network token compensation
-     * can only be called by the contract owner
-     *
-     * @param _minCompensation new minimum compensation
-     */
-    function setMinNetworkCompensation(uint256 _minCompensation) external ownerOnly {
-        emit MinNetworkCompensationUpdated(minNetworkCompensation, _minCompensation);
-
-        minNetworkCompensation = _minCompensation;
-    }
-
-    /**
-     * @dev updates the network token lock duration
-     * can only be called by the contract owner
-     *
-     * @param _lockDuration    network token lock duration, in seconds
-     */
-    function setLockDuration(uint256 _lockDuration) external ownerOnly {
-        emit LockDurationUpdated(lockDuration, _lockDuration);
-
-        lockDuration = _lockDuration;
-    }
-
-    /**
-     * @dev sets the maximum deviation of the average rate from the spot rate
-     * can only be called by the contract owner
-     *
-     * @param _averageRateMaxDeviation maximum deviation of the average rate from the spot rate
-     */
-    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation)
-        external
-        ownerOnly
-        validPortion(_averageRateMaxDeviation)
-    {
-        emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
-
-        averageRateMaxDeviation = _averageRateMaxDeviation;
-    }
-
-    /**
      * @dev adds a pool to the whitelist, or removes a pool from the whitelist
      * note that when a pool is whitelisted, it's not possible to remove liquidity anymore
      * removing a pool from the whitelist is an extreme measure in case of a base token compromise etc.
@@ -376,77 +221,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // add or remove the pool to/from the whitelist
         if (_add) store.addPoolToWhitelist(_poolAnchor);
         else store.removePoolFromWhitelist(_poolAnchor);
-    }
-
-    /**
-     * @dev adds a high tier pool
-     * can only be called by the contract owner
-     *
-     * @param _poolAnchor pool anchor
-     */
-    function addHighTierPool(IConverterAnchor _poolAnchor)
-        external
-        ownerOnly
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        // validate input
-        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
-        require(!poolIndex.isValid, "ERR_POOL_ALREADY_EXISTS");
-
-        poolIndex.value = _highTierPools.length;
-        _highTierPools.push(_poolAnchor);
-        poolIndex.isValid = true;
-    }
-
-    /**
-     * @dev removes a high tier pool
-     * can only be called by the contract owner
-     *
-     * @param _poolAnchor pool anchor
-     */
-    function removeHighTierPool(IConverterAnchor _poolAnchor)
-        external
-        ownerOnly
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        // validate input
-        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
-        require(poolIndex.isValid, "ERR_POOL_DOES_NOT_EXIST");
-
-        uint256 index = poolIndex.value;
-        uint256 length = _highTierPools.length;
-        assert(length > 0);
-
-        uint256 lastIndex = length - 1;
-        if (index < lastIndex) {
-            IConverterAnchor lastAnchor = _highTierPools[lastIndex];
-            highTierPoolIndices[lastAnchor].value = index;
-            _highTierPools[index] = lastAnchor;
-        }
-
-        _highTierPools.pop();
-        delete highTierPoolIndices[_poolAnchor];
-    }
-
-    /**
-     * @dev returns the list of high tier pools
-     *
-     * @return list of high tier pools
-     */
-    function highTierPools() external view returns (IConverterAnchor[] memory) {
-        return _highTierPools;
-    }
-
-    /**
-     * @dev checks whether a given pool is a high tier one
-     *
-     * @param _poolAnchor pool anchor
-     * @return true if the given pool is a high tier one, false otherwise
-     */
-    function isHighTierPool(IConverterAnchor _poolAnchor) public view returns (bool) {
-        return highTierPoolIndices[_poolAnchor].isValid;
     }
 
     /**
@@ -673,12 +447,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 newSystemBalance = store.systemBalance(poolToken);
         newSystemBalance = (newSystemBalance.mul(poolRate.n / 2).div(poolRate.d)).add(networkLiquidityAmount);
 
+        uint256 maxSystemNetworkTokenAmount = settings.maxSystemNetworkTokenAmount();
         require(newSystemBalance <= maxSystemNetworkTokenAmount, "ERR_MAX_AMOUNT_REACHED");
 
-        if (!isHighTierPool(_poolAnchor)) {
+        if (!settings.isHighTierPool(_poolAnchor)) {
             require(
                 newSystemBalance.mul(PPM_RESOLUTION) <=
-                    reserveBalanceNetwork.add(networkLiquidityAmount).mul(maxSystemNetworkTokenRatio),
+                    reserveBalanceNetwork.add(networkLiquidityAmount).mul(settings.maxSystemNetworkTokenRatio()),
                 "ERR_MAX_RATIO_REACHED"
             );
         }
@@ -1063,7 +838,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             poolAmount,
             _reserveAmount,
             packedRates,
-            time().sub(maxProtectionDelay),
+            time().sub(settings.maxProtectionDelay()),
             time()
         );
 
@@ -1145,7 +920,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount      amount of network tokens
      */
     function lockTokens(address _provider, uint256 _amount) internal {
-        uint256 expirationTime = time().add(lockDuration);
+        uint256 expirationTime = time().add(settings.lockDuration());
         store.addLockedBalance(_provider, _amount, expirationTime);
     }
 
@@ -1220,7 +995,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         require(
             !_validateAverageRate ||
-                averageRateInRange(spotRateN, spotRateD, averageRateN, averageRateD, averageRateMaxDeviation),
+                averageRateInRange(
+                    spotRateN,
+                    spotRateD,
+                    averageRateN,
+                    averageRateD,
+                    settings.averageRateMaxDeviation()
+                ),
             "ERR_INVALID_RATE"
         );
 
@@ -1443,6 +1224,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      */
     function protectionLevel(uint256 _addTimestamp, uint256 _removeTimestamp) internal view returns (Fraction memory) {
         uint256 timeElapsed = _removeTimestamp.sub(_addTimestamp);
+        uint256 minProtectionDelay = settings.minProtectionDelay();
+        uint256 maxProtectionDelay = settings.maxProtectionDelay();
         if (timeElapsed < minProtectionDelay) {
             return Fraction({ n: 0, d: 1 });
         }
@@ -1489,7 +1272,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // the delta might be very small due to precision loss
         // in which case no compensation will take place (gas optimization)
-        if (delta >= _minNetworkCompensation()) {
+        if (delta >= settings.minNetworkCompensation()) {
             return delta;
         }
 
@@ -1554,14 +1337,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
     // utility to get the owner
     function ownedBy(IOwned _owned) private view returns (address) {
         return _owned.owner();
-    }
-
-    /**
-     * @dev returns minimum network tokens compensation
-     * utility to allow overrides for tests
-     */
-    function _minNetworkCompensation() internal view virtual returns (uint256) {
-        return minNetworkCompensation;
     }
 
     /**
