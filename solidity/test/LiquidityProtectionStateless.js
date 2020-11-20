@@ -1,9 +1,10 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
-const TokenGovernance = artifacts.require('TestTokenGovernance');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
 const MIN_AMOUNT = Decimal(2).pow(0);
 const MAX_AMOUNT = Decimal(2).pow(127);
@@ -14,17 +15,17 @@ const MAX_RATIO = Decimal(2).pow(256 / 3);
 const MIN_DURATION = 30 * 24 * 60 * 60;
 const MAX_DURATION = 100 * 24 * 60 * 60;
 
-contract('LiquidityProtectionStateless', accounts => {
+describe('LiquidityProtectionStateless', () => {
     let liquidityProtection;
 
     before(async () => {
-        const networkTokenGovernance = await TokenGovernance.new(accounts[0]);
-        const govTokenGovernance = await TokenGovernance.new(accounts[0]);
+        const networkTokenGovernance = await TokenGovernance.new(defaultSender);
+        const govTokenGovernance = await TokenGovernance.new(defaultSender);
         liquidityProtection = await LiquidityProtection.new(
-            accounts[0],
+            defaultSender,
             networkTokenGovernance.address,
             govTokenGovernance.address,
-            accounts[0]
+            defaultSender
         );
     });
 

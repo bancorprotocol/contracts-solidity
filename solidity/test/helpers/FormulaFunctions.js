@@ -1,4 +1,4 @@
-const { expect } = require('chai');
+const { expect } = require('../../../chai-local');
 const constants = require('./FormulaConstants');
 const Decimal = require('decimal.js');
 

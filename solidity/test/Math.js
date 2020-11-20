@@ -1,15 +1,16 @@
-const { expect } = require('chai');
+const { contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 const MathUtils = require('./helpers/MathUtils');
 
-const MathContract = artifacts.require('TestMath');
+const MathContract = contract.fromArtifact('TestMath');
 
 const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);
 const SCALES = [6, 18, 30].map((n) => Decimal(10).pow(n)).concat(MAX_UINT128);
 
-contract('Math', (accounts) => {
+describe('Math', () => {
     before(async () => {
         mathContract = await MathContract.new();
     });

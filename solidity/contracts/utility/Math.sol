@@ -30,12 +30,7 @@ library Math {
      * @return the smallest integer larger than or equal to the square root of the positive integer
      */
     function ceilSqrt(uint256 _num) internal pure returns (uint256) {
-        uint256 x = _num / 2 + 1;
-        uint256 y = (x + _num / x) / 2;
-        while (x > y) {
-            x = y;
-            y = (x + _num / x) / 2;
-        }
+        uint256 x = floorSqrt(_num);
         return x * x == _num ? x : x + 1;
     }
 

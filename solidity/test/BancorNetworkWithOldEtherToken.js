@@ -1,17 +1,18 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
 const ConverterHelper = require('./helpers/Converter');
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const DSToken = artifacts.require('DSToken');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const EtherToken = artifacts.require('EtherToken');
-const TestNonStandardToken = artifacts.require('TestNonStandardToken');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const DSToken = contract.fromArtifact('DSToken');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const EtherToken = contract.fromArtifact('EtherToken');
+const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 
 /*
 Token network structure:
@@ -26,7 +27,7 @@ Token network structure:
 
 */
 
-contract('BancorNetworkWithOldEtherToken', (accounts) => {
+describe('BancorNetworkWithOldEtherToken', () => {
     let etherToken;
     let anchor1;
     let anchor2;
@@ -46,7 +47,7 @@ contract('BancorNetworkWithOldEtherToken', (accounts) => {
     let anchor2SellPath;
     let anchor3SellPath;
     let etherToErc20ConvertPath;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const sender2 = accounts[1];
     const nonOwner = accounts[5];
     const affiliate = accounts[8];

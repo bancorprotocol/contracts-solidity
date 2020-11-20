@@ -1,15 +1,16 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
-const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
-const ERC20Token = artifacts.require('ERC20Token');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const ERC20Token = contract.fromArtifact('ERC20Token');
 
 const DUMMY_ADDRESS = '0x'.padEnd(42, 'f');
 
-contract('LiquidityProtectionStore', (accounts) => {
+describe('LiquidityProtectionStore', () => {
     let liquidityProtectionStore;
 
-    const owner = accounts[0];
+    const owner = defaultSender;
     const nonOwner = accounts[1];
     const provider = accounts[2];
     const poolToken = accounts[3];
@@ -24,51 +25,51 @@ contract('LiquidityProtectionStore', (accounts) => {
             const erc20Token = await ERC20Token.new('name', 'symbol', 0, 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await expectRevert(
-                liquidityProtectionStore.withdrawTokens(erc20Token.address, accounts[0], 1, { from: nonOwner }),
+                liquidityProtectionStore.withdrawTokens(erc20Token.address, defaultSender, 1, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
             expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.bignumber.equal('1');
-            expect(await erc20Token.balanceOf(accounts[0])).to.be.bignumber.equal('0');
+            expect(await erc20Token.balanceOf(defaultSender)).to.be.bignumber.equal('0');
         });
 
         it('should revert when a non owner attempts to increase system balance', async () => {
             await expectRevert(
-                liquidityProtectionStore.incSystemBalance(accounts[0], 1, { from: nonOwner }),
+                liquidityProtectionStore.incSystemBalance(defaultSender, 1, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
-            expect(await liquidityProtectionStore.systemBalance(accounts[0])).to.be.bignumber.equal('0');
+            expect(await liquidityProtectionStore.systemBalance(defaultSender)).to.be.bignumber.equal('0');
         });
 
         it('should revert when a non owner attempts to decrease system balance', async () => {
-            await liquidityProtectionStore.incSystemBalance(accounts[0], 1, { from: owner });
+            await liquidityProtectionStore.incSystemBalance(defaultSender, 1, { from: owner });
             await expectRevert(
-                liquidityProtectionStore.decSystemBalance(accounts[0], 1, { from: nonOwner }),
+                liquidityProtectionStore.decSystemBalance(defaultSender, 1, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
-            expect(await liquidityProtectionStore.systemBalance(accounts[0])).to.be.bignumber.equal('1');
+            expect(await liquidityProtectionStore.systemBalance(defaultSender)).to.be.bignumber.equal('1');
         });
 
         it('should succeed when the owner attempts to withdraw tokens', async () => {
             const erc20Token = await ERC20Token.new('name', 'symbol', 0, 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
-            await liquidityProtectionStore.withdrawTokens(erc20Token.address, accounts[0], 1, { from: owner });
+            await liquidityProtectionStore.withdrawTokens(erc20Token.address, defaultSender, 1, { from: owner });
             expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.bignumber.equal('0');
-            expect(await erc20Token.balanceOf(accounts[0])).to.be.bignumber.equal('1');
+            expect(await erc20Token.balanceOf(defaultSender)).to.be.bignumber.equal('1');
         });
 
         it('should succeed when the owner attempts to increase system balance', async () => {
-            expect(await liquidityProtectionStore.systemBalance(accounts[0])).to.be.bignumber.equal('0');
-            const response = await liquidityProtectionStore.incSystemBalance(accounts[0], 1, { from: owner });
-            expect(await liquidityProtectionStore.systemBalance(accounts[0])).to.be.bignumber.equal('1');
-            expectEvent(response, 'SystemBalanceUpdated', { _token: accounts[0], _prevAmount: '0', _newAmount: '1' });
+            expect(await liquidityProtectionStore.systemBalance(defaultSender)).to.be.bignumber.equal('0');
+            const response = await liquidityProtectionStore.incSystemBalance(defaultSender, 1, { from: owner });
+            expect(await liquidityProtectionStore.systemBalance(defaultSender)).to.be.bignumber.equal('1');
+            expectEvent(response, 'SystemBalanceUpdated', { _token: defaultSender, _prevAmount: '0', _newAmount: '1' });
         });
 
         it('should succeed when the owner attempts to decrease system balance', async () => {
-            await liquidityProtectionStore.incSystemBalance(accounts[0], 1, { from: owner });
-            expect(await liquidityProtectionStore.systemBalance(accounts[0])).to.be.bignumber.equal('1');
-            const response = await liquidityProtectionStore.decSystemBalance(accounts[0], 1, { from: owner });
-            expect(await liquidityProtectionStore.systemBalance(accounts[0])).to.be.bignumber.equal('0');
-            expectEvent(response, 'SystemBalanceUpdated', { _token: accounts[0], _prevAmount: '1', _newAmount: '0' });
+            await liquidityProtectionStore.incSystemBalance(defaultSender, 1, { from: owner });
+            expect(await liquidityProtectionStore.systemBalance(defaultSender)).to.be.bignumber.equal('1');
+            const response = await liquidityProtectionStore.decSystemBalance(defaultSender, 1, { from: owner });
+            expect(await liquidityProtectionStore.systemBalance(defaultSender)).to.be.bignumber.equal('0');
+            expectEvent(response, 'SystemBalanceUpdated', { _token: defaultSender, _prevAmount: '1', _newAmount: '0' });
         });
     });
 

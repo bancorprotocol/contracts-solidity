@@ -1,17 +1,18 @@
-const { expect } = require('chai');
+const { defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, balance, constants } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { MAX_UINT256 } = constants;
 
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const DSToken = artifacts.require('DSToken');
-const ERC20Token = artifacts.require('ERC20Token');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
+const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const DSToken = contract.fromArtifact('DSToken');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
-contract('ConverterLiquidity', (accounts) => {
+describe('ConverterLiquidity', () => {
     const initLiquidityPool = async (hasETH, ...weights) => {
         const poolToken = await DSToken.new('name', 'symbol', 0);
         const converter = await LiquidityPoolV1Converter.new(poolToken.address, contractRegistry.address, 0);
@@ -32,7 +33,7 @@ contract('ConverterLiquidity', (accounts) => {
     };
 
     let contractRegistry;
-    const owner = accounts[0];
+    const owner = defaultSender;
 
     const MIN_RETURN = new BN(1);
 
