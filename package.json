@@ -33,6 +33,7 @@
     },
     "devDependencies": {
         "@bancor/token-governance": "bancorprotocol/token-governance",
+        "@openzeppelin/contracts": "3.2.0",
         "@openzeppelin/test-environment": "^0.1.6",
         "@openzeppelin/test-helpers": "^0.5.6",
         "@truffle/contract": "^4.2.14",
@@ -61,6 +62,7 @@
         "solhint": "^3.1.0",
         "solidity-coverage": "^0.7.9",
         "truffle": "5.1.36",
+        "truffle-contract-size": "^2.0.1",
         "truffle-flattener": "1.4.4",
         "web3": "1.2.11"
     },
