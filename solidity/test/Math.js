@@ -5,8 +5,9 @@ const MathUtils = require('./helpers/MathUtils');
 
 const MathContract = artifacts.require('TestMath');
 
+const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);
-const SCALES = [6, 18, 30].map((n) => Decimal(10).pow(n));
+const SCALES = [6, 18, 30].map((n) => Decimal(10).pow(n)).concat(MAX_UINT128);
 
 contract('Math', (accounts) => {
     before(async () => {
@@ -107,8 +108,34 @@ contract('Math', (accounts) => {
     for (const scale of SCALES) {
         for (let i = Decimal(1); i.lte(scale); i = i.mul(10)) {
             const a = MAX_UINT256.divToInt(scale).mul(i).add(1);
-            for (let j = Decimal(1); j.lte(scale); j = j.mul(10)) {
+            for (let j = Decimal(i); j.lte(scale); j = j.mul(10)) {
                 const b = MAX_UINT256.divToInt(scale).mul(j).add(1);
+                it(`accurateRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
+                    const expected = MathUtils.accurateRatio(a, b, scale);
+                    const actual = await mathContract.accurateRatioTest(a.toFixed(), b.toFixed(), scale.toFixed());
+                    expect(actual[0]).to.be.bignumber.equal(expected[0]);
+                    expect(actual[1]).to.be.bignumber.equal(expected[1]);
+                });
+            }
+        }
+    }
+
+    for (const scale of SCALES) {
+        const values = [
+            Decimal(1),
+            MAX_UINT256.div(3).floor(),
+            MAX_UINT256.div(3).ceil(),
+            MAX_UINT256.div(2).floor(),
+            MAX_UINT256.div(2).ceil(),
+            MAX_UINT256.mul(2).div(3).floor(),
+            MAX_UINT256.mul(2).div(3).ceil(),
+            MAX_UINT256.mul(3).div(4).floor(),
+            MAX_UINT256.mul(3).div(4).ceil(),
+            MAX_UINT256.sub(1),
+            MAX_UINT256
+        ];
+        for (const a of values) {
+            for (const b of values.filter(b => b.gt(a))) {
                 it(`accurateRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
                     const expected = MathUtils.accurateRatio(a, b, scale);
                     const actual = await mathContract.accurateRatioTest(a.toFixed(), b.toFixed(), scale.toFixed());

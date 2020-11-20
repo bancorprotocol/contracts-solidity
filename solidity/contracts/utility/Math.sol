@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "./SafeMath.sol";
 
 /**
  * @dev This library provides a set of complex math operations.
  */
 library Math {
-    using SafeMath for uint256;
-
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a positive integer
      *
@@ -89,12 +86,20 @@ library Math {
             _a /= c;
             _b /= c;
         }
-        if (_a == _b) {
-            return (_scale / 2, _scale / 2);
+        if (_a != _b) {
+            uint256 n = _a * _scale;
+            uint256 d = _a + _b;
+            if (d >= _a) {
+                uint256 x = roundDiv(n, d);
+                uint256 y = _scale - x;
+                return (x, y);
+            }
+            if (n < _b - (_b - _a) / 2) {
+                return (0, _scale);
+            }
+            return (1, _scale - 1);
         }
-        uint256 x = roundDiv(_a * _scale, _a.add(_b));
-        uint256 y = _scale - x;
-        return (x, y);
+        return (_scale / 2, _scale / 2);
     }
 
     /**
