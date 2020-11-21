@@ -15,9 +15,11 @@ module.exports = {
         BANCOR_X_UPGRADER: web3.utils.asciiToHex('BancorXUpgrader')
     },
 
-    governance: {
+    roles: {
+        ROLE_OWNER: web3.utils.keccak256('ROLE_OWNER'),
         ROLE_GOVERNOR: web3.utils.keccak256('ROLE_GOVERNOR'),
-        ROLE_MINTER: web3.utils.keccak256('ROLE_MINTER')
+        ROLE_MINTER: web3.utils.keccak256('ROLE_MINTER'),
+        ROLE_WHITELIST_ADMIN: web3.utils.keccak256('ROLE_WHITELIST_ADMIN')
     },
 
     ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'

@@ -3,14 +3,16 @@ pragma solidity 0.6.12;
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
-import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/Owned.sol";
 import "../utility/SafeMath.sol";
 import "../utility/Math.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/Types.sol";
+import "../utility/Utils.sol";
+import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
+import "./interfaces/ILiquidityProtectionSettings.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
@@ -36,7 +38,7 @@ interface ILiquidityPoolV1Converter is IConverter {
 /**
  * @dev This contract implements the liquidity protection mechanism.
  */
-contract LiquidityProtection is TokenHandler, ContractRegistryClient, ReentrancyGuard {
+contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard {
     using SafeMath for uint256;
     using Math for *;
 
@@ -61,140 +63,46 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
-    struct PoolIndex {
-        bool isValid;
-        uint256 value;
-    }
-
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
 
-    // the address of the whitelist administrator
-    address public whitelistAdmin;
-
-    // list of pools with less minting restrictions
-    // mapping of pool anchor address -> index in the list of pools for quick access
-    IConverterAnchor[] private _highTierPools;
-    mapping(IConverterAnchor => PoolIndex) private highTierPoolIndices;
-
+    ILiquidityProtectionSettings public immutable settings;
     ILiquidityProtectionStore public immutable store;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
     ITokenGovernance public immutable govTokenGovernance;
 
-    // system network token balance limits
-    uint256 public maxSystemNetworkTokenAmount = 1000000e18;
-    uint32 public maxSystemNetworkTokenRatio = 500000; // PPM units
-
-    // number of seconds until any protection is in effect
-    uint256 public minProtectionDelay = 30 days;
-
-    // number of seconds until full protection is in effect
-    uint256 public maxProtectionDelay = 100 days;
-
-    // minimum amount of network tokens the system can mint as compensation for base token losses, default = 0.01 network tokens
-    uint256 public minNetworkCompensation = 1e16;
-
-    // number of seconds from liquidation to full network token release
-    uint256 public lockDuration = 24 hours;
-
-    // maximum deviation of the average rate from the spot rate
-    uint32 public averageRateMaxDeviation = 5000; // PPM units
-
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
 
     /**
-     * @dev triggered when whitelist admin is updated
-     *
-     * @param _prevWhitelistAdmin  previous whitelist admin
-     * @param _newWhitelistAdmin   new whitelist admin
-     */
-    event WhitelistAdminUpdated(address indexed _prevWhitelistAdmin, address indexed _newWhitelistAdmin);
-
-    /**
-     * @dev triggered when the system network token balance limits are updated
-     *
-     * @param _prevMaxSystemNetworkTokenAmount  previous maximum absolute balance in a pool
-     * @param _newMaxSystemNetworkTokenAmount   new maximum absolute balance in a pool
-     * @param _prevMaxSystemNetworkTokenRatio   previos maximum balance out of the total balance in a pool
-     * @param _newMaxSystemNetworkTokenRatio    new maximum balance out of the total balance in a pool
-     */
-    event SystemNetworkTokenLimitsUpdated(
-        uint256 _prevMaxSystemNetworkTokenAmount,
-        uint256 _newMaxSystemNetworkTokenAmount,
-        uint256 _prevMaxSystemNetworkTokenRatio,
-        uint256 _newMaxSystemNetworkTokenRatio
-    );
-
-    /**
-     * @dev triggered when the protection delays are updated
-     *
-     * @param _prevMinProtectionDelay  previous seconds until the protection starts
-     * @param _newMinProtectionDelay   new seconds until the protection starts
-     * @param _prevMaxProtectionDelay  previos seconds until full protection
-     * @param _newMaxProtectionDelay   new seconds until full protection
-     */
-    event ProtectionDelaysUpdated(
-        uint256 _prevMinProtectionDelay,
-        uint256 _newMinProtectionDelay,
-        uint256 _prevMaxProtectionDelay,
-        uint256 _newMaxProtectionDelay
-    );
-
-    /**
-     * @dev triggered when the minimum network token compensation is updated
-     *
-     * @param _prevMinNetworkCompensation  previous minimum network token compensation
-     * @param _newMinNetworkCompensation   new minimum network token compensation
-     */
-    event MinNetworkCompensationUpdated(uint256 _prevMinNetworkCompensation, uint256 _newMinNetworkCompensation);
-
-    /**
-     * @dev triggered when the network token lock duration is updated
-     *
-     * @param _prevLockDuration  previous network token lock duration, in seconds
-     * @param _newLockDuration   new network token lock duration, in seconds
-     */
-    event LockDurationUpdated(uint256 _prevLockDuration, uint256 _newLockDuration);
-
-    /**
-     * @dev triggered when the maximum deviation of the average rate from the spot rate is updated
-     *
-     * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the spot rate
-     * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the spot rate
-     */
-    event AverageRateMaxDeviationUpdated(uint32 _prevAverageRateMaxDeviation, uint32 _newAverageRateMaxDeviation);
-
-    /**
      * @dev initializes a new LiquidityProtection contract
      *
-     * @param _store                    liquidity protection store
-     * @param _networkTokenGovernance   network token governance
-     * @param _govTokenGovernance       governance token governance
-     * @param _registry                 contract registry
+     * @param _settings liquidity protection settings
+     * @param _store liquidity protection store
+     * @param _networkTokenGovernance network token governance
+     * @param _govTokenGovernance governance token governance
      */
     constructor(
+        ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance,
-        IContractRegistry _registry
+        ITokenGovernance _govTokenGovernance
     )
         public
-        ContractRegistryClient(_registry)
+        validAddress(address(_settings))
         validAddress(address(_store))
         validAddress(address(_networkTokenGovernance))
         validAddress(address(_govTokenGovernance))
-        validAddress(address(_registry))
+        notThis(address(_settings))
         notThis(address(_store))
         notThis(address(_networkTokenGovernance))
         notThis(address(_govTokenGovernance))
-        notThis(address(_registry))
     {
-        whitelistAdmin = msg.sender;
+        settings = _settings;
         store = _store;
 
         networkTokenGovernance = _networkTokenGovernance;
@@ -233,7 +141,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     // error message binary size optimization
     function _poolSupported(IConverterAnchor _poolAnchor) internal view {
-        require(isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
+        require(settings.isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
     }
 
     // ensures that the pool is whitelisted
@@ -244,7 +152,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
     // error message binary size optimization
     function _poolWhitelisted(IConverterAnchor _poolAnchor) internal view {
-        require(store.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
+        require(settings.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
     }
 
     /**
@@ -269,227 +177,6 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      */
     function acceptStoreOwnership() external {
         acceptOwnership(store);
-    }
-
-    /**
-     * @dev set the address of the whitelist admin
-     * can only be called by the contract owner
-     *
-     * @param _whitelistAdmin  the address of the new whitelist admin
-     */
-    function setWhitelistAdmin(address _whitelistAdmin) external ownerOnly validAddress(_whitelistAdmin) {
-        emit WhitelistAdminUpdated(whitelistAdmin, _whitelistAdmin);
-
-        whitelistAdmin = _whitelistAdmin;
-    }
-
-    /**
-     * @dev updates the system network token balance limits
-     * can only be called by the contract owner
-     *
-     * @param _maxSystemNetworkTokenAmount  maximum absolute balance in a pool
-     * @param _maxSystemNetworkTokenRatio   maximum balance out of the total balance in a pool (in PPM units)
-     */
-    function setSystemNetworkTokenLimits(uint256 _maxSystemNetworkTokenAmount, uint32 _maxSystemNetworkTokenRatio)
-        external
-        ownerOnly
-        validPortion(_maxSystemNetworkTokenRatio)
-    {
-        emit SystemNetworkTokenLimitsUpdated(
-            maxSystemNetworkTokenAmount,
-            _maxSystemNetworkTokenAmount,
-            maxSystemNetworkTokenRatio,
-            _maxSystemNetworkTokenRatio
-        );
-
-        maxSystemNetworkTokenAmount = _maxSystemNetworkTokenAmount;
-        maxSystemNetworkTokenRatio = _maxSystemNetworkTokenRatio;
-    }
-
-    /**
-     * @dev updates the protection delays
-     * can only be called by the contract owner
-     *
-     * @param _minProtectionDelay  seconds until the protection starts
-     * @param _maxProtectionDelay  seconds until full protection
-     */
-    function setProtectionDelays(uint256 _minProtectionDelay, uint256 _maxProtectionDelay) external ownerOnly {
-        require(_minProtectionDelay < _maxProtectionDelay, "ERR_INVALID_PROTECTION_DELAY");
-
-        emit ProtectionDelaysUpdated(minProtectionDelay, _minProtectionDelay, maxProtectionDelay, _maxProtectionDelay);
-
-        minProtectionDelay = _minProtectionDelay;
-        maxProtectionDelay = _maxProtectionDelay;
-    }
-
-    /**
-     * @dev updates the minimum network token compensation
-     * can only be called by the contract owner
-     *
-     * @param _minCompensation new minimum compensation
-     */
-    function setMinNetworkCompensation(uint256 _minCompensation) external ownerOnly {
-        emit MinNetworkCompensationUpdated(minNetworkCompensation, _minCompensation);
-
-        minNetworkCompensation = _minCompensation;
-    }
-
-    /**
-     * @dev updates the network token lock duration
-     * can only be called by the contract owner
-     *
-     * @param _lockDuration    network token lock duration, in seconds
-     */
-    function setLockDuration(uint256 _lockDuration) external ownerOnly {
-        emit LockDurationUpdated(lockDuration, _lockDuration);
-
-        lockDuration = _lockDuration;
-    }
-
-    /**
-     * @dev sets the maximum deviation of the average rate from the spot rate
-     * can only be called by the contract owner
-     *
-     * @param _averageRateMaxDeviation maximum deviation of the average rate from the spot rate
-     */
-    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation)
-        external
-        ownerOnly
-        validPortion(_averageRateMaxDeviation)
-    {
-        emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
-
-        averageRateMaxDeviation = _averageRateMaxDeviation;
-    }
-
-    /**
-     * @dev adds a pool to the whitelist, or removes a pool from the whitelist
-     * note that when a pool is whitelisted, it's not possible to remove liquidity anymore
-     * removing a pool from the whitelist is an extreme measure in case of a base token compromise etc.
-     * can only be called by the whitelist admin
-     *
-     * @param _poolAnchor  anchor of the pool
-     * @param _add         true to add the pool to the whitelist, false to remove it from the whitelist
-     */
-    function whitelistPool(IConverterAnchor _poolAnchor, bool _add) external poolSupported(_poolAnchor) {
-        require(msg.sender == whitelistAdmin || msg.sender == owner, "ERR_ACCESS_DENIED");
-
-        // add or remove the pool to/from the whitelist
-        if (_add) store.addPoolToWhitelist(_poolAnchor);
-        else store.removePoolFromWhitelist(_poolAnchor);
-    }
-
-    /**
-     * @dev adds a high tier pool
-     * can only be called by the contract owner
-     *
-     * @param _poolAnchor pool anchor
-     */
-    function addHighTierPool(IConverterAnchor _poolAnchor)
-        external
-        ownerOnly
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        // validate input
-        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
-        require(!poolIndex.isValid, "ERR_POOL_ALREADY_EXISTS");
-
-        poolIndex.value = _highTierPools.length;
-        _highTierPools.push(_poolAnchor);
-        poolIndex.isValid = true;
-    }
-
-    /**
-     * @dev removes a high tier pool
-     * can only be called by the contract owner
-     *
-     * @param _poolAnchor pool anchor
-     */
-    function removeHighTierPool(IConverterAnchor _poolAnchor)
-        external
-        ownerOnly
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        // validate input
-        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
-        require(poolIndex.isValid, "ERR_POOL_DOES_NOT_EXIST");
-
-        uint256 index = poolIndex.value;
-        uint256 length = _highTierPools.length;
-        assert(length > 0);
-
-        uint256 lastIndex = length - 1;
-        if (index < lastIndex) {
-            IConverterAnchor lastAnchor = _highTierPools[lastIndex];
-            highTierPoolIndices[lastAnchor].value = index;
-            _highTierPools[index] = lastAnchor;
-        }
-
-        _highTierPools.pop();
-        delete highTierPoolIndices[_poolAnchor];
-    }
-
-    /**
-     * @dev returns the list of high tier pools
-     *
-     * @return list of high tier pools
-     */
-    function highTierPools() external view returns (IConverterAnchor[] memory) {
-        return _highTierPools;
-    }
-
-    /**
-     * @dev checks whether a given pool is a high tier one
-     *
-     * @param _poolAnchor pool anchor
-     * @return true if the given pool is a high tier one, false otherwise
-     */
-    function isHighTierPool(IConverterAnchor _poolAnchor) public view returns (bool) {
-        return highTierPoolIndices[_poolAnchor].isValid;
-    }
-
-    /**
-     * @dev checks if protection is supported for the given pool
-     * only standard pools are supported (2 reserves, 50%/50% weights)
-     * note that the pool should still be whitelisted
-     *
-     * @param _poolAnchor  anchor of the pool
-     * @return true if the pool is supported, false otherwise
-     */
-    function isPoolSupported(IConverterAnchor _poolAnchor) public view returns (bool) {
-        // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
-
-        // verify that the pool exists in the registry
-        IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
-        require(converterRegistry.isAnchor(address(_poolAnchor)), "ERR_INVALID_ANCHOR");
-
-        // get the converter
-        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
-
-        // verify that the converter has 2 reserves
-        if (converter.connectorTokenCount() != 2) {
-            return false;
-        }
-
-        // verify that one of the reserves is the network token
-        IERC20Token reserve0Token = converter.connectorTokens(0);
-        IERC20Token reserve1Token = converter.connectorTokens(1);
-        if (reserve0Token != networkTokenLocal && reserve1Token != networkTokenLocal) {
-            return false;
-        }
-
-        // verify that the reserve weights are exactly 50%/50%
-        if (
-            converterReserveWeight(converter, reserve0Token) != PPM_RESOLUTION / 2 ||
-            converterReserveWeight(converter, reserve1Token) != PPM_RESOLUTION / 2
-        ) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -551,7 +238,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        uint256 amount = liquidity1.reserveToken == networkTokenLocal ? liquidity1.reserveAmount : liquidity2.reserveAmount;
+        uint256 amount = liquidity1.reserveToken == networkTokenLocal
+            ? liquidity1.reserveAmount
+            : liquidity2.reserveAmount;
         safeTransferFrom(govToken, msg.sender, address(this), amount);
         govTokenGovernance.burn(amount);
 
@@ -572,7 +261,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount          amount of tokens to add to the pool
      * @return new protected liquidity id
      */
-    function addLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, uint256 _amount)
+    function addLiquidity(
+        IConverterAnchor _poolAnchor,
+        IERC20Token _reserveToken,
+        uint256 _amount
+    )
         external
         payable
         protected
@@ -604,7 +297,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount       amount of tokens to add to the pool
      * @return new protected liquidity id
      */
-    function addNetworkTokenLiquidity(IConverterAnchor _poolAnchor, IERC20Token _networkToken, uint256 _amount) internal returns (uint256) {
+    function addNetworkTokenLiquidity(
+        IConverterAnchor _poolAnchor,
+        IERC20Token _networkToken,
+        uint256 _amount
+    ) internal returns (uint256) {
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the rate between the pool token and the reserve
@@ -664,12 +361,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 newSystemBalance = store.systemBalance(poolToken);
         newSystemBalance = (newSystemBalance.mul(poolRate.n / 2).div(poolRate.d)).add(networkLiquidityAmount);
 
+        uint256 maxSystemNetworkTokenAmount = settings.maxSystemNetworkTokenAmount();
         require(newSystemBalance <= maxSystemNetworkTokenAmount, "ERR_MAX_AMOUNT_REACHED");
 
-        if (!isHighTierPool(_poolAnchor)) {
+        if (!settings.isHighTierPool(_poolAnchor)) {
             require(
                 newSystemBalance.mul(PPM_RESOLUTION) <=
-                    reserveBalanceNetwork.add(networkLiquidityAmount).mul(maxSystemNetworkTokenRatio),
+                    reserveBalanceNetwork.add(networkLiquidityAmount).mul(settings.maxSystemNetworkTokenRatio()),
                 "ERR_MAX_RATIO_REACHED"
             );
         }
@@ -960,7 +658,10 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: _packedRates.addSpotRateN, d: _packedRates.addSpotRateD });
         Fraction memory removeSpotRate = Fraction({ n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD });
-        Fraction memory removeAverageRate = Fraction({ n: _packedRates.removeAverageRateN, d: _packedRates.removeAverageRateD });
+        Fraction memory removeAverageRate = Fraction({
+            n: _packedRates.removeAverageRateN,
+            d: _packedRates.removeAverageRateD
+        });
 
         // calculate the protected amount of reserve tokens plus accumulated fee before compensation
         uint256 total = protectedAmountPlusFee(_poolAmount, poolRate, addSpotRate, removeSpotRate);
@@ -1039,13 +740,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 poolAmount = _reserveAmount.mul(_poolRateD).div(_poolRateN);
 
         // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = packRates(
-            _poolToken,
-            _reserveToken,
-            _reserveRateN,
-            _reserveRateD,
-            false
-        );
+        PackedRates memory packedRates = packRates(_poolToken, _reserveToken, _reserveRateN, _reserveRateD, false);
 
         // get the current return
         uint256 protectedReturn = removeLiquidityTargetAmount(
@@ -1054,7 +749,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
             poolAmount,
             _reserveAmount,
             packedRates,
-            time().sub(maxProtectionDelay),
+            time().sub(settings.maxProtectionDelay()),
             time()
         );
 
@@ -1136,7 +831,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _amount      amount of network tokens
      */
     function lockTokens(address _provider, uint256 _amount) internal {
-        uint256 expirationTime = time().add(lockDuration);
+        uint256 expirationTime = time().add(settings.lockDuration());
         store.addLockedBalance(_provider, _amount, expirationTime);
     }
 
@@ -1165,12 +860,16 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _reserveToken         reserve token
      * @param _validateAverageRate  true to validate the average rate; false otherwise
      */
-    function reserveTokenAverageRate(IDSToken _poolToken, IERC20Token _reserveToken, bool _validateAverageRate)
-        internal
-        view
-        returns (Fraction memory)
-    {
-        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
+    function reserveTokenAverageRate(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        bool _validateAverageRate
+    ) internal view returns (Fraction memory) {
+        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(
+            _poolToken,
+            _reserveToken,
+            _validateAverageRate
+        );
         return Fraction(averageRateN, averageRateD);
     }
 
@@ -1181,7 +880,11 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      * @param _reserveToken         reserve token
      * @param _validateAverageRate  true to validate the average rate; false otherwise
      */
-    function reserveTokenRates(IDSToken _poolToken, IERC20Token _reserveToken, bool _validateAverageRate)
+    function reserveTokenRates(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        bool _validateAverageRate
+    )
         internal
         view
         returns (
@@ -1203,7 +906,13 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         require(
             !_validateAverageRate ||
-                averageRateInRange(spotRateN, spotRateD, averageRateN, averageRateD, averageRateMaxDeviation),
+                averageRateInRange(
+                    spotRateN,
+                    spotRateD,
+                    averageRateN,
+                    averageRateD,
+                    settings.averageRateMaxDeviation()
+                ),
             "ERR_INVALID_RATE"
         );
 
@@ -1269,7 +978,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         uint256 _averageRateD,
         uint32 _maxDeviation
     ) internal pure returns (bool) {
-        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
+        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(
+            PPM_RESOLUTION - _maxDeviation
+        );
         uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
         uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
         return min <= mid && mid <= max;
@@ -1435,6 +1146,8 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
      */
     function protectionLevel(uint256 _addTimestamp, uint256 _removeTimestamp) internal view returns (Fraction memory) {
         uint256 timeElapsed = _removeTimestamp.sub(_addTimestamp);
+        uint256 minProtectionDelay = settings.minProtectionDelay();
+        uint256 maxProtectionDelay = settings.maxProtectionDelay();
         if (timeElapsed < minProtectionDelay) {
             return Fraction({ n: 0, d: 1 });
         }
@@ -1484,7 +1197,7 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
 
         // the delta might be very small due to precision loss
         // in which case no compensation will take place (gas optimization)
-        if (delta >= _minNetworkCompensation()) {
+        if (delta >= settings.minNetworkCompensation()) {
             return delta;
         }
 
@@ -1540,23 +1253,9 @@ contract LiquidityProtection is TokenHandler, ContractRegistryClient, Reentrancy
         return (_converter.getConnectorBalance(_reserveToken1), _converter.getConnectorBalance(_reserveToken2));
     }
 
-    // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
-    function converterReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
-        (, uint32 weight, , , ) = _converter.connectors(_reserveToken);
-        return weight;
-    }
-
     // utility to get the owner
     function ownedBy(IOwned _owned) private view returns (address) {
         return _owned.owner();
-    }
-
-    /**
-     * @dev returns minimum network tokens compensation
-     * utility to allow overrides for tests
-     */
-    function _minNetworkCompensation() internal view virtual returns (uint256) {
-        return minNetworkCompensation;
     }
 
     /**
