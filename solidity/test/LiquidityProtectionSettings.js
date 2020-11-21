@@ -80,7 +80,7 @@ describe('LiquidityProtectionSettings', () => {
         expect(await settings.hasRole.call(ROLE_WHITELIST_ADMIN, owner)).to.be.false();
     });
 
-    describe('whitelisted pools basic verification', () => {
+    describe('whitelisted pools', () => {
         const admin = accounts[2];
 
         beforeEach(async () => {
@@ -89,7 +89,7 @@ describe('LiquidityProtectionSettings', () => {
 
         it('should revert when a non admin attempts to add a whitelisted pool', async () => {
             await expectRevert(settings.addPoolToWhitelist(poolToken.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            expect(await settings.isPoolWhitelisted(poolToken.address)).to.be.false();
+            expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
         });
 
         it('should revert when a non admin attempts to remove a whitelisted pool', async () => {
@@ -118,15 +118,31 @@ describe('LiquidityProtectionSettings', () => {
 
         it('should succeed when an admin attempts to add a whitelisted pool', async () => {
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
+            expect(await settings.poolWhitelist.call()).to.be.ofSize(0);
+
             await settings.addPoolToWhitelist(poolToken.address, { from: admin });
+
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.true();
+            expect(await settings.poolWhitelist.call()).to.be.equalTo([poolToken.address]);
+
+            const poolToken2 = accounts[3];
+
+            await settings.addPoolToWhitelist(poolToken2, { from: admin });
+
+            expect(await settings.isPoolWhitelisted.call(poolToken2)).to.be.true();
+            expect(await settings.poolWhitelist.call()).to.be.equalTo([poolToken.address, poolToken2]);
         });
 
         it('should succeed when the owner attempts to remove a whitelisted pool', async () => {
             await settings.addPoolToWhitelist(poolToken.address, { from: admin });
+
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.true();
+            expect(await settings.poolWhitelist.call()).to.be.equalTo([poolToken.address]);
+
             await settings.removePoolFromWhitelist(poolToken.address, { from: admin });
+
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
+            expect(await settings.poolWhitelist.call()).to.be.ofSize(0);
         });
     });
 
@@ -192,27 +208,43 @@ describe('LiquidityProtectionSettings', () => {
 
     describe('high tier pools', () => {
         it('should allow the owner to add a high tier pool', async () => {
-            expect(await settings.isHighTierPool(poolToken.address)).to.be.false();
+            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.false();
+            expect(await settings.highTierPools.call()).to.be.ofSize(0);
+
             await settings.addHighTierPool(poolToken.address, { from: owner });
-            expect(await settings.isHighTierPool(poolToken.address)).to.be.true();
+
+            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.true();
+            expect(await settings.highTierPools.call()).to.be.equalTo([poolToken.address]);
+
+            const poolToken2 = accounts[3];
+
+            await settings.addHighTierPool(poolToken2, { from: owner });
+
+            expect(await settings.isHighTierPool.call(poolToken2)).to.be.true();
+            expect(await settings.highTierPools.call()).to.be.equalTo([poolToken.address, poolToken2]);
         });
 
         it('should allow the owner to remove a high tier pool', async () => {
             await settings.addHighTierPool(poolToken.address, { from: owner });
+
             expect(await settings.isHighTierPool.call(poolToken.address)).to.be.true();
+            expect(await settings.highTierPools.call()).to.be.equalTo([poolToken.address]);
+
             await settings.removeHighTierPool(poolToken.address, { from: owner });
+
             expect(await settings.isHighTierPool.call(poolToken.address)).to.be.false();
+            expect(await settings.highTierPools.call()).to.be.ofSize(0);
         });
 
         it('should revert when a non owner attempts to add a high tier pool', async () => {
             await expectRevert(settings.addHighTierPool(poolToken.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            expect(await settings.isHighTierPool(poolToken.address)).to.be.false();
+            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.false();
         });
 
         it('should revert when a non owner attempts to remove a high tier pool', async () => {
             await settings.addHighTierPool(poolToken.address, { from: owner });
             await expectRevert(settings.removeHighTierPool(poolToken.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            expect(await settings.isHighTierPool(poolToken.address)).to.be.true();
+            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.true();
         });
 
         it('should revert when the owner attempts to add a high tier pool that is already defined as high tier one', async () => {
@@ -224,6 +256,62 @@ describe('LiquidityProtectionSettings', () => {
             await expectRevert(
                 settings.removeHighTierPool(poolToken.address, { from: owner }),
                 'ERR_POOL_DOES_NOT_EXIST'
+            );
+        });
+    });
+
+    describe('position admins', () => {
+        const positionsAdmin = accounts[5];
+
+        it('should allow the owner to add a position admin pool', async () => {
+            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.false();
+            expect(await settings.positionAdmins.call()).to.be.ofSize(0);
+
+            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
+
+            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.true();
+            expect(await settings.positionAdmins.call()).to.be.equalTo([positionsAdmin]);
+
+            const positionsAdmin2 = accounts[3];
+
+            await settings.addPositionsAdmin(positionsAdmin2, { from: owner });
+
+            expect(await settings.isPositionsAdmin.call(positionsAdmin2)).to.be.true();
+            expect(await settings.positionAdmins.call()).to.be.equalTo([positionsAdmin, positionsAdmin2]);
+        });
+
+        it('should allow the owner to remove a positions admin', async () => {
+            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
+
+            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.true();
+            expect(await settings.positionAdmins.call()).to.be.equalTo([positionsAdmin]);
+
+            await settings.removePositionsAdmin(positionsAdmin, { from: owner });
+
+            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.false();
+            expect(await settings.positionAdmins.call()).to.be.ofSize(0);
+        });
+
+        it('should revert when a non owner attempts to add a positions admin', async () => {
+            await expectRevert(settings.addPositionsAdmin(positionsAdmin, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.false();
+        });
+
+        it('should revert when a non owner attempts to remove a positions admin', async () => {
+            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
+            await expectRevert(settings.removePositionsAdmin(positionsAdmin, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.true();
+        });
+
+        it('should revert when the owner attempts to add a positions admin that is already defined as high tier one', async () => {
+            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
+            await expectRevert(settings.addPositionsAdmin(positionsAdmin, { from: owner }), 'ERR_ADMIN_ALREADY_EXISTS');
+        });
+
+        it('should revert when the owner attempts to remove a positions admin that is not defined as a high tier one', async () => {
+            await expectRevert(
+                settings.removePositionsAdmin(positionsAdmin, { from: owner }),
+                'ERR_ADMIN_DOES_NOT_EXIST'
             );
         });
     });

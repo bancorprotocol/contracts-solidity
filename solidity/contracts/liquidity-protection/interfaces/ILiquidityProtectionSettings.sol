@@ -21,6 +21,12 @@ interface ILiquidityProtectionSettings {
 
     function isHighTierPool(IConverterAnchor _poolAnchor) external view returns (bool);
 
+    function addPositionsAdmin(address _admin) external;
+
+    function removePositionsAdmin(address _admin) external;
+
+    function isPositionsAdmin(address _admin) external view returns (bool);
+
     function maxSystemNetworkTokenAmount() external view returns (uint256);
 
     function maxSystemNetworkTokenRatio() external view returns (uint32);

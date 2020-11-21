@@ -842,69 +842,174 @@ describe('LiquidityProtection', () => {
         });
     });
 
-    it('verifies that the caller can transfer liquidity to another account', async () => {
-        let reserveAmount = new BN(5000);
-        await baseToken.transfer(accounts[1], 5000);
-        await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount, false, accounts[1]);
+    describe('transfer liquidity', () => {
+        it('verifies that the caller can transfer liquidity to another account', async () => {
+            let reserveAmount = new BN(5000);
+            await baseToken.transfer(accounts[1], 5000);
+            await addProtectedLiquidity(
+                poolToken.address,
+                baseToken,
+                baseTokenAddress,
+                reserveAmount,
+                false,
+                accounts[1]
+            );
 
-        reserveAmount = new BN(1000);
-        await addProtectedLiquidity(poolToken.address, networkToken, networkToken.address, reserveAmount);
+            reserveAmount = new BN(1000);
+            await addProtectedLiquidity(poolToken.address, networkToken, networkToken.address, reserveAmount);
 
-        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-        expect(protectionIds.length).to.eql(1);
+            let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+            expect(protectionIds.length).to.eql(1);
 
-        let protectionId = protectionIds[0];
-        let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
-        protection = getProtection(protection);
+            let protectionId = protectionIds[0];
+            let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
+            protection = getProtection(protection);
 
-        await liquidityProtection.transferLiquidity(protectionId, accounts[2]);
+            await liquidityProtection.transferLiquidity(protectionId, accounts[2]);
 
-        protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-        expect(protectionIds.length).to.eql(0);
+            protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+            expect(protectionIds.length).to.eql(0);
 
-        let protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(accounts[2]);
-        expect(protectionIds2.length).to.eql(1);
+            let protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(accounts[2]);
+            expect(protectionIds2.length).to.eql(1);
 
-        let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds2[0]);
-        protection2 = getProtection(protection2);
+            let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds2[0]);
+            protection2 = getProtection(protection2);
 
-        expect(protection.poolToken).to.eql(protection2.poolToken);
-        expect(protection.reserveToken).to.eql(protection2.reserveToken);
-        expect(protection.poolAmount).to.be.bignumber.equal(protection2.poolAmount);
-        expect(protection.reserveAmount).to.be.bignumber.equal(protection2.reserveAmount);
-        expect(protection.reserveRateN).to.be.bignumber.equal(protection2.reserveRateN);
-        expect(protection.reserveRateD).to.be.bignumber.equal(protection2.reserveRateD);
-        expect(protection.timestamp).to.be.bignumber.equal(protection2.timestamp);
+            expect(protection.poolToken).to.eql(protection2.poolToken);
+            expect(protection.reserveToken).to.eql(protection2.reserveToken);
+            expect(protection.poolAmount).to.be.bignumber.equal(protection2.poolAmount);
+            expect(protection.reserveAmount).to.be.bignumber.equal(protection2.reserveAmount);
+            expect(protection.reserveRateN).to.be.bignumber.equal(protection2.reserveRateN);
+            expect(protection.reserveRateD).to.be.bignumber.equal(protection2.reserveRateD);
+            expect(protection.timestamp).to.be.bignumber.equal(protection2.timestamp);
+        });
+
+        it('should revert when attempting to transfer liquidity to a zero address', async () => {
+            await expectRevert(liquidityProtection.transferLiquidity('0', ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
+        });
+
+        it('should revert when attempting to transfer liquidity to the liquidity protection contract', async () => {
+            await expectRevert(
+                liquidityProtection.transferLiquidity('0', liquidityProtection.address),
+                'ERR_ADDRESS_IS_SELF'
+            );
+        });
+
+        it('should revert when attempting to transfer liquidity that does not exist', async () => {
+            await expectRevert(liquidityProtection.transferLiquidity('1234', accounts[3]), 'ERR_ACCESS_DENIED');
+        });
+
+        it('should revert when attempting to transfer liquidity that belongs to another account', async () => {
+            let reserveAmount = new BN(5000);
+            await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
+
+            const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+            const protectionId = protectionIds[0];
+
+            await expectRevert(
+                liquidityProtection.transferLiquidity(protectionId, accounts[2], {
+                    from: accounts[1]
+                }),
+                'ERR_ACCESS_DENIED'
+            );
+        });
     });
 
-    it('should revert when attempting to transfer liquidity to a zero address', async () => {
-        await expectRevert(liquidityProtection.transferLiquidity('0', ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
-    });
+    describe('claim liquidity', () => {
+        const positionsAdmin = accounts[8];
+        const nonPositionsAdmin = accounts[9];
 
-    it('should revert when attempting to transfer liquidity to the liquidity protection contract', async () => {
-        await expectRevert(
-            liquidityProtection.transferLiquidity('0', liquidityProtection.address),
-            'ERR_ADDRESS_IS_SELF'
-        );
-    });
+        beforeEach(async () => {
+            await liquidityProtectionSettings.addPositionsAdmin(positionsAdmin, { from: owner });
+        });
 
-    it('should revert when attempting to transfer liquidity that does not exist', async () => {
-        await expectRevert(liquidityProtection.transferLiquidity('1234', accounts[3]), 'ERR_ACCESS_DENIED');
-    });
+        it('verifies that a positions admin can claim liquidity from another account', async () => {
+            let reserveAmount = new BN(1000);
+            await baseToken.transfer(accounts[1], 5000);
+            await addProtectedLiquidity(
+                poolToken.address,
+                baseToken,
+                baseTokenAddress,
+                reserveAmount,
+                false,
+                accounts[1]
+            );
 
-    it('should revert when attempting to transfer liquidity that belongs to another account', async () => {
-        let reserveAmount = new BN(5000);
-        await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
+            reserveAmount = new BN(1000);
+            await addProtectedLiquidity(poolToken.address, networkToken, networkToken.address, reserveAmount);
 
-        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-        const protectionId = protectionIds[0];
+            let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+            expect(protectionIds.length).to.eql(1);
 
-        await expectRevert(
-            liquidityProtection.transferLiquidity(protectionId, accounts[2], {
-                from: accounts[1]
-            }),
-            'ERR_ACCESS_DENIED'
-        );
+            const protectionId = protectionIds[0];
+            let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
+            protection = getProtection(protection);
+
+            const newProvider = accounts[2];
+            await liquidityProtection.claimLiquidity(protectionId, owner, newProvider, { from: positionsAdmin });
+
+            protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+            expect(protectionIds.length).to.eql(0);
+
+            let protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(newProvider);
+            expect(protectionIds2.length).to.eql(1);
+
+            let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds2[0]);
+            protection2 = getProtection(protection2);
+
+            expect(protection.poolToken).to.eql(protection2.poolToken);
+            expect(protection.reserveToken).to.eql(protection2.reserveToken);
+            expect(protection.poolAmount).to.be.bignumber.equal(protection2.poolAmount);
+            expect(protection.reserveAmount).to.be.bignumber.equal(protection2.reserveAmount);
+            expect(protection.reserveRateN).to.be.bignumber.equal(protection2.reserveRateN);
+            expect(protection.reserveRateD).to.be.bignumber.equal(protection2.reserveRateD);
+            expect(protection.timestamp).to.be.bignumber.equal(protection2.timestamp);
+        });
+
+        it('should revert when attempting to claim liquidity from/to a zero address', async () => {
+            await expectRevert(
+                liquidityProtection.claimLiquidity(0, ZERO_ADDRESS, owner, { from: positionsAdmin }),
+                'ERR_INVALID_ADDRESS'
+            );
+            await expectRevert(
+                liquidityProtection.claimLiquidity(0, owner, ZERO_ADDRESS, { from: positionsAdmin }),
+                'ERR_INVALID_ADDRESS'
+            );
+        });
+
+        it('should revert when attempting to claim liquidity from/to the liquidity protection contract', async () => {
+            await expectRevert(
+                liquidityProtection.claimLiquidity(0, liquidityProtection.address, owner, { from: positionsAdmin }),
+                'ERR_ADDRESS_IS_SELF'
+            );
+            await expectRevert(
+                liquidityProtection.claimLiquidity(0, owner, liquidityProtection.address, { from: positionsAdmin }),
+                'ERR_ADDRESS_IS_SELF'
+            );
+        });
+
+        it('should revert when attempting to claim liquidity that does not exist', async () => {
+            const newProvider = accounts[3];
+            await expectRevert(
+                liquidityProtection.claimLiquidity(1234, owner, newProvider, { from: positionsAdmin }),
+                'ERR_ACCESS_DENIED'
+            );
+        });
+
+        it('should revert when attempting to claim liquidity from a non position admin', async () => {
+            const reserveAmount = new BN(1000);
+            await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
+
+            const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+            const protectionId = protectionIds[0];
+
+            const newProvider = accounts[3];
+            await expectRevert(
+                liquidityProtection.claimLiquidity(protectionId, owner, newProvider, { from: nonPositionsAdmin }),
+                'ERR_ACCESS_DENIED'
+            );
+        });
     });
 
     it('verifies that removeLiquidityReturn returns the correct amount for removing entire protection', async () => {

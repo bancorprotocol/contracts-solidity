@@ -428,6 +428,49 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard {
     }
 
     /**
+     * @dev claims protected liquidity to a new provider
+     * can only be called by the contract owner
+     *
+     * @param _id protected liquidity id
+     * @param _provider existing provider
+     * @param _newProvider new provider
+     * @return new protected liquidity id
+     */
+    function claimLiquidity(
+        uint256 _id,
+        address _provider,
+        address _newProvider
+    )
+        external
+        protected
+        validAddress(_provider)
+        notThis(_provider)
+        validAddress(_newProvider)
+        notThis(_newProvider)
+        returns (uint256)
+    {
+        require(settings.isPositionsAdmin(msg.sender), "ERR_ACCESS_DENIED");
+
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, _provider);
+
+        // remove the protected liquidity from the existing provider
+        store.removeProtectedLiquidity(_id);
+
+        // add the protected liquidity to the new provider
+        return
+            store.addProtectedLiquidity(
+                _newProvider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount,
+                liquidity.reserveRateN,
+                liquidity.reserveRateD,
+                liquidity.timestamp
+            );
+    }
+
+    /**
      * @dev returns the expected/actual amounts the provider will receive for removing liquidity
      * it's also possible to provide the remove liquidity time to get an estimation
      * for the return at that given point

@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 
 import "./interfaces/ILiquidityProtectionSettings.sol";
 import "../converter/interfaces/IConverter.sol";
@@ -14,10 +15,7 @@ import "../utility/Utils.sol";
  * @dev Liquidity Protection Settings contract
  */
 contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessControl, ContractRegistryClient {
-    struct PoolIndex {
-        bool isValid;
-        uint256 value;
-    }
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     // the owner role is used to set the values in the store
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
@@ -29,14 +27,14 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
 
     IERC20Token public immutable networkToken;
 
-    // list of whitelisted pools and mapping of pool anchor address -> index in the pool whitelist for quick access
-    IConverterAnchor[] public poolWhitelist;
-    mapping(IConverterAnchor => PoolIndex) private poolWhitelistIndices;
+    // list of whitelisted pools and mapping of pool anchor address
+    EnumerableSet.AddressSet private _poolWhitelist;
+
+    // list of addresses that are able to claim positions
+    EnumerableSet.AddressSet private _positionAdmins;
 
     // list of pools with less minting restrictions
-    // mapping of pool anchor address -> index in the list of pools for quick access
-    IConverterAnchor[] public highTierPools;
-    mapping(IConverterAnchor => PoolIndex) private highTierPoolIndices;
+    EnumerableSet.AddressSet private _highTierPools;
 
     // system network token balance limits
     uint256 public override maxSystemNetworkTokenAmount = 1000000e18;
@@ -185,13 +183,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         validAddress(address(_poolAnchor))
         notThis(address(_poolAnchor))
     {
-        // validate input
-        PoolIndex storage poolIndex = poolWhitelistIndices[_poolAnchor];
-        require(!poolIndex.isValid, "ERR_POOL_ALREADY_WHITELISTED");
-
-        poolIndex.value = poolWhitelist.length;
-        poolWhitelist.push(_poolAnchor);
-        poolIndex.isValid = true;
+        require(_poolWhitelist.add(address(_poolAnchor)), "ERR_POOL_ALREADY_WHITELISTED");
 
         emit PoolWhitelistUpdated(_poolAnchor, true);
     }
@@ -209,23 +201,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         validAddress(address(_poolAnchor))
         notThis(address(_poolAnchor))
     {
-        // validate input
-        PoolIndex storage poolIndex = poolWhitelistIndices[_poolAnchor];
-        require(poolIndex.isValid, "ERR_POOL_NOT_WHITELISTED");
-
-        uint256 index = poolIndex.value;
-        uint256 length = poolWhitelist.length;
-        assert(length > 0);
-
-        uint256 lastIndex = length - 1;
-        if (index < lastIndex) {
-            IConverterAnchor lastAnchor = poolWhitelist[lastIndex];
-            poolWhitelistIndices[lastAnchor].value = index;
-            poolWhitelist[index] = lastAnchor;
-        }
-
-        poolWhitelist.pop();
-        delete poolWhitelistIndices[_poolAnchor];
+        require(_poolWhitelist.remove(address(_poolAnchor)), "ERR_POOL_NOT_WHITELISTED");
 
         emit PoolWhitelistUpdated(_poolAnchor, false);
     }
@@ -237,7 +213,21 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @return true if the given pool is whitelisted, false otherwise
      */
     function isPoolWhitelisted(IConverterAnchor _poolAnchor) external view override returns (bool) {
-        return poolWhitelistIndices[_poolAnchor].isValid;
+        return _poolWhitelist.contains(address(_poolAnchor));
+    }
+
+    /**
+     * @dev returns pools whitelist
+     *
+     * @return pools whitelist
+     */
+    function poolWhitelist() external view returns (address[] memory) {
+        uint256 length = _poolWhitelist.length();
+        address[] memory list = new address[](length);
+        for (uint256 i = 0; i < length; ++i) {
+            list[i] = _poolWhitelist.at(i);
+        }
+        return list;
     }
 
     /**
@@ -253,13 +243,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         validAddress(address(_poolAnchor))
         notThis(address(_poolAnchor))
     {
-        // validate input
-        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
-        require(!poolIndex.isValid, "ERR_POOL_ALREADY_EXISTS");
-
-        poolIndex.value = highTierPools.length;
-        highTierPools.push(_poolAnchor);
-        poolIndex.isValid = true;
+        require(_highTierPools.add(address(_poolAnchor)), "ERR_POOL_ALREADY_EXISTS");
     }
 
     /**
@@ -275,23 +259,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         validAddress(address(_poolAnchor))
         notThis(address(_poolAnchor))
     {
-        // validate input
-        PoolIndex storage poolIndex = highTierPoolIndices[_poolAnchor];
-        require(poolIndex.isValid, "ERR_POOL_DOES_NOT_EXIST");
-
-        uint256 index = poolIndex.value;
-        uint256 length = highTierPools.length;
-        assert(length > 0);
-
-        uint256 lastIndex = length - 1;
-        if (index < lastIndex) {
-            IConverterAnchor lastAnchor = highTierPools[lastIndex];
-            highTierPoolIndices[lastAnchor].value = index;
-            highTierPools[index] = lastAnchor;
-        }
-
-        highTierPools.pop();
-        delete highTierPoolIndices[_poolAnchor];
+        require(_highTierPools.remove(address(_poolAnchor)), "ERR_POOL_DOES_NOT_EXIST");
     }
 
     /**
@@ -301,7 +269,71 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @return true if the given pool is a high tier one, false otherwise
      */
     function isHighTierPool(IConverterAnchor _poolAnchor) external view override returns (bool) {
-        return highTierPoolIndices[_poolAnchor].isValid;
+        return _highTierPools.contains(address(_poolAnchor));
+    }
+
+    /**
+     * @dev returns high tier pools
+     *
+     * @return high tier pools
+     */
+    function highTierPools() external view returns (address[] memory) {
+        uint256 length = _highTierPools.length();
+        address[] memory list = new address[](length);
+        for (uint256 i = 0; i < length; ++i) {
+            list[i] = _highTierPools.at(i);
+        }
+        return list;
+    }
+
+    /**
+     * @dev adds a positions admin
+     * can only be called by the contract owner
+     *
+     * @param _admin address to add
+     */
+    function addPositionsAdmin(address _admin)
+        external
+        override
+        onlyOwner
+        validAddress(address(_admin))
+        notThis(address(_admin))
+    {
+        require(_positionAdmins.add(_admin), "ERR_ADMIN_ALREADY_EXISTS");
+    }
+
+    /**
+     * @dev removes a positions admin
+     * can only be called by the contract owner
+     *
+     * @param _admin address to remove
+     */
+    function removePositionsAdmin(address _admin) external override onlyOwner validAddress(_admin) notThis(_admin) {
+        require(_positionAdmins.remove(_admin), "ERR_ADMIN_DOES_NOT_EXIST");
+    }
+
+    /**
+     * @dev checks whether a given address is a positions admin
+     *
+     * @param _admin address to check
+     * @return true if the given address is a positions admin, false otherwise
+     */
+    function isPositionsAdmin(address _admin) external view override returns (bool) {
+        return _positionAdmins.contains(_admin);
+    }
+
+    /**
+     * @dev returns positions admins
+     *
+     * @return positions admins
+     */
+    function positionAdmins() external view returns (address[] memory) {
+        uint256 length = _positionAdmins.length();
+        address[] memory list = new address[](length);
+        for (uint256 i = 0; i < length; ++i) {
+            list[i] = _positionAdmins.at(i);
+        }
+        return list;
     }
 
     /**
