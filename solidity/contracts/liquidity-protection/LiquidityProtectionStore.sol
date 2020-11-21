@@ -14,11 +14,6 @@ import "../utility/Utils.sol";
 contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHandler, Utils {
     using SafeMath for uint256;
 
-    struct PoolIndex {
-        bool isValid;
-        uint256 value;
-    }
-
     struct ProtectedLiquidity {
         address provider; // liquidity provider
         uint256 index; // index in the provider liquidity ids array
@@ -36,10 +31,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         uint256 expirationTime; // lock expiration time
     }
 
-    // list of whitelisted pools and mapping of pool anchor address -> index in the pool whitelist for quick access
-    IConverterAnchor[] private poolWhitelist;
-    mapping(IConverterAnchor => PoolIndex) private poolWhitelistIndices;
-
     // protected liquidity by provider
     uint256 private nextProtectedLiquidityId;
     mapping(address => uint256[]) private protectedLiquidityIdsByProvider;
@@ -54,14 +45,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     // total protected pool supplies / reserve amounts
     mapping(IDSToken => uint256) private totalProtectedPoolAmounts;
     mapping(IDSToken => mapping(IERC20Token => uint256)) private totalProtectedReserveAmounts;
-
-    /**
-     * @dev triggered when the pool whitelist is updated
-     *
-     * @param _poolAnchor  pool anchor
-     * @param _added       true if the pool was added to the whitelist, false if it was removed
-     */
-    event PoolWhitelistUpdated(IConverterAnchor indexed _poolAnchor, bool _added);
 
     /**
      * @dev triggered when liquidity protection is added
@@ -139,102 +122,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
      * @param _newAmount   new amount
      */
     event SystemBalanceUpdated(IERC20Token _token, uint256 _prevAmount, uint256 _newAmount);
-
-    /**
-     * @dev adds a pool to the whitelist
-     * can only be called by the contract owner
-     *
-     * @param _poolAnchor pool anchor
-     */
-    function addPoolToWhitelist(IConverterAnchor _poolAnchor)
-        external
-        override
-        ownerOnly
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        // validate input
-        PoolIndex storage poolIndex = poolWhitelistIndices[_poolAnchor];
-        require(!poolIndex.isValid, "ERR_POOL_ALREADY_WHITELISTED");
-
-        poolIndex.value = poolWhitelist.length;
-        poolWhitelist.push(_poolAnchor);
-        poolIndex.isValid = true;
-
-        emit PoolWhitelistUpdated(_poolAnchor, true);
-    }
-
-    /**
-     * @dev removes a pool from the whitelist
-     * can only be called by the contract owner
-     *
-     * @param _poolAnchor pool anchor
-     */
-    function removePoolFromWhitelist(IConverterAnchor _poolAnchor)
-        external
-        override
-        ownerOnly
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        // validate input
-        PoolIndex storage poolIndex = poolWhitelistIndices[_poolAnchor];
-        require(poolIndex.isValid, "ERR_POOL_NOT_WHITELISTED");
-
-        uint256 index = poolIndex.value;
-        uint256 length = poolWhitelist.length;
-        assert(length > 0);
-
-        uint256 lastIndex = length - 1;
-        if (index < lastIndex) {
-            IConverterAnchor lastAnchor = poolWhitelist[lastIndex];
-            poolWhitelistIndices[lastAnchor].value = index;
-            poolWhitelist[index] = lastAnchor;
-        }
-
-        poolWhitelist.pop();
-        delete poolWhitelistIndices[_poolAnchor];
-
-        emit PoolWhitelistUpdated(_poolAnchor, false);
-    }
-
-    /**
-     * @dev returns the number of whitelisted pools
-     *
-     * @return number of whitelisted pools
-     */
-    function whitelistedPoolCount() external view returns (uint256) {
-        return poolWhitelist.length;
-    }
-
-    /**
-     * @dev returns the list of whitelisted pools
-     *
-     * @return list of whitelisted pools
-     */
-    function whitelistedPools() external view returns (IConverterAnchor[] memory) {
-        return poolWhitelist;
-    }
-
-    /**
-     * @dev returns the whitelisted pool at a given index
-     *
-     * @param _index index
-     * @return whitelisted pool anchor
-     */
-    function whitelistedPool(uint256 _index) external view returns (IConverterAnchor) {
-        return poolWhitelist[_index];
-    }
-
-    /**
-     * @dev checks whether a given pool is whitelisted
-     *
-     * @param _poolAnchor pool anchor
-     * @return true if the given pool is whitelisted, false otherwise
-     */
-    function isPoolWhitelisted(IConverterAnchor _poolAnchor) external view override returns (bool) {
-        return poolWhitelistIndices[_poolAnchor].isValid;
-    }
 
     /**
      * @dev withdraws tokens held by the contract

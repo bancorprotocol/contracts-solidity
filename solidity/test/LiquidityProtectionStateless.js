@@ -1,7 +1,7 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
-const { governance } = require('./helpers/Constants');
+const { roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const DSToken = contract.fromArtifact('DSToken');
@@ -35,25 +35,25 @@ describe('LiquidityProtectionStateless', () => {
 
         const networkToken = await DSToken.new('BNT', 'BNT', 18);
         const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         const govToken = await DSToken.new('vBNT', 'vBNT', 18);
         const govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
         liquidityProtection = await LiquidityProtection.new(
             defaultSender,
+            defaultSender,
             networkTokenGovernance.address,
-            govTokenGovernance.address,
-            defaultSender
+            govTokenGovernance.address
         );
 
-        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
     });
 
     for (const factorList of FACTOR_LISTS) {
