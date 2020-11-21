@@ -73,53 +73,6 @@ describe('LiquidityProtectionStore', () => {
         });
     });
 
-    describe('whitelisted pools basic verification', () => {
-        it('should revert when a non owner attempts to add a whitelisted pool', async () => {
-            await expectRevert(
-                liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to remove a whitelisted pool', async () => {
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            await expectRevert(
-                liquidityProtectionStore.removePoolFromWhitelist(poolToken, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.true();
-        });
-
-        it('should revert when the owner attempts to add a whitelisted pool which is already whitelisted', async () => {
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            await expectRevert(
-                liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner }),
-                'ERR_POOL_ALREADY_WHITELISTED'
-            );
-        });
-
-        it('should revert when the owner attempts to remove a whitelisted pool which is not yet whitelisted', async () => {
-            await expectRevert(
-                liquidityProtectionStore.removePoolFromWhitelist(poolToken, { from: owner }),
-                'ERR_POOL_NOT_WHITELISTED'
-            );
-        });
-
-        it('should succeed when the owner attempts to add a whitelisted pool', async () => {
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.false();
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.true();
-        });
-
-        it('should succeed when the owner attempts to remove a whitelisted pool', async () => {
-            await liquidityProtectionStore.addPoolToWhitelist(poolToken, { from: owner });
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.true();
-            await liquidityProtectionStore.removePoolFromWhitelist(poolToken, { from: owner });
-            expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken)).to.be.false();
-        });
-    });
-
     describe('protected liquidities basic verification', () => {
         it('should revert when a non owner attempts to add a protected-liquidity item', async () => {
             await expectRevert(
@@ -280,32 +233,6 @@ describe('LiquidityProtectionStore', () => {
                 await liquidityProtectionStore.addLockedBalance(provider, amount, 1, { from: owner });
             const range = await liquidityProtectionStore.lockedBalanceRange(provider, 8, 1000);
             for (let i = 0; i < range.length; i++) expect(range[i][0]).to.be.bignumber.equal(new BN(i + 8));
-        });
-    });
-
-    describe('whitelisted pools advanced verification', () => {
-        const removeAllOneByOne = async (direction) => {
-            console.log(`adding ${accounts.length} items...`);
-            for (const account of accounts) await liquidityProtectionStore.addPoolToWhitelist(account);
-            for (let items = accounts.slice(); items.length > 0; items.length--) {
-                const bgnIndex = ((items.length - 1) * (1 - direction)) / 2;
-                const endIndex = ((items.length - 1) * (1 + direction)) / 2;
-                const item = await liquidityProtectionStore.whitelistedPool(bgnIndex);
-                await liquidityProtectionStore.removePoolFromWhitelist(item);
-                expect(item).to.equal(items[bgnIndex]);
-                items[bgnIndex] = items[endIndex];
-                console.log(`item ${bgnIndex} removed`);
-            }
-            expect(await liquidityProtectionStore.whitelistedPoolCount()).to.be.bignumber.equal('0');
-            expect((await liquidityProtectionStore.whitelistedPools()).length).to.be.equal(0);
-        };
-
-        it('remove first item until all items removed', async () => {
-            await removeAllOneByOne(+1);
-        });
-
-        it('remove last item until all items removed', async () => {
-            await removeAllOneByOne(-1);
         });
     });
 

@@ -1,7 +1,7 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
-const { registry, governance } = require('./helpers/Constants');
+const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
@@ -13,6 +13,7 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
+const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
@@ -37,7 +38,9 @@ describe('LiquidityProtectionTokenRate', () => {
         await bancorNetwork.convertByPath(path, amount, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0);
     };
 
+    const owner = defaultSender;
     let bancorNetwork;
+    let liquidityProtectionSettings;
     let liquidityProtection;
     let reserveToken1;
     let reserveToken2;
@@ -56,25 +59,34 @@ describe('LiquidityProtectionTokenRate', () => {
 
         const networkToken = await DSToken.new('BNT', 'BNT', 18);
         const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         const govToken = await DSToken.new('vBNT', 'vBNT', 18);
         const govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
-        liquidityProtection = await LiquidityProtection.new(
-            defaultSender,
-            networkTokenGovernance.address,
-            govTokenGovernance.address,
+        liquidityProtectionSettings = await LiquidityProtectionSettings.new(
+            networkToken.address,
             contractRegistry.address
         );
+        await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
-        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        liquidityProtection = await LiquidityProtection.new(
+            liquidityProtectionSettings.address,
+            defaultSender,
+            networkTokenGovernance.address,
+            govTokenGovernance.address
+        );
+
+        await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {
+            from: owner
+        });
+        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
@@ -113,7 +125,7 @@ describe('LiquidityProtectionTokenRate', () => {
         for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
             for (let maxDeviation = 1; maxDeviation <= 10; maxDeviation += 1) {
                 it(`minutesElapsed = ${minutesElapsed}, convertPortion = ${convertPortion}%, maxDeviation = ${maxDeviation}%`, async () => {
-                    await liquidityProtection.setAverageRateMaxDeviation(percentageToPPM(`${maxDeviation}%`));
+                    await liquidityProtectionSettings.setAverageRateMaxDeviation(percentageToPPM(`${maxDeviation}%`));
                     await reserveToken1.approve(converter.address, INITIAL_AMOUNT);
                     await reserveToken2.approve(converter.address, INITIAL_AMOUNT);
                     await converter.addLiquidity(
