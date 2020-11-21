@@ -25,9 +25,9 @@ function ceilSqrt(n) {
 function reducedRatio(a, b, max) {
     [a, b, max] = [...arguments].map((x) => Decimal(x));
     if (a.gt(max) || b.gt(max)) {
-        [a, b] = normalizedRatio(a, b, max).map((x) => Decimal(x));
+        return normalizedRatio(a, b, max);
     }
-    return !a.eq(b) ? [a, b].map((x) => x.toFixed()) : ['1', '1'];
+    return [a, b].map(x => x.toFixed());
 }
 
 function normalizedRatio(a, b, scale) {
@@ -40,18 +40,7 @@ function normalizedRatio(a, b, scale) {
 
 function accurateRatio(a, b, scale) {
     [a, b, scale] = [...arguments].map((x) => Decimal(x));
-    const maxVal = MAX_UINT256.divToInt(scale);
-    if (a.gt(maxVal)) {
-        const c = a.divToInt(maxVal.add(1)).add(1);
-        a = a.divToInt(c);
-        b = b.divToInt(c);
-    }
-    if (!a.eq(b)) {
-        const x = roundDiv(a.mul(scale), a.add(b));
-        const y = scale.sub(x).toFixed();
-        return [x, y];
-    }
-    return [scale.divToInt(2).toFixed(), scale.divToInt(2).toFixed()];
+    return [a, b].map(x => x.div(a.add(b)).mul(scale).toFixed());
 }
 
 function roundDiv(a, b) {
