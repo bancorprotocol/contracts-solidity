@@ -12,8 +12,6 @@ module.exports = {
 
 const Decimal = require('decimal.js');
 
-const MAX_UINT256 = Decimal(2).pow(256).sub(1);
-
 function floorSqrt(n) {
     return Decimal(n.toString()).sqrt().floor().toFixed();
 }
