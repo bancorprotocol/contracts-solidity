@@ -23,9 +23,9 @@ describe('LiquidityProtectionStateless', () => {
         const govTokenGovernance = await TokenGovernance.new(defaultSender);
         liquidityProtection = await LiquidityProtection.new(
             defaultSender,
+            defaultSender,
             networkTokenGovernance.address,
-            govTokenGovernance.address,
-            defaultSender
+            govTokenGovernance.address
         );
     });
 
