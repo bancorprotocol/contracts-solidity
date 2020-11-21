@@ -78,23 +78,23 @@ library Math {
         uint256 maxVal = uint256(-1) / _scale;
         if (_a > maxVal) {
             uint256 c = _a / (maxVal + 1) + 1;
-            _a /= c;
+            _a /= c; // we can now safely compute `_a * _scale`
             _b /= c;
         }
         if (_a != _b) {
             uint256 n = _a * _scale;
-            uint256 d = _a + _b;
-            if (d >= _a) {
-                uint256 x = roundDiv(n, d);
+            uint256 d = _a + _b; // can overflow
+            if (d >= _a) { // no overflow in `_a + _b`
+                uint256 x = roundDiv(n, d); // we can now safely compute `_scale - x`
                 uint256 y = _scale - x;
                 return (x, y);
             }
             if (n < _b - (_b - _a) / 2) {
-                return (0, _scale);
+                return (0, _scale); // `_a * _scale < (_a + _b) / 2 < MAX_UINT256 < _a + _b`
             }
-            return (1, _scale - 1);
+            return (1, _scale - 1); // `(_a + _b) / 2 < _a * _scale < MAX_UINT256 < _a + _b`
         }
-        return (_scale / 2, _scale / 2);
+        return (_scale / 2, _scale / 2); // allow reduction to `(1, 1)` in the calling function
     }
 
     /**
