@@ -330,7 +330,9 @@ const run = async () => {
     await execute(bancorFormula.methods.init());
 
     const bntTokenGovernance = await web3Func(deploy, 'bntTokenGovernance', 'TokenGovernance', [reserves.BNT.address]);
-    const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [reserves.vBNT.address]);
+    const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [
+        reserves.vBNT.address
+    ]);
 
     await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
