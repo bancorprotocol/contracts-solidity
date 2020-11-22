@@ -128,7 +128,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         uint256 _time
     ) external override validAddress(address(_token)) greaterThanZero(_d) initialized(_token) {
         require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
-        require(_time <= time(), "ERR_INVALID_TIME");
+        require(_time < time(), "ERR_INVALID_TIME");
 
         addSample(_token, Fraction({ n: _n, d: _d }), _time);
     }
@@ -159,7 +159,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
             uint256 t = _times[i];
 
             _greaterThanZero(d);
-            require(t <= time(), "ERR_INVALID_TIME");
+            require(t < time(), "ERR_INVALID_TIME");
 
             addSample(_token, Fraction({ n: n, d: d }), t);
         }

@@ -372,10 +372,15 @@ describe('TokenTimeWeightedAverage', () => {
             });
 
             it('should revert when a seeder attempts to add a future sample', async () => {
-                const future = now.add(new BN(100));
-
                 const n = new BN(1000);
                 const d = new BN(2000);
+                await expectRevert(twa.addPastSample(token, n, d, now, { from: seeder }), 'ERR_INVALID_TIME');
+                await expectRevert(
+                    twa.addPastSamples(token, [n, n], [d, d], [now, now], { from: seeder }),
+                    'ERR_INVALID_TIME'
+                );
+
+                const future = now.add(new BN(100));
                 await expectRevert(twa.addPastSample(token, n, d, future, { from: seeder }), 'ERR_INVALID_TIME');
                 await expectRevert(
                     twa.addPastSamples(token, [n, n], [d, d], [now, future], { from: seeder }),
