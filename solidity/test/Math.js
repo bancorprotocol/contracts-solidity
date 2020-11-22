@@ -19,7 +19,7 @@ describe('Math', () => {
         for (const k of n < 256 ? [-1, 0, +1] : [-1]) {
             const x = new BN(2).pow(new BN(n)).add(new BN(k));
             it(`Function floorSqrt(0x${x.toString(16)})`, async () => {
-                const expected = MathUtils.floorSqrt(x);
+                const expected = MathUtils.floorSqrt(x.toString());
                 const actual = await mathContract.floorSqrtTest(x);
                 expect(actual).to.be.bignumber.equal(expected);
             });
@@ -30,7 +30,7 @@ describe('Math', () => {
         for (const k of n < 256 ? [-1, 0, +1] : [-1]) {
             const x = new BN(2).pow(new BN(n)).add(new BN(k));
             it(`Function ceilSqrt(0x${x.toString(16)})`, async () => {
-                const expected = MathUtils.ceilSqrt(x);
+                const expected = MathUtils.ceilSqrt(x.toString());
                 const actual = await mathContract.ceilSqrtTest(x);
                 expect(actual).to.be.bignumber.equal(expected);
             });

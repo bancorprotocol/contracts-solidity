@@ -13,11 +13,11 @@ module.exports = {
 const Decimal = require('decimal.js');
 
 function floorSqrt(n) {
-    return Decimal(n.toString()).sqrt().floor().toFixed();
+    return Decimal(n).sqrt().floor().toFixed();
 }
 
 function ceilSqrt(n) {
-    return Decimal(n.toString()).sqrt().ceil().toFixed();
+    return Decimal(n).sqrt().ceil().toFixed();
 }
 
 function reducedRatio(a, b, max) {
