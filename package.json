@@ -18,7 +18,7 @@
     "scripts": {
         "build": "truffle compile",
         "test": "npm run build && npm run qtest",
-        "qtest": "mocha --exit --recursive",
+        "qtest": "mocha",
         "coverage": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js run coverage",
         "export": "node scripts/export.js",
         "lint": "npm run lint:js && npm run lint:sol",
@@ -66,7 +66,8 @@
         "truffle": "5.1.36",
         "truffle-contract-size": "^2.0.1",
         "truffle-flattener": "1.4.4",
-        "web3": "1.2.11"
+        "web3": "1.2.11",
+        "yargs": "^16.1.1"
     },
     "snyk": true
 }
