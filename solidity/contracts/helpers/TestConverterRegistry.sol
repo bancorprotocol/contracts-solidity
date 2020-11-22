@@ -7,11 +7,9 @@ import "../converter/ConverterRegistry.sol";
 */
 contract TestConverterRegistry is ConverterRegistry {
     IConverter public createdConverter;
-    bool public typeChangingEnabled;
+    bool public typeChangingEnabled = true;
 
-    constructor(IContractRegistry _registry) public ConverterRegistry(_registry) {
-        typeChangingEnabled = true;
-    }
+    constructor(IContractRegistry _registry) public ConverterRegistry(_registry) {}
 
     function newConverter(
         uint16 _type,
