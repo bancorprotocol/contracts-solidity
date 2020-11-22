@@ -10,8 +10,10 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 const MIN_GAS_LIMIT = 100000;
 
+const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
+const ROLE_WHITELIST_ADMIN = Web3.utils.keccak256('ROLE_WHITELIST_ADMIN');
 
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
@@ -346,17 +348,25 @@ const run = async () => {
     await execute(bancorFormula.methods.init());
 
     const bntTokenGovernance = await web3Func(deploy, 'bntTokenGovernance', 'TokenGovernance', [reserves.BNT.address]);
-    const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [reserves.vBNT.address]);
+    const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [
+        reserves.vBNT.address
+    ]);
 
     await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
 
+    const liquidityProtectionSettings = await web3Func(
+        deploy,
+        'liquidityProtectionSettings',
+        'LiquidityProtectionSettings',
+        [reserves.BNT.address, contractRegistry._address]
+    );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
     const liquidityProtectionParams = [
+        liquidityProtectionSettings._address,
         liquidityProtectionStore._address,
         bntTokenGovernance._address,
-        vbntTokenGovernance._address,
-        contractRegistry._address
+        vbntTokenGovernance._address
     ];
 
     const liquidityProtection = await web3Func(
@@ -366,10 +376,19 @@ const run = async () => {
         liquidityProtectionParams
     );
 
-    // Granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role.
+    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_WHITELIST_ADMIN, account));
+
+    // granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
 
+    await execute(
+        contractRegistry.methods.registerAddress(
+            Web3.utils.asciiToHex('LiquidityProtectionSettings'),
+            LiquidityProtectionSettings._address
+        )
+    );
     await execute(
         contractRegistry.methods.registerAddress(
             Web3.utils.asciiToHex('LiquidityProtectionStore'),
@@ -390,15 +409,18 @@ const run = async () => {
     const maxSystemNetworkTokenRatio = percentageToPPM(params.maxSystemNetworkTokenRatio);
     const maxSystemNetworkTokenAmount = decimalToInteger(params.maxSystemNetworkTokenAmount, reserves.BNT.decimals);
     await execute(
-        liquidityProtection.methods.setSystemNetworkTokenLimits(maxSystemNetworkTokenAmount, maxSystemNetworkTokenRatio)
+        LiquidityProtectionSettings.methods.setSystemNetworkTokenLimits(
+            maxSystemNetworkTokenAmount,
+            maxSystemNetworkTokenRatio
+        )
     );
     await execute(
-        liquidityProtection.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
+        LiquidityProtectionSettings.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
     );
-    await execute(liquidityProtection.methods.setLockDuration(params.lockDuration));
+    await execute(LiquidityProtectionSettings.methods.setLockDuration(params.lockDuration));
 
     for (const converter of params.converters) {
-        await execute(liquidityProtection.methods.whitelistPool(reserves[converter].address, true));
+        await execute(liquidityProtectionSettings.methods.addPoolToWhitelist(reserves[converter].address));
     }
 
     web3.currentProvider.disconnect();

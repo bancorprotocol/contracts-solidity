@@ -1,23 +1,26 @@
-const { expect } = require('chai');
-const { expectRevert, expectEvent, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
-const { ETH_RESERVE_ADDRESS, registry, governance } = require('./helpers/Constants');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
+const { expectRevert, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
+const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
 const { duration, latest } = time;
+const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorFormula = artifacts.require('BancorFormula');
-const BancorNetwork = artifacts.require('BancorNetwork');
-const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('TestConverterRegistry');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const LiquidityProtectionStore = artifacts.require('LiquidityProtectionStore');
-const TokenGovernance = artifacts.require('TestTokenGovernance');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const DSToken = contract.fromArtifact('DSToken');
+const ConverterRegistry = contract.fromArtifact('TestConverterRegistry');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
+const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const PPM_RESOLUTION = new BN(1000000);
 
@@ -29,7 +32,7 @@ const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
 
-contract('LiquidityProtectionV1', (accounts) => {
+describe('LiquidityProtectionV1', () => {
     const initPool = async (isETH = false, whitelist = true, standard = true) => {
         if (isETH) {
             baseTokenAddress = ETH_RESERVE_ADDRESS;
@@ -76,7 +79,7 @@ contract('LiquidityProtectionV1', (accounts) => {
 
         // whitelist pool
         if (whitelist) {
-            await liquidityProtection.whitelistPool(poolToken.address, true);
+            await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
         }
     };
 
@@ -223,13 +226,15 @@ contract('LiquidityProtectionV1', (accounts) => {
     let govTokenGovernance;
     let poolToken;
     let converterRegistry;
+    let converterRegistryData;
     let converter;
+    let liquidityProtectionSettings;
     let liquidityProtectionStore;
     let liquidityProtection;
     let baseToken;
     let baseTokenAddress;
 
-    const owner = accounts[0];
+    const owner = defaultSender;
     const governor = accounts[1];
 
     before(async () => {
@@ -258,28 +263,37 @@ contract('LiquidityProtectionV1', (accounts) => {
         networkToken = await DSToken.new('BNT', 'BNT', 18);
         await networkToken.issue(owner, 1000000000);
         networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         govToken = await DSToken.new('vBNT', 'vBNT', 18);
         govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
         // initialize liquidity protection
-        liquidityProtectionStore = await LiquidityProtectionStore.new(contractRegistry.address);
-        liquidityProtection = await LiquidityProtection.new(
-            liquidityProtectionStore.address,
-            networkTokenGovernance.address,
-            govTokenGovernance.address,
+        liquidityProtectionSettings = await LiquidityProtectionSettings.new(
+            networkToken.address,
             contractRegistry.address
         );
+        await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
+
+        liquidityProtectionStore = await LiquidityProtectionStore.new();
+        liquidityProtection = await LiquidityProtection.new(
+            liquidityProtectionSettings.address,
+            liquidityProtectionStore.address,
+            networkTokenGovernance.address,
+            govTokenGovernance.address
+        );
+
+        await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+        await liquidityProtectionSettings.grantRole(ROLE_WHITELIST_ADMIN, owner, { from: owner });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
-        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         now = await latest();
         await liquidityProtection.setTime(now);
@@ -289,8 +303,8 @@ contract('LiquidityProtectionV1', (accounts) => {
     });
 
     it('verifies the liquidity protection contract after initialization', async () => {
-        const whitelistAdmin = await liquidityProtection.whitelistAdmin.call();
-        expect(whitelistAdmin).to.eql(owner);
+        const settings = await liquidityProtection.settings.call();
+        expect(settings).to.eql(liquidityProtectionSettings.address);
 
         const store = await liquidityProtection.store.call();
         expect(store).to.eql(liquidityProtectionStore.address);
@@ -320,358 +334,6 @@ contract('LiquidityProtectionV1', (accounts) => {
             }),
             'ERR_ACCESS_DENIED'
         );
-    });
-
-    it('verifies that the owner can set the system network token limits', async () => {
-        const prevMaxSystemNetworkTokenAmount = await liquidityProtection.maxSystemNetworkTokenAmount.call();
-        const prevMaxSystemNetworkTokenRatio = await liquidityProtection.maxSystemNetworkTokenRatio.call();
-        const newMaxSystemNetworkTokenAmount = new BN(100);
-        const newMaxSystemNetworkTokenRatio = new BN(200);
-
-        const res = await liquidityProtection.setSystemNetworkTokenLimits(
-            newMaxSystemNetworkTokenAmount,
-            newMaxSystemNetworkTokenRatio
-        );
-
-        expectEvent(res, 'SystemNetworkTokenLimitsUpdated', {
-            _prevMaxSystemNetworkTokenAmount: prevMaxSystemNetworkTokenAmount,
-            _newMaxSystemNetworkTokenAmount: newMaxSystemNetworkTokenAmount,
-            _prevMaxSystemNetworkTokenRatio: prevMaxSystemNetworkTokenRatio,
-            _newMaxSystemNetworkTokenRatio: newMaxSystemNetworkTokenRatio
-        });
-
-        const maxSystemNetworkTokenAmount = await liquidityProtection.maxSystemNetworkTokenAmount.call();
-        const maxSystemNetworkTokenRatio = await liquidityProtection.maxSystemNetworkTokenRatio.call();
-
-        expect(maxSystemNetworkTokenAmount).not.to.be.bignumber.equal(prevMaxSystemNetworkTokenAmount);
-        expect(maxSystemNetworkTokenRatio).not.to.be.bignumber.equal(prevMaxSystemNetworkTokenRatio);
-
-        expect(maxSystemNetworkTokenAmount).to.be.bignumber.equal(newMaxSystemNetworkTokenAmount);
-        expect(maxSystemNetworkTokenRatio).to.be.bignumber.equal(newMaxSystemNetworkTokenRatio);
-    });
-
-    it('should revert when a non owner attempts to set the system network token limits', async () => {
-        await expectRevert(
-            liquidityProtection.setSystemNetworkTokenLimits(100, 200, {
-                from: accounts[1]
-            }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('should revert when the owner attempts to set a system network token ratio that is larger than 100%', async () => {
-        await expectRevert(
-            liquidityProtection.setSystemNetworkTokenLimits(200, PPM_RESOLUTION.add(new BN(1))),
-            'ERR_INVALID_PORTION'
-        );
-    });
-
-    it('verifies that the owner can set the protection delays', async () => {
-        const prevMinProtectionDelay = await liquidityProtection.minProtectionDelay.call();
-        const prevMaxProtectionDelay = await liquidityProtection.maxProtectionDelay.call();
-        const newMinProtectionDelay = new BN(100);
-        const newMaxProtectionDelay = new BN(200);
-
-        const res = await liquidityProtection.setProtectionDelays(newMinProtectionDelay, 200);
-
-        expectEvent(res, 'ProtectionDelaysUpdated', {
-            _prevMinProtectionDelay: prevMinProtectionDelay,
-            _newMinProtectionDelay: newMinProtectionDelay,
-            _prevMaxProtectionDelay: prevMaxProtectionDelay,
-            _newMaxProtectionDelay: newMaxProtectionDelay
-        });
-
-        const minProtectionDelay = await liquidityProtection.minProtectionDelay.call();
-        const maxProtectionDelay = await liquidityProtection.maxProtectionDelay.call();
-
-        expect(minProtectionDelay).not.to.be.bignumber.equal(prevMinProtectionDelay);
-        expect(maxProtectionDelay).not.to.be.bignumber.equal(prevMaxProtectionDelay);
-
-        expect(minProtectionDelay).to.be.bignumber.equal(newMinProtectionDelay);
-        expect(maxProtectionDelay).to.be.bignumber.equal(newMaxProtectionDelay);
-    });
-
-    it('should revert when a non owner attempts to set the protection delays', async () => {
-        await expectRevert(
-            liquidityProtection.setProtectionDelays(100, 200, { from: accounts[1] }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('should revert when the owner attempts to set a minimum protection delay that is larger than the maximum delay', async () => {
-        await expectRevert(liquidityProtection.setProtectionDelays(200, 100), 'ERR_INVALID_PROTECTION_DELAY');
-    });
-
-    it('verifies that the owner can set the minimum network compensation', async () => {
-        const prevMinNetworkCompensation = await liquidityProtection.minNetworkCompensation.call();
-        const newMinNetworkCompensation = new BN(100);
-
-        const res = await liquidityProtection.setMinNetworkCompensation(newMinNetworkCompensation);
-
-        expectEvent(res, 'MinNetworkCompensationUpdated', {
-            _prevMinNetworkCompensation: prevMinNetworkCompensation,
-            _newMinNetworkCompensation: newMinNetworkCompensation
-        });
-
-        const minNetworkCompensation = await liquidityProtection.minNetworkCompensation.call();
-
-        expect(minNetworkCompensation).not.to.be.bignumber.equal(prevMinNetworkCompensation);
-        expect(minNetworkCompensation).to.be.bignumber.equal(newMinNetworkCompensation);
-    });
-
-    it('should revert when a non owner attempts to set the minimum network compensation', async () => {
-        await expectRevert(
-            liquidityProtection.setMinNetworkCompensation(100, { from: accounts[1] }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    it('verifies that the owner can set the lock duration', async () => {
-        const prevLockDuration = await liquidityProtection.lockDuration.call();
-        const newLockDuration = new BN(100);
-
-        const res = await liquidityProtection.setLockDuration(newLockDuration);
-        expectEvent(res, 'LockDurationUpdated', {
-            _prevLockDuration: prevLockDuration,
-            _newLockDuration: newLockDuration
-        });
-
-        const lockDuration = await liquidityProtection.lockDuration.call();
-
-        expect(lockDuration).not.to.be.bignumber.equal(prevLockDuration);
-        expect(lockDuration).to.be.bignumber.equal(new BN(100));
-    });
-
-    it('should revert when a non owner attempts to set the lock duration', async () => {
-        await expectRevert(liquidityProtection.setLockDuration('100', { from: accounts[1] }), 'ERR_ACCESS_DENIED');
-    });
-
-    it('verifies that the owner can set the maximum deviation of the average rate from the actual rate', async () => {
-        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('5000');
-
-        const res = await liquidityProtection.setAverageRateMaxDeviation('30000');
-        expectEvent(res, 'AverageRateMaxDeviationUpdated', {
-            _prevAverageRateMaxDeviation: '5000',
-            _newAverageRateMaxDeviation: '30000'
-        });
-
-        expect(await liquidityProtection.averageRateMaxDeviation.call()).to.be.bignumber.equal('30000');
-    });
-
-    it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
-        await expectRevert(
-            liquidityProtection.setAverageRateMaxDeviation('30000', { from: accounts[1] }),
-            'ERR_ACCESS_DENIED'
-        );
-    });
-
-    describe('whitelist', () => {
-        it('verifies that the owner can update the whitelist admin', async () => {
-            const newWhitelistAdmin = accounts[3];
-
-            expect(await liquidityProtection.whitelistAdmin.call()).not.to.be.eql(newWhitelistAdmin);
-
-            const res = await liquidityProtection.setWhitelistAdmin(newWhitelistAdmin);
-            expectEvent(res, 'WhitelistAdminUpdated', {
-                _prevWhitelistAdmin: owner,
-                _newWhitelistAdmin: newWhitelistAdmin
-            });
-
-            expect(await liquidityProtection.whitelistAdmin.call()).to.be.eql(newWhitelistAdmin);
-        });
-
-        it('should revert when trying to set the whitelist admin to a zero address', async () => {
-            await expectRevert(liquidityProtection.setWhitelistAdmin(ZERO_ADDRESS), 'ERR_INVALID_ADDRESS');
-        });
-
-        it('should revert when a non owner tries to update the whitelist admin', async () => {
-            const newWhitelistAdmin = accounts[3];
-
-            await expectRevert(
-                liquidityProtection.setWhitelistAdmin(newWhitelistAdmin, {
-                    from: accounts[1]
-                }),
-                'ERR_ACCESS_DENIED'
-            );
-        });
-
-        it('should revert when attempting to add a non standard pool to the whitelist', async () => {
-            await initPool(false, false, false);
-
-            await expectRevert(liquidityProtection.whitelistPool(poolToken.address, true), 'ERR_POOL_NOT_SUPPORTED');
-        });
-
-        context('with a non-default whitelist admin', async () => {
-            const whitelistAdmin = accounts[4];
-
-            beforeEach(async () => {
-                await liquidityProtection.setWhitelistAdmin(whitelistAdmin);
-            });
-
-            it('verifies that the whitelist admin can add a pool to the whitelist', async () => {
-                await initPool(false, false);
-
-                expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.false;
-
-                await liquidityProtection.whitelistPool(poolToken.address, true, {
-                    from: whitelistAdmin
-                });
-
-                expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
-            });
-
-            it('verifies that the whitelist admin can remove a pool from the whitelist', async () => {
-                expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
-
-                await liquidityProtection.whitelistPool(poolToken.address, false, {
-                    from: whitelistAdmin
-                });
-
-                expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken.address)).to.be.false;
-            });
-
-            it('verifies that the owner can add a pool to the whitelist', async () => {
-                await initPool(false, false);
-
-                expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.false;
-
-                await liquidityProtection.whitelistPool(poolToken.address, true, {
-                    from: owner
-                });
-
-                expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
-            });
-
-            it('verifies that the owner can remove a pool from the whitelist', async () => {
-                expect(await liquidityProtectionStore.isPoolWhitelisted.call(poolToken.address)).to.be.true;
-
-                await liquidityProtection.whitelistPool(poolToken.address, false, {
-                    from: owner
-                });
-
-                expect(await liquidityProtectionStore.isPoolWhitelisted(poolToken.address)).to.be.false;
-            });
-
-            it('should revert when a non owner or a non whitelist admin attempts add a pool to the whitelist', async () => {
-                await initPool(false, false);
-
-                await expectRevert(
-                    liquidityProtection.whitelistPool(poolToken.address, true, {
-                        from: accounts[1]
-                    }),
-                    'ERR_ACCESS_DENIED'
-                );
-            });
-        });
-    });
-
-    describe('high tier pools', () => {
-        it('should allow the owner to add a high tier pool', async () => {
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
-        });
-
-        it('should allow the owner to remove a high tier pool', async () => {
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
-            await liquidityProtection.removeHighTierPool(poolToken.address, { from: owner });
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to add a high tier pool', async () => {
-            await expectRevert(
-                liquidityProtection.addHighTierPool(poolToken.address, { from: accounts[1] }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to remove a high tier pool', async () => {
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            await expectRevert(
-                liquidityProtection.removeHighTierPool(poolToken.address, { from: accounts[1] }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await liquidityProtection.isHighTierPool(poolToken.address)).to.be.true();
-        });
-
-        it('should revert when the owner attempts to add a high tier pool that is already defined as high tier one', async () => {
-            await liquidityProtection.addHighTierPool(poolToken.address, { from: owner });
-            await expectRevert(
-                liquidityProtection.addHighTierPool(poolToken.address, { from: owner }),
-                'ERR_POOL_ALREADY_EXISTS'
-            );
-        });
-
-        it('should revert when the owner attempts to remove a high tier pool that is not defined as a high tier one', async () => {
-            await expectRevert(
-                liquidityProtection.removeHighTierPool(poolToken.address, { from: owner }),
-                'ERR_POOL_DOES_NOT_EXIST'
-            );
-        });
-    });
-
-    it('verifies that isPoolSupported returns true for a standard pool', async () => {
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolToken.address);
-        expect(isSupported).to.be.true;
-    });
-
-    it('should revert when calling isPoolSupported with an address that is not an anchor in the registry', async () => {
-        await expectRevert(liquidityProtection.isPoolSupported(accounts[2]), 'ERR_INVALID_ANCHOR');
-    });
-
-    it('verifies that isPoolSupported returns false for a pool with 3 reserves', async () => {
-        const reserveToken = await DSToken.new('RSV1', 'RSV1', 18);
-        await converterRegistry.newConverter(
-            1,
-            'PT',
-            'PT',
-            18,
-            5000,
-            [ETH_RESERVE_ADDRESS, networkToken.address, reserveToken.address],
-            [100000, 100000, 100000]
-        );
-        const anchorCount = await converterRegistry.getAnchorCount.call();
-        const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolTokenAddress);
-        expect(isSupported).to.be.false;
-    });
-
-    it('verifies that isPoolSupported returns false for a pool that does not have the network token as reserve', async () => {
-        const reserveToken = await DSToken.new('RSV1', 'RSV1', 18);
-        await converterRegistry.newConverter(
-            1,
-            'PT',
-            'PT',
-            18,
-            5000,
-            [ETH_RESERVE_ADDRESS, reserveToken.address],
-            [500000, 500000]
-        );
-        const anchorCount = await converterRegistry.getAnchorCount.call();
-        const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolTokenAddress);
-        expect(isSupported).to.be.false;
-    });
-
-    it('verifies that isPoolSupported returns false for a pool with reserve weights that are not 50%/50%', async () => {
-        await converterRegistry.newConverter(
-            1,
-            'PT',
-            'PT',
-            18,
-            5000,
-            [ETH_RESERVE_ADDRESS, networkToken.address],
-            [450000, 550000]
-        );
-        const anchorCount = await converterRegistry.getAnchorCount.call();
-        const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-
-        const isSupported = await liquidityProtection.isPoolSupported.call(poolTokenAddress);
-        expect(isSupported).to.be.false;
     });
 
     it('verifies that the caller can protect pool tokens', async () => {
@@ -971,7 +633,7 @@ contract('LiquidityProtectionV1', (accounts) => {
             });
 
             it('should revert when attempting to add liquidity to a non whitelisted pool', async () => {
-                await liquidityProtection.whitelistPool(poolToken.address, false);
+                await liquidityProtectionSettings.removePoolFromWhitelist(poolToken.address);
 
                 const reserveAmount = new BN(1000);
                 await expectRevert(
@@ -1004,7 +666,7 @@ contract('LiquidityProtectionV1', (accounts) => {
                     isETHReserve
                 );
 
-                await liquidityProtection.setSystemNetworkTokenLimits(500, PPM_RESOLUTION);
+                await liquidityProtectionSettings.setSystemNetworkTokenLimits(500, PPM_RESOLUTION);
                 reserveAmount = new BN(2000);
 
                 await expectRevert(
@@ -1023,7 +685,7 @@ contract('LiquidityProtectionV1', (accounts) => {
                     isETHReserve
                 );
 
-                await liquidityProtection.setSystemNetworkTokenLimits(500000, 20000);
+                await liquidityProtectionSettings.setSystemNetworkTokenLimits(500000, 20000);
                 reserveAmount = new BN(40000);
 
                 await expectRevert(
@@ -1042,11 +704,17 @@ contract('LiquidityProtectionV1', (accounts) => {
                     isETHReserve
                 );
 
-                await liquidityProtection.setSystemNetworkTokenLimits(500000, 20000);
-                await liquidityProtection.addHighTierPool(poolToken.address);
+                await liquidityProtectionSettings.setSystemNetworkTokenLimits(500000, 20000);
+                await liquidityProtectionSettings.addHighTierPool(poolToken.address);
                 reserveAmount = new BN(40000);
 
-                await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount, isETHReserve);
+                await addProtectedLiquidity(
+                    poolToken.address,
+                    baseToken,
+                    baseTokenAddress,
+                    reserveAmount,
+                    isETHReserve
+                );
             });
         });
     }
@@ -1135,7 +803,7 @@ contract('LiquidityProtectionV1', (accounts) => {
         });
 
         it('should revert when attempting to add liquidity to a non whitelisted pool', async () => {
-            await liquidityProtection.whitelistPool(poolToken.address, false);
+            await liquidityProtectionSettings.removePoolFromWhitelist(poolToken.address);
 
             const reserveAmount = new BN(1000);
             await expectRevert(
@@ -1273,7 +941,7 @@ contract('LiquidityProtectionV1', (accounts) => {
         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
 
         await increaseRate(baseTokenAddress);
-        await liquidityProtection.setAverageRateMaxDeviation(1);
+        await liquidityProtectionSettings.setAverageRateMaxDeviation(1);
         await liquidityProtection.removeLiquidityReturn(protectionIds[0], PPM_RESOLUTION, now);
     });
 
@@ -1490,8 +1158,11 @@ contract('LiquidityProtectionV1', (accounts) => {
                 const protectionId = protectionIds[0];
 
                 await increaseRate(baseTokenAddress);
-                await liquidityProtection.setAverageRateMaxDeviation(1);
-                await expectRevert(liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION), 'ERR_INVALID_RATE');
+                await liquidityProtectionSettings.setAverageRateMaxDeviation(1);
+                await expectRevert(
+                    liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION),
+                    'ERR_INVALID_RATE'
+                );
             });
 
             it('should revert when attempting to remove liquidity that does not exist', async () => {
@@ -1532,7 +1203,7 @@ contract('LiquidityProtectionV1', (accounts) => {
                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 const protectionId = protectionIds[0];
 
-                await liquidityProtection.whitelistPool(poolToken.address, false);
+                await liquidityProtectionSettings.removePoolFromWhitelist(poolToken.address);
 
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION),

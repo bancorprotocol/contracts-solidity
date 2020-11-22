@@ -1,11 +1,12 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
-const { governance } = require('./helpers/Constants');
+const { expect } = require('../../chai-local');
+const { roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const DSToken = artifacts.require('DSToken');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const TokenGovernance = artifacts.require('TestTokenGovernance');
+const DSToken = contract.fromArtifact('DSToken');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const FACTOR_LISTS = [
     [9, 12, 15].map((x) => new BN(10).pow(new BN(x))),
@@ -28,31 +29,31 @@ function assertAlmostEqual(actual, expected) {
     }
 }
 
-contract('LiquidityProtectionStateless', (accounts) => {
+describe('LiquidityProtectionStateless', () => {
     before(async () => {
         const governor = accounts[1];
 
         const networkToken = await DSToken.new('BNT', 'BNT', 18);
         const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         const govToken = await DSToken.new('vBNT', 'vBNT', 18);
         const govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
         liquidityProtection = await LiquidityProtection.new(
-            accounts[0],
+            defaultSender,
+            defaultSender,
             networkTokenGovernance.address,
-            govTokenGovernance.address,
-            accounts[0]
+            govTokenGovernance.address
         );
 
-        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
     });
 
     for (const factorList of FACTOR_LISTS) {

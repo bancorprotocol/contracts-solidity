@@ -1,22 +1,22 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ConverterFactory = artifacts.require('TestConverterFactory');
-const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const StandardPoolConverterFactory = artifacts.require('StandardPoolConverterFactory');
-const TypedConverterAnchorFactory = artifacts.require('TestTypedConverterAnchorFactory');
-const ConverterBase = artifacts.require('ConverterBase');
-const DSToken = artifacts.require('DSToken');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ConverterFactory = contract.fromArtifact('TestConverterFactory');
+const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
+const TypedConverterAnchorFactory = contract.fromArtifact('TestTypedConverterAnchorFactory');
+const ConverterBase = contract.fromArtifact('ConverterBase');
+const DSToken = contract.fromArtifact('DSToken');
 
-contract('ConverterFactory', (accounts) => {
+describe('ConverterFactory', () => {
     let contractRegistry;
     let converterFactory;
     let anchorFactory;
     let factory;
-    const owner = accounts[0];
+    const owner = defaultSender;
     const nonOwner = accounts[1];
 
     const MAX_CONVERSION_FEE = new BN(10000);
@@ -24,7 +24,6 @@ contract('ConverterFactory', (accounts) => {
     for (const Factory of [
         LiquidTokenConverterFactory,
         LiquidityPoolV1ConverterFactory,
-        LiquidityPoolV2ConverterFactory,
         StandardPoolConverterFactory
     ]) {
         describe(Factory.contractName, () => {

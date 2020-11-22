@@ -1,5 +1,6 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
@@ -7,17 +8,17 @@ const { ZERO_ADDRESS } = constants;
 
 const { duration, latest } = time;
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
-const StandardPoolConverterFactory = artifacts.require('StandardPoolConverterFactory');
-const DSToken = artifacts.require('DSToken');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ERC20Token = artifacts.require('ERC20Token');
-const TestNonStandardToken = artifacts.require('TestNonStandardToken');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterUpgrader = artifacts.require('ConverterUpgrader');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
+const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
+const DSToken = contract.fromArtifact('DSToken');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 
-contract('StandardPoolConverter', (accounts) => {
+describe('StandardPoolConverter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
         return StandardPoolConverter.new(tokenAddress, registryAddress, maxConversionFee);
     };
@@ -98,7 +99,7 @@ contract('StandardPoolConverter', (accounts) => {
     let reserveToken;
     let reserveToken2;
     let upgrader;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const sender2 = accounts[9];
 
     const MIN_RETURN = new BN(1);

@@ -1,3 +1,5 @@
+const { web3 } = require('@openzeppelin/test-environment');
+
 module.exports = {
     registry: {
         CONTRACT_REGISTRY: web3.utils.asciiToHex('ContractRegistry'),
@@ -10,13 +12,14 @@ module.exports = {
         CONVERTER_REGISTRY_DATA: web3.utils.asciiToHex('BancorConverterRegistryData'),
         BNT_TOKEN: web3.utils.asciiToHex('BNTToken'),
         BANCOR_X: web3.utils.asciiToHex('BancorX'),
-        BANCOR_X_UPGRADER: web3.utils.asciiToHex('BancorXUpgrader'),
-        CHAINLINK_ORACLE_WHITELIST: web3.utils.asciiToHex('ChainlinkOracleWhitelist')
+        BANCOR_X_UPGRADER: web3.utils.asciiToHex('BancorXUpgrader')
     },
 
-    governance: {
+    roles: {
+        ROLE_OWNER: web3.utils.keccak256('ROLE_OWNER'),
         ROLE_GOVERNOR: web3.utils.keccak256('ROLE_GOVERNOR'),
-        ROLE_MINTER: web3.utils.keccak256('ROLE_MINTER')
+        ROLE_MINTER: web3.utils.keccak256('ROLE_MINTER'),
+        ROLE_WHITELIST_ADMIN: web3.utils.keccak256('ROLE_WHITELIST_ADMIN')
     },
 
     ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'

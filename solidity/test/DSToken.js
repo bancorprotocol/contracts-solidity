@@ -1,19 +1,19 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
+const { expect } = require('../../chai-local');
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 
 const { ZERO_ADDRESS } = constants;
 
-const DSToken = artifacts.require('DSToken');
+const DSToken = contract.fromArtifact('DSToken');
 
-contract('DSToken', (accounts) => {
+describe('DSToken', () => {
     let token;
     const name = 'Token1';
     const symbol = 'TKN1';
     const decimals = new BN(18);
 
-    const owner = accounts[0];
+    const owner = defaultSender;
     const receiver = accounts[1];
-    const receiver2 = accounts[2];
     const nonOwner = accounts[3];
 
     beforeEach(async () => {

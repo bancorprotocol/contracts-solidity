@@ -1,19 +1,22 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, constants } = require('@openzeppelin/test-helpers');
-const { registry, governance } = require('./helpers/Constants');
+const { expect } = require('../../chai-local');
+const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const ContractRegistry = artifacts.require('ContractRegistry');
-const BancorFormula = artifacts.require('BancorFormula');
-const BancorNetwork = artifacts.require('BancorNetwork');
-const DSToken = artifacts.require('DSToken');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const StandardPoolConverterFactory = artifacts.require('TestStandardPoolConverterFactory');
-const StandardPoolConverter = artifacts.require('TestStandardPoolConverter');
-const LiquidityProtection = artifacts.require('TestLiquidityProtection');
-const TokenGovernance = artifacts.require('TestTokenGovernance');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const DSToken = contract.fromArtifact('DSToken');
+const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
+const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -29,14 +32,17 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-contract('LiquidityProtectionStandardPoolTokenRate', (accounts) => {
+describe('LiquidityProtectionStandardPoolAverageRate', () => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];
         await bancorNetwork.convertByPath(path, amount, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0);
     };
 
+    const owner = defaultSender;
     let bancorNetwork;
+    let liquidityProtectionSettings;
+    let liquidityProtectionStore;
     let liquidityProtection;
     let reserveToken1;
     let reserveToken2;
@@ -55,25 +61,35 @@ contract('LiquidityProtectionStandardPoolTokenRate', (accounts) => {
 
         const networkToken = await DSToken.new('BNT', 'BNT', 18);
         const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         const govToken = await DSToken.new('vBNT', 'vBNT', 18);
         const govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(governance.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
-        liquidityProtection = await LiquidityProtection.new(
-            accounts[0],
-            networkTokenGovernance.address,
-            govTokenGovernance.address,
+        liquidityProtectionSettings = await LiquidityProtectionSettings.new(
+            networkToken.address,
             contractRegistry.address
         );
+        await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
-        await networkTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(governance.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        liquidityProtectionStore = await LiquidityProtectionStore.new();
+        liquidityProtection = await LiquidityProtection.new(
+            liquidityProtectionSettings.address,
+            liquidityProtectionStore.address,
+            networkTokenGovernance.address,
+            govTokenGovernance.address
+        );
+
+        await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {
+            from: owner
+        });
+        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
@@ -90,8 +106,8 @@ contract('LiquidityProtectionStandardPoolTokenRate', (accounts) => {
 
         reserveToken1 = await DSToken.new('RT1', 'RT1', 18);
         reserveToken2 = await DSToken.new('RT2', 'RT2', 18);
-        await reserveToken1.issue(accounts[0], new BN('1'.padEnd(30, '0')));
-        await reserveToken2.issue(accounts[0], new BN('1'.padEnd(30, '0')));
+        await reserveToken1.issue(defaultSender, new BN('1'.padEnd(30, '0')));
+        await reserveToken2.issue(defaultSender, new BN('1'.padEnd(30, '0')));
 
         await converterRegistry.newConverter(
             3,
@@ -112,7 +128,7 @@ contract('LiquidityProtectionStandardPoolTokenRate', (accounts) => {
         for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
             for (let maxDeviation = 1; maxDeviation <= 10; maxDeviation += 1) {
                 it(`minutesElapsed = ${minutesElapsed}, convertPortion = ${convertPortion}%, maxDeviation = ${maxDeviation}%`, async () => {
-                    await liquidityProtection.setAverageRateMaxDeviation(percentageToPPM(`${maxDeviation}%`));
+                    await liquidityProtectionSettings.setAverageRateMaxDeviation(percentageToPPM(`${maxDeviation}%`));
                     await reserveToken1.approve(converter.address, INITIAL_AMOUNT);
                     await reserveToken2.approve(converter.address, INITIAL_AMOUNT);
                     await converter.addLiquidity(
@@ -150,7 +166,7 @@ contract('LiquidityProtectionStandardPoolTokenRate', (accounts) => {
                         );
                     }
                     await converter.removeLiquidity(
-                        await poolToken.balanceOf(accounts[0]),
+                        await poolToken.balanceOf(defaultSender),
                         [reserveToken1.address, reserveToken2.address],
                         [1, 1]
                     );
