@@ -3,6 +3,8 @@ const { BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
+const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
@@ -19,11 +21,13 @@ describe('LiquidityProtectionStateless', () => {
     let liquidityProtection;
 
     before(async () => {
+        const liquidityProtectionSettings = await LiquidityProtectionSettings.new(defaultSender, defaultSender);
+        const liquidityProtectionStore = await LiquidityProtectionStore.new();
         const networkTokenGovernance = await TokenGovernance.new(defaultSender);
         const govTokenGovernance = await TokenGovernance.new(defaultSender);
         liquidityProtection = await LiquidityProtection.new(
-            defaultSender,
-            defaultSender,
+            liquidityProtectionSettings.address,
+            liquidityProtectionStore.address,
             networkTokenGovernance.address,
             govTokenGovernance.address
         );
