@@ -396,8 +396,9 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard {
 
     /**
      * @dev transfers protected liquidity to a new provider
+     * can be called by the owner of the protected liquidity or by a positions admin
      *
-     * @param _id          protected liquidity id
+     * @param _id protected liquidity id
      * @param _newProvider new provider
      * @return new protected liquidity id
      */
@@ -408,52 +409,16 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard {
         notThis(_newProvider)
         returns (uint256)
     {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
+        ProtectedLiquidity memory liquidity;
+
+        // ensure that msg.sender is allowed to transfer the protected liquidity
+        if (settings.isPositionsAdmin(msg.sender)) {
+            liquidity = protectedLiquidity(_id);
+        } else {
+            liquidity = protectedLiquidity(_id, msg.sender);
+        }
 
         // remove the protected liquidity from the current provider
-        store.removeProtectedLiquidity(_id);
-
-        // add the protected liquidity to the new provider
-        return
-            store.addProtectedLiquidity(
-                _newProvider,
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.poolAmount,
-                liquidity.reserveAmount,
-                liquidity.reserveRateN,
-                liquidity.reserveRateD,
-                liquidity.timestamp
-            );
-    }
-
-    /**
-     * @dev claims protected liquidity to a new provider
-     * can only be called by the contract owner
-     *
-     * @param _id protected liquidity id
-     * @param _provider existing provider
-     * @param _newProvider new provider
-     * @return new protected liquidity id
-     */
-    function claimLiquidity(
-        uint256 _id,
-        address _provider,
-        address _newProvider
-    )
-        external
-        protected
-        validAddress(_provider)
-        notThis(_provider)
-        validAddress(_newProvider)
-        notThis(_newProvider)
-        returns (uint256)
-    {
-        require(settings.isPositionsAdmin(msg.sender), "ERR_ACCESS_DENIED");
-
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, _provider);
-
-        // remove the protected liquidity from the existing provider
         store.removeProtectedLiquidity(_id);
 
         // add the protected liquidity to the new provider
