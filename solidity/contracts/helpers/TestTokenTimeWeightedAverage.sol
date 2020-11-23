@@ -13,7 +13,7 @@ contract TestTokenTimeWeightedAverage is TokenTimeWeightedAverage, TestTime {
         return this.timeWeightedAverage(_token, _startTime, _endTime);
     }
 
-    function time() public view virtual override(Time, TestTime) returns (uint256) {
+    function time() internal view virtual override(Time, TestTime) returns (uint256) {
         return TestTime.time();
     }
 }
