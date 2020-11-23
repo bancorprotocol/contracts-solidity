@@ -232,10 +232,8 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         Fraction memory startAccumulator = _tokenData.accumulators[_startTime];
 
         // TWA = (endAccumulator - startAccumulator) / (_endTime - _startTime)
-        uint256 n = (startAccumulator.d.mul(endAccumulator.n).sub(endAccumulator.d.mul(startAccumulator.n))).div(
-            _endTime.sub(_startTime)
-        );
-        uint256 d = endAccumulator.d.mul(startAccumulator.d);
+        uint256 n = startAccumulator.d.mul(endAccumulator.n).sub(startAccumulator.n.mul(endAccumulator.d));
+        uint256 d = startAccumulator.d.mul(endAccumulator.d).mul(_endTime.sub(_startTime));
         (n, d) = Math.reducedRatio(n, d, MAX_UINT128);
 
         return (n, d);
