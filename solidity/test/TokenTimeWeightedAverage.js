@@ -5,7 +5,7 @@ const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
-const { latest, duration } = time;
+const { duration } = time;
 
 const TokenTimeWeightedAverage = contract.fromArtifact('TestTokenTimeWeightedAverage');
 
@@ -57,11 +57,9 @@ describe('TokenTimeWeightedAverage', () => {
     const seeder = accounts[1];
     const nonOwner = accounts[5];
     let twa;
-    let now;
+    const now = new BN(1606121626);
 
     beforeEach(async () => {
-        now = await latest();
-
         twa = await TokenTimeWeightedAverage.new({ from: owner });
         await twa.setTime(now);
     });
