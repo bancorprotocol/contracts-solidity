@@ -29,6 +29,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     uint256 private constant INITIAL_SAMPLE_N = 0;
     uint256 private constant INITIAL_SAMPLE_D = 1;
     uint256 private constant MAX_UINT128 = 2**128 - 1;
+    uint256 private constant MAX_UINT256 = 2**256 - 1;
 
     mapping(IERC20Token => TokenData) private data;
 
@@ -166,7 +167,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     }
 
     /**
-     * @dev calculated the TWA from a specific sample time
+     * @dev calculates the TWA from a specific sample time
      *
      * @param _token the token the data is accumulated for
      * @param _startTime the sampling starting time
@@ -187,7 +188,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     }
 
     /**
-     * @dev calculated the TWA between to specific sample times
+     * @dev calculates the TWA between to specific sample times
      *
      * @param _token the token the data is accumulated for
      * @param _startTime the sampling starting time
@@ -209,7 +210,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
     }
 
     /**
-     * @dev calculated the TWA between to specific sample times
+     * @dev calculates the TWA between to specific sample times
      *
      * @param _tokenData the token accumulation data
      * @param _startTime the sampling starting time
@@ -231,12 +232,45 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
 
         Fraction memory startAccumulator = _tokenData.accumulators[_startTime];
 
-        // TWA = (endAccumulator - startAccumulator) / (_endTime - _startTime)
-        uint256 n = startAccumulator.d.mul(endAccumulator.n).sub(startAccumulator.n.mul(endAccumulator.d));
-        uint256 d = startAccumulator.d.mul(endAccumulator.d).mul(_endTime.sub(_startTime));
-        (n, d) = Math.reducedRatio(n, d, MAX_UINT128);
+        (uint256 n, uint256 d) = timeWeightedAverage(startAccumulator, endAccumulator, _startTime, _endTime);
 
-        return (n, d);
+        return Math.reducedRatio(n, d, MAX_UINT128);
+    }
+
+    /**
+     * @dev calculates the TWA between to specific sample times
+     *
+     * @param _startAccumulator the starting accumulation value
+     * @param _endAccumulator the ending accumulation value
+     * @param _startTime the sampling starting time
+     * @param _endTime the sampling ending time
+     *
+     * @return TWA's numerator and denominator
+     */
+    function timeWeightedAverage(
+        Fraction memory _startAccumulator,
+        Fraction memory _endAccumulator,
+        uint256 _startTime,
+        uint256 _endTime
+    ) private pure returns (uint256, uint256) {
+        // TWA = (endAccumulator - startAccumulator) / (_endTime - _startTime)
+        uint256 n = _startAccumulator.d.mul(_endAccumulator.n).sub(_startAccumulator.n.mul(_endAccumulator.d));
+        uint256 d1 = _startAccumulator.d.mul(_endAccumulator.d);
+        uint256 d2 = _endTime.sub(_startTime);
+
+        uint256 x = d1 * d2;
+        if (x / d1 == d2) {
+            return (n, x);
+        }
+
+        (uint256 hi, uint256 lo) = d1 > d2 ? (d1, d2) : (d2, d1);
+        (uint256 p, uint256 q) = Math.reducedRatio(n, hi, MAX_UINT256 / lo);
+
+        if (q > 0) {
+            return (p, q * lo);
+        }
+
+        return (n / lo, hi);
     }
 
     /**

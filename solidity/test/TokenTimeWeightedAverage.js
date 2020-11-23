@@ -406,7 +406,7 @@ describe('TokenTimeWeightedAverage', () => {
     });
 
     describe('accumulating TWA', () => {
-        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.03)) => {
+        const expectAlmostEqual = (amount1, amount2, maxError = Decimal(0.02)) => {
             if (!amount1.eq(amount2)) {
                 const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
                 expect(error.lte(maxError)).to.be.true(`error = ${error.toFixed(maxError.length)}`);
