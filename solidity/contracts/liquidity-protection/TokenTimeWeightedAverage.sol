@@ -266,7 +266,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
         (uint256 hi, uint256 lo) = d1 > d2 ? (d1, d2) : (d2, d1);
         (uint256 p, uint256 q) = Math.reducedRatio(n, hi, MAX_UINT256 / lo);
 
-        if (q > 0) {
+        if (p > n / lo && q > 0) {
             return (p, q * lo);
         }
 
