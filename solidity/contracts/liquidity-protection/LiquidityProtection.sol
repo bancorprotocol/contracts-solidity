@@ -20,7 +20,7 @@ import "../converter/interfaces/IConverterAnchor.sol";
 import "../converter/interfaces/IConverter.sol";
 import "../converter/interfaces/IConverterRegistry.sol";
 
-interface ILiquidityPoolV1Converter is IConverter {
+interface ILiquidityPoolConverter is IConverter {
     function addLiquidity(
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
@@ -357,7 +357,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the reserve balances
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolAnchor)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) = converterReserveBalances(
             converter,
             _baseToken,
@@ -909,7 +909,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             uint256
         )
     {
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolToken)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
 
         IERC20Token otherReserve = converter.connectorTokens(0);
         if (otherReserve == _reserveToken) {
@@ -1012,7 +1012,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @param _value           ETH amount to add
      */
     function addLiquidity(
-        ILiquidityPoolV1Converter _converter,
+        ILiquidityPoolConverter _converter,
         IERC20Token _reserveToken1,
         IERC20Token _reserveToken2,
         uint256 _reserveAmount1,
@@ -1058,7 +1058,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         IERC20Token _reserveToken1,
         IERC20Token _reserveToken2
     ) internal {
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolToken)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
 
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
@@ -1290,7 +1290,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      *
      * @return true if the given converter implements a standard pool, false otherwise
      */
-    function isStandardPool(ILiquidityPoolV1Converter _converter) internal pure returns (bool) {
+    function isStandardPool(ILiquidityPoolConverter _converter) internal pure returns (bool) {
         return _converter.converterType() == 3;
     }
 }
