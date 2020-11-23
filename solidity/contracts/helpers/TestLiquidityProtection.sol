@@ -29,7 +29,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         return (rate.n, rate.d);
     }
 
-    function time() public view virtual override(Time, TestTime) returns (uint256) {
+    function time() internal view override(Time, TestTime) returns (uint256) {
         return TestTime.time();
     }
 }
