@@ -196,9 +196,7 @@ abstract contract ConverterBase is IConverter, TokenHandler, TokenHolder, Contra
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override {
-        require(reserves[ETH_RESERVE_ADDRESS].isSet, "ERR_INVALID_RESERVE");
-    }
+    receive() external payable override validReserve(ETH_RESERVE_ADDRESS) {}
 
     /**
      * @dev withdraws ether
