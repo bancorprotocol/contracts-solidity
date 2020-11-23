@@ -21,7 +21,7 @@ contract TestLiquidityPoolV1Converter is LiquidityPoolV1Converter, TestTime {
         reserveAmountsRemoved = removeLiquidity(_amount, _reserveTokens, _reserveMinReturnAmounts);
     }
 
-    function time() public view virtual override(Time, TestTime) returns (uint256) {
+    function time() internal view override(Time, TestTime) returns (uint256) {
         return TestTime.time();
     }
 }

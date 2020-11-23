@@ -6,7 +6,7 @@ import "../utility/Time.sol";
 contract TestTime is Time {
     uint256 public currentTime = 1;
 
-    function time() public view virtual override returns (uint256) {
+    function time() internal view virtual override returns (uint256) {
         return currentTime;
     }
 
