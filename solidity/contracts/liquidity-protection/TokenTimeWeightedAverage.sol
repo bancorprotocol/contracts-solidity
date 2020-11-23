@@ -364,10 +364,8 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
      * @return whether the accumulator is initialized for a specific token
      */
     function isInitialized(IERC20Token _token) private view returns (bool) {
-        TokenData storage tokenData = data[_token];
-        uint256 firstSampleTime = tokenData.firstSampleTime;
+        TokenData memory tokenData = data[_token];
 
-        Fraction memory firstAccumulator = tokenData.accumulators[firstSampleTime];
-        return firstSampleTime > 0 && firstAccumulator.n == INITIAL_SAMPLE_N && firstAccumulator.d == INITIAL_SAMPLE_D;
+        return tokenData.firstSampleTime > 0;
     }
 }
