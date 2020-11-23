@@ -9,6 +9,7 @@ import "../utility/SafeMath.sol";
 import "../utility/Math.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/Types.sol";
+import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
@@ -38,7 +39,7 @@ interface ILiquidityPoolV1Converter is IConverter {
 /**
  * @dev This contract implements the liquidity protection mechanism.
  */
-contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard {
+contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Time {
     using SafeMath for uint256;
     using Math for *;
 
@@ -1256,13 +1257,5 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard {
     // utility to get the owner
     function ownedBy(IOwned _owned) private view returns (address) {
         return _owned.owner();
-    }
-
-    /**
-     * @dev returns the current time
-     * utility to allow overrides for tests
-     */
-    function time() internal view virtual returns (uint256) {
-        return block.timestamp;
     }
 }
