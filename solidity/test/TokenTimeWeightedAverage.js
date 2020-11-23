@@ -25,7 +25,7 @@ const initTWA = (start) => {
 };
 
 const addTWASample = (acc, n, d, time) => {
-    const sampleTime = time.string();
+    const sampleTime = time.toString();
     const value = Decimal(n.toString()).div(Decimal(d.toString()));
     const { accumulators, lastSampleTime } = acc;
 
