@@ -32,6 +32,7 @@ contract StandardPoolConverter is
     IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint256 private constant MAX_UINT128 = 2**128 - 1;
     uint256 private constant MAX_UINT112 = 2**112 - 1;
+    uint256 private constant MAX_UINT32 = 2**32 - 1;
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
     uint32 private constant PPM_RESOLUTION = 1000000;
 
@@ -1139,10 +1140,12 @@ contract StandardPoolConverter is
     }
 
     function encodeReserveBalance(uint256 _balance, uint256 _id) private pure returns (uint256) {
+        assert(_balance <= MAX_UINT128 && (_id == 1 || _id == 2));
         return _balance << ((_id - 1) * 128);
     }
 
     function decodeReserveBalance(uint256 _balances, uint256 _id) private pure returns (uint256) {
+        assert(_id == 1 || _id == 2);
         return (_balances >> ((_id - 1) * 128)) & MAX_UINT128;
     }
 
@@ -1168,6 +1171,7 @@ contract StandardPoolConverter is
         uint256 _averageRateN,
         uint256 _averageRateD
     ) private pure returns (uint256) {
+        assert(_averageRateT <= MAX_UINT32 && _averageRateN <= MAX_UINT112 && _averageRateD <= MAX_UINT112);
         return (_averageRateT << 224) | (_averageRateN << 112) | _averageRateD;
     }
 
