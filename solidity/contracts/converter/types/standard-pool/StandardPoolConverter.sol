@@ -51,53 +51,6 @@ contract StandardPoolConverter is
     uint256 public averageRateInfo;
 
     /**
-     * @dev triggered when the converter is activated
-     *
-     * @param _type        converter type
-     * @param _anchor      converter anchor
-     * @param _activated   true if the converter was activated, false if it was deactivated
-     */
-    event Activation(uint16 indexed _type, IConverterAnchor indexed _anchor, bool indexed _activated);
-
-    /**
-     * @dev triggered when a conversion between two tokens occurs
-     *
-     * @param _fromToken       source ERC20 token
-     * @param _toToken         target ERC20 token
-     * @param _trader          wallet that initiated the trade
-     * @param _amount          input amount in units of the source token
-     * @param _return          output amount minus conversion fee in units of the target token
-     * @param _conversionFee   conversion fee in units of the target token
-     */
-    event Conversion(
-        IERC20Token indexed _fromToken,
-        IERC20Token indexed _toToken,
-        address indexed _trader,
-        uint256 _amount,
-        uint256 _return,
-        int256 _conversionFee
-    );
-
-    /**
-     * @dev triggered when the rate between two tokens in the converter changes
-     * note that the event might be dispatched for rate updates between any two tokens in the converter
-     *
-     * @param  _token1 address of the first token
-     * @param  _token2 address of the second token
-     * @param  _rateN  rate of 1 unit of `_token1` in `_token2` (numerator)
-     * @param  _rateD  rate of 1 unit of `_token1` in `_token2` (denominator)
-     */
-    event TokenRateUpdate(IERC20Token indexed _token1, IERC20Token indexed _token2, uint256 _rateN, uint256 _rateD);
-
-    /**
-     * @dev triggered when the conversion fee is updated
-     *
-     * @param  _prevFee    previous fee percentage, represented in ppm
-     * @param  _newFee     new fee percentage, represented in ppm
-     */
-    event ConversionFeeUpdate(uint32 _prevFee, uint32 _newFee);
-
-    /**
      * @dev triggered after liquidity is added
      *
      * @param  _provider       liquidity provider
