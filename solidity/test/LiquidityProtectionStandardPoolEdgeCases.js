@@ -181,7 +181,6 @@ describe('LiquidityProtectionStandardPoolEdgeCases', () => {
 
         await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
         await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
-        await liquidityProtectionSettings.setAverageRateMaxDeviation(FULL_PPM);
     });
 
     for (const config of CONFIGURATIONS) {
