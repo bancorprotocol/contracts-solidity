@@ -2,24 +2,15 @@
 pragma solidity 0.6.12;
 
 import "../liquidity-protection/LiquidityProtection.sol";
+import "./TestTime.sol";
 
-contract TestLiquidityProtection is LiquidityProtection {
-    uint256 public currentTime = 1;
-
+contract TestLiquidityProtection is LiquidityProtection, TestTime {
     constructor(
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance
     ) public LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance) {}
-
-    function time() internal view override returns (uint256) {
-        return currentTime;
-    }
-
-    function setTime(uint256 _currentTime) external {
-        currentTime = _currentTime;
-    }
 
     function impLossTest(
         uint256 _initialRateN,
@@ -36,5 +27,9 @@ contract TestLiquidityProtection is LiquidityProtection {
     function averageRateTest(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256, uint256) {
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
         return (rate.n, rate.d);
+    }
+
+    function time() public view virtual override(Time, TestTime) returns (uint256) {
+        return TestTime.time();
     }
 }
