@@ -57,7 +57,7 @@ describe('TokenTimeWeightedAverage', () => {
     const seeder = accounts[1];
     const nonOwner = accounts[5];
     let twa;
-    const now = new BN(1606121626);
+    let now = new BN(1606121626);
 
     beforeEach(async () => {
         twa = await TokenTimeWeightedAverage.new({ from: owner });
