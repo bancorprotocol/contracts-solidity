@@ -330,7 +330,7 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
 
         // update the previous accumulator value once per-block. we would need it in order to accumulate
         // same-block changes
-        if (_time > tokenData.prevAccumulatorUpdateTime) {
+        if (tokenData.prevAccumulatorUpdateTime < _time) {
             tokenData.prevAccumulatorUpdateTime = _time;
             tokenData.prevAccumulator = lastAccumulator;
         }
