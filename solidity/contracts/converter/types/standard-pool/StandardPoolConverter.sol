@@ -11,6 +11,7 @@ import "../../../utility/SafeMath.sol";
 import "../../../utility/TokenHandler.sol";
 import "../../../utility/TokenHolder.sol";
 import "../../../utility/Math.sol";
+import "../../../utility/Time.sol";
 
 /**
  * @dev This contract is a specialized version of the converter, which is
@@ -22,7 +23,8 @@ contract StandardPoolConverter is
     TokenHandler,
     TokenHolder,
     ContractRegistryClient,
-    ReentrancyGuard
+    ReentrancyGuard,
+    Time
 {
     using SafeMath for uint256;
     using Math for *;
@@ -1186,14 +1188,6 @@ contract StandardPoolConverter is
         // dispatch token rate update events for the pool token
         emit TokenRateUpdate(poolToken, _sourceToken, _sourceBalance, poolTokenSupply);
         emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
-    }
-
-    /**
-     * @dev returns the current time
-     * utility to allow overrides for tests
-     */
-    function time() internal view virtual returns (uint256) {
-        return block.timestamp;
     }
 
     function encodeReserveBalance(uint256 _balance, uint256 _id) private pure returns (uint256) {
