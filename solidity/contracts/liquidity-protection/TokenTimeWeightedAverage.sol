@@ -341,11 +341,10 @@ contract TokenTimeWeightedAverage is ITokenTimeWeightedAverage, AccessControl, U
             lastAccumulator = tokenData.prevAccumulator;
         }
 
-        // accumulate the current value in combination with the last accumulator using the TWA formuls:
-        //  ACC[time] = ACC[time - timeDiff] + value * timeDiff
-        uint256 n = _sample.d.mul(lastAccumulator.n).add(
-            _sample.n.mul(lastAccumulator.d).mul(_time.sub(lastSampleTime))
-        );
+        // accumulate the current value in combination with the last accumulator using the TWA formula:
+        // accumulator = lastAccumulator + sample * timeDelta
+        uint256 n =
+            _sample.d.mul(lastAccumulator.n).add(_sample.n.mul(lastAccumulator.d).mul(_time.sub(lastSampleTime)));
         uint256 d = _sample.d.mul(lastAccumulator.d);
         (n, d) = Math.reducedRatio(n, d, MAX_UINT128);
 
