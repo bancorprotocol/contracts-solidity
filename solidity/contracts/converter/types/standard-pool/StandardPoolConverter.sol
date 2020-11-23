@@ -516,11 +516,6 @@ contract StandardPoolConverter is
         uint256 _returnAmount,
         uint256 _feeAmount
     ) internal {
-        // fee amount is converted to 255 bits -
-        // negative amount means the fee is taken from the source token, positive amount means its taken from the target token
-        // currently the fee is always taken from the target token
-        // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
-        assert(_feeAmount < 2**255);
         emit Conversion(_sourceToken, _targetToken, _trader, _amount, _returnAmount, int256(_feeAmount));
     }
 
