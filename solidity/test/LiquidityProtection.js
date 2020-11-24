@@ -1559,7 +1559,7 @@ describe('LiquidityProtection', () => {
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
-                                        await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1599,7 +1599,7 @@ describe('LiquidityProtection', () => {
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
-                                        await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1639,7 +1639,7 @@ describe('LiquidityProtection', () => {
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
-                                        await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1663,7 +1663,7 @@ describe('LiquidityProtection', () => {
                                         protection = getProtection(protection);
 
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
-                                        await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
 
                                         const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
@@ -1684,7 +1684,7 @@ describe('LiquidityProtection', () => {
                                         protection = getProtection(protection);
 
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
-                                        await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
 
                                         const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
