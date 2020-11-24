@@ -403,6 +403,7 @@ describe('LiquidityProtection', () => {
             protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
 
         await govToken.approve(liquidityProtection.address, amount);
+        await liquidityProtection.setTime(now.add(duration.seconds(1)));
         await liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]);
         protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
         expect(protectionIds.length).to.eql(0);
@@ -415,6 +416,35 @@ describe('LiquidityProtection', () => {
 
         const govBalance = await govToken.balanceOf.call(owner);
         expect(govBalance).to.be.bignumber.equal(new BN(0));
+    });
+
+    it('should revert when the caller attempts to protect and unprotect pool tokens on the same block', async () => {
+        const balance = await poolToken.balanceOf.call(owner);
+        await poolToken.approve(liquidityProtection.address, balance);
+
+        await liquidityProtection.protectLiquidity(poolToken.address, balance);
+        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
+        protection1 = getProtection(protection1);
+        let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
+        protection2 = getProtection(protection2);
+
+        const amount =
+            protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
+
+        await govToken.approve(liquidityProtection.address, amount);
+        await expectRevert(liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]), 'ERR_TOO_EARLY');
+        protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        expect(protectionIds.length).to.eql(2);
+
+        const newBalance = await poolToken.balanceOf.call(owner);
+        expect(newBalance).to.be.bignumber.equal(new BN(0));
+
+        const storeBalance = await poolToken.balanceOf.call(liquidityProtectionStore.address);
+        expect(storeBalance).to.be.bignumber.equal(balance);
+
+        const govBalance = await govToken.balanceOf.call(owner);
+        expect(govBalance).to.be.bignumber.equal(amount);
     });
 
     it('should revert when attempting to unprotect pool tokens with a first id that does not exist', async () => {
