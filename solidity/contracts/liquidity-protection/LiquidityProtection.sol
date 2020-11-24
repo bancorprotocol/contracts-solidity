@@ -179,16 +179,16 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      *
      * @param _newOwner    the new owner of the store
      */
-    function transferStoreOwnership(address _newOwner) external {
-        transferOwnership(store, _newOwner);
+    function transferStoreOwnership(address _newOwner) external ownerOnly {
+        store.transferOwnership(_newOwner);
     }
 
     /**
      * @dev accepts the ownership of the store
      * can only be called by the contract owner
      */
-    function acceptStoreOwnership() external {
-        acceptOwnership(store);
+    function acceptStoreOwnership() external ownerOnly {
+        store.acceptOwnership();
     }
 
     /**
@@ -1227,25 +1227,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         }
 
         return 0;
-    }
-
-    /**
-     * @dev transfers the ownership of a contract
-     * can only be called by the contract owner
-     *
-     * @param _owned       the owned contract
-     * @param _newOwner    the new owner of the contract
-     */
-    function transferOwnership(IOwned _owned, address _newOwner) internal ownerOnly {
-        _owned.transferOwnership(_newOwner);
-    }
-
-    /**
-     * @dev accepts the ownership of a contract
-     * can only be called by the contract owner
-     */
-    function acceptOwnership(IOwned _owned) internal ownerOnly {
-        _owned.acceptOwnership();
     }
 
     /**
