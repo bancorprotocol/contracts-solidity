@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const { ZERO_ADDRESS } = constants;
+const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { duration, latest } = time;
 const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
@@ -567,6 +567,27 @@ describe('LiquidityProtection', () => {
             liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]),
             'ERR_TRANSFER_FROM_FAILED'
         );
+    });
+
+    it('should revert when the caller attempts to add and remove base tokens on the same block', async () => {
+        const balance = await baseToken.balanceOf.call(owner);
+        await baseToken.approve(liquidityProtection.address, balance);
+
+        await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, PPM_RESOLUTION);
+        await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, balance);
+        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
+        protection1 = getProtection(protection1);
+
+        const amount = protection1.reserveAmount;
+
+        await govToken.approve(liquidityProtection.address, amount);
+        await expectRevert(liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION), 'ERR_TOO_EARLY');
+        protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        expect(protectionIds.length).to.eql(1);
+
+        const newBalance = await baseToken.balanceOf.call(owner);
+        expect(newBalance).to.be.bignumber.equal(new BN(0));
     });
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
