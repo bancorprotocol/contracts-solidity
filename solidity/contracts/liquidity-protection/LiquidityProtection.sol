@@ -412,7 +412,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
 
         // remove the protected liquidity from the current provider
-        removeProtectedLiquidity(_id, liquidity.timestamp);
+        store.removeProtectedLiquidity(_id);
 
         // add the protected liquidity to the new provider
         return
