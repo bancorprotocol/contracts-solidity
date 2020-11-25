@@ -14,6 +14,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
@@ -31,7 +32,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-describe('LiquidityProtectionTokenRate', () => {
+describe('LiquidityProtectionAverageRate', () => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];
@@ -41,6 +42,7 @@ describe('LiquidityProtectionTokenRate', () => {
     const owner = defaultSender;
     let bancorNetwork;
     let liquidityProtectionSettings;
+    let liquidityProtectionStore;
     let liquidityProtection;
     let reserveToken1;
     let reserveToken2;
@@ -75,9 +77,10 @@ describe('LiquidityProtectionTokenRate', () => {
         );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
+        liquidityProtectionStore = await LiquidityProtectionStore.new();
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
-            defaultSender,
+            liquidityProtectionStore.address,
             networkTokenGovernance.address,
             govTokenGovernance.address
         );
