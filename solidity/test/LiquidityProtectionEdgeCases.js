@@ -16,9 +16,9 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
@@ -165,6 +165,7 @@ describe('LiquidityProtectionEdgeCases', () => {
             contractRegistry.address
         );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
+
         liquidityProtectionStore = await LiquidityProtectionStore.new();
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
