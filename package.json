@@ -16,7 +16,7 @@
         "npm": "^3.0.0"
     },
     "scripts": {
-        "install": "node scripts/fix-modules.js",
+        "postinstall": "node scripts/fix-modules.js",
         "build": "truffle compile",
         "test": "npm run build && npm run qtest",
         "qtest": "mocha",
