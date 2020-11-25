@@ -18,8 +18,8 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
-const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const PPM_RESOLUTION = new BN(1000000);

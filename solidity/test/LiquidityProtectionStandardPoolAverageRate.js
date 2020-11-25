@@ -13,9 +13,9 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
 const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
-const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const INITIAL_AMOUNT = 1000000;

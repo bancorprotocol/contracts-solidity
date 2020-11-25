@@ -3,6 +3,7 @@ const { BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
+
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
@@ -15,9 +16,9 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
-const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
@@ -166,6 +167,7 @@ describe('LiquidityProtectionV1EdgeCases', () => {
             contractRegistry.address
         );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
+
         liquidityProtectionStore = await LiquidityProtectionStore.new();
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
