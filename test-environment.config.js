@@ -1,3 +1,5 @@
+const memdown = require('memdown');
+
 module.exports = {
     accounts: {
         amount: 10,
@@ -12,6 +14,7 @@ module.exports = {
     },
 
     node: {
+        db: memdown(),
         gasLimit: 9500000,
         gasPrice: 20000000000
     }
