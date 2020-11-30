@@ -295,8 +295,7 @@ const run = async () => {
         const tokens = converter.reserves.map((reserve) => reserves[reserve.symbol].address);
         const weights = converter.reserves.map((reserve) => percentageToPPM(reserve.weight));
         const amounts = converter.reserves.map((reserve) =>
-            decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals)
-        );
+            decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals));
         const value = amounts[converter.reserves.findIndex((reserve) => reserve.symbol === 'ETH')];
 
         await execute(
@@ -386,7 +385,7 @@ const run = async () => {
     await execute(
         contractRegistry.methods.registerAddress(
             Web3.utils.asciiToHex('LiquidityProtectionSettings'),
-            LiquidityProtectionSettings._address
+            liquidityProtectionSettings._address
         )
     );
     await execute(
@@ -409,15 +408,15 @@ const run = async () => {
     const maxSystemNetworkTokenRatio = percentageToPPM(params.maxSystemNetworkTokenRatio);
     const maxSystemNetworkTokenAmount = decimalToInteger(params.maxSystemNetworkTokenAmount, reserves.BNT.decimals);
     await execute(
-        LiquidityProtectionSettings.methods.setSystemNetworkTokenLimits(
+        liquidityProtectionSettings.methods.setSystemNetworkTokenLimits(
             maxSystemNetworkTokenAmount,
             maxSystemNetworkTokenRatio
         )
     );
     await execute(
-        LiquidityProtectionSettings.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
+        liquidityProtectionSettings.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
     );
-    await execute(LiquidityProtectionSettings.methods.setLockDuration(params.lockDuration));
+    await execute(liquidityProtectionSettings.methods.setLockDuration(params.lockDuration));
 
     for (const converter of params.converters) {
         await execute(liquidityProtectionSettings.methods.addPoolToWhitelist(reserves[converter].address));

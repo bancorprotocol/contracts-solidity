@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const { ZERO_ADDRESS } = constants;
+const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { duration, latest } = time;
 const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
@@ -405,6 +405,7 @@ describe('LiquidityProtectionV1', () => {
             protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
 
         await govToken.approve(liquidityProtection.address, amount);
+        await liquidityProtection.setTime(now.add(duration.seconds(1)));
         await liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]);
         protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
         expect(protectionIds.length).to.eql(0);
@@ -417,6 +418,35 @@ describe('LiquidityProtectionV1', () => {
 
         const govBalance = await govToken.balanceOf.call(owner);
         expect(govBalance).to.be.bignumber.equal(new BN(0));
+    });
+
+    it('should revert when the caller attempts to protect and unprotect pool tokens on the same block', async () => {
+        const balance = await poolToken.balanceOf.call(owner);
+        await poolToken.approve(liquidityProtection.address, balance);
+
+        await liquidityProtection.protectLiquidity(poolToken.address, balance);
+        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
+        protection1 = getProtection(protection1);
+        let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
+        protection2 = getProtection(protection2);
+
+        const amount =
+            protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
+
+        await govToken.approve(liquidityProtection.address, amount);
+        await expectRevert(liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]), 'ERR_TOO_EARLY');
+        protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        expect(protectionIds.length).to.eql(2);
+
+        const newBalance = await poolToken.balanceOf.call(owner);
+        expect(newBalance).to.be.bignumber.equal(new BN(0));
+
+        const storeBalance = await poolToken.balanceOf.call(liquidityProtectionStore.address);
+        expect(storeBalance).to.be.bignumber.equal(balance);
+
+        const govBalance = await govToken.balanceOf.call(owner);
+        expect(govBalance).to.be.bignumber.equal(amount);
     });
 
     it('should revert when attempting to unprotect pool tokens with a first id that does not exist', async () => {
@@ -539,6 +569,27 @@ describe('LiquidityProtectionV1', () => {
             liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]),
             'ERR_TRANSFER_FROM_FAILED'
         );
+    });
+
+    it('should revert when the caller attempts to add and remove base tokens on the same block', async () => {
+        const balance = await baseToken.balanceOf.call(owner);
+        await baseToken.approve(liquidityProtection.address, balance);
+
+        await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, PPM_RESOLUTION);
+        await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, balance);
+        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
+        protection1 = getProtection(protection1);
+
+        const amount = protection1.reserveAmount;
+
+        await govToken.approve(liquidityProtection.address, amount);
+        await expectRevert(liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION), 'ERR_TOO_EARLY');
+        protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+        expect(protectionIds.length).to.eql(1);
+
+        const newBalance = await baseToken.balanceOf.call(owner);
+        expect(newBalance).to.be.bignumber.equal(new BN(0));
     });
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
@@ -1001,6 +1052,10 @@ describe('LiquidityProtectionV1', () => {
                     const res = await govToken.approve(liquidityProtection.address, protection.reserveAmount);
                     transactionCost = transactionCost.add(await getTransactionCost(res));
                 }
+                const response = await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                if (isETHReserve) {
+                    transactionCost = transactionCost.add(await getTransactionCost(response));
+                }
                 const res = await liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION);
                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 expect(protectionIds.length).to.eql(0);
@@ -1067,6 +1122,10 @@ describe('LiquidityProtectionV1', () => {
 
                     transactionCost = transactionCost.add(await getTransactionCost(res));
                 }
+                const response = await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                if (isETHReserve) {
+                    transactionCost = transactionCost.add(await getTransactionCost(response));
+                }
                 const res = await liquidityProtection.removeLiquidity(protectionId, portion);
                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 expect(protectionIds.length).to.eql(1);
@@ -1124,6 +1183,7 @@ describe('LiquidityProtectionV1', () => {
                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 const protectionId = protectionIds[0];
 
+                await liquidityProtection.setTime(now.add(duration.seconds(1)));
                 await expectRevert(liquidityProtection.removeLiquidity(protectionId, 0), 'ERR_INVALID_PORTION');
             });
 
@@ -1139,6 +1199,7 @@ describe('LiquidityProtectionV1', () => {
                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 const protectionId = protectionIds[0];
 
+                await liquidityProtection.setTime(now.add(duration.seconds(1)));
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION.add(new BN(1))),
                     'ERR_INVALID_PORTION'
@@ -1159,6 +1220,7 @@ describe('LiquidityProtectionV1', () => {
 
                 await increaseRate(baseTokenAddress);
                 await liquidityProtectionSettings.setAverageRateMaxDeviation(1);
+                await liquidityProtection.setTime(now.add(duration.seconds(1)));
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION),
                     'ERR_INVALID_RATE'
@@ -1166,6 +1228,7 @@ describe('LiquidityProtectionV1', () => {
             });
 
             it('should revert when attempting to remove liquidity that does not exist', async () => {
+                await liquidityProtection.setTime(now.add(duration.seconds(1)));
                 await expectRevert(liquidityProtection.removeLiquidity('1234', PPM_RESOLUTION), 'ERR_ACCESS_DENIED');
             });
 
@@ -1182,6 +1245,7 @@ describe('LiquidityProtectionV1', () => {
                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 const protectionId = protectionIds[0];
 
+                await liquidityProtection.setTime(now.add(duration.seconds(1)));
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION, {
                         from: accounts[1]
@@ -1205,6 +1269,7 @@ describe('LiquidityProtectionV1', () => {
 
                 await liquidityProtectionSettings.removePoolFromWhitelist(poolToken.address);
 
+                await liquidityProtection.setTime(now.add(duration.seconds(1)));
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION),
                     'ERR_POOL_NOT_WHITELISTED'
@@ -1239,6 +1304,7 @@ describe('LiquidityProtectionV1', () => {
             const prevGovBalance = await govToken.balanceOf(owner);
 
             await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+            await liquidityProtection.setTime(now.add(duration.seconds(1)));
             await liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION);
             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
             expect(protectionIds.length).to.eql(0);
@@ -1295,6 +1361,7 @@ describe('LiquidityProtectionV1', () => {
                 liquidityProtection.address,
                 prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
             );
+            await liquidityProtection.setTime(now.add(duration.seconds(1)));
             await liquidityProtection.removeLiquidity(protectionId, portion);
             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
             expect(protectionIds.length).to.eql(1);
@@ -1341,6 +1408,7 @@ describe('LiquidityProtectionV1', () => {
             const portion = PPM_RESOLUTION.div(new BN(2));
             const amount = new BN(2000).mul(portion).div(PPM_RESOLUTION);
             await govToken.approve(liquidityProtection.address, amount);
+            await liquidityProtection.setTime(now.add(duration.seconds(1)));
             await liquidityProtection.removeLiquidity(protectionId, portion);
             await govToken.approve(liquidityProtection.address, amount);
             await liquidityProtection.removeLiquidity(protectionId, portion);
@@ -1514,6 +1582,7 @@ describe('LiquidityProtectionV1', () => {
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1553,6 +1622,7 @@ describe('LiquidityProtectionV1', () => {
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1592,6 +1662,7 @@ describe('LiquidityProtectionV1', () => {
 
                                         const prevBalance = await getBalance(reserveToken, reserveAddress, owner);
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                         const balance = await getBalance(reserveToken, reserveAddress, owner);
 
@@ -1615,6 +1686,7 @@ describe('LiquidityProtectionV1', () => {
                                         protection = getProtection(protection);
 
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
 
                                         const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
@@ -1635,6 +1707,7 @@ describe('LiquidityProtectionV1', () => {
                                         protection = getProtection(protection);
 
                                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                                        await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                         await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
 
                                         const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
