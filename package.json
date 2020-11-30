@@ -35,7 +35,7 @@
     "devDependencies": {
         "@bancor/token-governance": "bancorprotocol/token-governance",
         "@openzeppelin/contracts": "3.2.0",
-        "@openzeppelin/test-environment": "^0.1.6",
+        "@openzeppelin/test-environment": "^0.1.7",
         "@openzeppelin/test-helpers": "^0.5.6",
         "@truffle/contract": "^4.2.14",
         "bignumber.js": "^9.0.0",
