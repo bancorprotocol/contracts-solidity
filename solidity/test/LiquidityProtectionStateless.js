@@ -103,16 +103,16 @@ describe('LiquidityProtectionStateless', () => {
 
     describe('accuracy part 4', () => {
         const amounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
-        const totals = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
+        const fees = [30, 60, 90].map((x) => new BN(2).pow(new BN(x)));
         const lossNs = [12, 15, 18].map((x) => new BN(10).pow(new BN(x)));
         const lossDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
         const levelNs = [3, 5, 7].map((x) => new BN(x).pow(new BN(10)));
         const levelDs = [7, 9, 11].map((x) => new BN(x).pow(new BN(10)));
         const range = {
             maxAbsoluteError: '1.0',
-            maxRelativeError: '0.000000001',
+            maxRelativeError: '0.0000000006',
         };
-        compensationAmountTest(amounts, totals, lossNs, lossDs, levelNs, levelDs, range);
+        compensationAmountTest(amounts, fees, lossNs, lossDs, levelNs, levelDs, range);
     });
 
     function removeLiquidityTargetAmountTest(amounts, durations, range) {
@@ -217,12 +217,13 @@ describe('LiquidityProtectionStateless', () => {
         }
     }
 
-    function compensationAmountTest(amounts, totals, lossNs, lossDs, levelNs, levelDs, range) {
+    function compensationAmountTest(amounts, fees, lossNs, lossDs, levelNs, levelDs, range) {
         let testNum = 0;
-        const numOfTest = [amounts, totals, lossNs, lossDs, levelNs, levelDs].reduce((a, b) => a * b.length, 1);
+        const numOfTest = [amounts, fees, lossNs, lossDs, levelNs, levelDs].reduce((a, b) => a * b.length, 1);
 
         for (const amount of amounts) {
-            for (const total of totals) {
+            for (const fee of fees) {
+                const total = amount.add(fee);
                 for (const lossN of lossNs) {
                     for (const lossD of lossDs) {
                         for (const levelN of levelNs) {
