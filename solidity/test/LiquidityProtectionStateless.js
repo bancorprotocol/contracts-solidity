@@ -173,7 +173,7 @@ describe('LiquidityProtectionStateless', () => {
                                                                 removeAverageRateD,
                                                                 timeElapsed
                                                             );
-                                                            exceptAlmostEqual(Decimal(actual.toString()), expected, range);
+                                                            expectAlmostEqual(Decimal(actual.toString()), expected, range);
                                                         }
                                                     });
                                                 }
@@ -208,7 +208,7 @@ describe('LiquidityProtectionStateless', () => {
                                     currentRateN,
                                     currentRateD
                                 );
-                                exceptAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
+                                expectAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
                             });
                         }
                     }
@@ -240,7 +240,7 @@ describe('LiquidityProtectionStateless', () => {
                                         levelN,
                                         levelD
                                     );
-                                    exceptAlmostEqual(Decimal(actual.toString()), expected, range);
+                                    expectAlmostEqual(Decimal(actual.toString()), expected, range);
                                 });
                             }
                         }
@@ -298,7 +298,7 @@ describe('LiquidityProtectionStateless', () => {
         return total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).mul(amount).div(lossD.mul(levelD)));
     }
 
-    function exceptAlmostEqual(actual, expected, range) {
+    function expectAlmostEqual(actual, expected, range) {
         if (!actual.eq(expected)) {
             const absoluteError = actual.sub(expected).abs();
             const relativeError = actual.div(expected).sub(1).abs();
