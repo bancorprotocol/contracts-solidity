@@ -101,6 +101,20 @@ describe('LiquidityProtectionStateless', () => {
         impLossTest(factorLists, range);
     });
 
+    describe('accuracy part 4', () => {
+        const amounts = [20, 70, 120].map((x) => new BN(2).pow(new BN(x)));
+        const totals = [20, 70, 120].map((x) => new BN(2).pow(new BN(x)));
+        const lossNs = [12, 15, 18].map((x) => new BN(10).pow(new BN(x)));
+        const lossDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
+        const levelNs = [3, 5, 7].map((x) => new BN(x).pow(new BN(10)));
+        const levelDs = [7, 9, 11].map((x) => new BN(x).pow(new BN(10)));
+        const range = {
+            maxAbsoluteError: '1.0',
+            maxRelativeError: '0.000002',
+        };
+        compensationAmountTest(amounts, totals, lossNs, lossDs, levelNs, levelDs, range);
+    });
+
     function removeLiquidityTargetAmountTest(amounts, durations, range) {
         let testNum = 0;
         const numOfTest = amounts.length ** 10 * durations.length ** 1;
@@ -203,6 +217,38 @@ describe('LiquidityProtectionStateless', () => {
         }
     }
 
+    function compensationAmountTest(amounts, totals, lossNs, lossDs, levelNs, levelDs, range) {
+        let testNum = 0;
+        const numOfTest = [amounts, totals, lossNs, lossDs, levelNs, levelDs].reduce((a, b) => a * b.length, 1);
+
+        for (const amount of amounts) {
+            for (const total of totals) {
+                for (const lossN of lossNs) {
+                    for (const lossD of lossDs) {
+                        for (const levelN of levelNs) {
+                            for (const levelD of levelDs) {
+                                testNum += 1;
+                                const testDesc = `compensationAmount(${amount}, ${total}, ${lossN}/${lossD}, ${levelN}/${levelD})`;
+                                it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
+                                    const expected = compensationAmount(amount, total, lossN, lossD, levelN, levelD);
+                                    const actual = await liquidityProtection.compensationAmountTest(
+                                        amount,
+                                        total,
+                                        lossN,
+                                        lossD,
+                                        levelN,
+                                        levelD
+                                    );
+                                    exceptAlmostEqual(Decimal(actual.toString()), expected, range);
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function removeLiquidityTargetAmount(
         poolTokenRateN,
         poolTokenRateD,
@@ -244,6 +290,11 @@ describe('LiquidityProtectionStateless', () => {
         const ratioD = currentRateD.mul(initialRateN);
         const ratio = Decimal(ratioN.toString()).div(ratioD.toString());
         return ratio.sqrt().mul(2).div(ratio.add(1)).sub(1).neg();
+    }
+
+    function compensationAmount(amount, total, lossN, lossD, levelN, levelD) {
+        [amount, total, lossN, lossD, levelN, levelD] = [...arguments].map(x => new Decimal(x.toString()));
+        return total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).mul(amount).div(lossD.mul(levelD)));
     }
 
     function exceptAlmostEqual(actual, expected, range) {

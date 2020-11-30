@@ -28,6 +28,19 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         return (impLossRate.n, impLossRate.d);
     }
 
+    function compensationAmountTest(
+        uint256 _amount,
+        uint256 _total,
+        uint256 _lossN,
+        uint256 _lossD,
+        uint256 _levelN,
+        uint256 _levelD
+    ) external pure returns (uint256) {
+        Fraction memory loss = Fraction({ n: _lossN, d: _lossD });
+        Fraction memory level = Fraction({ n: _levelN, d: _levelD });
+        return compensationAmount(_amount, _total, loss, level);
+    }
+
     function averageRateTest(IDSToken _poolToken, IERC20Token _reserveToken) external view returns (uint256, uint256) {
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
         return (rate.n, rate.d);
