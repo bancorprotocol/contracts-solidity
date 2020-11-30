@@ -102,15 +102,15 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 4', () => {
-        const amounts = [20, 70, 120].map((x) => new BN(2).pow(new BN(x)));
-        const totals = [20, 70, 120].map((x) => new BN(2).pow(new BN(x)));
+        const amounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
+        const totals = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
         const lossNs = [12, 15, 18].map((x) => new BN(10).pow(new BN(x)));
         const lossDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
         const levelNs = [3, 5, 7].map((x) => new BN(x).pow(new BN(10)));
         const levelDs = [7, 9, 11].map((x) => new BN(x).pow(new BN(10)));
         const range = {
             maxAbsoluteError: '1.0',
-            maxRelativeError: '0.000002',
+            maxRelativeError: '0.000000001',
         };
         compensationAmountTest(amounts, totals, lossNs, lossDs, levelNs, levelDs, range);
     });
