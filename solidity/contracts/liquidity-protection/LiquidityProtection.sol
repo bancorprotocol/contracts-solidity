@@ -225,7 +225,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // save a local copy of `networkToken`
         IERC20Token networkTokenLocal = networkToken;
 
-        // verify that the two protections were added together (using `protect`)
+        // verify that the two protected liquidities were added together (using `protect`)
         require(
             liquidity1.poolToken == liquidity2.poolToken &&
                 liquidity1.reserveToken != liquidity2.reserveToken &&
@@ -236,6 +236,9 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             "ERR_PROTECTIONS_MISMATCH"
         );
 
+        // verify that the two protected liquidities are not removed on the same block in which they were added
+        require(liquidity1.timestamp < time(), "ERR_TOO_EARLY");
+
         // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
         uint256 amount = liquidity1.reserveToken == networkTokenLocal
@@ -244,9 +247,9 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         safeTransferFrom(govToken, msg.sender, address(this), amount);
         govTokenGovernance.burn(amount);
 
-        // remove the protected liquidities from the store
-        removeProtectedLiquidity(_id1, liquidity1.timestamp);
-        removeProtectedLiquidity(_id2, liquidity2.timestamp);
+        // remove the two protected liquidities from the provider
+        store.removeProtectedLiquidity(_id1);
+        store.removeProtectedLiquidity(_id2);
 
         // transfer the pool tokens back to the caller
         store.withdrawTokens(liquidity1.poolToken, msg.sender, liquidity1.poolAmount.add(liquidity2.poolAmount));
@@ -525,11 +528,14 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // verify that the pool is whitelisted
         _poolWhitelisted(liquidity.poolToken);
 
+        // verify that the protected liquidity is not removed on the same block in which it was added
+        require(liquidity.timestamp < time(), "ERR_TOO_EARLY");
+
         if (_portion == PPM_RESOLUTION) {
-            // remove the pool tokens from the provider
-            removeProtectedLiquidity(_id, liquidity.timestamp);
+            // remove the protected liquidity from the provider
+            store.removeProtectedLiquidity(_id);
         } else {
-            // remove portion of the pool tokens from the provider
+            // remove a portion of the protected liquidity from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
             uint256 fullReserveAmount = liquidity.reserveAmount;
             liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
@@ -825,17 +831,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
                 rate.d,
                 time()
             );
-    }
-
-    /**
-     * @dev removes protected liquidity from the store
-     *
-     * @param _id           id of the protected liquidity
-     * @param _timestamp    time at which the liquidity was protected
-     */
-    function removeProtectedLiquidity(uint256 _id, uint256 _timestamp) internal {
-        require(_timestamp < time(), "ERR_TOO_EARLY");
-        store.removeProtectedLiquidity(_id);
     }
 
     /**
