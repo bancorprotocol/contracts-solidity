@@ -76,7 +76,7 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
         uint256 length = _addresses.length;
         require(length == _times.length, "ERR_INVALID_LENGTH");
 
-        for (uint256 i = 0; i < length; ++i) {
+        for (uint256 i = 0; i < length; i++) {
             address addr = _addresses[i];
             uint256 t = _times[i];
 

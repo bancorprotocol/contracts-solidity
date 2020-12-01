@@ -63,7 +63,7 @@ describe('CheckpointStore', () => {
         const testPastCheckpoints = async (users, times) => {
             const res = await checkpointStore.addPastCheckpoints(users, times, { from: seeder });
 
-            for (let i = 0; i < users.length; ++i) {
+            for (let i = 0; i < users.length; i++) {
                 expectEvent(res, 'CheckpointUpdated', {
                     _address: users[i],
                     _time: times[i]

@@ -221,7 +221,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function poolWhitelist() external view returns (address[] memory) {
         uint256 length = _poolWhitelist.length();
         address[] memory list = new address[](length);
-        for (uint256 i = 0; i < length; ++i) {
+        for (uint256 i = 0; i < length; i++) {
             list[i] = _poolWhitelist.at(i);
         }
         return list;
@@ -277,7 +277,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function highTierPools() external view returns (address[] memory) {
         uint256 length = _highTierPools.length();
         address[] memory list = new address[](length);
-        for (uint256 i = 0; i < length; ++i) {
+        for (uint256 i = 0; i < length; i++) {
             list[i] = _highTierPools.at(i);
         }
         return list;

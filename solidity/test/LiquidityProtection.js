@@ -1292,7 +1292,7 @@ describe('LiquidityProtection', () => {
                 expect(await checkpointStore.checkpoint.call(owner)).to.be.bignumber.equal(new BN(0));
 
                 const portion = new BN(500000);
-                for (let i = 1; i < 5; ++i) {
+                for (let i = 1; i < 5; i++) {
                     await setTime(now.add(duration.days(3)));
 
                     await liquidityProtection.removeLiquidity(protectionId, portion);
