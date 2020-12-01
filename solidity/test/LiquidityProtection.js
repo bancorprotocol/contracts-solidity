@@ -909,34 +909,6 @@ describe('LiquidityProtection', () => {
                 expect(protection.timestamp).to.be.bignumber.equal(protection2.timestamp);
             });
 
-            it('verifies that a positions admin can transfer liquidity from another account', async () => {
-                const positionsAdmin = accounts[8];
-                await liquidityProtectionSettings.addPositionsAdmin(positionsAdmin, { from: owner });
-
-                let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
-                protection = getProtection(protection);
-
-                const newProvider = nonOwner;
-                await liquidityProtection.transferLiquidity(protectionId, newProvider, { from: positionsAdmin });
-
-                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(positionOwner);
-                expect(protectionIds.length).to.eql(0);
-
-                const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(newProvider);
-                expect(protectionIds2.length).to.eql(1);
-
-                let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds2[0]);
-                protection2 = getProtection(protection2);
-
-                expect(protection.poolToken).to.eql(protection2.poolToken);
-                expect(protection.reserveToken).to.eql(protection2.reserveToken);
-                expect(protection.poolAmount).to.be.bignumber.equal(protection2.poolAmount);
-                expect(protection.reserveAmount).to.be.bignumber.equal(protection2.reserveAmount);
-                expect(protection.reserveRateN).to.be.bignumber.equal(protection2.reserveRateN);
-                expect(protection.reserveRateD).to.be.bignumber.equal(protection2.reserveRateD);
-                expect(protection.timestamp).to.be.bignumber.equal(protection2.timestamp);
-            });
-
             it('should revert when attempting to transfer liquidity that belongs to another account', async () => {
                 const provider = accounts[3];
                 const reserveAmount = new BN(2000);

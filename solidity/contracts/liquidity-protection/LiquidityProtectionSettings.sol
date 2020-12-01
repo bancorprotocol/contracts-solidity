@@ -30,9 +30,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // list of whitelisted pools and mapping of pool anchor address
     EnumerableSet.AddressSet private _poolWhitelist;
 
-    // list of addresses that are able to claim positions
-    EnumerableSet.AddressSet private _positionAdmins;
-
     // list of pools with less minting restrictions
     EnumerableSet.AddressSet private _highTierPools;
 
@@ -282,56 +279,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         address[] memory list = new address[](length);
         for (uint256 i = 0; i < length; ++i) {
             list[i] = _highTierPools.at(i);
-        }
-        return list;
-    }
-
-    /**
-     * @dev adds a positions admin
-     * can only be called by the contract owner
-     *
-     * @param _admin address to add
-     */
-    function addPositionsAdmin(address _admin)
-        external
-        override
-        onlyOwner
-        validAddress(address(_admin))
-        notThis(address(_admin))
-    {
-        require(_positionAdmins.add(_admin), "ERR_ADMIN_ALREADY_EXISTS");
-    }
-
-    /**
-     * @dev removes a positions admin
-     * can only be called by the contract owner
-     *
-     * @param _admin address to remove
-     */
-    function removePositionsAdmin(address _admin) external override onlyOwner validAddress(_admin) notThis(_admin) {
-        require(_positionAdmins.remove(_admin), "ERR_ADMIN_DOES_NOT_EXIST");
-    }
-
-    /**
-     * @dev checks whether a given address is a positions admin
-     *
-     * @param _admin address to check
-     * @return true if the given address is a positions admin, false otherwise
-     */
-    function isPositionsAdmin(address _admin) external view override returns (bool) {
-        return _positionAdmins.contains(_admin);
-    }
-
-    /**
-     * @dev returns positions admins
-     *
-     * @return positions admins
-     */
-    function positionAdmins() external view returns (address[] memory) {
-        uint256 length = _positionAdmins.length();
-        address[] memory list = new address[](length);
-        for (uint256 i = 0; i < length; ++i) {
-            list[i] = _positionAdmins.at(i);
         }
         return list;
     }

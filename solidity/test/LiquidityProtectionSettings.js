@@ -260,62 +260,6 @@ describe('LiquidityProtectionSettings', () => {
         });
     });
 
-    describe('position admins', () => {
-        const positionsAdmin = accounts[5];
-
-        it('should allow the owner to add a position admin pool', async () => {
-            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.false();
-            expect(await settings.positionAdmins.call()).to.be.ofSize(0);
-
-            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
-
-            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.true();
-            expect(await settings.positionAdmins.call()).to.be.equalTo([positionsAdmin]);
-
-            const positionsAdmin2 = accounts[3];
-
-            await settings.addPositionsAdmin(positionsAdmin2, { from: owner });
-
-            expect(await settings.isPositionsAdmin.call(positionsAdmin2)).to.be.true();
-            expect(await settings.positionAdmins.call()).to.be.equalTo([positionsAdmin, positionsAdmin2]);
-        });
-
-        it('should allow the owner to remove a positions admin', async () => {
-            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
-
-            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.true();
-            expect(await settings.positionAdmins.call()).to.be.equalTo([positionsAdmin]);
-
-            await settings.removePositionsAdmin(positionsAdmin, { from: owner });
-
-            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.false();
-            expect(await settings.positionAdmins.call()).to.be.ofSize(0);
-        });
-
-        it('should revert when a non owner attempts to add a positions admin', async () => {
-            await expectRevert(settings.addPositionsAdmin(positionsAdmin, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to remove a positions admin', async () => {
-            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
-            await expectRevert(settings.removePositionsAdmin(positionsAdmin, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            expect(await settings.isPositionsAdmin.call(positionsAdmin)).to.be.true();
-        });
-
-        it('should revert when the owner attempts to add a positions admin that is already defined as high tier one', async () => {
-            await settings.addPositionsAdmin(positionsAdmin, { from: owner });
-            await expectRevert(settings.addPositionsAdmin(positionsAdmin, { from: owner }), 'ERR_ADMIN_ALREADY_EXISTS');
-        });
-
-        it('should revert when the owner attempts to remove a positions admin that is not defined as a high tier one', async () => {
-            await expectRevert(
-                settings.removePositionsAdmin(positionsAdmin, { from: owner }),
-                'ERR_ADMIN_DOES_NOT_EXIST'
-            );
-        });
-    });
-
     describe('token limits', () => {
         it('verifies that the owner can set the system network token limits', async () => {
             const prevMaxSystemNetworkTokenAmount = await settings.maxSystemNetworkTokenAmount.call();

@@ -413,11 +413,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         ProtectedLiquidity memory liquidity;
 
         // ensure that msg.sender is allowed to transfer the protected liquidity
-        if (settings.isPositionsAdmin(msg.sender)) {
-            liquidity = protectedLiquidity(_id);
-        } else {
-            liquidity = protectedLiquidity(_id, msg.sender);
-        }
+        liquidity = protectedLiquidity(_id, msg.sender);
 
         // remove the protected liquidity from the current provider
         store.removeProtectedLiquidity(_id);
