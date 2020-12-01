@@ -542,7 +542,7 @@ describe('LiquidityProtection', () => {
         await poolToken.approve(liquidityProtection.address, balance);
         await liquidityProtection.protectLiquidity(poolToken.address, '200');
 
-        liquidityProtection.setTime(now.add(duration.seconds(1)));
+        await liquidityProtection.setTime(now.add(duration.seconds(1)));
         await liquidityProtection.protectLiquidity(poolToken.address, '200');
 
         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
@@ -563,7 +563,7 @@ describe('LiquidityProtection', () => {
         const govBalance = await govToken.balanceOf.call(owner);
         await govToken.transfer(accounts[1], govBalance);
 
-        liquidityProtection.setTime(now.add(duration.seconds(1)));
+        await liquidityProtection.setTime(now.add(duration.seconds(1)));
         await expectRevert(
             liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]),
             'ERR_TRANSFER_FROM_FAILED'
