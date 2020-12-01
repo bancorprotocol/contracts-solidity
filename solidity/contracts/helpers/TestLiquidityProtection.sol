@@ -16,6 +16,21 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         ITokenGovernance _govTokenGovernance
     ) public LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance) {}
 
+    function protectedAmountPlusFeeTest(
+        uint256 _poolAmount,
+        uint256 _poolRateN,
+        uint256 _poolRateD,
+        uint256 _addRateN,
+        uint256 _addRateD,
+        uint256 _removeRateN,
+        uint256 _removeRateD
+    ) external pure returns (uint256) {
+        Fraction memory poolRate = Fraction({ n: _poolRateN, d: _poolRateD });
+        Fraction memory addRate = Fraction({ n: _addRateN, d: _addRateD });
+        Fraction memory removeRate = Fraction({ n: _removeRateN, d: _removeRateD });
+        return protectedAmountPlusFee(_poolAmount, poolRate, addRate, removeRate);
+    }
+
     function impLossTest(
         uint256 _initialRateN,
         uint256 _initialRateD,

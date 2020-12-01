@@ -87,6 +87,21 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations, range);
     });
 
+    describe.only('accuracy part 3', () => {
+        const poolAmounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
+        const poolRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
+        const poolRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
+        const addRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
+        const addRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
+        const removeRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
+        const removeRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
+        const range = {
+            maxAbsoluteError: '1.0',
+            maxRelativeError: '0.0000000005',
+        };
+        protectedAmountPlusFeeTest(poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs, range);
+    });
+
     describe('accuracy part 3', () => {
         const initialRateNs = [9, 12, 15].map((x) => new BN(10).pow(new BN(x)));
         const initialRateDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
@@ -178,6 +193,41 @@ describe('LiquidityProtectionStateless', () => {
                                             }
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function protectedAmountPlusFeeTest(poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs, range) {
+        let testNum = 0;
+        const numOfTest = [poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs].reduce((a, b) => a * b.length, 1);
+
+        for (const poolAmount of poolAmounts) {
+            for (const poolRateN of poolRateNs) {
+                for (const poolRateD of poolRateDs) {
+                    for (const addRateN of addRateNs) {
+                        for (const addRateD of addRateDs) {
+                            for (const removeRateN of removeRateNs) {
+                                for (const removeRateD of removeRateDs) {
+                                    testNum += 1;
+                                    const testDesc = `compensationAmount(${poolAmount}, ${poolRateN}/${poolRateD}, ${addRateN}/${addRateD}, ${removeRateN}/${removeRateD})`;
+                                    it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
+                                        const expected = protectedAmountPlusFee(poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD);
+                                        const actual = await liquidityProtection.protectedAmountPlusFeeTest(
+                                            poolAmount,
+                                            poolRateN,
+                                            poolRateD,
+                                            addRateN,
+                                            addRateD,
+                                            removeRateN,
+                                            removeRateD
+                                        );
+                                        expectAlmostEqual(Decimal(actual.toString()), expected, range);
+                                    });
                                 }
                             }
                         }
@@ -280,6 +330,11 @@ describe('LiquidityProtectionStateless', () => {
 
         // calculate the compensation amount
         return total.mul(Decimal(1).sub(loss)).add(reserveAmount.mul(loss).mul(level));
+    }
+
+    function protectedAmountPlusFee(poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD) {
+        [poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD] = [...arguments].map(x => new Decimal(x.toString()));
+        return removeRateN.div(removeRateD).mul(addRateD).div(addRateN).sqrt().mul(poolRateN).div(poolRateD).mul(poolAmount);
     }
 
     function impLoss(initialRateN, initialRateD, currentRateN, currentRateD) {
