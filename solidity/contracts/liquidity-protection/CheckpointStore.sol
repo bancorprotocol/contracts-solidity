@@ -88,7 +88,7 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
     }
 
     /**
-     * @dev returns the store vlaue for a specific address
+     * @dev returns the store value for a specific address
      *
      * @param _address the address we're collecting the data for
      *
