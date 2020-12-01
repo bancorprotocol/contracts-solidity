@@ -173,16 +173,16 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      *
      * @param _newOwner    the new owner of the store
      */
-    function transferStoreOwnership(address _newOwner) external {
-        transferOwnership(store, _newOwner);
+    function transferStoreOwnership(address _newOwner) external ownerOnly {
+        store.transferOwnership(_newOwner);
     }
 
     /**
      * @dev accepts the ownership of the store
      * can only be called by the contract owner
      */
-    function acceptStoreOwnership() external {
-        acceptOwnership(store);
+    function acceptStoreOwnership() external ownerOnly {
+        store.acceptOwnership();
     }
 
     /**
@@ -254,8 +254,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         lastRemoveCheckpointStore.addCheckpoint(msg.sender);
 
         // remove the protected liquidities from the store
-        store.removeProtectedLiquidity(_id1);
-        store.removeProtectedLiquidity(_id2);
+        removeProtectedLiquidity(_id1, liquidity1.timestamp);
+        removeProtectedLiquidity(_id2, liquidity2.timestamp);
 
         // transfer the pool tokens back to the caller
         store.withdrawTokens(liquidity1.poolToken, msg.sender, liquidity1.poolAmount.add(liquidity2.poolAmount));
@@ -544,7 +544,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         if (_portion == PPM_RESOLUTION) {
             // remove the pool tokens from the provider
-            store.removeProtectedLiquidity(_id);
+            removeProtectedLiquidity(_id, liquidity.timestamp);
         } else {
             // remove portion of the pool tokens from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
@@ -845,6 +845,17 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
                 rate.d,
                 time()
             );
+    }
+
+    /**
+     * @dev removes protected liquidity from the store
+     *
+     * @param _id           id of the protected liquidity
+     * @param _timestamp    time at which the liquidity was protected
+     */
+    function removeProtectedLiquidity(uint256 _id, uint256 _timestamp) internal {
+        require(_timestamp < time(), "ERR_TOO_EARLY");
+        store.removeProtectedLiquidity(_id);
     }
 
     /**
@@ -1211,25 +1222,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         }
 
         return 0;
-    }
-
-    /**
-     * @dev transfers the ownership of a contract
-     * can only be called by the contract owner
-     *
-     * @param _owned       the owned contract
-     * @param _newOwner    the new owner of the contract
-     */
-    function transferOwnership(IOwned _owned, address _newOwner) internal ownerOnly {
-        _owned.transferOwnership(_newOwner);
-    }
-
-    /**
-     * @dev accepts the ownership of a contract
-     * can only be called by the contract owner
-     */
-    function acceptOwnership(IOwned _owned) internal ownerOnly {
-        _owned.acceptOwnership();
     }
 
     /**

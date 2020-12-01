@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const { ROLE_OWNER } = roles;
+const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -16,6 +16,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
+const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
@@ -44,6 +45,7 @@ describe('LiquidityProtectionAverageRate', () => {
     const owner = defaultSender;
     let bancorNetwork;
     let liquidityProtectionSettings;
+    let liquidityProtectionStore;
     let liquidityProtection;
     let reserveToken1;
     let reserveToken2;
@@ -62,13 +64,13 @@ describe('LiquidityProtectionAverageRate', () => {
 
         const networkToken = await DSToken.new('BNT', 'BNT', 18);
         const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-        await networkTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
+        await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
         await networkToken.transferOwnership(networkTokenGovernance.address);
         await networkTokenGovernance.acceptTokenOwnership();
 
         const govToken = await DSToken.new('vBNT', 'vBNT', 18);
         const govTokenGovernance = await TokenGovernance.new(govToken.address);
-        await govTokenGovernance.grantRole(roles.ROLE_GOVERNOR, governor);
+        await govTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
@@ -77,22 +79,23 @@ describe('LiquidityProtectionAverageRate', () => {
             contractRegistry.address
         );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
-
-        const checkpointStore = await CheckpointStore.new({ from: owner });
+        await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+        liquidityProtectionStore = await LiquidityProtectionStore.new();
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
-            defaultSender,
+            liquidityProtectionStore.address,
             networkTokenGovernance.address,
             govTokenGovernance.address,
             checkpointStore.address
         );
 
-        await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {
-            from: owner
-        });
+        await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+        await liquidityProtectionSettings.grantRole(ROLE_WHITELIST_ADMIN, owner, { from: owner });
+        await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
+        await liquidityProtection.acceptStoreOwnership();
         await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-        await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
-        await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
+        await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 
         const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
