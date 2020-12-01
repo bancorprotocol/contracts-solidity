@@ -88,17 +88,15 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 3', () => {
-        const factorLists = [
-            [9, 12, 15].map((x) => new BN(10).pow(new BN(x))),
-            [18, 24, 30].map((x) => new BN(10).pow(new BN(x))),
-            [23, 47, 95].map((x) => new BN(x).pow(new BN(10))),
-            [7, 9, 11, 13].map((x) => new BN(x).pow(new BN(10))),
-        ];
+        const initialRateNs = [9, 12, 15].map((x) => new BN(10).pow(new BN(x)));
+        const initialRateDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
+        const currentRateNs = [23, 47, 95].map((x) => new BN(x).pow(new BN(10)));
+        const currentRateDs = [7, 9, 11, 13].map((x) => new BN(x).pow(new BN(10)));
         const range = {
             maxAbsoluteError: '0.0',
             maxRelativeError: '0.000000000000000000003',
         };
-        impLossTest(factorLists, range);
+        impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range);
     });
 
     describe('accuracy part 4', () => {
@@ -189,28 +187,26 @@ describe('LiquidityProtectionStateless', () => {
         }
     }
 
-    function impLossTest(factorLists, range) {
+    function impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range) {
         let testNum = 0;
-        const numOfTest = factorLists.reduce((a, b) => a + b.length ** 4, 0);
+        const numOfTest = [initialRateNs, initialRateDs, currentRateNs, currentRateDs].reduce((a, b) => a * b.length, 1);
 
-        for (const factorList of factorLists) {
-            for (const initialRateN of factorList) {
-                for (const initialRateD of factorList) {
-                    for (const currentRateN of factorList) {
-                        for (const currentRateD of factorList) {
-                            testNum += 1;
-                            const testDesc = `impLoss(${initialRateN}/${initialRateD}, ${currentRateN}/${currentRateD})`;
-                            it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
-                                const expected = impLoss(initialRateN, initialRateD, currentRateN, currentRateD);
-                                const actual = await liquidityProtection.impLossTest(
-                                    initialRateN,
-                                    initialRateD,
-                                    currentRateN,
-                                    currentRateD
-                                );
-                                expectAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
-                            });
-                        }
+        for (const initialRateN of initialRateNs) {
+            for (const initialRateD of initialRateDs) {
+                for (const currentRateN of currentRateNs) {
+                    for (const currentRateD of currentRateDs) {
+                        testNum += 1;
+                        const testDesc = `impLoss(${initialRateN}/${initialRateD}, ${currentRateN}/${currentRateD})`;
+                        it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
+                            const expected = impLoss(initialRateN, initialRateD, currentRateN, currentRateD);
+                            const actual = await liquidityProtection.impLossTest(
+                                initialRateN,
+                                initialRateD,
+                                currentRateN,
+                                currentRateD
+                            );
+                            expectAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
+                        });
                     }
                 }
             }
