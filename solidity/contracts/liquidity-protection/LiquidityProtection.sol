@@ -14,6 +14,7 @@ import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
 import "./interfaces/ILiquidityProtectionSettings.sol";
+import "./interfaces/ICheckpointStore.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
@@ -74,6 +75,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
     ITokenGovernance public immutable govTokenGovernance;
+    ICheckpointStore public immutable lastRemoveCheckpointStore;
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
@@ -85,12 +87,14 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @param _store liquidity protection store
      * @param _networkTokenGovernance network token governance
      * @param _govTokenGovernance governance token governance
+     * @param _lastRemoveCheckpointStore last liquidity removal/transfer/unprotection checkpoints store
      */
     constructor(
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance
+        ITokenGovernance _govTokenGovernance,
+        ICheckpointStore _lastRemoveCheckpointStore
     )
         public
         validAddress(address(_settings))
@@ -109,6 +113,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         networkToken = IERC20Token(address(_networkTokenGovernance.token()));
         govTokenGovernance = _govTokenGovernance;
         govToken = IERC20Token(address(_govTokenGovernance.token()));
+
+        lastRemoveCheckpointStore = _lastRemoveCheckpointStore;
     }
 
     // ensures that the contract is currently removing liquidity from a converter
@@ -243,6 +249,9 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             : liquidity2.reserveAmount;
         safeTransferFrom(govToken, msg.sender, address(this), amount);
         govTokenGovernance.burn(amount);
+
+        // update last liquidity removal checkpoint
+        lastRemoveCheckpointStore.addCheckpoint(msg.sender);
 
         // remove the protected liquidities from the store
         store.removeProtectedLiquidity(_id1);
@@ -415,6 +424,10 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // ensure that msg.sender is allowed to transfer the protected liquidity
         liquidity = protectedLiquidity(_id, msg.sender);
 
+        // update last liquidity removal checkpoints
+        lastRemoveCheckpointStore.addCheckpoint(msg.sender);
+        lastRemoveCheckpointStore.addCheckpoint(_newProvider);
+
         // remove the protected liquidity from the current provider
         store.removeProtectedLiquidity(_id);
 
@@ -545,6 +558,9 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
                 fullReserveAmount - liquidity.reserveAmount
             );
         }
+
+        // update last liquidity removal checkpoint
+        lastRemoveCheckpointStore.addCheckpoint(msg.sender);
 
         // add the pool tokens to the system
         store.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);

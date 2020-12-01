@@ -4,6 +4,8 @@ const { expect } = require('../../chai-local');
 const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
+const { ROLE_OWNER } = roles;
+
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
@@ -16,6 +18,7 @@ const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Conve
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
+const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -31,7 +34,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-describe('LiquidityProtectionTokenRate', () => {
+describe('LiquidityProtectionAverageRate', () => {
     const convert = async (sourceToken, targetToken, amount) => {
         await sourceToken.approve(bancorNetwork.address, amount);
         const path = [sourceToken.address, poolToken.address, targetToken.address];
@@ -75,16 +78,19 @@ describe('LiquidityProtectionTokenRate', () => {
         );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
+        const checkpointStore = await CheckpointStore.new({ from: owner });
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
             defaultSender,
             networkTokenGovernance.address,
-            govTokenGovernance.address
+            govTokenGovernance.address,
+            checkpointStore.address
         );
 
         await liquidityProtectionSettings.grantRole(roles.ROLE_OWNER, liquidityProtection.address, {
             from: owner
         });
+        await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
         await networkTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
         await govTokenGovernance.grantRole(roles.ROLE_MINTER, liquidityProtection.address, { from: governor });
 

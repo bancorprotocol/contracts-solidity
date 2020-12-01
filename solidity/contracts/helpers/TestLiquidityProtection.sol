@@ -9,8 +9,12 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance
-    ) public LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance) {}
+        ITokenGovernance _govTokenGovernance,
+        ICheckpointStore _lastRemoveCheckpointStore
+    )
+        public
+        LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance, _lastRemoveCheckpointStore)
+    {}
 
     function impLossTest(
         uint256 _initialRateN,
