@@ -87,7 +87,7 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations, range);
     });
 
-    describe.only('accuracy part 3', () => {
+    describe('accuracy part 3', () => {
         const poolAmounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
         const poolRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
         const poolRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
@@ -102,7 +102,7 @@ describe('LiquidityProtectionStateless', () => {
         protectedAmountPlusFeeTest(poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs, range);
     });
 
-    describe('accuracy part 3', () => {
+    describe('accuracy part 4', () => {
         const initialRateNs = [9, 12, 15].map((x) => new BN(10).pow(new BN(x)));
         const initialRateDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
         const currentRateNs = [23, 47, 95].map((x) => new BN(x).pow(new BN(10)));
@@ -114,7 +114,7 @@ describe('LiquidityProtectionStateless', () => {
         impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range);
     });
 
-    describe('accuracy part 4', () => {
+    describe('accuracy part 5', () => {
         const amounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
         const fees = [30, 60, 90].map((x) => new BN(2).pow(new BN(x)));
         const lossNs = [12, 15, 18].map((x) => new BN(10).pow(new BN(x)));
