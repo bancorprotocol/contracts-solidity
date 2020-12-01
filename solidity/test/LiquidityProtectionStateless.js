@@ -103,13 +103,13 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 4', () => {
-        const initialRateNs = [9, 12, 15].map((x) => new BN(10).pow(new BN(x)));
-        const initialRateDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
-        const currentRateNs = [23, 47, 95].map((x) => new BN(x).pow(new BN(10)));
-        const currentRateDs = [7, 9, 11, 13].map((x) => new BN(x).pow(new BN(10)));
+        const initialRateNs = [18, 24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
+        const initialRateDs = [11, 23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
+        const currentRateNs = [18, 24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
+        const currentRateDs = [11, 23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
         const range = {
-            maxAbsoluteError: '0.0',
-            maxRelativeError: '0.000000000000000000003',
+            maxAbsoluteError: '0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006',
+            maxRelativeError: '0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000174',
         };
         impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range);
     });
