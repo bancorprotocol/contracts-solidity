@@ -244,9 +244,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        uint256 amount = liquidity1.reserveToken == networkTokenLocal
-            ? liquidity1.reserveAmount
-            : liquidity2.reserveAmount;
+        uint256 amount =
+            liquidity1.reserveToken == networkTokenLocal ? liquidity1.reserveAmount : liquidity2.reserveAmount;
         safeTransferFrom(govToken, msg.sender, address(this), amount);
         govTokenGovernance.burn(amount);
 
@@ -355,11 +354,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         // get the reserve balances
         ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolAnchor)));
-        (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) = converterReserveBalances(
-            converter,
-            _baseToken,
-            _networkToken
-        );
+        (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
+            converterReserveBalances(converter, _baseToken, _networkToken);
 
         // calculate and mint the required amount of network tokens for adding liquidity
         uint256 networkLiquidityAmount = _amount.mul(reserveBalanceNetwork).div(reserveBalanceBase);
@@ -481,23 +477,25 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         }
 
         // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = packRates(
-            liquidity.poolToken,
-            liquidity.reserveToken,
-            liquidity.reserveRateN,
-            liquidity.reserveRateD,
-            false
-        );
+        PackedRates memory packedRates =
+            packRates(
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.reserveRateN,
+                liquidity.reserveRateD,
+                false
+            );
 
-        uint256 targetAmount = removeLiquidityTargetAmount(
-            liquidity.poolToken,
-            liquidity.reserveToken,
-            liquidity.poolAmount,
-            liquidity.reserveAmount,
-            packedRates,
-            liquidity.timestamp,
-            _removeTimestamp
-        );
+        uint256 targetAmount =
+            removeLiquidityTargetAmount(
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount,
+                packedRates,
+                liquidity.timestamp,
+                _removeTimestamp
+            );
 
         // for network token, the return amount is identical to the target amount
         if (liquidity.reserveToken == networkToken) {
@@ -570,24 +568,26 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         }
 
         // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = packRates(
-            liquidity.poolToken,
-            liquidity.reserveToken,
-            liquidity.reserveRateN,
-            liquidity.reserveRateD,
-            true
-        );
+        PackedRates memory packedRates =
+            packRates(
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.reserveRateN,
+                liquidity.reserveRateD,
+                true
+            );
 
         // get the target token amount
-        uint256 targetAmount = removeLiquidityTargetAmount(
-            liquidity.poolToken,
-            liquidity.reserveToken,
-            liquidity.poolAmount,
-            liquidity.reserveAmount,
-            packedRates,
-            liquidity.timestamp,
-            time()
-        );
+        uint256 targetAmount =
+            removeLiquidityTargetAmount(
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount,
+                packedRates,
+                liquidity.timestamp,
+                time()
+            );
 
         // remove network token liquidity
         if (liquidity.reserveToken == networkTokenLocal) {
@@ -675,10 +675,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: _packedRates.addSpotRateN, d: _packedRates.addSpotRateD });
         Fraction memory removeSpotRate = Fraction({ n: _packedRates.removeSpotRateN, d: _packedRates.removeSpotRateD });
-        Fraction memory removeAverageRate = Fraction({
-            n: _packedRates.removeAverageRateN,
-            d: _packedRates.removeAverageRateD
-        });
+        Fraction memory removeAverageRate =
+            Fraction({ n: _packedRates.removeAverageRateN, d: _packedRates.removeAverageRateD });
 
         // calculate the protected amount of reserve tokens plus accumulated fee before compensation
         uint256 total = protectedAmountPlusFee(_poolAmount, poolRate, addSpotRate, removeSpotRate);
@@ -705,11 +703,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      */
     function claimBalance(uint256 _startIndex, uint256 _endIndex) external protected {
         // get the locked balances from the store
-        (uint256[] memory amounts, uint256[] memory expirationTimes) = store.lockedBalanceRange(
-            msg.sender,
-            _startIndex,
-            _endIndex
-        );
+        (uint256[] memory amounts, uint256[] memory expirationTimes) =
+            store.lockedBalanceRange(msg.sender, _startIndex, _endIndex);
 
         uint256 totalAmount = 0;
         uint256 length = amounts.length;
@@ -763,15 +758,16 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         PackedRates memory packedRates = packRates(_poolToken, _reserveToken, _reserveRateN, _reserveRateD, false);
 
         // get the current return
-        uint256 protectedReturn = removeLiquidityTargetAmount(
-            _poolToken,
-            _reserveToken,
-            poolAmount,
-            _reserveAmount,
-            packedRates,
-            time().sub(settings.maxProtectionDelay()),
-            time()
-        );
+        uint256 protectedReturn =
+            removeLiquidityTargetAmount(
+                _poolToken,
+                _reserveToken,
+                poolAmount,
+                _reserveAmount,
+                packedRates,
+                time().sub(settings.maxProtectionDelay()),
+                time()
+            );
 
         // calculate the ROI as the ratio between the current fully protected return and the initial amount
         return protectedReturn.mul(PPM_RESOLUTION).div(_reserveAmount);
@@ -896,11 +892,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         IERC20Token _reserveToken,
         bool _validateAverageRate
     ) internal view returns (Fraction memory) {
-        (, , uint256 averageRateN, uint256 averageRateD) = reserveTokenRates(
-            _poolToken,
-            _reserveToken,
-            _validateAverageRate
-        );
+        (, , uint256 averageRateN, uint256 averageRateD) =
+            reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
         return Fraction(averageRateN, averageRateD);
     }
 
@@ -967,12 +960,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         uint256 _addSpotRateD,
         bool _validateAverageRate
     ) internal view returns (PackedRates memory) {
-        (
-            uint256 removeSpotRateN,
-            uint256 removeSpotRateD,
-            uint256 removeAverageRateN,
-            uint256 removeAverageRateD
-        ) = reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
+        (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) =
+            reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
 
         require(
             (_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128) &&
@@ -1009,9 +998,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         uint256 _averageRateD,
         uint32 _maxDeviation
     ) internal pure returns (bool) {
-        uint256 min = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(
-            PPM_RESOLUTION - _maxDeviation
-        );
+        uint256 min =
+            _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
         uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
         uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
         return min <= mid && mid <= max;
@@ -1208,9 +1196,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         }
 
         // calculate the delta in network tokens
-        uint256 delta = (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(
-            _packedRates.removeAverageRateD
-        );
+        uint256 delta =
+            (_targetAmount - _baseAmount).mul(_packedRates.removeAverageRateN).div(_packedRates.removeAverageRateD);
 
         // the delta might be very small due to precision loss
         // in which case no compensation will take place (gas optimization)

@@ -145,7 +145,7 @@ describe('LiquidityProtection', () => {
         return new BN(transaction.gasPrice).mul(new BN(txResult.receipt.cumulativeGasUsed));
     };
 
-    const expectAlmostEqual = (amount1, amount2, maxError = 0.01) => {
+    const expectAlmostEqual = (amount1, amount2, maxError = '0.01') => {
         if (!amount1.eq(amount2)) {
             const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
             expect(error.lte(maxError)).to.be.true(`error = ${error.toFixed(maxError.length)}`);
