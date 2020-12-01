@@ -419,10 +419,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         notThis(_newProvider)
         returns (uint256)
     {
-        ProtectedLiquidity memory liquidity;
-
-        // ensure that msg.sender is allowed to transfer the protected liquidity
-        liquidity = protectedLiquidity(_id, msg.sender);
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
 
         // update last liquidity removal checkpoints
         lastRemoveCheckpointStore.addCheckpoint(msg.sender);
