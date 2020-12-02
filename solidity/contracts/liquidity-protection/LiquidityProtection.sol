@@ -404,44 +404,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     }
 
     /**
-     * @dev transfers protected liquidity to a new provider
-     * can be called by the owner of the protected liquidity or by a positions admin
-     *
-     * @param _id protected liquidity id
-     * @param _newProvider new provider
-     * @return new protected liquidity id
-     */
-    function transferLiquidity(uint256 _id, address _newProvider)
-        external
-        protected
-        validAddress(_newProvider)
-        notThis(_newProvider)
-        returns (uint256)
-    {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
-
-        // update last liquidity removal checkpoints
-        lastRemoveCheckpointStore.addCheckpoint(msg.sender);
-        lastRemoveCheckpointStore.addCheckpoint(_newProvider);
-
-        // remove the protected liquidity from the current provider
-        store.removeProtectedLiquidity(_id);
-
-        // add the protected liquidity to the new provider
-        return
-            store.addProtectedLiquidity(
-                _newProvider,
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.poolAmount,
-                liquidity.reserveAmount,
-                liquidity.reserveRateN,
-                liquidity.reserveRateD,
-                liquidity.timestamp
-            );
-    }
-
-    /**
      * @dev returns the expected/actual amounts the provider will receive for removing liquidity
      * it's also possible to provide the remove liquidity time to get an estimation
      * for the return at that given point
