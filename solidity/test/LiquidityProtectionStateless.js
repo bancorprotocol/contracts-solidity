@@ -57,7 +57,7 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations);
     });
 
-    describe('nameless', () => {
+    describe('accuracy part 1', () => {
         const amounts = [
             new BN(MIN_AMOUNT.toFixed()),
             new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed()),
@@ -74,7 +74,7 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
-    describe('nameless', () => {
+    describe('accuracy part 2', () => {
         const amounts = [
             new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()),
             new BN(MAX_AMOUNT.toFixed()),
@@ -91,7 +91,7 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
-    describe('accuracy part 1', () => {
+    describe('accuracy part 3', () => {
         const amounts = [
             new BN(MAX_AMOUNT.toFixed()),
         ];
@@ -107,7 +107,7 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
-    describe('accuracy part 2', () => {
+    describe('accuracy part 4', () => {
         const amounts = [
             new BN('123456789123456789'),
             new BN('987654321987654321'),
@@ -123,7 +123,7 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
-    describe('accuracy part 3', () => {
+    describe('accuracy part 5', () => {
         const poolAmounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
         const poolRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
         const poolRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
@@ -138,7 +138,7 @@ describe('LiquidityProtectionStateless', () => {
         protectedAmountPlusFeeTest(poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs, range);
     });
 
-    describe('accuracy part 4', () => {
+    describe('accuracy part 6', () => {
         const initialRateNs = [18, 24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
         const initialRateDs = [11, 23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
         const currentRateNs = [18, 24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
@@ -150,7 +150,7 @@ describe('LiquidityProtectionStateless', () => {
         impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range);
     });
 
-    describe('accuracy part 5', () => {
+    describe('accuracy part 7', () => {
         const amounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
         const fees = [30, 60, 90].map((x) => new BN(2).pow(new BN(x)));
         const lossNs = [12, 15, 18].map((x) => new BN(10).pow(new BN(x)));
