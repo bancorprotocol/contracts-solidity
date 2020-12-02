@@ -57,6 +57,40 @@ describe('LiquidityProtectionStateless', () => {
         removeLiquidityTargetAmountTest(amounts, durations);
     });
 
+    describe('nameless', () => {
+        const amounts = [
+            new BN(MIN_AMOUNT.toFixed()),
+            new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed()),
+        ];
+        const durations = [
+            MIN_DURATION,
+            MAX_DURATION - 1,
+        ];
+        const deviation = '0.25';
+        const range = {
+            maxAbsoluteError: '1.2',
+            maxRelativeError: '0.0000000000003',
+        };
+        removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
+    });
+
+    describe('nameless', () => {
+        const amounts = [
+            new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()),
+            new BN(MAX_AMOUNT.toFixed()),
+        ];
+        const durations = [
+            MIN_DURATION,
+            MAX_DURATION - 1,
+        ];
+        const deviation = '0.75';
+        const range = {
+            maxAbsoluteError: '0.0',
+            maxRelativeError: '0.0000000000000000007',
+        };
+        removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
+    });
+
     describe('accuracy part 1', () => {
         const amounts = [
             new BN(MAX_AMOUNT.toFixed()),
@@ -65,11 +99,12 @@ describe('LiquidityProtectionStateless', () => {
             MIN_DURATION,
             MAX_DURATION - 1,
         ];
+        const deviation = '1';
         const range = {
             maxAbsoluteError: '0',
             maxRelativeError: '0',
         };
-        removeLiquidityTargetAmountTest(amounts, durations, range);
+        removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('accuracy part 2', () => {
@@ -80,11 +115,12 @@ describe('LiquidityProtectionStateless', () => {
         const durations = [
             Math.floor((MIN_DURATION + MAX_DURATION) / 2),
         ];
+        const deviation = '1';
         const range = {
             maxAbsoluteError: '1.6',
             maxRelativeError: '0.000000000000000003',
         };
-        removeLiquidityTargetAmountTest(amounts, durations, range);
+        removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('accuracy part 3', () => {
@@ -128,7 +164,7 @@ describe('LiquidityProtectionStateless', () => {
         compensationAmountTest(amounts, fees, lossNs, lossDs, levelNs, levelDs, range);
     });
 
-    function removeLiquidityTargetAmountTest(amounts, durations, range) {
+    function removeLiquidityTargetAmountTest(amounts, durations, deviation = '1', range = null) {
         let testNum = 0;
         const numOfTest = amounts.length ** 10 * durations.length ** 1;
 
@@ -138,10 +174,10 @@ describe('LiquidityProtectionStateless', () => {
                     for (const reserveAmount of amounts) {
                         for (const addSpotRateN of amounts) {
                             for (const addSpotRateD of amounts) {
-                                for (const removeSpotRateN of amounts) {
-                                    for (const removeSpotRateD of amounts) {
-                                        for (const removeAverageRateN of amounts) {
-                                            for (const removeAverageRateD of amounts) {
+                                for (const removeSpotRateN of amounts.map(amount => fixedDev(amount, addSpotRateN, deviation))) {
+                                    for (const removeSpotRateD of amounts.map(amount => fixedDev(amount, addSpotRateD, deviation))) {
+                                        for (const removeAverageRateN of amounts.map(amount => fixedDev(amount, removeSpotRateN, deviation))) {
+                                            for (const removeAverageRateD of amounts.map(amount => fixedDev(amount, removeSpotRateD, deviation))) {
                                                 for (const timeElapsed of durations) {
                                                     testNum += 1;
                                                     const testDesc = JSON.stringify({
@@ -347,6 +383,19 @@ describe('LiquidityProtectionStateless', () => {
     function compensationAmount(amount, total, lossN, lossD, levelN, levelD) {
         [amount, total, lossN, lossD, levelN, levelD] = [...arguments].map(x => new Decimal(x.toString()));
         return total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).mul(amount).div(lossD.mul(levelD)));
+    }
+
+    function fixedDev(a, b, p) {
+        const x = Decimal(a.toString());
+        const y = Decimal(b.toString());
+        const q = Decimal(1).sub(p);
+        if (x.lt(y.mul(q))) {
+            return new BN(y.mul(q).toFixed(0, Decimal.ROUND_UP));
+        }
+        if (x.gt(y.div(q))) {
+            return new BN(y.div(q).toFixed(0, Decimal.ROUND_DOWN));
+        }
+        return a;
     }
 
     function expectAlmostEqual(actual, expected, range) {
