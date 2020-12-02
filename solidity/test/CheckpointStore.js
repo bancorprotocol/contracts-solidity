@@ -17,7 +17,7 @@ describe('CheckpointStore', () => {
     const user2 = accounts[7];
 
     let checkpointStore;
-    let now = new BN(1606121626);
+    let now = new BN(1000000000);
 
     beforeEach(async () => {
         checkpointStore = await CheckpointStore.new({ from: owner });
