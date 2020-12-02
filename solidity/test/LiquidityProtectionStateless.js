@@ -42,7 +42,12 @@ describe('LiquidityProtectionStateless', () => {
             MIN_DURATION,
             MAX_DURATION - 1,
         ];
-        removeLiquidityTargetAmountTest(amounts, durations);
+        const deviation = '1';
+        const range = {
+            maxAbsoluteError: Infinity,
+            maxRelativeError: Infinity,
+        };
+        removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('sanity part 2', () => {
@@ -54,7 +59,12 @@ describe('LiquidityProtectionStateless', () => {
             MIN_DURATION,
             MAX_DURATION - 1,
         ];
-        removeLiquidityTargetAmountTest(amounts, durations);
+        const deviation = '1';
+        const range = {
+            maxAbsoluteError: Infinity,
+            maxRelativeError: Infinity,
+        };
+        removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('accuracy part 1', () => {
@@ -164,7 +174,7 @@ describe('LiquidityProtectionStateless', () => {
         compensationAmountTest(amounts, fees, lossNs, lossDs, levelNs, levelDs, range);
     });
 
-    function removeLiquidityTargetAmountTest(amounts, durations, deviation = '1', range = null) {
+    function removeLiquidityTargetAmountTest(amounts, durations, deviation, range) {
         let testNum = 0;
         const numOfTest = amounts.length ** 10 * durations.length ** 1;
 
@@ -208,22 +218,20 @@ describe('LiquidityProtectionStateless', () => {
                                                             0,
                                                             timeElapsed
                                                         );
-                                                        if (range) {
-                                                            const expected = removeLiquidityTargetAmount(
-                                                                poolTokenRateN,
-                                                                poolTokenRateD,
-                                                                poolAmount,
-                                                                reserveAmount,
-                                                                addSpotRateN,
-                                                                addSpotRateD,
-                                                                removeSpotRateN,
-                                                                removeSpotRateD,
-                                                                removeAverageRateN,
-                                                                removeAverageRateD,
-                                                                timeElapsed
-                                                            );
-                                                            expectAlmostEqual(Decimal(actual.toString()), expected, range);
-                                                        }
+                                                        const expected = removeLiquidityTargetAmount(
+                                                            poolTokenRateN,
+                                                            poolTokenRateD,
+                                                            poolAmount,
+                                                            reserveAmount,
+                                                            addSpotRateN,
+                                                            addSpotRateD,
+                                                            removeSpotRateN,
+                                                            removeSpotRateD,
+                                                            removeAverageRateN,
+                                                            removeAverageRateD,
+                                                            timeElapsed
+                                                        );
+                                                        expectAlmostEqual(Decimal(actual.toString()), expected, range);
                                                     });
                                                 }
                                             }
