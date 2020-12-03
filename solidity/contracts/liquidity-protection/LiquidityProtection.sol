@@ -68,6 +68,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
+    uint256 internal constant MAX_UINT256 = uint256(-1);
 
     ILiquidityProtectionSettings public immutable settings;
     ILiquidityProtectionStore public immutable store;
@@ -699,9 +700,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         // calculate the protected amount of reserve tokens plus accumulated fee before compensation
         uint256 total = protectedAmountPlusFee(_poolAmount, poolRate, addSpotRate, removeSpotRate);
-        if (total < _reserveAmount) {
-            total = _reserveAmount;
-        }
 
         // calculate the impermanent loss
         Fraction memory loss = impLoss(addSpotRate, removeAverageRate);
@@ -710,7 +708,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
 
         // calculate the compensation amount
-        return compensationAmount(_reserveAmount, total, loss, level);
+        return compensationAmount(_reserveAmount, Math.max(_reserveAmount, total), loss, level);
     }
 
     /**
@@ -876,7 +874,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @param _poolToken       pool token
      * @param _reserveToken    reserve token
      */
-    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view returns (Fraction memory) {
+    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view virtual returns (Fraction memory) {
         // get the pool token supply
         uint256 poolTokenSupply = _poolToken.totalSupply();
 
@@ -1132,8 +1130,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         }
 
         (uint256 hi, uint256 lo) = n > _poolAmount ? (n, _poolAmount) : (_poolAmount, n);
-        (uint256 p, uint256 q) = Math.reducedRatio(hi, d, uint256(-1) / lo);
-        return (p * lo) / q;
+        (uint256 p, uint256 q) = Math.reducedRatio(hi, d, MAX_UINT256 / lo);
+        uint256 min = (hi / d).mul(lo);
+
+        if (q > 0) {
+            return Math.max(min, p * lo / q);
+        }
+        return min;
     }
 
     /**
@@ -1150,7 +1153,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         uint256 prod = ratioN * ratioD;
         uint256 root = prod / ratioN == ratioD ? Math.floorSqrt(prod) : Math.floorSqrt(ratioN) * Math.floorSqrt(ratioD);
         uint256 sum = ratioN.add(ratioD);
-        return Fraction({ n: sum.sub(root.mul(2)), d: sum });
+
+        // the arithmetic below is safe because `x + y >= sqrt(x * y) * 2`
+        if (sum % 2 == 0) {
+            sum /= 2;
+            return Fraction({ n: sum - root, d: sum });
+        }
+        return Fraction({ n: sum - root * 2, d: sum });
     }
 
     /**
@@ -1190,8 +1199,11 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         Fraction memory _loss,
         Fraction memory _level
     ) internal pure returns (uint256) {
-        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT128);
-        return _total.mul(lossD.sub(lossN)).div(lossD).add(_amount.mul(lossN.mul(_level.n)).div(lossD.mul(_level.d)));
+        uint256 levelN = _level.n.mul(_amount);
+        uint256 levelD = _level.d;
+        uint256 maxVal = Math.max(Math.max(levelN, levelD), _total);
+        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT256 / maxVal);
+        return _total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).div(lossD.mul(levelD)));
     }
 
     function getNetworkCompensation(
