@@ -283,7 +283,8 @@ const run = async () => {
         const tokens = converter.reserves.map((reserve) => reserves[reserve.symbol].address);
         const weights = converter.reserves.map((reserve) => percentageToPPM(reserve.weight));
         const amounts = converter.reserves.map((reserve) =>
-            decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals));
+            decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals)
+        );
         const value = amounts[converter.reserves.findIndex((reserve) => reserve.symbol === 'ETH')];
 
         await execute(
@@ -338,6 +339,7 @@ const run = async () => {
     await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
 
+    const checkpointStore = await web3Func(deploy, 'checkpointStore', 'CheckpointStore', []);
     const liquidityProtectionSettings = await web3Func(
         deploy,
         'liquidityProtectionSettings',
@@ -349,7 +351,8 @@ const run = async () => {
         liquidityProtectionSettings._address,
         liquidityProtectionStore._address,
         bntTokenGovernance._address,
-        vbntTokenGovernance._address
+        vbntTokenGovernance._address,
+        checkpointStore._address
     ];
 
     const liquidityProtection = await web3Func(
@@ -359,12 +362,14 @@ const run = async () => {
         liquidityProtectionParams
     );
 
-    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
-    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_WHITELIST_ADMIN, account));
+    await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     // granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
+
+    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_WHITELIST_ADMIN, account));
 
     await execute(
         contractRegistry.methods.registerAddress(
