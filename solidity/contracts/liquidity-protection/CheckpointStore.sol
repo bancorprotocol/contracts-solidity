@@ -94,7 +94,7 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
      *
      * @return the checkpoint
      */
-    function checkpoint(address _address) external view override validAddress(_address) returns (uint256) {
+    function checkpoint(address _address) external view override returns (uint256) {
         return data[_address];
     }
 
