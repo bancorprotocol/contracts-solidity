@@ -1,4 +1,4 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
+const { defaultSender, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
@@ -7,6 +7,7 @@ const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSe
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 
 const MIN_AMOUNT = Decimal(2).pow(0);
 const MAX_AMOUNT = Decimal(2).pow(127);
@@ -25,110 +26,79 @@ describe('LiquidityProtectionStateless', () => {
         const liquidityProtectionStore = await LiquidityProtectionStore.new();
         const networkTokenGovernance = await TokenGovernance.new(defaultSender);
         const govTokenGovernance = await TokenGovernance.new(defaultSender);
+        const checkpointStore = await CheckpointStore.new();
+
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             networkTokenGovernance.address,
-            govTokenGovernance.address
+            govTokenGovernance.address,
+            checkpointStore.address
         );
     });
 
     describe('sanity part 1', () => {
-        const amounts = [
-            new BN(MIN_AMOUNT.toFixed()),
-            new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed()),
-        ];
-        const durations = [
-            MIN_DURATION,
-            MAX_DURATION - 1,
-        ];
+        const amounts = [new BN(MIN_AMOUNT.toFixed()), new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed())];
+        const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '1';
         const range = {
             maxAbsoluteError: Infinity,
-            maxRelativeError: Infinity,
+            maxRelativeError: Infinity
         };
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('sanity part 2', () => {
-        const amounts = [
-            new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()),
-            new BN(MAX_AMOUNT.toFixed()),
-        ];
-        const durations = [
-            MIN_DURATION,
-            MAX_DURATION - 1,
-        ];
+        const amounts = [new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()), new BN(MAX_AMOUNT.toFixed())];
+        const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '1';
         const range = {
             maxAbsoluteError: Infinity,
-            maxRelativeError: Infinity,
+            maxRelativeError: Infinity
         };
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('accuracy part 1', () => {
-        const amounts = [
-            new BN(MIN_AMOUNT.toFixed()),
-            new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed()),
-        ];
-        const durations = [
-            MIN_DURATION,
-            MAX_DURATION - 1,
-        ];
+        const amounts = [new BN(MIN_AMOUNT.toFixed()), new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed())];
+        const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '0.25';
         const range = {
             maxAbsoluteError: '1.2',
-            maxRelativeError: '0.0000000000003',
+            maxRelativeError: '0.0000000000003'
         };
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('accuracy part 2', () => {
-        const amounts = [
-            new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()),
-            new BN(MAX_AMOUNT.toFixed()),
-        ];
-        const durations = [
-            MIN_DURATION,
-            MAX_DURATION - 1,
-        ];
+        const amounts = [new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()), new BN(MAX_AMOUNT.toFixed())];
+        const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '0.75';
         const range = {
             maxAbsoluteError: '0.0',
-            maxRelativeError: '0.0000000000000000007',
+            maxRelativeError: '0.0000000000000000007'
         };
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('accuracy part 3', () => {
-        const amounts = [
-            new BN(MAX_AMOUNT.toFixed()),
-        ];
-        const durations = [
-            MIN_DURATION,
-            MAX_DURATION - 1,
-        ];
+        const amounts = [new BN(MAX_AMOUNT.toFixed())];
+        const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '1';
         const range = {
             maxAbsoluteError: '0',
-            maxRelativeError: '0',
+            maxRelativeError: '0'
         };
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
 
     describe('accuracy part 4', () => {
-        const amounts = [
-            new BN('123456789123456789'),
-            new BN('987654321987654321'),
-        ];
-        const durations = [
-            Math.floor((MIN_DURATION + MAX_DURATION) / 2),
-        ];
+        const amounts = [new BN('123456789123456789'), new BN('987654321987654321')];
+        const durations = [Math.floor((MIN_DURATION + MAX_DURATION) / 2)];
         const deviation = '1';
         const range = {
             maxAbsoluteError: '1.6',
-            maxRelativeError: '0.000000000000000003',
+            maxRelativeError: '0.000000000000000003'
         };
         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
     });
@@ -143,9 +113,18 @@ describe('LiquidityProtectionStateless', () => {
         const removeRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
         const range = {
             maxAbsoluteError: '1.0',
-            maxRelativeError: '0.0000000005',
+            maxRelativeError: '0.0000000005'
         };
-        protectedAmountPlusFeeTest(poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs, range);
+        protectedAmountPlusFeeTest(
+            poolAmounts,
+            poolRateNs,
+            poolRateDs,
+            addRateNs,
+            addRateDs,
+            removeRateNs,
+            removeRateDs,
+            range
+        );
     });
 
     describe('accuracy part 6', () => {
@@ -154,8 +133,10 @@ describe('LiquidityProtectionStateless', () => {
         const currentRateNs = [18, 24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
         const currentRateDs = [11, 23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
         const range = {
-            maxAbsoluteError: '0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006',
-            maxRelativeError: '0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000174',
+            maxAbsoluteError:
+                '0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006',
+            maxRelativeError:
+                '0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000174'
         };
         impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range);
     });
@@ -169,7 +150,7 @@ describe('LiquidityProtectionStateless', () => {
         const levelDs = [7, 9, 11].map((x) => new BN(x).pow(new BN(10)));
         const range = {
             maxAbsoluteError: '1.0',
-            maxRelativeError: '0.0000000006',
+            maxRelativeError: '0.0000000006'
         };
         compensationAmountTest(amounts, fees, lossNs, lossDs, levelNs, levelDs, range);
     });
@@ -184,10 +165,18 @@ describe('LiquidityProtectionStateless', () => {
                     for (const reserveAmount of amounts) {
                         for (const addSpotRateN of amounts) {
                             for (const addSpotRateD of amounts) {
-                                for (const removeSpotRateN of amounts.map(amount => fixedDev(amount, addSpotRateN, deviation))) {
-                                    for (const removeSpotRateD of amounts.map(amount => fixedDev(amount, addSpotRateD, deviation))) {
-                                        for (const removeAverageRateN of amounts.map(amount => fixedDev(amount, removeSpotRateN, deviation))) {
-                                            for (const removeAverageRateD of amounts.map(amount => fixedDev(amount, removeSpotRateD, deviation))) {
+                                for (const removeSpotRateN of amounts.map((amount) =>
+                                    fixedDev(amount, addSpotRateN, deviation)
+                                )) {
+                                    for (const removeSpotRateD of amounts.map((amount) =>
+                                        fixedDev(amount, addSpotRateD, deviation)
+                                    )) {
+                                        for (const removeAverageRateN of amounts.map((amount) =>
+                                            fixedDev(amount, removeSpotRateN, deviation)
+                                        )) {
+                                            for (const removeAverageRateD of amounts.map((amount) =>
+                                                fixedDev(amount, removeSpotRateD, deviation)
+                                            )) {
                                                 for (const timeElapsed of durations) {
                                                     testNum += 1;
                                                     const testDesc = JSON.stringify({
@@ -202,7 +191,10 @@ describe('LiquidityProtectionStateless', () => {
                                                         removeAverageRateN,
                                                         removeAverageRateD,
                                                         timeElapsed
-                                                    }).split('"').join('').slice(1, -1);
+                                                    })
+                                                        .split('"')
+                                                        .join('')
+                                                        .slice(1, -1);
                                                     it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
                                                         const actual = await liquidityProtection.removeLiquidityTargetAmountTest.call(
                                                             poolTokenRateN,
@@ -246,9 +238,26 @@ describe('LiquidityProtectionStateless', () => {
         }
     }
 
-    function protectedAmountPlusFeeTest(poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs, range) {
+    function protectedAmountPlusFeeTest(
+        poolAmounts,
+        poolRateNs,
+        poolRateDs,
+        addRateNs,
+        addRateDs,
+        removeRateNs,
+        removeRateDs,
+        range
+    ) {
         let testNum = 0;
-        const numOfTest = [poolAmounts, poolRateNs, poolRateDs, addRateNs, addRateDs, removeRateNs, removeRateDs].reduce((a, b) => a * b.length, 1);
+        const numOfTest = [
+            poolAmounts,
+            poolRateNs,
+            poolRateDs,
+            addRateNs,
+            addRateDs,
+            removeRateNs,
+            removeRateDs
+        ].reduce((a, b) => a * b.length, 1);
 
         for (const poolAmount of poolAmounts) {
             for (const poolRateN of poolRateNs) {
@@ -260,7 +269,15 @@ describe('LiquidityProtectionStateless', () => {
                                     testNum += 1;
                                     const testDesc = `compensationAmount(${poolAmount}, ${poolRateN}/${poolRateD}, ${addRateN}/${addRateD}, ${removeRateN}/${removeRateD})`;
                                     it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
-                                        const expected = protectedAmountPlusFee(poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD);
+                                        const expected = protectedAmountPlusFee(
+                                            poolAmount,
+                                            poolRateN,
+                                            poolRateD,
+                                            addRateN,
+                                            addRateD,
+                                            removeRateN,
+                                            removeRateD
+                                        );
                                         const actual = await liquidityProtection.protectedAmountPlusFeeTest(
                                             poolAmount,
                                             poolRateN,
@@ -283,7 +300,10 @@ describe('LiquidityProtectionStateless', () => {
 
     function impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range) {
         let testNum = 0;
-        const numOfTest = [initialRateNs, initialRateDs, currentRateNs, currentRateDs].reduce((a, b) => a * b.length, 1);
+        const numOfTest = [initialRateNs, initialRateDs, currentRateNs, currentRateDs].reduce(
+            (a, b) => a * b.length,
+            1
+        );
 
         for (const initialRateN of initialRateNs) {
             for (const initialRateD of initialRateDs) {
@@ -377,8 +397,17 @@ describe('LiquidityProtectionStateless', () => {
     }
 
     function protectedAmountPlusFee(poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD) {
-        [poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD] = [...arguments].map(x => new Decimal(x.toString()));
-        return removeRateN.div(removeRateD).mul(addRateD).div(addRateN).sqrt().mul(poolRateN).div(poolRateD).mul(poolAmount);
+        [poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD] = [...arguments].map(
+            (x) => new Decimal(x.toString())
+        );
+        return removeRateN
+            .div(removeRateD)
+            .mul(addRateD)
+            .div(addRateN)
+            .sqrt()
+            .mul(poolRateN)
+            .div(poolRateD)
+            .mul(poolAmount);
     }
 
     function impLoss(initialRateN, initialRateD, currentRateN, currentRateD) {
@@ -389,8 +418,11 @@ describe('LiquidityProtectionStateless', () => {
     }
 
     function compensationAmount(amount, total, lossN, lossD, levelN, levelD) {
-        [amount, total, lossN, lossD, levelN, levelD] = [...arguments].map(x => new Decimal(x.toString()));
-        return total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).mul(amount).div(lossD.mul(levelD)));
+        [amount, total, lossN, lossD, levelN, levelD] = [...arguments].map((x) => new Decimal(x.toString()));
+        return total
+            .mul(lossD.sub(lossN))
+            .div(lossD)
+            .add(lossN.mul(levelN).mul(amount).div(lossD.mul(levelD)));
     }
 
     function fixedDev(a, b, p) {

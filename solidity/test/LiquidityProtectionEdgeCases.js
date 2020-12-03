@@ -1,5 +1,5 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { BN, constants } = require('@openzeppelin/test-helpers');
+const { BN, constants, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
@@ -20,6 +20,7 @@ const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSe
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
+const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -90,12 +91,23 @@ describe('LiquidityProtectionEdgeCases', () => {
         return systemBalance.mul(reserveBalance).div(totalSupply);
     };
 
+    const setTime = async (time) => {
+        now = time;
+
+        for (const t of [converter, checkpointStore, liquidityProtection]) {
+            if (t) {
+                await t.setTime(now);
+            }
+        }
+    };
+
     let contractRegistry;
     let converterRegistry;
     let bancorNetwork;
     let baseToken;
     let networkToken;
     let govToken;
+    let checkpointStore;
     let poolToken;
     let converter;
     let liquidityProtectionSettings;
@@ -160,6 +172,8 @@ describe('LiquidityProtectionEdgeCases', () => {
         converter = await LiquidityPoolV1Converter.at(converterAddress);
         await converter.acceptOwnership();
 
+        checkpointStore = await CheckpointStore.new({ from: owner });
+
         liquidityProtectionSettings = await LiquidityProtectionSettings.new(
             networkToken.address,
             contractRegistry.address
@@ -171,15 +185,19 @@ describe('LiquidityProtectionEdgeCases', () => {
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             networkTokenGovernance.address,
-            govTokenGovernance.address
+            govTokenGovernance.address,
+            checkpointStore.address
         );
 
         await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
         await liquidityProtectionSettings.grantRole(ROLE_WHITELIST_ADMIN, owner, { from: owner });
+        await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
         await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
         await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
+
+        await setTime(new BN(1));
 
         await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
         await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, FULL_PPM);
@@ -227,7 +245,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                         await generateFee(FEE_PPM, baseToken, networkToken);
                     }
 
-                    await converter.setTime(timestamp);
+                    await setTime(timestamp);
                     const actual = await liquidityProtection.removeLiquidityReturn(0, FULL_PPM, timestamp);
                     const error = test(actual[0], amounts[2]);
                     expect(error).to.be.empty(error);
@@ -277,7 +295,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                         await generateFee(FEE_PPM, networkToken, baseToken);
                     }
 
-                    await converter.setTime(timestamp);
+                    await setTime(timestamp);
                     const actual = await liquidityProtection.removeLiquidityReturn(1, FULL_PPM, timestamp);
                     const error = test(actual[0], amounts[3]);
                     expect(error).to.be.empty(error);
