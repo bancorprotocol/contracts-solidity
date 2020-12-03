@@ -267,14 +267,14 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @dev adds protected liquidity to a pool for a specific recipient
      * also mints new governance tokens for the caller if the caller adds network tokens
      *
-     * @param _recipient       protected liquidity recipient
+     * @param _owner       protected liquidity owner
      * @param _poolAnchor      anchor of the pool
      * @param _reserveToken    reserve token to add to the pool
      * @param _amount          amount of tokens to add to the pool
      * @return new protected liquidity id
      */
     function addLiquidityFor(
-        address _recipient,
+        address _owner,
         IConverterAnchor _poolAnchor,
         IERC20Token _reserveToken,
         uint256 _amount
@@ -282,13 +282,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         external
         payable
         protected
-        validAddress(_recipient)
+        validAddress(_owner)
         poolSupported(_poolAnchor)
         poolWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
         returns (uint256)
     {
-        return addLiquidity(_recipient, _poolAnchor, _reserveToken, _amount);
+        return addLiquidity(_owner, _poolAnchor, _reserveToken, _amount);
     }
 
     /**
@@ -320,14 +320,14 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @dev adds protected liquidity to a pool for a specific recipient
      * also mints new governance tokens for the caller if the caller adds network tokens
      *
-     * @param _recipient       protected liquidity recipient
+     * @param _owner       protected liquidity owner
      * @param _poolAnchor      anchor of the pool
      * @param _reserveToken    reserve token to add to the pool
      * @param _amount          amount of tokens to add to the pool
      * @return new protected liquidity id
      */
     function addLiquidity(
-        address _recipient,
+        address _owner,
         IConverterAnchor _poolAnchor,
         IERC20Token _reserveToken,
         uint256 _amount
@@ -337,27 +337,27 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         if (_reserveToken == networkTokenLocal) {
             require(msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");
-            return addNetworkTokenLiquidity(_recipient, _poolAnchor, networkTokenLocal, _amount);
+            return addNetworkTokenLiquidity(_owner, _poolAnchor, networkTokenLocal, _amount);
         }
 
         // verify that ETH was passed with the call if needed
         uint256 val = _reserveToken == ETH_RESERVE_ADDRESS ? _amount : 0;
         require(msg.value == val, "ERR_ETH_AMOUNT_MISMATCH");
-        return addBaseTokenLiquidity(_recipient, _poolAnchor, _reserveToken, networkTokenLocal, _amount);
+        return addBaseTokenLiquidity(_owner, _poolAnchor, _reserveToken, networkTokenLocal, _amount);
     }
 
     /**
      * @dev adds protected network token liquidity to a pool
      * also mints new governance tokens for the caller
      *
-     * @param _recipient    protected liquidity recipient
+     * @param _owner    protected liquidity owner
      * @param _poolAnchor   anchor of the pool
      * @param _networkToken the network reserve token of the pool
      * @param _amount       amount of tokens to add to the pool
      * @return new protected liquidity id
      */
     function addNetworkTokenLiquidity(
-        address _recipient,
+        address _owner,
         IConverterAnchor _poolAnchor,
         IERC20Token _networkToken,
         uint256 _amount
@@ -374,7 +374,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         store.decSystemBalance(poolToken, poolTokenAmount);
 
         // add protected liquidity for the recipient
-        uint256 id = addProtectedLiquidity(_recipient, poolToken, _networkToken, poolTokenAmount, _amount);
+        uint256 id = addProtectedLiquidity(_owner, poolToken, _networkToken, poolTokenAmount, _amount);
 
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
@@ -382,7 +382,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         networkTokenGovernance.burn(_amount);
 
         // mint governance tokens to the recipient
-        govTokenGovernance.mint(_recipient, _amount);
+        govTokenGovernance.mint(_owner, _amount);
 
         return id;
     }
@@ -390,7 +390,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     /**
      * @dev adds protected base token liquidity to a pool
      *
-     * @param _recipient    protected liquidity recipient
+     * @param _owner    protected liquidity owner
      * @param _poolAnchor   anchor of the pool
      * @param _baseToken    the base reserve token of the pool
      * @param _networkToken the network reserve token of the pool
@@ -398,7 +398,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @return new protected liquidity id
      */
     function addBaseTokenLiquidity(
-        address _recipient,
+        address _owner,
         IConverterAnchor _poolAnchor,
         IERC20Token _baseToken,
         IERC20Token _networkToken,
@@ -451,7 +451,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
         store.incSystemBalance(poolToken, poolTokenAmount - poolTokenAmount / 2); // account for rounding errors
-        return addProtectedLiquidity(_recipient, poolToken, _baseToken, poolTokenAmount / 2, _amount);
+        return addProtectedLiquidity(_owner, poolToken, _baseToken, poolTokenAmount / 2, _amount);
     }
 
     /**
