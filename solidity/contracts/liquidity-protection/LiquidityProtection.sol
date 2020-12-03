@@ -87,7 +87,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @param _store liquidity protection store
      * @param _networkTokenGovernance network token governance
      * @param _govTokenGovernance governance token governance
-     * @param _lastRemoveCheckpointStore last liquidity removal/transfer/unprotection checkpoints store
+     * @param _lastRemoveCheckpointStore last liquidity removal/unprotection checkpoints store
      */
     constructor(
         ILiquidityProtectionSettings _settings,
