@@ -20,9 +20,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // the owner role is used to set the values in the store
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
-    // the whitelist admin role is responsible for managing pools whitelist
-    bytes32 public constant ROLE_WHITELIST_ADMIN = keccak256("ROLE_WHITELIST_ADMIN");
-
     uint32 private constant PPM_RESOLUTION = 1000000;
 
     IERC20Token public immutable networkToken;
@@ -128,7 +125,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
-        _setRoleAdmin(ROLE_WHITELIST_ADMIN, ROLE_OWNER);
 
         // allow the deployer to initially govern the contract.
         _setupRole(ROLE_OWNER, msg.sender);
@@ -144,16 +140,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // error message binary size optimization
     function _onlyOwner() internal view {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
-    }
-
-    modifier onlyWhitelistAdmin() {
-        _onlyWhitelistAdmin();
-        _;
-    }
-
-    // error message binary size optimization
-    function _onlyWhitelistAdmin() internal view {
-        require(hasRole(ROLE_WHITELIST_ADMIN, msg.sender), "ERR_ACCESS_DENIED");
     }
 
     // ensures that the portion is valid
@@ -176,7 +162,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function addPoolToWhitelist(IConverterAnchor _poolAnchor)
         external
         override
-        onlyWhitelistAdmin
+        onlyOwner
         validAddress(address(_poolAnchor))
         notThis(address(_poolAnchor))
     {
@@ -194,7 +180,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function removePoolFromWhitelist(IConverterAnchor _poolAnchor)
         external
         override
-        onlyWhitelistAdmin
+        onlyOwner
         validAddress(address(_poolAnchor))
         notThis(address(_poolAnchor))
     {

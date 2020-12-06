@@ -6,7 +6,7 @@ const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { duration, latest } = time;
-const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -309,7 +309,6 @@ describe('LiquidityProtection', () => {
         );
 
         await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-        await liquidityProtectionSettings.grantRole(ROLE_WHITELIST_ADMIN, owner, { from: owner });
         await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
