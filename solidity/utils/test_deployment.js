@@ -368,7 +368,6 @@ const run = async () => {
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
 
-    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_OWNER, account));
     await execute(liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address));
 
     await execute(
