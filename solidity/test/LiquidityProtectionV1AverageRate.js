@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const { ROLE_OWNER, ROLE_WHITELIST_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { ROLE_OWNER, ROLE_MINTED_TOKENS_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -19,6 +19,7 @@ const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSe
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
+const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -78,19 +79,22 @@ describe('LiquidityProtectionV1AverageRate', () => {
             contractRegistry.address
         );
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
+        const checkpointStore = await CheckpointStore.new({ from: owner });
 
         liquidityProtectionStore = await LiquidityProtectionStore.new();
         liquidityProtection = await LiquidityProtection.new(
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             networkTokenGovernance.address,
-            govTokenGovernance.address
+            govTokenGovernance.address,
+            checkpointStore.address
         );
 
         await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-        await liquidityProtectionSettings.grantRole(ROLE_WHITELIST_ADMIN, owner, { from: owner });
+        await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
+        await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
         await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
         await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 

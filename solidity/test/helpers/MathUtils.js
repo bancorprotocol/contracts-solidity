@@ -13,11 +13,11 @@ module.exports = {
 const Decimal = require('decimal.js');
 
 function floorSqrt(n) {
-    return Decimal(n.toString()).sqrt().floor().toFixed();
+    return Decimal(n).sqrt().floor().toFixed();
 }
 
 function ceilSqrt(n) {
-    return Decimal(n.toString()).sqrt().ceil().toFixed();
+    return Decimal(n).sqrt().ceil().toFixed();
 }
 
 function reducedRatio(a, b, max) {
@@ -25,12 +25,12 @@ function reducedRatio(a, b, max) {
     if (a.gt(max) || b.gt(max)) {
         return normalizedRatio(a, b, max);
     }
-    return [a, b].map((x) => x.toFixed());
+    return [a, b].map(x => x.toFixed());
 }
 
 function normalizedRatio(a, b, scale) {
     [a, b, scale] = [...arguments].map((x) => Decimal(x));
-    if (a.lt(b)) {
+    if (a.lte(b)) {
         return accurateRatio(a, b, scale);
     }
     return accurateRatio(b, a, scale).slice().reverse();
@@ -38,9 +38,7 @@ function normalizedRatio(a, b, scale) {
 
 function accurateRatio(a, b, scale) {
     [a, b, scale] = [...arguments].map((x) => Decimal(x));
-    const x = scale.mul(a).div(a.add(b)).toFixed(0, Decimal.ROUND_HALF_UP);
-    const y = scale.sub(x).toFixed();
-    return [x, y];
+    return [a, b].map(x => x.div(a.add(b)).mul(scale).toFixed());
 }
 
 function roundDiv(a, b) {
@@ -60,8 +58,5 @@ function weightedAverageForIntegers(a, b, p, q) {
 
 function weightedAverageForFractions(a, b, c, d, p, q) {
     [a, b, c, d, p, q] = [...arguments].map((x) => Decimal(x));
-    return a
-        .div(b)
-        .add(c.div(d).sub(a.div(b)).mul(p).div(q))
-        .toFixed();
+    return a.div(b).add(c.div(d).sub(a.div(b)).mul(p).div(q)).toFixed();
 }

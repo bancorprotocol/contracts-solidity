@@ -13,7 +13,7 @@ const MIN_GAS_LIMIT = 100000;
 const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
-const ROLE_WHITELIST_ADMIN = Web3.utils.keccak256('ROLE_WHITELIST_ADMIN');
+const ROLE_MINTED_TOKENS_ADMIN = Web3.utils.keccak256('ROLE_MINTED_TOKENS_ADMIN');
 
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
@@ -295,7 +295,8 @@ const run = async () => {
         const tokens = converter.reserves.map((reserve) => reserves[reserve.symbol].address);
         const weights = converter.reserves.map((reserve) => percentageToPPM(reserve.weight));
         const amounts = converter.reserves.map((reserve) =>
-            decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals));
+            decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals)
+        );
         const value = amounts[converter.reserves.findIndex((reserve) => reserve.symbol === 'ETH')];
 
         await execute(
@@ -354,6 +355,7 @@ const run = async () => {
     await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
 
+    const checkpointStore = await web3Func(deploy, 'checkpointStore', 'CheckpointStore', []);
     const liquidityProtectionSettings = await web3Func(
         deploy,
         'liquidityProtectionSettings',
@@ -365,7 +367,8 @@ const run = async () => {
         liquidityProtectionSettings._address,
         liquidityProtectionStore._address,
         bntTokenGovernance._address,
-        vbntTokenGovernance._address
+        vbntTokenGovernance._address,
+        checkpointStore._address
     ];
 
     const liquidityProtection = await web3Func(
@@ -375,12 +378,13 @@ const run = async () => {
         liquidityProtectionParams
     );
 
-    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
-    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_WHITELIST_ADMIN, account));
+    await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     // granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
+
+    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address));
 
     await execute(
         contractRegistry.methods.registerAddress(
@@ -405,14 +409,13 @@ const run = async () => {
     await execute(liquidityProtection.methods.acceptStoreOwnership());
 
     const params = getConfig().liquidityProtectionParams;
-    const maxSystemNetworkTokenRatio = percentageToPPM(params.maxSystemNetworkTokenRatio);
-    const maxSystemNetworkTokenAmount = decimalToInteger(params.maxSystemNetworkTokenAmount, reserves.BNT.decimals);
-    await execute(
-        liquidityProtectionSettings.methods.setSystemNetworkTokenLimits(
-            maxSystemNetworkTokenAmount,
-            maxSystemNetworkTokenRatio
-        )
-    );
+
+    const minNetworkTokenLiquidityForMinting = decimalToInteger(params.minNetworkTokenLiquidityForMinting, reserves.BNT.decimals);
+    await execute(liquidityProtectionSettings.methods.setMinNetworkTokenLiquidityForMinting(minNetworkTokenLiquidityForMinting));
+
+    const defaultNetworkTokenMintingLimit = decimalToInteger(params.defaultNetworkTokenMintingLimit, reserves.BNT.decimals);
+    await execute(liquidityProtectionSettings.methods.setDefaultNetworkTokenMintingLimit(defaultNetworkTokenMintingLimit));
+
     await execute(
         liquidityProtectionSettings.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
     );

@@ -3,6 +3,7 @@ const chai = require('chai');
 chai.use(require('chai-as-promised'))
     .use(require('chai-bn')(require('bn.js')))
     .use(require('chai-string'))
+    .use(require('chai-arrays'))
     .use(require('dirty-chai'))
     .expect();
 

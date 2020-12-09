@@ -15,18 +15,17 @@ interface ILiquidityProtectionSettings {
 
     function isPoolSupported(IConverterAnchor _poolAnchor) external view returns (bool);
 
-    function addHighTierPool(IConverterAnchor _poolAnchor) external;
+    function minNetworkTokenLiquidityForMinting() external view returns (uint256);
 
-    function removeHighTierPool(IConverterAnchor _poolAnchor) external;
+    function defaultNetworkTokenMintingLimit() external view returns (uint256);
 
-    function isHighTierPool(IConverterAnchor _poolAnchor) external view returns (bool);
+    function networkTokenMintingLimits(IConverterAnchor _poolAnchor) external view returns (uint256);
 
-    function maxSystemNetworkTokenAmount() external view returns (uint256);
+    function networkTokensMinted(IConverterAnchor _poolAnchor) external view returns (uint256);
 
-    function maxSystemNetworkTokenRatio() external view returns (uint32);
+    function incNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount) external;
 
-    function setSystemNetworkTokenLimits(uint256 _maxSystemNetworkTokenAmount, uint32 _maxSystemNetworkTokenRatio)
-        external;
+    function decNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount) external;
 
     function minProtectionDelay() external view returns (uint256);
 
