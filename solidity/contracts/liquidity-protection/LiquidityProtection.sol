@@ -34,18 +34,6 @@ interface ILiquidityPoolConverter is IConverter {
         uint256[] memory _reserveMinReturnAmounts
     ) external;
 
-    function addLiquidity(
-        IERC20Token[2] memory _reserveTokens,
-        uint256[2] memory _reserveAmounts,
-        uint256 _minReturn
-    ) external payable;
-
-    function removeLiquidity(
-        uint256 _amount,
-        IERC20Token[2] memory _reserveTokens,
-        uint256[2] memory _reserveMinReturnAmounts
-    ) external;
-
     function recentAverageRate(IERC20Token _reserveToken) external view returns (uint256, uint256);
 }
 
