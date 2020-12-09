@@ -421,7 +421,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
         // get the reserve balances
-        ILiquidityPoolV1Converter converter = ILiquidityPoolV1Converter(payable(ownedBy(_poolAnchor)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
             converterReserveBalances(converter, _baseToken, _networkToken);
 
@@ -1042,23 +1042,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
 
-        if (isStandardPool(_converter)) {
-            IERC20Token[2] memory reserveTokens;
-            uint256[2] memory amounts;
-            reserveTokens[0] = _reserveToken1;
-            reserveTokens[1] = _reserveToken2;
-            amounts[0] = _reserveAmount1;
-            amounts[1] = _reserveAmount2;
-            _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
-        } else {
-            IERC20Token[] memory reserveTokens = new IERC20Token[](2);
-            uint256[] memory amounts = new uint256[](2);
-            reserveTokens[0] = _reserveToken1;
-            reserveTokens[1] = _reserveToken2;
-            amounts[0] = _reserveAmount1;
-            amounts[1] = _reserveAmount2;
-            _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
-        }
+        IERC20Token[] memory reserveTokens = new IERC20Token[](2);
+        uint256[] memory amounts = new uint256[](2);
+        reserveTokens[0] = _reserveToken1;
+        reserveTokens[1] = _reserveToken2;
+        amounts[0] = _reserveAmount1;
+        amounts[1] = _reserveAmount2;
+        _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
 
         // ensure that the contract can receive ETH
         updatingLiquidity = false;
@@ -1083,23 +1073,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
 
-        if (isStandardPool(converter)) {
-            IERC20Token[2] memory reserveTokens;
-            uint256[2] memory minReturns;
-            reserveTokens[0] = _reserveToken1;
-            reserveTokens[1] = _reserveToken2;
-            minReturns[0] = 1;
-            minReturns[1] = 1;
-            converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
-        } else {
-            IERC20Token[] memory reserveTokens = new IERC20Token[](2);
-            uint256[] memory minReturns = new uint256[](2);
-            reserveTokens[0] = _reserveToken1;
-            reserveTokens[1] = _reserveToken2;
-            minReturns[0] = 1;
-            minReturns[1] = 1;
-            converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
-        }
+        IERC20Token[] memory reserveTokens = new IERC20Token[](2);
+        uint256[] memory minReturns = new uint256[](2);
+        reserveTokens[0] = _reserveToken1;
+        reserveTokens[1] = _reserveToken2;
+        minReturns[0] = 1;
+        minReturns[1] = 1;
+        converter.removeLiquidity(_poolAmount, reserveTokens, minReturns);
 
         // ensure that the contract can receive ETH
         updatingLiquidity = false;
@@ -1295,16 +1275,5 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     // utility to get the owner
     function ownedBy(IOwned _owned) private view returns (address) {
         return _owned.owner();
-    }
-
-    /**
-     * @dev checks whether or not a given converter implements a standard pool
-     *
-     * @param _converter   converter
-     *
-     * @return true if the given converter implements a standard pool, false otherwise
-     */
-    function isStandardPool(ILiquidityPoolConverter _converter) internal pure returns (bool) {
-        return _converter.converterType() == 3;
     }
 }

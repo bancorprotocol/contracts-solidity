@@ -5,7 +5,7 @@ import "../converter/types/standard-pool/StandardPoolConverter.sol";
 import "./TestTime.sol";
 
 contract TestStandardPoolConverter is StandardPoolConverter, TestTime {
-    uint256[2] public reserveAmountsRemoved;
+    uint256[] public reserveAmountsRemoved = new uint256[](2);
 
     constructor(
         IDSToken _token,
@@ -15,8 +15,8 @@ contract TestStandardPoolConverter is StandardPoolConverter, TestTime {
 
     function removeLiquidityTest(
         uint256 _amount,
-        IERC20Token[2] memory _reserveTokens,
-        uint256[2] memory _reserveMinReturnAmounts
+        IERC20Token[] memory _reserveTokens,
+        uint256[] memory _reserveMinReturnAmounts
     ) public {
         reserveAmountsRemoved = removeLiquidity(_amount, _reserveTokens, _reserveMinReturnAmounts);
     }
