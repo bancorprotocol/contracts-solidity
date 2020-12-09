@@ -619,7 +619,12 @@ contract StandardPoolConverter is
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
-    function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
+    function recentAverageRate(IERC20Token _token)
+        external
+        view
+        validReserve(_token)
+        returns (uint256, uint256)
+    {
         // get the recent average rate of reserve 0
         uint256 rate = calcRecentAverageRate(averageRateInfo);
 

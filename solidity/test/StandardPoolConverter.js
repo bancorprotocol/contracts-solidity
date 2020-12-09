@@ -714,6 +714,10 @@ describe('StandardPoolConverter', () => {
             return averageRateInfo.shrn(224);
         };
 
+        it('should revert when requesting the average rate for a non reserve token', async () => {
+            await expectRevert(converter.recentAverageRate.call(accounts[7]), 'ERR_INVALID_RESERVE');
+        });
+
         it('should be initially equal to the current rate', async () => {
             const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
             const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
