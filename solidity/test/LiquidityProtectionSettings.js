@@ -3,7 +3,7 @@ const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 
-const { ROLE_OWNER, ROLE_WHITELIST_ADMIN } = roles;
+const { ROLE_OWNER } = roles;
 
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
@@ -71,29 +71,18 @@ describe('LiquidityProtectionSettings', () => {
 
     it('should properly initialize roles', async () => {
         expect(await settings.getRoleMemberCount.call(ROLE_OWNER)).to.be.bignumber.equal(new BN(1));
-        expect(await settings.getRoleMemberCount.call(ROLE_WHITELIST_ADMIN)).to.be.bignumber.equal(new BN(0));
-
         expect(await settings.getRoleAdmin.call(ROLE_OWNER)).to.eql(ROLE_OWNER);
-        expect(await settings.getRoleAdmin.call(ROLE_WHITELIST_ADMIN)).to.eql(ROLE_OWNER);
-
         expect(await settings.hasRole.call(ROLE_OWNER, owner)).to.be.true();
-        expect(await settings.hasRole.call(ROLE_WHITELIST_ADMIN, owner)).to.be.false();
     });
 
     describe('whitelisted pools', () => {
-        const admin = accounts[2];
-
-        beforeEach(async () => {
-            await settings.grantRole(ROLE_WHITELIST_ADMIN, admin, { from: owner });
-        });
-
-        it('should revert when a non admin attempts to add a whitelisted pool', async () => {
+        it('should revert when a non owner attempts to add a whitelisted pool', async () => {
             await expectRevert(settings.addPoolToWhitelist(poolToken.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
         });
 
-        it('should revert when a non admin attempts to remove a whitelisted pool', async () => {
-            await settings.addPoolToWhitelist(poolToken.address, { from: admin });
+        it('should revert when a non owner attempts to remove a whitelisted pool', async () => {
+            await settings.addPoolToWhitelist(poolToken.address, { from: owner });
             await expectRevert(
                 settings.removePoolFromWhitelist(poolToken.address, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
@@ -101,45 +90,45 @@ describe('LiquidityProtectionSettings', () => {
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.true();
         });
 
-        it('should revert when an admin attempts to add a whitelisted pool which is already whitelisted', async () => {
-            await settings.addPoolToWhitelist(poolToken.address, { from: admin });
+        it('should revert when an owner attempts to add a whitelisted pool which is already whitelisted', async () => {
+            await settings.addPoolToWhitelist(poolToken.address, { from: owner });
             await expectRevert(
-                settings.addPoolToWhitelist(poolToken.address, { from: admin }),
+                settings.addPoolToWhitelist(poolToken.address, { from: owner }),
                 'ERR_POOL_ALREADY_WHITELISTED'
             );
         });
 
-        it('should revert when an admin attempts to remove a whitelisted pool which is not yet whitelisted', async () => {
+        it('should revert when an owner attempts to remove a whitelisted pool which is not yet whitelisted', async () => {
             await expectRevert(
-                settings.removePoolFromWhitelist(poolToken.address, { from: admin }),
+                settings.removePoolFromWhitelist(poolToken.address, { from: owner }),
                 'ERR_POOL_NOT_WHITELISTED'
             );
         });
 
-        it('should succeed when an admin attempts to add a whitelisted pool', async () => {
+        it('should succeed when an owner attempts to add a whitelisted pool', async () => {
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
             expect(await settings.poolWhitelist.call()).to.be.ofSize(0);
 
-            await settings.addPoolToWhitelist(poolToken.address, { from: admin });
+            await settings.addPoolToWhitelist(poolToken.address, { from: owner });
 
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.true();
             expect(await settings.poolWhitelist.call()).to.be.equalTo([poolToken.address]);
 
             const poolToken2 = accounts[3];
 
-            await settings.addPoolToWhitelist(poolToken2, { from: admin });
+            await settings.addPoolToWhitelist(poolToken2, { from: owner });
 
             expect(await settings.isPoolWhitelisted.call(poolToken2)).to.be.true();
             expect(await settings.poolWhitelist.call()).to.be.equalTo([poolToken.address, poolToken2]);
         });
 
         it('should succeed when the owner attempts to remove a whitelisted pool', async () => {
-            await settings.addPoolToWhitelist(poolToken.address, { from: admin });
+            await settings.addPoolToWhitelist(poolToken.address, { from: owner });
 
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.true();
             expect(await settings.poolWhitelist.call()).to.be.equalTo([poolToken.address]);
 
-            await settings.removePoolFromWhitelist(poolToken.address, { from: admin });
+            await settings.removePoolFromWhitelist(poolToken.address, { from: owner });
 
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
             expect(await settings.poolWhitelist.call()).to.be.ofSize(0);
