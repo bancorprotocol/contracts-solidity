@@ -14,8 +14,9 @@ const ConverterRegistry = contract.fromArtifact('TestConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
-const IConverter = contract.fromArtifact('IConverter');
+const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
+const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -133,7 +134,13 @@ describe('LiquidityProtectionV1AverageRate', () => {
                     [HALF_PPM, HALF_PPM]
                 );
                 poolToken = await DSToken.at(await converterRegistry.getAnchor(0));
-                converter = await IConverter.at(await poolToken.owner());
+                if (converterType === 1) {
+                    converter = await LiquidityPoolV1Converter.at(await poolToken.owner());
+                }
+                else {
+                    converter = await StandardPoolConverter.at(await poolToken.owner());
+                }
+
                 await converter.acceptOwnership();
                 time = await converter.currentTime();
             });
