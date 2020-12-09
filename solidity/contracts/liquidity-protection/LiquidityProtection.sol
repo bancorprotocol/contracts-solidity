@@ -381,6 +381,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // token holders can burn their tokens
         safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
         networkTokenGovernance.burn(_amount);
+        settings.decNetworkTokensMinted(_poolAnchor, _amount);
 
         // mint governance tokens to the recipient
         govTokenGovernance.mint(_owner, _amount);
@@ -412,38 +413,33 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
             converterReserveBalances(converter, _baseToken, _networkToken);
 
+        require(reserveBalanceNetwork >= settings.minNetworkTokenLiquidityForMinting(), "ERR_NOT_ENOUGH_LIQUIDITY");
+
         // calculate and mint the required amount of network tokens for adding liquidity
-        uint256 networkLiquidityAmount = _amount.mul(reserveBalanceNetwork).div(reserveBalanceBase);
+        uint256 newNetworkLiquidityAmount = _amount.mul(reserveBalanceNetwork).div(reserveBalanceBase);
 
-        // verify network token limits
-        // note that the amount is divided by 2 since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = poolTokenRate(poolToken, _networkToken);
-        uint256 newSystemBalance = store.systemBalance(poolToken);
-        newSystemBalance = (newSystemBalance.mul(poolRate.n / 2).div(poolRate.d)).add(networkLiquidityAmount);
-
-        uint256 maxSystemNetworkTokenAmount = settings.maxSystemNetworkTokenAmount();
-        require(newSystemBalance <= maxSystemNetworkTokenAmount, "ERR_MAX_AMOUNT_REACHED");
-
-        if (!settings.isHighTierPool(_poolAnchor)) {
-            require(
-                newSystemBalance.mul(PPM_RESOLUTION) <=
-                    reserveBalanceNetwork.add(networkLiquidityAmount).mul(settings.maxSystemNetworkTokenRatio()),
-                "ERR_MAX_RATIO_REACHED"
-            );
+        // verify network token minting limit
+        uint256 mintingLimit = settings.networkTokenMintingLimits(_poolAnchor);
+        if (mintingLimit == 0) {
+            mintingLimit = settings.defaultNetworkTokenMintingLimit();
         }
 
+        uint256 newNetworkTokensMinted = settings.networkTokensMinted(_poolAnchor).add(newNetworkLiquidityAmount);
+        require(newNetworkTokensMinted <= mintingLimit, "ERR_MAX_AMOUNT_REACHED");
+
         // issue new network tokens to the system
-        networkTokenGovernance.mint(address(this), networkLiquidityAmount);
+        networkTokenGovernance.mint(address(this), newNetworkLiquidityAmount);
+        settings.incNetworkTokensMinted(_poolAnchor, newNetworkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
-        ensureAllowance(_networkToken, address(converter), networkLiquidityAmount);
+        ensureAllowance(_networkToken, address(converter), newNetworkLiquidityAmount);
         if (_baseToken != ETH_RESERVE_ADDRESS) {
             safeTransferFrom(_baseToken, msg.sender, address(this), _amount);
             ensureAllowance(_baseToken, address(converter), _amount);
         }
 
         // add liquidity
-        addLiquidity(converter, _baseToken, _networkToken, _amount, networkLiquidityAmount, msg.value);
+        addLiquidity(converter, _baseToken, _networkToken, _amount, newNetworkLiquidityAmount, msg.value);
 
         // transfer the new pool tokens to the store
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
@@ -613,6 +609,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         if (liquidity.reserveToken == networkTokenLocal) {
             // mint network tokens for the caller and lock them
             networkTokenGovernance.mint(address(store), targetAmount);
+            settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
             lockTokens(msg.sender, targetAmount);
             return;
         }
@@ -659,10 +656,11 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             lockTokens(msg.sender, delta);
         }
 
-        // if the contract still holds network token, burn them
+        // if the contract still holds network tokens, burn them
         uint256 networkBalance = networkTokenLocal.balanceOf(address(this));
         if (networkBalance > 0) {
             networkTokenGovernance.burn(networkBalance);
+            settings.decNetworkTokensMinted(liquidity.poolToken, networkBalance);
         }
     }
 

@@ -9,30 +9,34 @@ import "../converter/interfaces/IConverter.sol";
 import "../converter/interfaces/IConverterRegistry.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../utility/ContractRegistryClient.sol";
+import "../utility/SafeMath.sol";
 import "../utility/Utils.sol";
 
 /**
  * @dev Liquidity Protection Settings contract
  */
 contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessControl, ContractRegistryClient {
+    using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    // the owner role is used to set the values in the store
+    // the owner role is used to update the settings
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
+
+    // the minted tokens admin role is used to update the amount of minted tokens per pool
+    bytes32 public constant ROLE_MINTED_TOKENS_ADMIN = keccak256("ROLE_MINTED_TOKENS_ADMIN");
 
     uint32 private constant PPM_RESOLUTION = 1000000;
 
     IERC20Token public immutable networkToken;
 
-    // list of whitelisted pools and mapping of pool anchor address
+    // list of whitelisted pools
     EnumerableSet.AddressSet private _poolWhitelist;
 
-    // list of pools with less minting restrictions
-    EnumerableSet.AddressSet private _highTierPools;
-
-    // system network token balance limits
-    uint256 public override maxSystemNetworkTokenAmount = 1000000e18;
-    uint32 public override maxSystemNetworkTokenRatio = 500000; // PPM units
+    // network token minting limits
+    uint256 public override minNetworkTokenLiquidityForMinting = 1000e18;
+    uint256 public override defaultNetworkTokenMintingLimit = 20000e18;
+    mapping(IConverterAnchor => uint256) public override networkTokenMintingLimits;
+    mapping(IConverterAnchor => uint256) public override networkTokensMinted;
 
     // number of seconds until any protection is in effect
     uint256 public override minProtectionDelay = 30 days;
@@ -58,18 +62,51 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     event PoolWhitelistUpdated(IConverterAnchor indexed _poolAnchor, bool _added);
 
     /**
-     * @dev triggered when the system network token balance limits are updated
+     * @dev triggered when the minimum amount of network token liquidity to allow minting is updated
      *
-     * @param _prevMaxSystemNetworkTokenAmount  previous maximum absolute balance in a pool
-     * @param _newMaxSystemNetworkTokenAmount   new maximum absolute balance in a pool
-     * @param _prevMaxSystemNetworkTokenRatio   previous maximum balance out of the total balance in a pool
-     * @param _newMaxSystemNetworkTokenRatio    new maximum balance out of the total balance in a pool
+     * @param _prevMin  previous minimum amount of network token liquidity for minting
+     * @param _newMin   new minimum amount of network token liquidity for minting
      */
-    event SystemNetworkTokenLimitsUpdated(
-        uint256 _prevMaxSystemNetworkTokenAmount,
-        uint256 _newMaxSystemNetworkTokenAmount,
-        uint256 _prevMaxSystemNetworkTokenRatio,
-        uint256 _newMaxSystemNetworkTokenRatio
+    event MinNetworkTokenLiquidityForMintingUpdated(
+        uint256 _prevMin,
+        uint256 _newMin
+    );
+
+    /**
+     * @dev triggered when the default network token minting limit is updated
+     *
+     * @param _prevDefault  previous default network token minting limit
+     * @param _newDefault   new default network token minting limit
+     */
+    event DefaultNetworkTokenMintingLimitUpdated(
+        uint256 _prevDefault,
+        uint256 _newDefault
+    );
+
+    /**
+     * @dev triggered when a pool network token minting limit is updated
+     *
+     * @param _poolAnchor   pool anchor
+     * @param _prevLimit    previous limit
+     * @param _newLimit     new limit
+     */
+    event NetworkTokenMintingLimitUpdated(
+        IConverterAnchor indexed _poolAnchor,
+        uint256 _prevLimit,
+        uint256 _newLimit
+    );
+
+    /**
+     * @dev triggered when the amount of network tokens minted into a specific pool is updated
+     *
+     * @param _poolAnchor  pool anchor
+     * @param _prevAmount  previous amount
+     * @param _newAmount   new amount
+     */
+    event NetworkTokensMintedUpdated(
+        IConverterAnchor indexed _poolAnchor,
+        uint256 _prevAmount,
+        uint256 _newAmount
     );
 
     /**
@@ -125,6 +162,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
+        _setRoleAdmin(ROLE_MINTED_TOKENS_ADMIN, ROLE_OWNER);
 
         // allow the deployer to initially govern the contract.
         _setupRole(ROLE_OWNER, msg.sender);
@@ -140,6 +178,16 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // error message binary size optimization
     function _onlyOwner() internal view {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
+    }
+
+    modifier onlyMintedTokensAdmin() {
+        _onlyMintedTokensAdmin();
+        _;
+    }
+
+    // error message binary size optimization
+    function _onlyMintedTokensAdmin() internal view {
+        require(hasRole(ROLE_MINTED_TOKENS_ADMIN, msg.sender), "ERR_ACCESS_DENIED");
     }
 
     // ensures that the portion is valid
@@ -214,83 +262,90 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     }
 
     /**
-     * @dev adds a high tier pool
+     * @dev updates the minimum amount of network token liquidity to allow minting
      * can only be called by the contract owner
      *
-     * @param _poolAnchor pool anchor
+     * @param _minimum    new minimum
      */
-    function addHighTierPool(IConverterAnchor _poolAnchor)
-        external
-        override
-        onlyOwner
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        require(_highTierPools.add(address(_poolAnchor)), "ERR_POOL_ALREADY_EXISTS");
+    function setMinNetworkTokenLiquidityForMinting(uint256 _minimum) external onlyOwner() {
+        emit MinNetworkTokenLiquidityForMintingUpdated(minNetworkTokenLiquidityForMinting, _minimum);
+
+        minNetworkTokenLiquidityForMinting = _minimum;
     }
 
     /**
-     * @dev removes a high tier pool
+     * @dev updates the default network token amount the system can mint into each pool
      * can only be called by the contract owner
      *
-     * @param _poolAnchor pool anchor
+     * @param _limit    new limit
      */
-    function removeHighTierPool(IConverterAnchor _poolAnchor)
-        external
-        override
-        onlyOwner
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
-    {
-        require(_highTierPools.remove(address(_poolAnchor)), "ERR_POOL_DOES_NOT_EXIST");
+    function setDefaultNetworkTokenMintingLimit(uint256 _limit) external onlyOwner() {
+        emit DefaultNetworkTokenMintingLimitUpdated(defaultNetworkTokenMintingLimit, _limit);
+
+        defaultNetworkTokenMintingLimit = _limit;
     }
 
     /**
-     * @dev checks whether a given pool is a high tier one
-     *
-     * @param _poolAnchor pool anchor
-     * @return true if the given pool is a high tier one, false otherwise
-     */
-    function isHighTierPool(IConverterAnchor _poolAnchor) external view override returns (bool) {
-        return _highTierPools.contains(address(_poolAnchor));
-    }
-
-    /**
-     * @dev returns high tier pools
-     *
-     * @return high tier pools
-     */
-    function highTierPools() external view returns (address[] memory) {
-        uint256 length = _highTierPools.length();
-        address[] memory list = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            list[i] = _highTierPools.at(i);
-        }
-        return list;
-    }
-
-    /**
-     * @dev updates the system network token balance limits
+     * @dev updates the amount of network tokens that the system can mint into a specific pool
      * can only be called by the contract owner
      *
-     * @param _maxSystemNetworkTokenAmount  maximum absolute balance in a pool
-     * @param _maxSystemNetworkTokenRatio   maximum balance out of the total balance in a pool (in PPM units)
+     * @param _poolAnchor   pool anchor
+     * @param _limit        new limit
      */
-    function setSystemNetworkTokenLimits(uint256 _maxSystemNetworkTokenAmount, uint32 _maxSystemNetworkTokenRatio)
+    function setNetworkTokenMintingLimit(IConverterAnchor _poolAnchor, uint256 _limit)
         external
-        override
         onlyOwner()
-        validPortion(_maxSystemNetworkTokenRatio)
+        validAddress(address(_poolAnchor))
     {
-        emit SystemNetworkTokenLimitsUpdated(
-            maxSystemNetworkTokenAmount,
-            _maxSystemNetworkTokenAmount,
-            maxSystemNetworkTokenRatio,
-            _maxSystemNetworkTokenRatio
-        );
+        emit NetworkTokenMintingLimitUpdated(_poolAnchor, networkTokenMintingLimits[_poolAnchor], _limit);
 
-        maxSystemNetworkTokenAmount = _maxSystemNetworkTokenAmount;
-        maxSystemNetworkTokenRatio = _maxSystemNetworkTokenRatio;
+        networkTokenMintingLimits[_poolAnchor] = _limit;
+    }
+
+    /**
+     * @dev increases the amount of network tokens minted into a specific pool
+     * can only be called by the minted tokens admin
+     *
+     * @param _poolAnchor   pool anchor
+     * @param _amount       amount to increase the minted tokens by
+     */
+    function incNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount)
+        external
+        override
+        onlyMintedTokensAdmin
+        validAddress(address(_poolAnchor))
+    {
+        uint256 prevAmount = networkTokensMinted[_poolAnchor];
+        uint256 newAmount = prevAmount.add(_amount);
+        networkTokensMinted[_poolAnchor] = newAmount;
+
+        emit NetworkTokensMintedUpdated(_poolAnchor, prevAmount, newAmount);
+    }
+
+    /**
+     * @dev decreases the amount of network tokens minted into a specific pool
+     * can only be called by the minted tokens admin
+     *
+     * @param _poolAnchor   pool anchor
+     * @param _amount       amount to decrease the minted tokens by
+     */
+    function decNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount)
+        external
+        override
+        onlyMintedTokensAdmin
+        validAddress(address(_poolAnchor))
+    {
+        uint256 prevAmount = networkTokensMinted[_poolAnchor];
+
+        // allow the amount to reset to 0 if the provided amount is higher than the previous amount
+        uint256 newAmount = 0;
+        if (_amount < prevAmount) {
+            newAmount = prevAmount.sub(_amount);
+        }
+
+        networkTokensMinted[_poolAnchor] = newAmount;
+
+        emit NetworkTokensMintedUpdated(_poolAnchor, prevAmount, newAmount);
     }
 
     /**

@@ -6,7 +6,7 @@ const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { duration, latest } = time;
-const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER, ROLE_MINTED_TOKENS_ADMIN } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -61,7 +61,7 @@ describe('LiquidityProtection', () => {
         const anchorCount = await converterRegistry.getAnchorCount.call();
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
         poolToken = await DSToken.at(poolTokenAddress);
-        converterAddress = await poolToken.owner.call();
+        const converterAddress = await poolToken.owner.call();
         converter = await LiquidityPoolV1Converter.at(converterAddress);
         await setTime(now);
         await converter.acceptOwnership();
@@ -264,7 +264,7 @@ describe('LiquidityProtection', () => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
         const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
-        converterFactory = await ConverterFactory.new();
+        const converterFactory = await ConverterFactory.new();
         await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
@@ -297,6 +297,7 @@ describe('LiquidityProtection', () => {
             networkToken.address,
             contractRegistry.address
         );
+        await liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(new BN(100));
         await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
         liquidityProtectionStore = await LiquidityProtectionStore.new();
@@ -309,6 +310,7 @@ describe('LiquidityProtection', () => {
         );
 
         await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+        await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, { from: owner });
         await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
         await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
         await liquidityProtection.acceptStoreOwnership();
@@ -624,7 +626,6 @@ describe('LiquidityProtection', () => {
         const balance = await baseToken.balanceOf.call(owner);
         await baseToken.approve(liquidityProtection.address, balance);
 
-        await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, PPM_RESOLUTION);
         await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, balance);
         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
         let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
@@ -645,7 +646,6 @@ describe('LiquidityProtection', () => {
         const balance = await baseToken.balanceOf.call(owner);
         await baseToken.approve(liquidityProtection.address, balance);
 
-        await liquidityProtectionSettings.setSystemNetworkTokenLimits(MAX_UINT256, PPM_RESOLUTION);
         await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, balance);
         let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
         let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
@@ -808,7 +808,7 @@ describe('LiquidityProtection', () => {
                             );
                         });
 
-                        it('should revert when attempting to add liquidity which will increase the system network token balance above the max amount', async () => {
+                        it('should revert when attempting to add liquidity when the pool has less liquidity than the minimum required', async () => {
                             let reserveAmount = new BN(10000);
                             await addProtectedLiquidity(
                                 poolToken.address,
@@ -820,7 +820,37 @@ describe('LiquidityProtection', () => {
                                 recipient
                             );
 
-                            await liquidityProtectionSettings.setSystemNetworkTokenLimits(500, PPM_RESOLUTION);
+                            await liquidityProtectionSettings.setNetworkTokenMintingLimit(poolToken.address, 500000);
+                            await liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(100000000);
+                            reserveAmount = new BN(2000);
+
+                            await expectRevert(
+                                addProtectedLiquidity(
+                                    poolToken.address,
+                                    baseToken,
+                                    baseTokenAddress,
+                                    reserveAmount,
+                                    isETHReserve,
+                                    owner,
+                                    recipient
+                                ),
+                                'ERR_NOT_ENOUGH_LIQUIDITY'
+                            );
+                        });
+
+                        it('should revert when attempting to add liquidity which will increase the system network token balance above the pool limit', async () => {
+                            let reserveAmount = new BN(10000);
+                            await addProtectedLiquidity(
+                                poolToken.address,
+                                baseToken,
+                                baseTokenAddress,
+                                reserveAmount,
+                                isETHReserve,
+                                owner,
+                                recipient
+                            );
+
+                            await liquidityProtectionSettings.setNetworkTokenMintingLimit(poolToken.address, 500);
                             reserveAmount = new BN(2000);
 
                             await expectRevert(
@@ -834,62 +864,6 @@ describe('LiquidityProtection', () => {
                                     recipient
                                 ),
                                 'ERR_MAX_AMOUNT_REACHED'
-                            );
-                        });
-
-                        it('should revert when attempting to add liquidity which will increase the system network token balance above the max ratio', async () => {
-                            let reserveAmount = new BN(10000);
-                            await addProtectedLiquidity(
-                                poolToken.address,
-                                baseToken,
-                                baseTokenAddress,
-                                reserveAmount,
-                                isETHReserve,
-                                owner,
-                                recipient
-                            );
-
-                            await liquidityProtectionSettings.setSystemNetworkTokenLimits(500000, 20000);
-                            reserveAmount = new BN(40000);
-
-                            await expectRevert(
-                                addProtectedLiquidity(
-                                    poolToken.address,
-                                    baseToken,
-                                    baseTokenAddress,
-                                    reserveAmount,
-                                    isETHReserve,
-                                    owner,
-                                    recipient
-                                ),
-                                'ERR_MAX_RATIO_REACHED'
-                            );
-                        });
-
-                        it('should allow adding liquidity which will increase the system network token balance above the max ratio for a high tier pool', async () => {
-                            let reserveAmount = new BN(10000);
-                            await addProtectedLiquidity(
-                                poolToken.address,
-                                baseToken,
-                                baseTokenAddress,
-                                reserveAmount,
-                                isETHReserve,
-                                owner,
-                                recipient
-                            );
-
-                            await liquidityProtectionSettings.setSystemNetworkTokenLimits(500000, 20000);
-                            await liquidityProtectionSettings.addHighTierPool(poolToken.address);
-                            reserveAmount = new BN(40000);
-
-                            await addProtectedLiquidity(
-                                poolToken.address,
-                                baseToken,
-                                baseTokenAddress,
-                                reserveAmount,
-                                isETHReserve,
-                                owner,
-                                recipient
                             );
                         });
                     });

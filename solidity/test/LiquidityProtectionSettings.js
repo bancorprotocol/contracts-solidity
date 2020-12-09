@@ -3,7 +3,7 @@ const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 
-const { ROLE_OWNER } = roles;
+const { ROLE_OWNER, ROLE_MINTED_TOKENS_ADMIN } = roles;
 
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
@@ -71,8 +71,13 @@ describe('LiquidityProtectionSettings', () => {
 
     it('should properly initialize roles', async () => {
         expect(await settings.getRoleMemberCount.call(ROLE_OWNER)).to.be.bignumber.equal(new BN(1));
+        expect(await settings.getRoleMemberCount.call(ROLE_MINTED_TOKENS_ADMIN)).to.be.bignumber.equal(new BN(0));
+
         expect(await settings.getRoleAdmin.call(ROLE_OWNER)).to.eql(ROLE_OWNER);
+        expect(await settings.getRoleAdmin.call(ROLE_MINTED_TOKENS_ADMIN)).to.eql(ROLE_OWNER);
+
         expect(await settings.hasRole.call(ROLE_OWNER, owner)).to.be.true();
+        expect(await settings.hasRole.call(ROLE_MINTED_TOKENS_ADMIN, owner)).to.be.false();
     });
 
     describe('whitelisted pools', () => {
@@ -195,103 +200,137 @@ describe('LiquidityProtectionSettings', () => {
         });
     });
 
-    describe('high tier pools', () => {
-        it('should allow the owner to add a high tier pool', async () => {
-            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.false();
-            expect(await settings.highTierPools.call()).to.be.ofSize(0);
+    describe('pool limits', () => {
+        const admin = accounts[2];
 
-            await settings.addHighTierPool(poolToken.address, { from: owner });
-
-            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.true();
-            expect(await settings.highTierPools.call()).to.be.equalTo([poolToken.address]);
-
-            const poolToken2 = accounts[3];
-
-            await settings.addHighTierPool(poolToken2, { from: owner });
-
-            expect(await settings.isHighTierPool.call(poolToken2)).to.be.true();
-            expect(await settings.highTierPools.call()).to.be.equalTo([poolToken.address, poolToken2]);
+        beforeEach(async () => {
+            await settings.grantRole(ROLE_MINTED_TOKENS_ADMIN, admin, { from: owner });
         });
 
-        it('should allow the owner to remove a high tier pool', async () => {
-            await settings.addHighTierPool(poolToken.address, { from: owner });
+        it('verifies that the owner can set the minimum network token liquidity for minting', async () => {
+            const prevMin = await settings.minNetworkTokenLiquidityForMinting.call();
+            const newMin = new BN(100);
 
-            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.true();
-            expect(await settings.highTierPools.call()).to.be.equalTo([poolToken.address]);
+            const res = await settings.setMinNetworkTokenLiquidityForMinting(newMin);
 
-            await settings.removeHighTierPool(poolToken.address, { from: owner });
-
-            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.false();
-            expect(await settings.highTierPools.call()).to.be.ofSize(0);
-        });
-
-        it('should revert when a non owner attempts to add a high tier pool', async () => {
-            await expectRevert(settings.addHighTierPool(poolToken.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.false();
-        });
-
-        it('should revert when a non owner attempts to remove a high tier pool', async () => {
-            await settings.addHighTierPool(poolToken.address, { from: owner });
-            await expectRevert(settings.removeHighTierPool(poolToken.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            expect(await settings.isHighTierPool.call(poolToken.address)).to.be.true();
-        });
-
-        it('should revert when the owner attempts to add a high tier pool that is already defined as high tier one', async () => {
-            await settings.addHighTierPool(poolToken.address, { from: owner });
-            await expectRevert(settings.addHighTierPool(poolToken.address, { from: owner }), 'ERR_POOL_ALREADY_EXISTS');
-        });
-
-        it('should revert when the owner attempts to remove a high tier pool that is not defined as a high tier one', async () => {
-            await expectRevert(
-                settings.removeHighTierPool(poolToken.address, { from: owner }),
-                'ERR_POOL_DOES_NOT_EXIST'
-            );
-        });
-    });
-
-    describe('token limits', () => {
-        it('verifies that the owner can set the system network token limits', async () => {
-            const prevMaxSystemNetworkTokenAmount = await settings.maxSystemNetworkTokenAmount.call();
-            const prevMaxSystemNetworkTokenRatio = await settings.maxSystemNetworkTokenRatio.call();
-            const newMaxSystemNetworkTokenAmount = new BN(100);
-            const newMaxSystemNetworkTokenRatio = new BN(200);
-
-            const res = await settings.setSystemNetworkTokenLimits(
-                newMaxSystemNetworkTokenAmount,
-                newMaxSystemNetworkTokenRatio
-            );
-
-            expectEvent(res, 'SystemNetworkTokenLimitsUpdated', {
-                _prevMaxSystemNetworkTokenAmount: prevMaxSystemNetworkTokenAmount,
-                _newMaxSystemNetworkTokenAmount: newMaxSystemNetworkTokenAmount,
-                _prevMaxSystemNetworkTokenRatio: prevMaxSystemNetworkTokenRatio,
-                _newMaxSystemNetworkTokenRatio: newMaxSystemNetworkTokenRatio
+            expectEvent(res, 'MinNetworkTokenLiquidityForMintingUpdated', {
+                _prevMin: prevMin,
+                _newMin: newMin
             });
 
-            const maxSystemNetworkTokenAmount = await settings.maxSystemNetworkTokenAmount.call();
-            const maxSystemNetworkTokenRatio = await settings.maxSystemNetworkTokenRatio.call();
+            const minimum = await settings.minNetworkTokenLiquidityForMinting.call();
 
-            expect(maxSystemNetworkTokenAmount).not.to.be.bignumber.equal(prevMaxSystemNetworkTokenAmount);
-            expect(maxSystemNetworkTokenRatio).not.to.be.bignumber.equal(prevMaxSystemNetworkTokenRatio);
-
-            expect(maxSystemNetworkTokenAmount).to.be.bignumber.equal(newMaxSystemNetworkTokenAmount);
-            expect(maxSystemNetworkTokenRatio).to.be.bignumber.equal(newMaxSystemNetworkTokenRatio);
+            expect(minimum).not.to.be.bignumber.equal(prevMin);
+            expect(minimum).to.be.bignumber.equal(newMin);
         });
 
-        it('should revert when a non owner attempts to set the system network token limits', async () => {
-            await expectRevert(
-                settings.setSystemNetworkTokenLimits(100, 200, {
-                    from: nonOwner
-                }),
-                'ERR_ACCESS_DENIED'
-            );
+        it('should revert when a non owner attempts to set the minimum network token liquidity for minting', async () => {
+            await expectRevert(settings.setMinNetworkTokenLiquidityForMinting(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
         });
 
-        it('should revert when the owner attempts to set a system network token ratio that is larger than 100%', async () => {
-            await expectRevert(
-                settings.setSystemNetworkTokenLimits(200, PPM_RESOLUTION.add(new BN(1))),
-                'ERR_INVALID_PORTION'
-            );
+        it('verifies that the owner can set the default network token minting limit', async () => {
+            const prevDefault = await settings.defaultNetworkTokenMintingLimit.call();
+            const newDefault = new BN(100);
+
+            const res = await settings.setDefaultNetworkTokenMintingLimit(newDefault);
+
+            expectEvent(res, 'DefaultNetworkTokenMintingLimitUpdated', {
+                _prevDefault: prevDefault,
+                _newDefault: newDefault
+            });
+
+            const defaultLimit = await settings.defaultNetworkTokenMintingLimit.call();
+
+            expect(defaultLimit).not.to.be.bignumber.equal(prevDefault);
+            expect(defaultLimit).to.be.bignumber.equal(newDefault);
+        });
+
+        it('should revert when a non owner attempts to set the default network token minting limit', async () => {
+            await expectRevert(settings.setDefaultNetworkTokenMintingLimit(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        });
+
+        it('verifies that the owner can set the network token minting limit for a pool', async () => {
+            const prevPoolLimit = await settings.networkTokenMintingLimits.call(poolToken.address);
+            const newPoolLimit = new BN(100);
+
+            const res = await settings.setNetworkTokenMintingLimit(poolToken.address, newPoolLimit);
+
+            expectEvent(res, 'NetworkTokenMintingLimitUpdated', {
+                _prevLimit: prevPoolLimit,
+                _newLimit: newPoolLimit
+            });
+
+            const poolLimit = await settings.networkTokenMintingLimits.call(poolToken.address);
+
+            expect(poolLimit).not.to.be.bignumber.equal(prevPoolLimit);
+            expect(poolLimit).to.be.bignumber.equal(newPoolLimit);
+        });
+
+        it('should revert when a non owner attempts to set the network token minting limit for a pool', async () => {
+            await expectRevert(settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        });
+
+        it('verifies that the minted tokens admin can increase the minted tokens balance for a pool', async () => {
+            const prevBalance = await settings.networkTokensMinted.call(poolToken.address);
+            const delta = new BN(100);
+
+            const res = await settings.incNetworkTokensMinted(poolToken.address, delta, { from: admin });
+
+            expectEvent(res, 'NetworkTokensMintedUpdated', {
+                _prevAmount: prevBalance,
+                _newAmount: prevBalance.add(delta)
+            });
+
+            const mintedBalance = await settings.networkTokensMinted.call(poolToken.address);
+
+            expect(mintedBalance).not.to.be.bignumber.equal(prevBalance);
+            expect(mintedBalance).to.be.bignumber.equal(prevBalance.add(delta));
+        });
+
+        it('should revert when a non minted tokens admin attempts to increase the minted tokens balance for a pool', async () => {
+            await expectRevert(settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        });
+
+        it('verifies that the minted tokens admin can decrease the minted tokens balance for a pool', async () => {
+            await settings.incNetworkTokensMinted(poolToken.address, 1000, { from: admin });
+
+            const prevBalance = await settings.networkTokensMinted.call(poolToken.address);
+            const delta = new BN(100);
+
+            const res = await settings.decNetworkTokensMinted(poolToken.address, delta, { from: admin });
+
+            expectEvent(res, 'NetworkTokensMintedUpdated', {
+                _prevAmount: prevBalance,
+                _newAmount: prevBalance.sub(delta)
+            });
+
+            const mintedBalance = await settings.networkTokensMinted.call(poolToken.address);
+
+            expect(mintedBalance).not.to.be.bignumber.equal(prevBalance);
+            expect(mintedBalance).to.be.bignumber.equal(prevBalance.sub(delta));
+        });
+
+        it('should revert when a non minted tokens admin attempts to decrease the minted tokens balance for a pool', async () => {
+            await expectRevert(settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        });
+
+        it('verifies that the minted tokens admin can decrease the minted tokens balance for a pool by a number larger than the current balance', async () => {
+            await settings.incNetworkTokensMinted(poolToken.address, 100, { from: admin });
+
+            const prevBalance = await settings.networkTokensMinted.call(poolToken.address);
+            const delta = new BN(300);
+
+            const res = await settings.decNetworkTokensMinted(poolToken.address, delta, { from: admin });
+
+            expectEvent(res, 'NetworkTokensMintedUpdated', {
+                _prevAmount: prevBalance,
+                _newAmount: new BN(0)
+            });
+
+            const mintedBalance = await settings.networkTokensMinted.call(poolToken.address);
+
+            expect(mintedBalance).not.to.be.bignumber.equal(prevBalance);
+            expect(mintedBalance).to.be.bignumber.equal(new BN(0));
         });
     });
 
