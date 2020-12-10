@@ -49,8 +49,12 @@ library Math {
         uint256 _max
     ) internal pure returns (uint256, uint256) {
         (uint256 n, uint256 d) = (_n, _d);
-        if (n > _max || d > _max) (n, d) = normalizedRatio(n, d, _max);
-        if (n != d) return (n, d);
+        if (n > _max || d > _max) {
+            (n, d) = normalizedRatio(n, d, _max);
+        }
+        if (n != d) {
+            return (n, d);
+        }
         return (1, 1);
     }
 
@@ -62,7 +66,9 @@ library Math {
         uint256 _b,
         uint256 _scale
     ) internal pure returns (uint256, uint256) {
-        if (_a <= _b) return accurateRatio(_a, _b, _scale);
+        if (_a <= _b) {
+            return accurateRatio(_a, _b, _scale);
+        }
         (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
         return (x, y);
     }
@@ -114,7 +120,9 @@ library Math {
     function geometricMean(uint256[] memory _values) internal pure returns (uint256) {
         uint256 numOfDigits = 0;
         uint256 length = _values.length;
-        for (uint256 i = 0; i < length; i++) numOfDigits += decimalLength(_values[i]);
+        for (uint256 i = 0; i < length; i++) {
+            numOfDigits += decimalLength(_values[i]);
+        }
         return uint256(10)**(roundDivUnsafe(numOfDigits, length) - 1);
     }
 
@@ -127,7 +135,9 @@ library Math {
      */
     function decimalLength(uint256 _x) internal pure returns (uint256) {
         uint256 y = 0;
-        for (uint256 x = _x; x > 0; x /= 10) y++;
+        for (uint256 x = _x; x > 0; x /= 10) {
+            y++;
+        }
         return y;
     }
 
