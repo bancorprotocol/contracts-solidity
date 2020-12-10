@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
+import "../utility/interfaces/ICheckpointStore.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/Owned.sol";
 import "../utility/SafeMath.sol";
@@ -14,7 +15,6 @@ import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
 import "./interfaces/ILiquidityProtectionSettings.sol";
-import "./interfaces/ICheckpointStore.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
