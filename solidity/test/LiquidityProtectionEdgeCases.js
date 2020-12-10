@@ -224,14 +224,14 @@ describe('LiquidityProtectionV1EdgeCases', () => {
 
                         let test;
                         if (!config.increaseRate && !config.generateFee) {
-                            test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0');
+                            test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.0', 3: '0.00000004'}[converterType]);
                         } else if (!config.increaseRate && config.generateFee) {
-                            test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.0');
+                            test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, {1: '0.0', 3: '0.0'}[converterType]);
                         } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                            test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
+                            test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, {1: '0.0', 3: '0.0'}[converterType]);
                         } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.eq(expected), actual, expected, '0.000000000000001');
+                                condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.000000000000001', 3: '0.00000005'}[converterType]);
                         } else {
                             throw new Error('invalid configuration');
                         }
@@ -275,13 +275,13 @@ describe('LiquidityProtectionV1EdgeCases', () => {
 
                         let test;
                         if (!config.increaseRate && !config.generateFee) {
-                            test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.0');
+                            test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.0', 3: '0.00000004'}[converterType]);
                         } else if (!config.increaseRate && config.generateFee) {
-                            test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, '0.002');
+                            test = (actual, expected) => condOrAlmostEqual(actual.gt(expected), actual, expected, {1: '0.002', 3: '0.002'}[converterType]);
                         } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                            test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, '0.0');
+                            test = (actual, expected) => condOrAlmostEqual(actual.lt(expected), actual, expected, {1: '0.0', 3: '0.0'}[converterType]);
                         } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                            test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, '0.002');
+                            test = (actual, expected) => condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.002', 3: '0.002'}[converterType]);
                         } else {
                             throw new Error('invalid configuration');
                         }
