@@ -141,5 +141,3 @@ Here is an example of the initial configuration file which should be provided to
     }
 }
 ```
-
-You may omit the `oracle` entries if you wish to deploy your own oracles.
