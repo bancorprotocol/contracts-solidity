@@ -37,7 +37,7 @@ function percentageToPPM(value) {
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-describe('LiquidityProtectionV1AverageRate', () => {
+describe('LiquidityProtectionAverageRate', () => {
     for (const converterType of [1, 3]) {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
             const convert = async (sourceToken, targetToken, amount) => {
