@@ -1,3 +1,29 @@
+### 0.6.27
+General
+* Added a gas optimized standard pool converter (type 3) for 2 reserves, 50%/50% weights
+* Added Checkpoint store contract for tracking any actions that happen at a specific point in time
+* Optimized some of the generic Math functions
+* Removed legacy code
+* Added prettier to the code
+
+ConverterRegistry
+* Creating a standard type 1 pool will result in a type 3 pool
+
+ConverterUpgrader
+* Upgrading a standard type 1 pool will result in a new type 3 pool
+
+LiquidityProtection
+* New flexible and more secure network token minting limit system
+* Liquidity cannot be added and removed in the same block anymore
+* Settings moved into a dedicated contract
+* Removed the high tier pool system
+* Optimized calculations to reduce potential overflows/underflows
+* Added addLiquidityFor function that allows creating a position for a different wallet
+* Removed the transferLiquidity function
+* Added on-chain tracking for when users remove liquidity
+* Fixed an issue that triggererd an exception in the poolROI view function in certain cases
+
+
 ### 0.6.26
 LiquidityProtection
 * Added support for high tier pools
