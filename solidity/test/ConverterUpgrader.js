@@ -9,14 +9,13 @@ const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
 const BancorFormula = contract.fromArtifact('BancorFormula');
-const EtherToken = contract.fromArtifact('EtherToken');
 const ERC20Token = contract.fromArtifact('ERC20Token');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
-
 const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 
 const CONVERSION_FEE = new BN(1000);
@@ -39,7 +38,7 @@ describe('ConverterUpgrader', () => {
             500000,
             version
         );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
@@ -55,10 +54,10 @@ describe('ConverterUpgrader', () => {
         return [upgrader, converter];
     };
 
-    const initWith2Reserves = async (deployer, version, activate) => {
+    const initWith2Reserves = async (type, deployer, version, activate) => {
         const anchor = await DSToken.new('Token1', 'TKN1', 0);
         const converter = await ConverterHelper.new(
-            1,
+            type,
             anchor.address,
             contractRegistry.address,
             MAX_CONVERSION_FEE,
@@ -66,7 +65,7 @@ describe('ConverterUpgrader', () => {
             500000,
             version
         );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version) {
@@ -86,6 +85,14 @@ describe('ConverterUpgrader', () => {
         }
 
         return [upgrader, converter];
+    };
+
+    const initType1With2Reserves = async (deployer, version, activate) => {
+        return await initWith2Reserves(1, deployer, version, activate);
+    };
+
+    const initType3With2Reserves = async (deployer, version, activate) => {
+        return await initWith2Reserves(3, deployer, version, activate);
     };
 
     const initWithoutReserves = async (deployer, version, activate) => {
@@ -99,7 +106,7 @@ describe('ConverterUpgrader', () => {
             0,
             version
         );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
@@ -112,55 +119,21 @@ describe('ConverterUpgrader', () => {
         return [upgrader, converter];
     };
 
-    const initWithEtherReserve = async (deployer, version, activate) => {
-        const anchor = await DSToken.new('Token1', 'TKN1', 0);
-        const converter = await ConverterHelper.new(
-            1,
-            anchor.address,
-            contractRegistry.address,
-            MAX_CONVERSION_FEE,
-            etherToken.address,
-            500000,
-            version
-        );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, etherToken.address);
-
-        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-        if (version) {
-            await converter.addConnector(reserveToken2.address, 500000, false);
-        } else {
-            await converter.addReserve(reserveToken2.address, 500000);
-        }
-
-        await converter.setConversionFee(CONVERSION_FEE);
-        await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
-        await etherToken.deposit({ value: RESERVE1_BALANCE });
-        await etherToken.transfer(converter.address, RESERVE1_BALANCE);
-        await reserveToken2.transfer(converter.address, RESERVE2_BALANCE);
-
-        if (activate) {
-            await anchor.transferOwnership(converter.address);
-            await converter.acceptTokenOwnership();
-        }
-
-        return [upgrader, converter];
-    };
-
-    const initWithETHReserve = async (deployer, version, activate) => {
+    const initWithETHReserve = async (type, deployer, version, activate) => {
         if (version) {
             throw new Error(`Converter version ${version} does not support ETH-reserve`);
         }
 
         const anchor = await DSToken.new('Token1', 'TKN1', 0);
         const converter = await ConverterHelper.new(
-            1,
+            type,
             anchor.address,
             contractRegistry.address,
             MAX_CONVERSION_FEE,
             reserveToken1.address,
             500000
         );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
@@ -175,6 +148,14 @@ describe('ConverterUpgrader', () => {
         }
 
         return [upgrader, converter];
+    };
+
+    const initType1WithETHReserve = async (deployer, version, activate) => {
+        return await initWithETHReserve(1, deployer, version, activate);
+    };
+
+    const initType3WithETHReserve = async (deployer, version, activate) => {
+        return await initWithETHReserve(3, deployer, version, activate);
     };
 
     const upgradeConverter = async (upgrader, converter, options = {}) => {
@@ -231,6 +212,7 @@ describe('ConverterUpgrader', () => {
             };
         }
 
+
         return state;
     };
 
@@ -239,7 +221,6 @@ describe('ConverterUpgrader', () => {
     const deployer = defaultSender;
     let reserveToken1;
     let reserveToken2;
-    let etherToken;
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -254,20 +235,21 @@ describe('ConverterUpgrader', () => {
 
         await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
     });
 
     beforeEach(async () => {
         reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
         reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
-        etherToken = await EtherToken.new('Ether Token', 'ETH');
     });
 
     const initFuncs = [
         initWithoutReserves,
         initWith1Reserve,
-        initWith2Reserves,
-        initWithEtherReserve,
-        initWithETHReserve
+        initType1With2Reserves,
+        initType3With2Reserves,
+        initType1WithETHReserve,
+        initType3WithETHReserve
     ];
 
     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
@@ -275,7 +257,9 @@ describe('ConverterUpgrader', () => {
     const product = cartesian(initFuncs, [...VERSIONS, null], [false, true]);
     const combinations = product.filter(
         ([init, version, active]) =>
-            !(init === initWithoutReserves && active) && !(init === initWithETHReserve && version)
+            !(init === initWithoutReserves && active) &&
+            !(init === initType1WithETHReserve && version) &&
+            !(init === initType3WithETHReserve && version)
     );
 
     for (const [init, version, activate] of combinations) {
@@ -285,12 +269,8 @@ describe('ConverterUpgrader', () => {
                 let upgradedReserveTokens;
 
                 switch (init) {
-                    case initWithEtherReserve:
-                        reserveTokens = [etherToken.address, reserveToken2.address];
-                        // An EtherToken reserve is always upgraded to ETH_RESERVE_ADDRESS.
-                        upgradedReserveTokens = [ETH_RESERVE_ADDRESS, reserveToken2.address];
-                        break;
-                    case initWithETHReserve:
+                    case initType1WithETHReserve:
+                    case initType3WithETHReserve:
                         reserveTokens = [reserveToken1.address, ETH_RESERVE_ADDRESS];
                         upgradedReserveTokens = reserveTokens;
                         break;
@@ -301,8 +281,9 @@ describe('ConverterUpgrader', () => {
                 }
 
                 // Initial reserve balances are synced when the converter is being activated or during transfer to
-                // the EtherToken/ERC20 reserve, for older converters.
+                // the ERC20 reserve, for older converters.
                 const olderConverter = version && version < 28;
+
                 const reserveBalances = [
                     activate || olderConverter ? RESERVE1_BALANCE : new BN(0),
                     activate || olderConverter ? RESERVE2_BALANCE : new BN(0)

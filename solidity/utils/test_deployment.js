@@ -183,6 +183,12 @@ const run = async () => {
         'LiquidityPoolV1ConverterFactory',
         []
     );
+    const standardPoolConverterFactory = await web3Func(
+        deploy,
+        'standardPoolConverterFactory',
+        'StandardPoolConverterFactory',
+        []
+    );
 
     // contract deployment for etherscan verification only
     const poolToken1 = await web3Func(deploy, 'poolToken1', 'DSToken', ['Token1', 'TKN1', 18]);
@@ -193,6 +199,11 @@ const run = async () => {
         1000
     ]);
     await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [
+        poolToken2._address,
+        contractRegistry._address,
+        1000
+    ]);
+    await web3Func(deploy, 'standardPoolConverter', 'StandardPoolConverter', [
         poolToken2._address,
         contractRegistry._address,
         1000
@@ -239,6 +250,7 @@ const run = async () => {
     // initialize converter factory
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
+    await execute(converterFactory.methods.registerTypedConverterFactory(standardPoolConverterFactory._address));
 
     for (const reserve of getConfig().reserves) {
         if (reserve.type === undefined) {
@@ -317,6 +329,10 @@ const run = async () => {
             }
             if (type === 1) {
                 const deployedConverter = deployed(web3, 'LiquidityPoolV1Converter', converterBase._address);
+                await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
+            }
+            if (type === 3) {
+                const deployedConverter = deployed(web3, 'StandardPoolConverter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
             }
         }

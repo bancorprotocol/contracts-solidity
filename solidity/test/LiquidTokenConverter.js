@@ -109,7 +109,7 @@ describe('LiquidTokenConverter', () => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        upgrader = await ConverterUpgrader.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         const token = await DSToken.new('Token1', 'TKN1', 2);

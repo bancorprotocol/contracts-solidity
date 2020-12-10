@@ -140,7 +140,7 @@ describe('LiquidityPoolConverter', () => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        upgrader = await ConverterUpgrader.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);

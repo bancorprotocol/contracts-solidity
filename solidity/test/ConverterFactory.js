@@ -6,6 +6,7 @@ const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('TestConverterFactory');
 const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 const TypedConverterAnchorFactory = contract.fromArtifact('TestTypedConverterAnchorFactory');
 const ConverterBase = contract.fromArtifact('ConverterBase');
 const DSToken = contract.fromArtifact('DSToken');
@@ -20,7 +21,11 @@ describe('ConverterFactory', () => {
 
     const MAX_CONVERSION_FEE = new BN(10000);
 
-    for (const Factory of [LiquidTokenConverterFactory, LiquidityPoolV1ConverterFactory]) {
+    for (const Factory of [
+        LiquidTokenConverterFactory,
+        LiquidityPoolV1ConverterFactory,
+        StandardPoolConverterFactory
+    ]) {
         describe(Factory.contractName, () => {
             before(async () => {
                 // The following contracts are unaffected by the underlying tests, this can be shared.

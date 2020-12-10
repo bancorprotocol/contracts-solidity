@@ -13,6 +13,7 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
+const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 
 const PPM_RESOLUTION = new BN(1000000);
@@ -39,8 +40,10 @@ describe('LiquidityProtectionSettings', () => {
         const bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
         const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
+        const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
         const converterFactory = await ConverterFactory.new();
         await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
+        await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
