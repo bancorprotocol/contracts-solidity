@@ -162,8 +162,7 @@ const run = async () => {
         contractRegistry._address
     ]);
     const converterUpgrader = await web3Func(deploy, 'converterUpgrader', 'ConverterUpgrader', [
-        contractRegistry._address,
-        reserves.ETH.address
+        contractRegistry._address
     ]);
     const converterRegistry = await web3Func(deploy, 'converterRegistry', 'ConverterRegistry', [
         contractRegistry._address
