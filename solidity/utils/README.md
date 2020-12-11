@@ -129,8 +129,8 @@ Here is an example of the initial configuration file which should be provided to
         }
     ],
     "liquidityProtectionParams": {
-        "maxSystemNetworkTokenAmount": "1000000",
-        "maxSystemNetworkTokenRatio": "75%",
+        "minNetworkTokenLiquidityForMinting": "100",
+        "defaultNetworkTokenMintingLimit": "750",
         "minProtectionDelay": 600,
         "maxProtectionDelay": 3600,
         "lockDuration": 60,
@@ -141,5 +141,3 @@ Here is an example of the initial configuration file which should be provided to
     }
 }
 ```
-
-You may omit the `oracle` entries if you wish to deploy your own oracles.
