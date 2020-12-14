@@ -10,8 +10,10 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 const MIN_GAS_LIMIT = 100000;
 
+const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
+const ROLE_MINTED_TOKENS_ADMIN = Web3.utils.keccak256('ROLE_MINTED_TOKENS_ADMIN');
 
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
@@ -160,8 +162,7 @@ const run = async () => {
         contractRegistry._address
     ]);
     const converterUpgrader = await web3Func(deploy, 'converterUpgrader', 'ConverterUpgrader', [
-        contractRegistry._address,
-        reserves.ETH.address
+        contractRegistry._address
     ]);
     const converterRegistry = await web3Func(deploy, 'converterRegistry', 'ConverterRegistry', [
         contractRegistry._address
@@ -181,42 +182,16 @@ const run = async () => {
         'LiquidityPoolV1ConverterFactory',
         []
     );
-    const liquidityPoolV2ConverterFactory = await web3Func(
+    const standardPoolConverterFactory = await web3Func(
         deploy,
-        'liquidityPoolV2ConverterFactory',
-        'LiquidityPoolV2ConverterFactory',
+        'standardPoolConverterFactory',
+        'StandardPoolConverterFactory',
         []
     );
-    const liquidityPoolV2ConverterAnchorFactory = await web3Func(
-        deploy,
-        'liquidityPoolV2ConverterAnchorFactory',
-        'LiquidityPoolV2ConverterAnchorFactory',
-        []
-    );
-    const liquidityPoolV2ConverterCustomFactory = await web3Func(
-        deploy,
-        'liquidityPoolV2ConverterCustomFactory',
-        'LiquidityPoolV2ConverterCustomFactory',
-        []
-    );
-    const whitelist = await web3Func(deploy, 'whitelist', 'Whitelist', []);
 
     // contract deployment for etherscan verification only
     const poolToken1 = await web3Func(deploy, 'poolToken1', 'DSToken', ['Token1', 'TKN1', 18]);
     const poolToken2 = await web3Func(deploy, 'poolToken2', 'DSToken', ['Token2', 'TKN2', 18]);
-    const poolTokensContainer = await web3Func(deploy, 'poolTokensContainer', 'PoolTokensContainer', [
-        'Pool',
-        'POOL',
-        18
-    ]);
-    const chainlinkOracle1 = await web3Func(deploy, 'chainlinkOracle1', 'ChainlinkETHToETHOracle', []);
-    const chainlinkOracle2 = await web3Func(deploy, 'chainlinkOracle2', 'ChainlinkETHToETHOracle', []);
-    await web3Func(deploy, 'priceOracle', 'PriceOracle', [
-        poolToken1._address,
-        poolToken2._address,
-        chainlinkOracle1._address,
-        chainlinkOracle2._address
-    ]);
     await web3Func(deploy, 'liquidTokenConverter', 'LiquidTokenConverter', [
         poolToken1._address,
         contractRegistry._address,
@@ -227,8 +202,8 @@ const run = async () => {
         contractRegistry._address,
         1000
     ]);
-    await web3Func(deploy, 'liquidityPoolV2Converter', 'LiquidityPoolV2Converter', [
-        poolTokensContainer._address,
+    await web3Func(deploy, 'standardPoolConverter', 'StandardPoolConverter', [
+        poolToken2._address,
         contractRegistry._address,
         1000
     ]);
@@ -270,20 +245,11 @@ const run = async () => {
             converterRegistryData._address
         )
     );
-    await execute(
-        contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('ChainlinkOracleWhitelist'), whitelist._address)
-    );
 
     // initialize converter factory
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
-    await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV2ConverterFactory._address));
-    await execute(
-        converterFactory.methods.registerTypedConverterAnchorFactory(liquidityPoolV2ConverterAnchorFactory._address)
-    );
-    await execute(
-        converterFactory.methods.registerTypedConverterCustomFactory(liquidityPoolV2ConverterCustomFactory._address)
-    );
+    await execute(converterFactory.methods.registerTypedConverterFactory(standardPoolConverterFactory._address));
 
     for (const reserve of getConfig().reserves) {
         if (reserve.type === undefined) {
@@ -352,30 +318,6 @@ const run = async () => {
         await execute(converterBase.methods.acceptOwnership());
         await execute(converterBase.methods.setConversionFee(fee));
 
-        if (type === 2) {
-            for (const reserve of converter.reserves) {
-                if (reserve.oracle === undefined) {
-                    const oracle = await web3Func(
-                        deploy,
-                        'chainlinkOracle-' + converter.symbol + reserve.symbol,
-                        'ChainlinkETHToETHOracle',
-                        []
-                    );
-                    reserve.oracle = oracle._address;
-                }
-            }
-            const deployedConverter = deployed(web3, 'LiquidityPoolV2Converter', converterBase._address);
-            await execute(whitelist.methods.addAddress(converter.reserves[0].oracle));
-            await execute(whitelist.methods.addAddress(converter.reserves[1].oracle));
-            await execute(
-                deployedConverter.methods.activate(
-                    tokens[0],
-                    converter.reserves[0].oracle,
-                    converter.reserves[1].oracle
-                )
-            );
-        }
-
         if (type !== 0 && amounts.every((amount) => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {
                 const reserve = converter.reserves[i];
@@ -388,10 +330,9 @@ const run = async () => {
                 const deployedConverter = deployed(web3, 'LiquidityPoolV1Converter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
             }
-            if (type === 2) {
-                const deployedConverter = deployed(web3, 'LiquidityPoolV2Converter', converterBase._address);
-                await execute(deployedConverter.methods.addLiquidity(tokens[0], amounts[0], 1), value);
-                await execute(deployedConverter.methods.addLiquidity(tokens[1], amounts[1], 1), value);
+            if (type === 3) {
+                const deployedConverter = deployed(web3, 'StandardPoolConverter', converterBase._address);
+                await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
             }
         }
 
@@ -406,30 +347,49 @@ const run = async () => {
     await execute(bancorFormula.methods.init());
 
     const bntTokenGovernance = await web3Func(deploy, 'bntTokenGovernance', 'TokenGovernance', [reserves.BNT.address]);
-    const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [reserves.vBNT.address]);
+    const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [
+        reserves.vBNT.address
+    ]);
 
     await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
 
+    const checkpointStore = await web3Func(deploy, 'checkpointStore', 'CheckpointStore', []);
+    const liquidityProtectionSettings = await web3Func(
+        deploy,
+        'liquidityProtectionSettings',
+        'LiquidityProtectionSettings',
+        [reserves.BNT.address, contractRegistry._address]
+    );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
-    const liquidityProtectionParams = [
-        liquidityProtectionStore._address,
-        bntTokenGovernance._address,
-        vbntTokenGovernance._address,
-        contractRegistry._address
-    ];
 
     const liquidityProtection = await web3Func(
         deploy,
         'liquidityProtection',
         'LiquidityProtection',
-        liquidityProtectionParams
+        [
+            liquidityProtectionSettings._address,
+            liquidityProtectionStore._address,
+            bntTokenGovernance._address,
+            vbntTokenGovernance._address,
+            checkpointStore._address
+        ]
     );
 
-    // Granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role.
+    await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+
+    // granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
 
+    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address));
+
+    await execute(
+        contractRegistry.methods.registerAddress(
+            Web3.utils.asciiToHex('LiquidityProtectionSettings'),
+            liquidityProtectionSettings._address
+        )
+    );
     await execute(
         contractRegistry.methods.registerAddress(
             Web3.utils.asciiToHex('LiquidityProtectionStore'),
@@ -447,18 +407,20 @@ const run = async () => {
     await execute(liquidityProtection.methods.acceptStoreOwnership());
 
     const params = getConfig().liquidityProtectionParams;
-    const maxSystemNetworkTokenRatio = percentageToPPM(params.maxSystemNetworkTokenRatio);
-    const maxSystemNetworkTokenAmount = decimalToInteger(params.maxSystemNetworkTokenAmount, reserves.BNT.decimals);
+
+    const minNetworkTokenLiquidityForMinting = decimalToInteger(params.minNetworkTokenLiquidityForMinting, reserves.BNT.decimals);
+    await execute(liquidityProtectionSettings.methods.setMinNetworkTokenLiquidityForMinting(minNetworkTokenLiquidityForMinting));
+
+    const defaultNetworkTokenMintingLimit = decimalToInteger(params.defaultNetworkTokenMintingLimit, reserves.BNT.decimals);
+    await execute(liquidityProtectionSettings.methods.setDefaultNetworkTokenMintingLimit(defaultNetworkTokenMintingLimit));
+
     await execute(
-        liquidityProtection.methods.setSystemNetworkTokenLimits(maxSystemNetworkTokenAmount, maxSystemNetworkTokenRatio)
+        liquidityProtectionSettings.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
     );
-    await execute(
-        liquidityProtection.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
-    );
-    await execute(liquidityProtection.methods.setLockDuration(params.lockDuration));
+    await execute(liquidityProtectionSettings.methods.setLockDuration(params.lockDuration));
 
     for (const converter of params.converters) {
-        await execute(liquidityProtection.methods.whitelistPool(reserves[converter].address, true));
+        await execute(liquidityProtectionSettings.methods.addPoolToWhitelist(reserves[converter].address));
     }
 
     web3.currentProvider.disconnect();

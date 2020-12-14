@@ -4,6 +4,7 @@ import "../../LiquidityPoolConverter.sol";
 import "../../../token/interfaces/IDSToken.sol";
 import "../../../utility/Math.sol";
 import "../../../utility/Types.sol";
+import "../../../utility/Time.sol";
 
 /**
  * @dev This contract is a specialized version of a converter that manages
@@ -12,7 +13,7 @@ import "../../../utility/Types.sol";
  * Even though pools can have many reserves, the standard pool configuration
  * is 2 reserves with 50%/50% weights.
  */
-contract LiquidityPoolV1Converter is LiquidityPoolConverter {
+contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
     using Math for *;
 
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
@@ -179,7 +180,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
-    function recentAverageRate(IERC20Token _token) external view returns (uint256, uint256) {
+    function recentAverageRate(IERC20Token _token)
+        external
+        view
+        validReserve(_token)
+        returns (uint256, uint256)
+    {
         // verify that the pool is standard
         require(isStandardPool, "ERR_NON_STANDARD_POOL");
 
@@ -619,33 +625,6 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
     }
 
     /**
-     * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
-     *
-     * @param _amount          amount of pool tokens
-     * @param _reserveTokens   address of each reserve token
-     * @param _totalSupply     token total supply
-     * @param _formula         formula contract
-     *
-     * @return the amount of each reserve token entitled for the given amount of pool tokens
-     */
-    function removeLiquidityReserveAmounts(
-        uint256 _amount,
-        IERC20Token[] memory _reserveTokens,
-        uint256 _totalSupply,
-        IBancorFormula _formula
-    ) private view returns (uint256[] memory) {
-        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
-        for (uint256 i = 0; i < reserveAmounts.length; i++)
-            reserveAmounts[i] = _formula.liquidateReserveAmount(
-                _totalSupply,
-                reserves[_reserveTokens[i]].balance,
-                reserveRatio,
-                _amount
-            );
-        return reserveAmounts;
-    }
-
-    /**
      * @dev removes liquidity (reserve) from the pool
      *
      * @param _reserveTokens           address of each reserve token
@@ -694,6 +673,33 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
         }
 
         // return the amount of each reserve token granted for the given amount of pool tokens
+        return reserveAmounts;
+    }
+
+    /**
+     * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
+     *
+     * @param _amount          amount of pool tokens
+     * @param _reserveTokens   address of each reserve token
+     * @param _totalSupply     token total supply
+     * @param _formula         formula contract
+     *
+     * @return the amount of each reserve token entitled for the given amount of pool tokens
+     */
+    function removeLiquidityReserveAmounts(
+        uint256 _amount,
+        IERC20Token[] memory _reserveTokens,
+        uint256 _totalSupply,
+        IBancorFormula _formula
+    ) private view returns (uint256[] memory) {
+        uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
+        for (uint256 i = 0; i < reserveAmounts.length; i++)
+            reserveAmounts[i] = _formula.liquidateReserveAmount(
+                _totalSupply,
+                reserves[_reserveTokens[i]].balance,
+                reserveRatio,
+                _amount
+            );
         return reserveAmounts;
     }
 
@@ -758,13 +764,5 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter {
             _reserveBalance.mul(PPM_RESOLUTION),
             _poolTokenSupply.mul(_reserveWeight)
         );
-    }
-
-    /**
-     * @dev returns the current time
-     * utility to allow overrides for tests
-     */
-    function time() internal view virtual returns (uint256) {
-        return block.timestamp;
     }
 }
