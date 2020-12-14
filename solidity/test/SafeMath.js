@@ -1,9 +1,10 @@
-const { expect } = require('chai');
+const { contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
-const TestSafeMath = artifacts.require('TestSafeMath');
+const TestSafeMath = contract.fromArtifact('TestSafeMath');
 
-contract('SafeMath', () => {
+describe('SafeMath', () => {
     let math;
 
     beforeEach(async () => {

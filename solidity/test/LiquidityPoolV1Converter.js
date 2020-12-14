@@ -1,5 +1,6 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
@@ -7,18 +8,18 @@ const { ZERO_ADDRESS } = constants;
 
 const { duration, latest } = time;
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const LiquidityPoolV1Converter = artifacts.require('TestLiquidityPoolV1Converter');
-const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const DSToken = artifacts.require('DSToken');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ERC20Token = artifacts.require('ERC20Token');
-const TestNonStandardToken = artifacts.require('TestNonStandardToken');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterUpgrader = artifacts.require('ConverterUpgrader');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const DSToken = contract.fromArtifact('DSToken');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 
-contract('LiquidityPoolV1Converter', (accounts) => {
+describe('LiquidityPoolV1Converter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
         return LiquidityPoolV1Converter.new(tokenAddress, registryAddress, maxConversionFee);
     };
@@ -54,11 +55,23 @@ contract('LiquidityPoolV1Converter', (accounts) => {
         const inputAmount = new BN(poolTokenAmount);
         const converter = await initConverter(true, false, 0, true);
         const poolTokenSupply = await token.totalSupply.call();
-        const reserveBalances = await Promise.all(reserveTokens.map((reserveToken) => converter.reserveBalance.call(reserveToken.address)));
-        const expectedOutputAmounts = reserveBalances.map((reserveBalance) => reserveBalance.mul(inputAmount).div(poolTokenSupply));
-        await converter.removeLiquidityTest(inputAmount, reserveTokens.map((reserveToken) => reserveToken.address), [MIN_RETURN, MIN_RETURN]);
-        const actualOutputAmounts = await Promise.all(reserveTokens.map((reserveToken, i) => converter.reserveAmountsRemoved(i)));
-        reserveTokens.map((reserveToken, i) => expect(actualOutputAmounts[i]).to.be.bignumber.equal(expectedOutputAmounts[i]));
+        const reserveBalances = await Promise.all(
+            reserveTokens.map((reserveToken) => converter.reserveBalance.call(reserveToken.address))
+        );
+        const expectedOutputAmounts = reserveBalances.map((reserveBalance) =>
+            reserveBalance.mul(inputAmount).div(poolTokenSupply)
+        );
+        await converter.removeLiquidityTest(
+            inputAmount,
+            reserveTokens.map((reserveToken) => reserveToken.address),
+            [MIN_RETURN, MIN_RETURN]
+        );
+        const actualOutputAmounts = await Promise.all(
+            reserveTokens.map((reserveToken, i) => converter.reserveAmountsRemoved(i))
+        );
+        reserveTokens.map((reserveToken, i) =>
+            expect(actualOutputAmounts[i]).to.be.bignumber.equal(expectedOutputAmounts[i])
+        );
     };
 
     const getReserve1Address = (isETH) => {
@@ -100,7 +113,7 @@ contract('LiquidityPoolV1Converter', (accounts) => {
     let reserveToken2;
     let reserveToken3;
     let upgrader;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const sender2 = accounts[9];
 
     const MIN_RETURN = new BN(1);
@@ -124,7 +137,7 @@ contract('LiquidityPoolV1Converter', (accounts) => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        upgrader = await ConverterUpgrader.new(contractRegistry.address, ZERO_ADDRESS);
+        upgrader = await ConverterUpgrader.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
         const token = await DSToken.new('Token1', 'TKN1', 2);
@@ -777,6 +790,10 @@ contract('LiquidityPoolV1Converter', (accounts) => {
             return prevAverageRateUpdateTime;
         };
 
+        it('should revert when requesting the average rate for a non reserve token', async () => {
+            await expectRevert(converter.recentAverageRate.call(accounts[7]), 'ERR_INVALID_RESERVE');
+        });
+
         it('should be initially equal to the current rate', async () => {
             const averageRate = await getAverageRate(ETH_RESERVE_ADDRESS);
             const currentRate = await getCurrentRate(ETH_RESERVE_ADDRESS, reserveToken2.address);
@@ -914,6 +931,190 @@ contract('LiquidityPoolV1Converter', (accounts) => {
                         expectRatesAlmostEqual(averageRate, expectedAverageRate);
                     }
                 });
+            });
+        }
+    });
+
+    describe('add/remove liquidity', () => {
+        const initLiquidityPool = async (hasETH) => {
+            const poolToken = await DSToken.new('name', 'symbol', 0);
+            const converter = await LiquidityPoolV1Converter.new(poolToken.address, contractRegistry.address, 0);
+
+            const reserveTokens = [
+                (await ERC20Token.new('name', 'symbol', 0, -1)).address,
+                hasETH ? ETH_RESERVE_ADDRESS : (await ERC20Token.new('name', 'symbol', 0, -1)).address
+            ];
+
+            for (const reserveToken of reserveTokens) {
+                await converter.addReserve(reserveToken, 500000);
+            }
+
+            await poolToken.transferOwnership(converter.address);
+            await converter.acceptAnchorOwnership();
+
+            return [converter, poolToken, reserveTokens];
+        };
+
+        const approve = async (reserveToken, converter, amount) => {
+            if (reserveToken === ETH_RESERVE_ADDRESS) {
+                return;
+            }
+
+            const token = await ERC20Token.at(reserveToken);
+            return token.approve(converter.address, amount);
+        };
+
+        const getAllowance = async (reserveToken, converter) => {
+            if (reserveToken === ETH_RESERVE_ADDRESS) {
+                return new BN(0);
+            }
+
+            const token = await ERC20Token.at(reserveToken);
+            return token.allowance.call(sender, converter.address);
+        };
+
+        const getBalance = async (reserveToken, converter) => {
+            if (reserveToken === ETH_RESERVE_ADDRESS) {
+                return balance.current(converter.address);
+            }
+
+            const token = await ERC20Token.at(reserveToken);
+            return await token.balanceOf.call(converter.address);
+        };
+
+        const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+            if (firstTime) {
+                return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
+            }
+
+            return await Promise.all(
+                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityCost(reserveTokens, i, reserveAmount))
+            );
+        };
+
+        const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+            if (firstTime) {
+                const length = Math.round(
+                    reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length /
+                        reserveAmounts.length
+                );
+                const retVal = new BN('1'.padEnd(length, '0'));
+                return reserveAmounts.map((reserveAmount, i) => retVal);
+            }
+
+            return await Promise.all(
+                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
+            );
+        };
+
+        const test = async (hasETH) => {
+            const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
+
+            const state = [];
+            let expected = [];
+            let prevSupply = new BN(0);
+            let prevBalances = reserveTokens.map((reserveToken) => new BN(0));
+
+            for (const supplyAmount of [1000000000, 1000000, 2000000, 3000000, 4000000]) {
+                const reserveAmounts = reserveTokens.map((reserveToken, i) =>
+                    new BN(supplyAmount).mul(new BN(100 + i)).div(new BN(100))
+                );
+                await Promise.all(
+                    reserveTokens.map((reserveToken, i) =>
+                        approve(reserveToken, converter, reserveAmounts[i].mul(new BN(0)))
+                    )
+                );
+                await Promise.all(
+                    reserveTokens.map((reserveToken, i) =>
+                        approve(reserveToken, converter, reserveAmounts[i].mul(new BN(1)))
+                    )
+                );
+                const liquidityCosts = await getLiquidityCosts(
+                    state.length == 0,
+                    converter,
+                    reserveTokens,
+                    reserveAmounts
+                );
+                const liquidityReturns = await getLiquidityReturns(
+                    state.length == 0,
+                    converter,
+                    reserveTokens,
+                    reserveAmounts
+                );
+                await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, {
+                    value: hasETH ? reserveAmounts.slice(-1)[0] : 0
+                });
+                const allowances = await Promise.all(
+                    reserveTokens.map((reserveToken) => getAllowance(reserveToken, converter))
+                );
+                const balances = await Promise.all(
+                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                );
+                const supply = await poolToken.totalSupply.call();
+
+                state.push({ supply: supply, balances: balances });
+
+                for (let i = 0; i < allowances.length; i++) {
+                    const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
+                    expect(diff.eq('0')).to.be.true();
+                }
+
+                const actual = balances.map((balance) => Decimal(balance.toString()).div(supply.toString()));
+                for (let i = 0; i < expected.length; i++) {
+                    const diff = expected[i].div(actual[i]);
+                    expect(diff.eq('1')).to.be.true();
+                    for (const liquidityCost of liquidityCosts) {
+                        expect(liquidityCost[i]).to.be.bignumber.equal(balances[i].sub(prevBalances[i]));
+                    }
+                }
+
+                for (const liquidityReturn of liquidityReturns) {
+                    expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
+                }
+
+                expected = actual;
+                prevSupply = supply;
+                prevBalances = balances;
+            }
+
+            for (let n = state.length - 1; n > 0; n--) {
+                const supplyAmount = state[n].supply.sub(new BN(state[n - 1].supply));
+                const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
+                await converter.removeLiquidity(
+                    supplyAmount,
+                    reserveTokens,
+                    reserveTokens.map((reserveTokens) => 1)
+                );
+                const balances = await Promise.all(
+                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                );
+                for (let i = 0; i < balances.length; i++) {
+                    const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
+                    expect(diff.eq('1')).to.be.true();
+                    expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
+                }
+                prevBalances = balances;
+            }
+
+            const supplyAmount = state[0].supply;
+            const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
+            await converter.removeLiquidity(
+                supplyAmount,
+                reserveTokens,
+                reserveTokens.map((reserveTokens) => 1)
+            );
+            const balances = await Promise.all(
+                reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+            );
+            for (let i = 0; i < balances.length; i++) {
+                expect(balances[i]).to.be.bignumber.equal(new BN(0));
+                expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
+            }
+        };
+
+        for (const hasETH of [false, true]) {
+            it(`hasETH = ${hasETH}`, async () => {
+                await test(hasETH);
             });
         }
     });

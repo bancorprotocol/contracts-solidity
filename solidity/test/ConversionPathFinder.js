@@ -1,18 +1,19 @@
-const { expect } = require('chai');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
-const ERC20Token = artifacts.require('ERC20Token');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const IConverterAnchor = artifacts.require('IConverterAnchor');
-const ConverterBase = artifacts.require('ConverterBase');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const LiquidTokenConverterFactory = artifacts.require('LiquidTokenConverterFactory');
-const LiquidityPoolV1ConverterFactory = artifacts.require('LiquidityPoolV1ConverterFactory');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConversionPathFinder = artifacts.require('ConversionPathFinder');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const IConverterAnchor = contract.fromArtifact('IConverterAnchor');
+const ConverterBase = contract.fromArtifact('ConverterBase');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
+const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConversionPathFinder = contract.fromArtifact('ConversionPathFinder');
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
@@ -113,7 +114,7 @@ const getShortestPath = (sourcePath, targetPath) => {
     return path.slice(0, length);
 };
 
-contract('ConversionPathFinder', (accounts) => {
+describe('ConversionPathFinder', () => {
     let contractRegistry;
     let converterFactory;
     let converterRegistry;

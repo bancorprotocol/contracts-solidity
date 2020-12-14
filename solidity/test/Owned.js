@@ -1,13 +1,14 @@
-const { expect } = require('chai');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ZERO_ADDRESS } = constants;
 
-const Owned = artifacts.require('Owned');
+const Owned = contract.fromArtifact('Owned');
 
-contract('Owned', (accounts) => {
+describe('Owned', () => {
     let contract;
-    const owner = accounts[0];
+    const owner = defaultSender;
     const newOwner = accounts[1];
 
     beforeEach(async () => {
@@ -15,7 +16,7 @@ contract('Owned', (accounts) => {
     });
 
     it('verifies the owner after construction', async () => {
-        expect(await contract.owner.call()).to.be.eql(accounts[0]);
+        expect(await contract.owner.call()).to.be.eql(defaultSender);
     });
 
     it('verifies the new owner after ownership transfer', async () => {

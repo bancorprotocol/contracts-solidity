@@ -61,7 +61,7 @@ Here is an example of the initial configuration file which should be provided to
     ],
     "converters": [
         {
-            "type": 1,
+            "type": 3,
             "symbol": "ETHBNT",
             "decimals": 18,
             "fee": "0.1%",
@@ -79,7 +79,7 @@ Here is an example of the initial configuration file which should be provided to
             ]
         },
         {
-            "type": 1,
+            "type": 3,
             "symbol": "XXXBNT",
             "decimals": 18,
             "fee": "0.1%",
@@ -104,12 +104,12 @@ Here is an example of the initial configuration file which should be provided to
             "reserves": [
                 {
                     "symbol": "YYY",
-                    "weight": "50%",
+                    "weight": "40%",
                     "balance": "312"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": "50%",
+                    "weight": "60%",
                     "balance": "270"
                 }
             ]
@@ -126,71 +126,11 @@ Here is an example of the initial configuration file which should be provided to
                     "balance": "920"
                 }
             ]
-        },
-        {
-            "type": 2,
-            "symbol": "WBTCBNTv2",
-            "decimals": 18,
-            "fee": "0.05%",
-            "reserves": [
-                {
-                    "symbol": "WBTC",
-                    "weight": "50%",
-                    "balance": "1.5",
-                    "oracle": "0x5b8B87A0abA4be247e660B0e0143bB30Cdf566AF"
-                },
-                {
-                    "symbol": "BNT",
-                    "weight": "50%",
-                    "balance": "12918",
-                    "oracle": "0xC1FCa03a77AD6f708789c1d193418780330709dd"
-                }
-            ]
-        },
-        {
-            "type": 2,
-            "symbol": "BATBNTv2",
-            "decimals": 18,
-            "fee": "0.1%",
-            "reserves": [
-                {
-                    "symbol": "BAT",
-                    "weight": "50%",
-                    "balance": "15000",
-                    "oracle": "0xAfd8186C962daf599f171B8600f3e19Af7B52c92"
-                },
-                {
-                    "symbol": "BNT",
-                    "weight": "50%",
-                    "balance": "8173",
-                    "oracle": "0xC1FCa03a77AD6f708789c1d193418780330709dd"
-                }
-            ]
-        },
-        {
-            "type": 2,
-            "symbol": "LINKBNTv2",
-            "decimals": 18,
-            "fee": "0.08%",
-            "reserves": [
-                {
-                    "symbol": "LINK",
-                    "weight": "50%",
-                    "balance": "216",
-                    "oracle": "0xb8c99b98913bE2ca4899CdcaF33a3e519C20EeEc"
-                },
-                {
-                    "symbol": "BNT",
-                    "weight": "50%",
-                    "balance": "9017",
-                    "oracle": "0xC1FCa03a77AD6f708789c1d193418780330709dd"
-                }
-            ]
         }
     ],
     "liquidityProtectionParams": {
-        "maxSystemNetworkTokenAmount": "1000000",
-        "maxSystemNetworkTokenRatio": "75%",
+        "minNetworkTokenLiquidityForMinting": "100",
+        "defaultNetworkTokenMintingLimit": "750",
         "minProtectionDelay": 600,
         "maxProtectionDelay": 3600,
         "lockDuration": 60,
@@ -201,5 +141,3 @@ Here is an example of the initial configuration file which should be provided to
     }
 }
 ```
-
-You may omit the `oracle` entries if you wish to deploy your own oracles.

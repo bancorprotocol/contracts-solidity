@@ -1,17 +1,18 @@
-const { expect } = require('chai');
+const { defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, balance, constants } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { MAX_UINT256 } = constants;
 
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const DSToken = artifacts.require('DSToken');
-const ERC20Token = artifacts.require('ERC20Token');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
+const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const DSToken = contract.fromArtifact('DSToken');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
-contract('ConverterLiquidity', (accounts) => {
+describe('ConverterLiquidity', () => {
     const initLiquidityPool = async (hasETH, ...weights) => {
         const poolToken = await DSToken.new('name', 'symbol', 0);
         const converter = await LiquidityPoolV1Converter.new(poolToken.address, contractRegistry.address, 0);
@@ -32,7 +33,7 @@ contract('ConverterLiquidity', (accounts) => {
     };
 
     let contractRegistry;
-    const owner = accounts[0];
+    const owner = defaultSender;
 
     const MIN_RETURN = new BN(1);
 
@@ -55,7 +56,7 @@ contract('ConverterLiquidity', (accounts) => {
         context('without ether reserve', async () => {
             beforeEach(async () => {
                 [converter, poolToken] = await initLiquidityPool(false, ...weights);
-                reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+                reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
             });
 
             it('should revert if the number of input reserve tokens is not equal to the number of reserve tokens', async () => {
@@ -128,7 +129,7 @@ contract('ConverterLiquidity', (accounts) => {
         context('with ether reserve', async () => {
             beforeEach(async () => {
                 [converter, poolToken] = await initLiquidityPool(true, ...weights);
-                reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+                reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
             });
 
             it('should revert if the input value is not equal to the input amount of ether', async () => {
@@ -146,7 +147,7 @@ contract('ConverterLiquidity', (accounts) => {
         const test = (hasETH, ...weights) => {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
                 const [converter, poolToken] = await initLiquidityPool(hasETH, ...weights);
-                const reserveTokens = await Promise.all(weights.map((weight, i) => converter.reserveTokens.call(i)));
+                const reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
 
                 const state = [];
                 let expected = [];

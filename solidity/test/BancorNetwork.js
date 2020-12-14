@@ -1,39 +1,31 @@
-const { expect } = require('chai');
-const { expectRevert, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
+const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
+const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
-
-const { latest } = time;
 const { ZERO_ADDRESS } = constants;
 
-const BancorNetwork = artifacts.require('BancorNetwork');
-const BancorFormula = artifacts.require('BancorFormula');
-const ContractRegistry = artifacts.require('ContractRegistry');
-const ConverterRegistry = artifacts.require('ConverterRegistry');
-const ConverterFactory = artifacts.require('ConverterFactory');
-const ConverterRegistryData = artifacts.require('ConverterRegistryData');
-const ConversionPathFinder = artifacts.require('ConversionPathFinder');
-const EtherToken = artifacts.require('EtherToken');
-const ERC20Token = artifacts.require('ERC20Token');
-const TestNonStandardToken = artifacts.require('TestNonStandardToken');
+const BancorNetwork = contract.fromArtifact('BancorNetwork');
+const BancorFormula = contract.fromArtifact('BancorFormula');
+const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
+const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const ConversionPathFinder = contract.fromArtifact('ConversionPathFinder');
+const EtherToken = contract.fromArtifact('EtherToken');
+const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterHelper = require('./helpers/Converter');
-const TestBancorNetwork = artifacts.require('TestBancorNetwork');
-const ConverterV27OrLowerWithoutFallback = artifacts.require('ConverterV27OrLowerWithoutFallback');
-const ConverterV27OrLowerWithFallback = artifacts.require('ConverterV27OrLowerWithFallback');
-const ConverterV28OrHigherWithoutFallback = artifacts.require('ConverterV28OrHigherWithoutFallback');
-const ConverterV28OrHigherWithFallback = artifacts.require('ConverterV28OrHigherWithFallback');
+const TestBancorNetwork = contract.fromArtifact('TestBancorNetwork');
+const ConverterV27OrLowerWithoutFallback = contract.fromArtifact('ConverterV27OrLowerWithoutFallback');
+const ConverterV27OrLowerWithFallback = contract.fromArtifact('ConverterV27OrLowerWithFallback');
+const ConverterV28OrHigherWithoutFallback = contract.fromArtifact('ConverterV28OrHigherWithoutFallback');
+const ConverterV28OrHigherWithFallback = contract.fromArtifact('ConverterV28OrHigherWithFallback');
 
-const LiquidTokenConverter = artifacts.require('LiquidTokenConverter');
-const LiquidityPoolV1Converter = artifacts.require('LiquidityPoolV1Converter');
-const LiquidityPoolV2Converter = artifacts.require('LiquidityPoolV2Converter');
-const LiquidityPoolV2ConverterFactory = artifacts.require('LiquidityPoolV2ConverterFactory');
-const LiquidityPoolV2ConverterAnchorFactory = artifacts.require('LiquidityPoolV2ConverterAnchorFactory');
-const LiquidityPoolV2ConverterCustomFactory = artifacts.require('LiquidityPoolV2ConverterCustomFactory');
+const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
+const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 
-const PoolTokensContainer = artifacts.require('PoolTokensContainer');
-const DSToken = artifacts.require('DSToken');
-const ChainlinkPriceOracle = artifacts.require('TestChainlinkPriceOracle');
-const Whitelist = artifacts.require('Whitelist');
+const DSToken = contract.fromArtifact('DSToken');
 
 /*
 Token network structure:
@@ -47,7 +39,7 @@ Token network structure:
     ERC20Token2   BNT
 */
 
-contract('BancorNetwork', (accounts) => {
+describe('BancorNetwork', () => {
     const initPaths = (tokens) => {
         const bntToken = tokens[0];
         const erc20Token1 = tokens[1];
@@ -127,15 +119,6 @@ contract('BancorNetwork', (accounts) => {
         return new BN(transaction.gasPrice).mul(new BN(txResult.receipt.cumulativeGasUsed));
     };
 
-    const createChainlinkOracle = async (answer) => {
-        const chainlinkOracle = await ChainlinkPriceOracle.new();
-        await chainlinkOracle.setAnswer(answer);
-        await chainlinkOracle.setTimestamp(await latest());
-
-        return chainlinkOracle;
-    };
-
-    let network;
     let bntToken;
     let erc20Token1;
     let erc20Token2;
@@ -147,21 +130,17 @@ contract('BancorNetwork', (accounts) => {
     let converter2;
     let converter3;
     let converter4;
-    let chainlinkPriceOracleA;
-    let chainlinkPriceOracleB;
     let bancorNetwork;
     let contractRegistry;
     let pathsTokens;
     let paths;
-    const sender = accounts[0];
+    const sender = defaultSender;
     const nonOwner = accounts[1];
     const sender2 = accounts[2];
     const affiliate = accounts[5];
 
     const OLD_CONVERTER_VERSION = 9;
     const MIN_RETURN = new BN(1);
-    const INITIAL_ORACLE_A_PRICE = new BN(10000);
-    const INITIAL_ORACLE_B_PRICE = new BN(20000);
     const AFFILIATE_FEE = new BN(10000);
 
     before(async () => {
@@ -174,23 +153,6 @@ contract('BancorNetwork', (accounts) => {
 
         const converterFactory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
-
-        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV2ConverterFactory.new()).address);
-        await converterFactory.registerTypedConverterAnchorFactory(
-            (await LiquidityPoolV2ConverterAnchorFactory.new()).address
-        );
-        await converterFactory.registerTypedConverterCustomFactory(
-            (await LiquidityPoolV2ConverterCustomFactory.new()).address
-        );
-
-        const oracleWhitelist = await Whitelist.new();
-        await contractRegistry.registerAddress(registry.CHAINLINK_ORACLE_WHITELIST, oracleWhitelist.address);
-
-        chainlinkPriceOracleA = await createChainlinkOracle(INITIAL_ORACLE_A_PRICE);
-        chainlinkPriceOracleB = await createChainlinkOracle(INITIAL_ORACLE_B_PRICE);
-
-        await oracleWhitelist.addAddress(chainlinkPriceOracleA.address);
-        await oracleWhitelist.addAddress(chainlinkPriceOracleB.address);
     });
 
     describe('Settings', () => {
@@ -302,7 +264,8 @@ contract('BancorNetwork', (accounts) => {
             anchor1 = await DSToken.new('Anchor1', 'ANCR1', 2);
             await anchor1.issue(sender, 1000000);
 
-            anchor2 = await PoolTokensContainer.new('Pool', 'POOL', 2);
+            anchor2 = await DSToken.new('Anchor2', 'ANCR2', 2);
+            await anchor2.issue(sender, 2000000);
 
             anchor3 = await DSToken.new('Anchor3', 'ANCR3', 2);
             await anchor3.issue(sender, 3000000);
@@ -316,7 +279,7 @@ contract('BancorNetwork', (accounts) => {
             await converter1.addReserve(bntToken.address, 500000);
             await converter1.addReserve(ETH_RESERVE_ADDRESS, 500000);
 
-            converter2 = await LiquidityPoolV2Converter.new(anchor2.address, contractRegistry.address, 0);
+            converter2 = await LiquidityPoolV1Converter.new(anchor2.address, contractRegistry.address, 0);
             await converter2.addReserve(bntToken.address, 300000);
             await converter2.addReserve(erc20Token1.address, 150000);
 
@@ -335,10 +298,12 @@ contract('BancorNetwork', (accounts) => {
             await converter4.addReserve(bntToken.address, 220000);
 
             await bntToken.transfer(converter1.address, 40000);
+            await bntToken.transfer(converter2.address, 70000);
             await bntToken.transfer(converter3.address, 110000);
             await bntToken.transfer(converter4.address, 130000);
 
             await web3.eth.sendTransaction({ from: sender, to: converter1.address, value: 50000 });
+            await erc20Token1.transfer(converter2.address, 25000);
             await erc20Token2.transfer(converter3.address, 30000);
 
             await anchor1.transferOwnership(converter1.address);
@@ -346,15 +311,6 @@ contract('BancorNetwork', (accounts) => {
 
             await anchor2.transferOwnership(converter2.address);
             await converter2.acceptTokenOwnership();
-            await converter2.activate(
-                erc20Token1.address,
-                chainlinkPriceOracleA.address,
-                chainlinkPriceOracleB.address
-            );
-            await bntToken.approve(converter2.address, 700000, { from: sender });
-            await erc20Token1.approve(converter2.address, 250000, { from: sender });
-            await converter2.addLiquidity(bntToken.address, 700000, MIN_RETURN);
-            await converter2.addLiquidity(erc20Token1.address, 250000, MIN_RETURN);
 
             await anchor3.transferOwnership(converter3.address);
             await converter3.acceptTokenOwnership();
@@ -987,7 +943,10 @@ contract('BancorNetwork', (accounts) => {
 
             const balanceBeforeTransfer = await bntToken.balanceOf.call(affiliate);
 
-            await bancorNetwork.convert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE, { from: sender, value });
+            await bancorNetwork.convert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE, {
+                from: sender,
+                value
+            });
 
             const balanceAfterTransfer = await bntToken.balanceOf.call(affiliate);
             expect(balanceAfterTransfer).to.be.bignumber.gt(balanceBeforeTransfer);
