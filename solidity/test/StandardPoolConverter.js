@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
-const { ZERO_ADDRESS } = constants;
+const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 
 const { duration, latest } = time;
 
@@ -930,8 +930,8 @@ describe('StandardPoolConverter', () => {
             const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 0);
 
             const reserveTokens = [
-                (await ERC20Token.new('name', 'symbol', 0, -1)).address,
-                hasETH ? ETH_RESERVE_ADDRESS : (await ERC20Token.new('name', 'symbol', 0, -1)).address
+                (await ERC20Token.new('name', 'symbol', 0, MAX_UINT256)).address,
+                hasETH ? ETH_RESERVE_ADDRESS : (await ERC20Token.new('name', 'symbol', 0, MAX_UINT256)).address
             ];
 
             for (const reserveToken of reserveTokens) {
