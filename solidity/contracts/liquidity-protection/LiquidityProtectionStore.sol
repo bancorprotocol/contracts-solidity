@@ -14,16 +14,22 @@ import "../utility/Utils.sol";
 contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHandler, Utils {
     using SafeMath for uint256;
 
+    uint256 private constant MAX_UINT128 = 2**128 - 1;
+    uint256 private constant MAX_UINT112 = 2**112 - 1;
+    uint256 private constant MAX_UINT32 = 2**32 - 1;
+
     struct ProtectedLiquidity {
         address provider; // liquidity provider
         uint256 index; // index in the provider liquidity ids array
         IDSToken poolToken; // pool token address
         IERC20Token reserveToken; // reserve token address
-        uint256 poolAmount; // pool token amount
-        uint256 reserveAmount; // reserve token amount
-        uint256 reserveRateN; // rate of 1 protected reserve token in units of the other reserve token (numerator)
-        uint256 reserveRateD; // rate of 1 protected reserve token in units of the other reserve token (denominator)
-        uint256 timestamp; // timestamp
+        uint128 poolAmount; // pool token amount
+        uint128 reserveAmount; // reserve token amount
+        uint256 reserveRateInfo; // reserve rate details:
+        // bits 0...111 represent the numerator of the rate between the protected reserve token and the other reserve token
+        // bits 111...223 represent the denominator of the rate between the protected reserve token and the other reserve token
+        // bits 224...255 represent the update-time of the rate between the protected reserve token and the other reserve token
+        // where `numerator / denominator` gives the worth of one protected reserve token in units of the other reserve token
     }
 
     struct LockedBalance {
@@ -200,15 +206,16 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         )
     {
         ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
+        uint256 reserveRateInfo = liquidity.reserveRateInfo;
         return (
             liquidity.provider,
             liquidity.poolToken,
             liquidity.reserveToken,
-            liquidity.poolAmount,
-            liquidity.reserveAmount,
-            liquidity.reserveRateN,
-            liquidity.reserveRateD,
-            liquidity.timestamp
+            uint256(liquidity.poolAmount),
+            uint256(liquidity.reserveAmount),
+            decodeReserveRateN(reserveRateInfo),
+            decodeReserveRateD(reserveRateInfo),
+            decodeReserveRateT(reserveRateInfo)
         );
     }
 
@@ -261,11 +268,9 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
             index: ids.length,
             poolToken: _poolToken,
             reserveToken: _reserveToken,
-            poolAmount: _poolAmount,
-            reserveAmount: _reserveAmount,
-            reserveRateN: _reserveRateN,
-            reserveRateD: _reserveRateD,
-            timestamp: _timestamp
+            poolAmount: toUint128(_poolAmount),
+            reserveAmount: toUint128(_reserveAmount),
+            reserveRateInfo: encodeReserveRateInfo(_reserveRateN, _reserveRateD, _timestamp)
         });
 
         ids.push(id);
@@ -301,10 +306,10 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
 
         IDSToken poolToken = liquidity.poolToken;
         IERC20Token reserveToken = liquidity.reserveToken;
-        uint256 prevPoolAmount = liquidity.poolAmount;
-        uint256 prevReserveAmount = liquidity.reserveAmount;
-        liquidity.poolAmount = _newPoolAmount;
-        liquidity.reserveAmount = _newReserveAmount;
+        uint256 prevPoolAmount = uint256(liquidity.poolAmount);
+        uint256 prevReserveAmount = uint256(liquidity.reserveAmount);
+        liquidity.poolAmount = toUint128(_newPoolAmount);
+        liquidity.reserveAmount = toUint128(_newReserveAmount);
 
         // update the total amounts
         totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken].add(_newPoolAmount).sub(
@@ -334,8 +339,8 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         uint256 index = liquidity.index;
         IDSToken poolToken = liquidity.poolToken;
         IERC20Token reserveToken = liquidity.reserveToken;
-        uint256 poolAmount = liquidity.poolAmount;
-        uint256 reserveAmount = liquidity.reserveAmount;
+        uint256 poolAmount = uint256(liquidity.poolAmount);
+        uint256 reserveAmount = uint256(liquidity.reserveAmount);
         delete protectedLiquidities[_id];
 
         uint256[] storage ids = protectedLiquidityIdsByProvider[provider];
@@ -550,5 +555,31 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         returns (uint256)
     {
         return totalProtectedReserveAmounts[_poolToken][_reserveToken];
+    }
+
+    function toUint128(uint256 _amount) private pure returns (uint128) {
+        require(_amount <= MAX_UINT128, "ERR_AMOUNT_TOO_HIGH");
+        return uint128(_amount);
+    }
+
+    function encodeReserveRateInfo(
+        uint256 _reserveRateT,
+        uint256 _reserveRateN,
+        uint256 _reserveRateD
+    ) private pure returns (uint256) {
+        assert(_reserveRateT <= MAX_UINT32 && _reserveRateN <= MAX_UINT112 && _reserveRateD <= MAX_UINT112);
+        return (_reserveRateT << 224) | (_reserveRateN << 112) | _reserveRateD;
+    }
+
+    function decodeReserveRateT(uint256 _reserveRateInfo) private pure returns (uint256) {
+        return _reserveRateInfo >> 224;
+    }
+
+    function decodeReserveRateN(uint256 _reserveRateInfo) private pure returns (uint256) {
+        return (_reserveRateInfo >> 112) & MAX_UINT112;
+    }
+
+    function decodeReserveRateD(uint256 _reserveRateInfo) private pure returns (uint256) {
+        return _reserveRateInfo & MAX_UINT112;
     }
 }
