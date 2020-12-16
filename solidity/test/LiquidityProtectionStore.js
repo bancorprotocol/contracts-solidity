@@ -135,7 +135,7 @@ describe('LiquidityProtectionStore', () => {
             const newPoolAmount = new BN(333);
             const oldReserveAmount = new BN(999);
             const newReserveAmount = new BN(555);
-            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, 1, oldPoolAmount, oldReserveAmount, 4, 5, {
+            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, oldPoolAmount, oldReserveAmount, 1, 2, 3, {
                 from: owner
             });
             const response = await liquidityProtectionStore.updateProtectedLiquidityAmounts(0, newPoolAmount, newReserveAmount, { from: owner });
