@@ -307,8 +307,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
 
         // validate input
-        address provider = liquidity.provider;
-        require(provider != address(0), "ERR_INVALID_ID");
+        require(liquidity.provider != address(0), "ERR_INVALID_ID");
 
         IDSToken poolToken = liquidity.poolToken;
         IERC20Token reserveToken = liquidity.reserveToken;
@@ -325,10 +324,10 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
             .add(_newReserveAmount)
             .sub(prevReserveAmount);
 
-        int256 _deltaPoolAmount = int256(prevPoolAmount) - int256(prevReserveAmount);
-        int256 _deltaReserveAmount = int256(_newPoolAmount) - int256(_newReserveAmount);
+        int256 _deltaPoolAmount = int256(prevPoolAmount) - int256(_newPoolAmount);
+        int256 _deltaReserveAmount = int256(prevReserveAmount) - int256(_newReserveAmount);
 
-        emit PositionUpdated(_id, provider, poolToken, reserveToken, _deltaPoolAmount, _deltaReserveAmount);
+        emit PositionUpdated(_id, liquidity.provider, poolToken, reserveToken, _deltaPoolAmount, _deltaReserveAmount);
     }
 
     /**
