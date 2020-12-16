@@ -53,15 +53,17 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     mapping(IDSToken => mapping(IERC20Token => uint256)) private totalProtectedReserveAmounts;
 
     /**
-     * @dev triggered when liquidity protection is added
+     * @dev triggered when a position is added
      *
+     * @param _id              position id
      * @param _provider        liquidity provider
      * @param _poolToken       pool token address
      * @param _reserveToken    reserve token address
      * @param _poolAmount      amount of pool tokens
      * @param _reserveAmount   amount of reserve tokens
      */
-    event ProtectionAdded(
+    event PositionAdded(
+        uint256 _id,
         address indexed _provider,
         IDSToken indexed _poolToken,
         IERC20Token indexed _reserveToken,
@@ -70,32 +72,36 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     );
 
     /**
-     * @dev triggered when liquidity protection is updated
+     * @dev triggered when a position is updated
      *
+     * @param _id                  position id
      * @param _provider            liquidity provider
-     * @param _prevPoolAmount      previous amount of pool tokens
-     * @param _prevReserveAmount   previous amount of reserve tokens
-     * @param _newPoolAmount       new amount of pool tokens
-     * @param _newReserveAmount    new amount of reserve tokens
+     * @param _poolToken           pool token address
+     * @param _reserveToken        reserve token address
+     * @param _deltaPoolAmount     delta amount of pool tokens
+     * @param _deltaReserveAmount  delta amount of reserve tokens
      */
-    event ProtectionUpdated(
+    event PositionUpdated(
+        uint256 _id,
         address indexed _provider,
-        uint256 _prevPoolAmount,
-        uint256 _prevReserveAmount,
-        uint256 _newPoolAmount,
-        uint256 _newReserveAmount
+        IDSToken indexed _poolToken,
+        IERC20Token indexed _reserveToken,
+        int256 _deltaPoolAmount,
+        int256 _deltaReserveAmount
     );
 
     /**
-     * @dev triggered when liquidity protection is removed
+     * @dev triggered when a position is removed
      *
+     * @param _id              position id
      * @param _provider        liquidity provider
      * @param _poolToken       pool token address
      * @param _reserveToken    reserve token address
      * @param _poolAmount      amount of pool tokens
      * @param _reserveAmount   amount of reserve tokens
      */
-    event ProtectionRemoved(
+    event PositionRemoved(
+        uint256 _id,
         address indexed _provider,
         IDSToken indexed _poolToken,
         IERC20Token indexed _reserveToken,
@@ -280,7 +286,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         totalProtectedReserveAmounts[_poolToken][_reserveToken] = totalProtectedReserveAmounts[_poolToken][_reserveToken]
             .add(_reserveAmount);
 
-        emit ProtectionAdded(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
+        emit PositionAdded(id, _provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         return id;
     }
 
@@ -319,7 +325,10 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
             .add(_newReserveAmount)
             .sub(prevReserveAmount);
 
-        emit ProtectionUpdated(provider, prevPoolAmount, prevReserveAmount, _newPoolAmount, _newReserveAmount);
+        int256 _deltaPoolAmount = int256(prevPoolAmount) - int256(prevReserveAmount);
+        int256 _deltaReserveAmount = int256(_newPoolAmount) - int256(_newReserveAmount);
+
+        emit PositionUpdated(_id, provider, poolToken, reserveToken, _deltaPoolAmount, _deltaReserveAmount);
     }
 
     /**
@@ -361,7 +370,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         totalProtectedReserveAmounts[poolToken][reserveToken] = totalProtectedReserveAmounts[poolToken][reserveToken]
             .sub(reserveAmount);
 
-        emit ProtectionRemoved(provider, poolToken, reserveToken, poolAmount, reserveAmount);
+        emit PositionRemoved(_id, provider, poolToken, reserveToken, poolAmount, reserveAmount);
     }
 
     /**
