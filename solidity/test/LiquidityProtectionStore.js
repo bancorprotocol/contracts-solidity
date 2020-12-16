@@ -120,32 +120,38 @@ describe('LiquidityProtectionStore', () => {
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
             ).to.be.bignumber.equal('2');
             const expectedEvent = {
+                _id: '0',
                 _provider: provider,
                 _poolToken: poolToken,
                 _reserveToken: reserveToken,
                 _poolAmount: '1',
                 _reserveAmount: '2'
             };
-            expectEvent(response, 'ProtectionAdded', expectedEvent);
+            expectEvent(response, 'PositionAdded', expectedEvent);
         });
 
         it('should succeed when the owner attempts to update a protected-liquidity item', async () => {
-            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
+            const oldPoolAmount = new BN(111);
+            const newPoolAmount = new BN(333);
+            const oldReserveAmount = new BN(999);
+            const newReserveAmount = new BN(555);
+            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, 1, oldPoolAmount, oldReserveAmount, 4, 5, {
                 from: owner
             });
-            const response = await liquidityProtectionStore.updateProtectedLiquidityAmounts(0, 3, 4, { from: owner });
-            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken)).to.be.bignumber.equal('3');
+            const response = await liquidityProtectionStore.updateProtectedLiquidityAmounts(0, newPoolAmount, newReserveAmount, { from: owner });
+            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken)).to.be.bignumber.equal(newPoolAmount);
             expect(
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
-            ).to.be.bignumber.equal('4');
+            ).to.be.bignumber.equal(newReserveAmount);
             const expectedEvent = {
+                _id: '0',
                 _provider: provider,
-                _prevPoolAmount: '1',
-                _prevReserveAmount: '2',
-                _newPoolAmount: '3',
-                _newReserveAmount: '4'
+                _poolToken: poolToken,
+                _reserveToken: reserveToken,
+                _deltaPoolAmount: oldPoolAmount.sub(newPoolAmount),
+                _deltaReserveAmount: oldReserveAmount.sub(newReserveAmount)
             };
-            expectEvent(response, 'ProtectionUpdated', expectedEvent);
+            expectEvent(response, 'PositionUpdated', expectedEvent);
         });
 
         it('should succeed when the owner attempts to remove a protected-liquidity item', async () => {
@@ -158,13 +164,14 @@ describe('LiquidityProtectionStore', () => {
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
             ).to.be.bignumber.equal('0');
             const expectedEvent = {
+                _id: '0',
                 _provider: provider,
                 _poolToken: poolToken,
                 _reserveToken: reserveToken,
                 _poolAmount: '1',
                 _reserveAmount: '2'
             };
-            expectEvent(response, 'ProtectionRemoved', expectedEvent);
+            expectEvent(response, 'PositionRemoved', expectedEvent);
         });
     });
 
