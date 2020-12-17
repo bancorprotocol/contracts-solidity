@@ -452,6 +452,51 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     }
 
     /**
+     * @dev returns the single-side staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return base maximum amount of base token liquidity that can be single-sided staked in the pool
+     * @return network maximum amount of base token liquidity that can be single-sided staked in the pool
+     */
+    function poolAvailableSpace(IConverterAnchor _poolAnchor) external view returns (uint256, uint256) {
+        // get the pool token
+        IDSToken poolToken = IDSToken(address(_poolAnchor));
+
+        // get the pool converter
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
+
+        // get the base token
+        IERC20Token baseToken = converter.connectorTokens(0);
+        if (baseToken == networkToken) {
+            baseToken = converter.connectorTokens(1);
+        }
+
+        // get the reserve balances
+        (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
+            converterReserveBalances(converter, baseToken, networkToken);
+
+        // get the network token minting limit
+        uint256 mintingLimit = settings.networkTokenMintingLimits(_poolAnchor);
+        if (mintingLimit == 0) {
+            mintingLimit = settings.defaultNetworkTokenMintingLimit();
+        }
+
+        // get the amount of network tokens minted for the pool
+        uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
+
+        // get the rate between the pool token and the network token
+        Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
+
+        // get the maximum amount of base token liquidity that can be single-sided staked in the pool
+        uint256 baseTokenMaxAmount = mintingLimit.sub(networkTokensMinted).mul(reserveBalanceBase).div(reserveBalanceNetwork);
+
+        // get the maximum amount of network token liquidity that can be single-sided staked in the pool
+        uint256 networkTokenMaxAmount = store.systemBalance(poolToken).mul(poolRate.n).div(poolRate.d);
+
+        return (baseTokenMaxAmount, networkTokenMaxAmount);
+    }
+
+    /**
      * @dev returns the expected/actual amounts the provider will receive for removing liquidity
      * it's also possible to provide the remove liquidity time to get an estimation
      * for the return at that given point
