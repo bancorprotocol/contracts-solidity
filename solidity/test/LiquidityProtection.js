@@ -684,11 +684,11 @@ describe('LiquidityProtection', () => {
                 expect(newBalance).to.be.bignumber.equal(new BN(0));
             });
 
-            for (let x = 24; x < 30; x++) {
+            for (let x = 24; x < 28; x++) {
                 const initialBaseTokenSupply = new BN(10).pow(new BN(x));
-                for (let y = 24; y < 30; y++) {
+                for (let y = 24; y < 28; y++) {
                     const initialNetworkTokenSupply = new BN(10).pow(new BN(y));
-                    for (let z = 18; z < 24; z++) {
+                    for (let z = 18; z < 22; z++) {
                         const initialBaseTokenAmount = new BN(10).pow(new BN(z));
                         it(`verifies function poolAvailableSpace with [${x}, ${y}, ${z}]`, async () => {
                             await initSystem(initialBaseTokenSupply, initialNetworkTokenSupply);
