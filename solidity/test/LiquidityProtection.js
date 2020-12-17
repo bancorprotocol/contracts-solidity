@@ -38,13 +38,13 @@ const PROTECTION_EXCESSIVE_PROTECTION = 3;
 describe('LiquidityProtection', () => {
     for (const converterType of [1, 3]) {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
-            const initPool = async (isETH = false, whitelist = true, standard = true) => {
+            const initPool = async (isETH = false, whitelist = true, standard = true, baseTokenAmount = 1000000000) => {
                 if (isETH) {
                     baseTokenAddress = ETH_RESERVE_ADDRESS;
                 } else {
                     // create a pool with ERC20 as the base token
                     baseToken = await DSToken.new('RSV1', 'RSV1', 18);
-                    await baseToken.issue(owner, new BN(10).pow(new BN(27)));
+                    await baseToken.issue(owner, baseTokenAmount);
                     baseTokenAddress = baseToken.address;
                 }
 
@@ -291,8 +291,12 @@ describe('LiquidityProtection', () => {
             });
 
             beforeEach(async () => {
+                await initSystem(1000000000, 1000000000);
+            });
+
+            const initSystem = async (baseTokenAmount, networkTokenAmount) => {
                 networkToken = await DSToken.new('BNT', 'BNT', 18);
-                await networkToken.issue(owner, new BN(10).pow(new BN(27)));
+                await networkToken.issue(owner, networkTokenAmount);
                 networkTokenGovernance = await TokenGovernance.new(networkToken.address);
                 await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
                 await networkToken.transferOwnership(networkTokenGovernance.address);
@@ -333,8 +337,8 @@ describe('LiquidityProtection', () => {
                 await setTime(await latest());
 
                 // initialize pool
-                await initPool();
-            });
+                await initPool(false, true, true, baseTokenAmount);
+            }
 
             it('verifies the liquidity protection contract after initialization', async () => {
                 const settings = await liquidityProtection.settings.call();
@@ -680,28 +684,37 @@ describe('LiquidityProtection', () => {
                 expect(newBalance).to.be.bignumber.equal(new BN(0));
             });
 
-            it('verifies function poolAvailableSpace', async () => {
-                const initialBaseTokenAmount = new BN(10).pow(new BN(21));
-                await baseToken.approve(liquidityProtection.address, initialBaseTokenAmount);
-                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, initialBaseTokenAmount);
+            for (let x = 24; x < 30; x++) {
+                const initialBaseTokenSupply = new BN(10).pow(new BN(x));
+                for (let y = 24; y < 30; y++) {
+                    const initialNetworkTokenSupply = new BN(10).pow(new BN(y));
+                    for (let z = 18; z < 24; z++) {
+                        const initialBaseTokenAmount = new BN(10).pow(new BN(z));
+                        it(`verifies function poolAvailableSpace with [${x}, ${y}, ${z}]`, async () => {
+                            await initSystem(initialBaseTokenSupply, initialNetworkTokenSupply);
+                            await baseToken.approve(liquidityProtection.address, initialBaseTokenAmount);
+                            await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, initialBaseTokenAmount);
 
-                const poolAvailableSpace = await liquidityProtection.poolAvailableSpace(poolToken.address);
-                await baseToken.approve(liquidityProtection.address, await baseToken.balanceOf(owner));
-                await networkToken.approve(liquidityProtection.address, await networkToken.balanceOf(owner));
+                            const poolAvailableSpace = await liquidityProtection.poolAvailableSpace(poolToken.address);
+                            await baseToken.approve(liquidityProtection.address, await baseToken.balanceOf(owner));
+                            await networkToken.approve(liquidityProtection.address, await networkToken.balanceOf(owner));
 
-                await expectRevert(
-                    liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace[0].add(new BN(1))),
-                    'ERR_MAX_AMOUNT_REACHED'
-                );
+                            await expectRevert(
+                                liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace[0].add(new BN(1))),
+                                'ERR_MAX_AMOUNT_REACHED'
+                            );
 
-                await expectRevert(
-                    liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace[1].add(new BN(5))),
-                    'ERR_UNDERFLOW'
-                );
+                            await expectRevert(
+                                liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace[1].add(new BN(5))),
+                                'ERR_UNDERFLOW'
+                            );
 
-                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace[0]);
-                await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace[1]);
-            });
+                            await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace[0]);
+                            await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace[1]);
+                        });
+                    }
+                }
+            }
 
             describe('add liquidity', () => {
                 // test both addLiquidity and addLiquidityFor
