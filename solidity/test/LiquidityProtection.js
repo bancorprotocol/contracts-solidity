@@ -693,11 +693,10 @@ describe('LiquidityProtection', () => {
                         it(`verifies function poolAvailableSpace with [${x}, ${y}, ${z}]`, async () => {
                             await initSystem(initialBaseTokenSupply, initialNetworkTokenSupply);
                             await baseToken.approve(liquidityProtection.address, initialBaseTokenAmount);
+                            await networkToken.approve(liquidityProtection.address, initialNetworkTokenSupply);
                             await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, initialBaseTokenAmount);
 
                             const poolAvailableSpace = await liquidityProtection.poolAvailableSpace(poolToken.address);
-                            await baseToken.approve(liquidityProtection.address, await baseToken.balanceOf(owner));
-                            await networkToken.approve(liquidityProtection.address, await networkToken.balanceOf(owner));
 
                             await expectRevert(
                                 liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace[0].add(new BN(1))),
