@@ -691,18 +691,20 @@ describe('LiquidityProtection', () => {
                 await networkToken.approve(liquidityProtection.address, totalSupply);
 
                 const poolAvailableSpace0 = await liquidityProtection.poolAvailableSpace(poolToken.address);
+                const baseSpaceAvailable = poolAvailableSpace0[0];
                 await expectRevert(
-                    liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0].addn(1)),
+                    liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseSpaceAvailable.addn(1)),
                     'ERR_MAX_AMOUNT_REACHED'
                 );
-                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0]);
+                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseSpaceAvailable);
 
                 const poolAvailableSpace1 = await liquidityProtection.poolAvailableSpace(poolToken.address);
+                const networkSpaceAvailable = poolAvailableSpace1[1].addn(4);
                 await expectRevert(
-                    liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1].addn(5)),
+                    liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkSpaceAvailable.addn(1)),
                     'ERR_UNDERFLOW'
                 );
-                await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1]);
+                await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkSpaceAvailable);
             });
 
             describe('add liquidity', () => {
