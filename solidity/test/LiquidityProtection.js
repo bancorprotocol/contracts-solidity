@@ -684,37 +684,26 @@ describe('LiquidityProtection', () => {
                 expect(newBalance).to.be.bignumber.equal(new BN(0));
             });
 
-            for (let x = 24; x < 28; x++) {
-                const initialBaseTokenSupply = new BN(10).pow(new BN(x));
-                for (let y = 24; y < 28; y++) {
-                    const initialNetworkTokenSupply = new BN(10).pow(new BN(y));
-                    for (let z = 18; z < 22; z++) {
-                        const initialBaseTokenAmount = new BN(10).pow(new BN(z));
-                        it(`verifies function poolAvailableSpace with [${x}, ${y}, ${z}]`, async () => {
-                            await initSystem(initialBaseTokenSupply, initialNetworkTokenSupply);
-                            await baseToken.approve(liquidityProtection.address, initialBaseTokenAmount);
-                            await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, initialBaseTokenAmount);
+            it('verifies function poolAvailableSpace', async () => {
+                const totalSupply = '1'.padEnd(25, '0');
+                await initSystem(totalSupply, totalSupply);
+                await baseToken.approve(liquidityProtection.address, totalSupply);
+                await networkToken.approve(liquidityProtection.address, totalSupply);
 
-                            await baseToken.approve(liquidityProtection.address, await baseToken.balanceOf(owner));
-                            await networkToken.approve(liquidityProtection.address, await networkToken.balanceOf(owner));
+                const poolAvailableSpace0 = await liquidityProtection.poolAvailableSpace(poolToken.address);
+                await expectRevert(
+                    liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0].addn(1)),
+                    'ERR_MAX_AMOUNT_REACHED'
+                );
+                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0]);
 
-                            const poolAvailableSpace0 = await liquidityProtection.poolAvailableSpace(poolToken.address);
-                            await expectRevert(
-                                liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0].add(new BN(1))),
-                                'ERR_MAX_AMOUNT_REACHED'
-                            );
-                            await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0]);
-
-                            const poolAvailableSpace1 = await liquidityProtection.poolAvailableSpace(poolToken.address);
-                            await expectRevert(
-                                liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1].add(new BN(5))),
-                                'ERR_UNDERFLOW'
-                            );
-                            await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1]);
-                        });
-                    }
-                }
-            }
+                const poolAvailableSpace1 = await liquidityProtection.poolAvailableSpace(poolToken.address);
+                await expectRevert(
+                    liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1].addn(5)),
+                    'ERR_UNDERFLOW'
+                );
+                await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1]);
+            });
 
             describe('add liquidity', () => {
                 // test both addLiquidity and addLiquidityFor
