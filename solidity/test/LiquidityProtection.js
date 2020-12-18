@@ -695,22 +695,22 @@ describe('LiquidityProtection', () => {
                             await baseToken.approve(liquidityProtection.address, initialBaseTokenAmount);
                             await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, initialBaseTokenAmount);
 
-                            const poolAvailableSpace = await liquidityProtection.poolAvailableSpace(poolToken.address);
                             await baseToken.approve(liquidityProtection.address, await baseToken.balanceOf(owner));
                             await networkToken.approve(liquidityProtection.address, await networkToken.balanceOf(owner));
 
+                            const poolAvailableSpace0 = await liquidityProtection.poolAvailableSpace(poolToken.address);
                             await expectRevert(
-                                liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace[0].add(new BN(1))),
+                                liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0].add(new BN(1))),
                                 'ERR_MAX_AMOUNT_REACHED'
                             );
+                            await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace0[0]);
 
+                            const poolAvailableSpace1 = await liquidityProtection.poolAvailableSpace(poolToken.address);
                             await expectRevert(
-                                liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace[1].add(new BN(5))),
+                                liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1].add(new BN(5))),
                                 'ERR_UNDERFLOW'
                             );
-
-                            await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, poolAvailableSpace[0]);
-                            await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace[1]);
+                            await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, poolAvailableSpace1[1]);
                         });
                     }
                 }
