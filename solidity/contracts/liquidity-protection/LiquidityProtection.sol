@@ -455,13 +455,20 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @dev returns the single-side staking limits of a given pool
      *
      * @param _poolAnchor   anchor of the pool
-     * @return base maximum amount of base token liquidity that can be single-sided staked in the pool
-     * @return network maximum amount of base token liquidity that can be single-sided staked in the pool
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     * @return maximum amount of network tokens that can be single-side staked in the pool
      */
     function poolAvailableSpace(IConverterAnchor _poolAnchor) external view returns (uint256, uint256) {
-        // get the pool token
-        IDSToken poolToken = IDSToken(address(_poolAnchor));
+        return (baseTokenAvailableSpace(_poolAnchor), networkTokenTokenAvailableSpace(_poolAnchor));
+    }
 
+    /**
+     * @dev returns the base-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     */
+    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor) internal view returns (uint256) {
         // get the pool converter
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
 
@@ -484,16 +491,25 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // get the amount of network tokens minted for the pool
         uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
 
-        // get the rate between the pool token and the network token
+        // return the maximum amount of base token liquidity that can be single-sided staked in the pool
+        return mintingLimit.sub(networkTokensMinted).mul(reserveBalanceBase).div(reserveBalanceNetwork);
+    }
+
+    /**
+     * @dev returns the network-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of network tokens that can be single-side staked in the pool
+     */
+    function networkTokenTokenAvailableSpace(IConverterAnchor _poolAnchor) internal view returns (uint256) {
+        // get the pool token
+        IDSToken poolToken = IDSToken(address(_poolAnchor));
+
+        // get the pool token rate
         Fraction memory poolRate = poolTokenRate(poolToken, networkToken);
 
-        // get the maximum amount of base token liquidity that can be single-sided staked in the pool
-        uint256 baseTokenMaxAmount = mintingLimit.sub(networkTokensMinted).mul(reserveBalanceBase).div(reserveBalanceNetwork);
-
-        // get the maximum amount of network token liquidity that can be single-sided staked in the pool
-        uint256 networkTokenMaxAmount = store.systemBalance(poolToken).mul(poolRate.n).div(poolRate.d);
-
-        return (baseTokenMaxAmount, networkTokenMaxAmount);
+        // return the maximum amount of network token liquidity that can be single-sided staked in the pool
+        return store.systemBalance(poolToken).mul(poolRate.n).add(poolRate.n).sub(1).div(poolRate.d);
     }
 
     /**
