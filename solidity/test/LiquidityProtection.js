@@ -36,6 +36,17 @@ const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
 
+const POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES = [
+    {baseBalance: new BN(1000000), networkBalance: new BN(1000000)},
+    {baseBalance: new BN(1234567), networkBalance: new BN(2000000)},
+    {baseBalance: new BN(2345678), networkBalance: new BN(3000000)},
+    {baseBalance: new BN(3456789), networkBalance: new BN(4000000)},
+    {baseBalance: new BN(4000000), networkBalance: new BN(4000000)},
+    {baseBalance: new BN(5000000), networkBalance: new BN(3000000)},
+    {baseBalance: new BN(6000000), networkBalance: new BN(2000000)},
+    {baseBalance: new BN(7000000), networkBalance: new BN(1000000)},
+];
+
 describe('LiquidityProtection', () => {
     for (const converterType of [1, 3]) {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
@@ -679,24 +690,30 @@ describe('LiquidityProtection', () => {
                 expect(newBalance).to.be.bignumber.equal(balance.sub(amount));
             });
 
-            it('verifies function poolAvailableSpace', async () => {
-                await baseToken.approve(liquidityProtection.address, TOTAL_SUPPLY);
-                await networkToken.approve(liquidityProtection.address, TOTAL_SUPPLY);
+            for (const { baseBalance, networkBalance } of POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES) {
+                it.only(`pool available space with additional balances of ${baseBalance} and ${networkBalance}`, async () => {
+                    await baseToken.approve(converter.address, baseBalance);
+                    await networkToken.approve(converter.address, networkBalance);
+                    await converter.addLiquidity([baseToken.address, networkToken.address], [baseBalance, networkBalance], 1);
 
-                const baseSpaceAvailable = (await liquidityProtection.poolAvailableSpace(poolToken.address))[0];
-                await expectRevert(
-                    liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseSpaceAvailable.addn(1)),
-                    'ERR_MAX_AMOUNT_REACHED'
-                );
-                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseSpaceAvailable);
+                    await baseToken.approve(liquidityProtection.address, TOTAL_SUPPLY);
+                    await networkToken.approve(liquidityProtection.address, TOTAL_SUPPLY);
 
-                const networkSpaceAvailable = (await liquidityProtection.poolAvailableSpace(poolToken.address))[1];
-                await expectRevert(
-                    liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkSpaceAvailable.addn(1)),
-                    'ERR_UNDERFLOW'
-                );
-                await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkSpaceAvailable);
-            });
+                    const baseTokenAvailableSpace = await liquidityProtection.baseTokenAvailableSpace(poolToken.address);
+                    await expectRevert(
+                        liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseTokenAvailableSpace.addn(1)),
+                        'ERR_MAX_AMOUNT_REACHED'
+                    );
+                    await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseTokenAvailableSpace);
+
+                    const networkTokenAvailableSpace = await liquidityProtection.networkTokenAvailableSpace(poolToken.address);
+                    await expectRevert(
+                        liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkTokenAvailableSpace.addn(1)),
+                        'ERR_UNDERFLOW'
+                    );
+                    await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkTokenAvailableSpace);
+                });
+            }
 
             describe('add liquidity', () => {
                 // test both addLiquidity and addLiquidityFor
