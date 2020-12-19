@@ -691,7 +691,7 @@ describe('LiquidityProtection', () => {
             });
 
             for (const { baseBalance, networkBalance } of POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES) {
-                it.only(`pool available space with additional balances of ${baseBalance} and ${networkBalance}`, async () => {
+                it(`pool available space with additional balances of ${baseBalance} and ${networkBalance}`, async () => {
                     await baseToken.approve(converter.address, baseBalance);
                     await networkToken.approve(converter.address, networkBalance);
                     await converter.addLiquidity([baseToken.address, networkToken.address], [baseBalance, networkBalance], 1);
