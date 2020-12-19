@@ -458,8 +458,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @return maximum amount of base tokens that can be single-side staked in the pool
      * @return maximum amount of network tokens that can be single-side staked in the pool
      */
-    function poolAvailableSpace(IConverterAnchor _poolAnchor) external view returns (uint256, uint256) {
-        return (baseTokenAvailableSpace(_poolAnchor), networkTokenTokenAvailableSpace(_poolAnchor));
+    function poolAvailableSpace(IConverterAnchor _poolAnchor) public view returns (uint256, uint256) {
+        return (baseTokenAvailableSpace(_poolAnchor), networkTokenAvailableSpace(_poolAnchor));
     }
 
     /**
@@ -468,7 +468,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @param _poolAnchor   anchor of the pool
      * @return maximum amount of base tokens that can be single-side staked in the pool
      */
-    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor) internal view returns (uint256) {
+    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor) public view returns (uint256) {
         // get the pool converter
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
 
@@ -501,7 +501,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @param _poolAnchor   anchor of the pool
      * @return maximum amount of network tokens that can be single-side staked in the pool
      */
-    function networkTokenTokenAvailableSpace(IConverterAnchor _poolAnchor) internal view returns (uint256) {
+    function networkTokenAvailableSpace(IConverterAnchor _poolAnchor) public view returns (uint256) {
         // get the pool token
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
