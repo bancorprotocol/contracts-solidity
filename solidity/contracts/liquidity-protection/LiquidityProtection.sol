@@ -488,16 +488,14 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             mintingLimit = settings.defaultNetworkTokenMintingLimit();
         }
 
-        // get the amount of network tokens minted for the pool
+        // get the amount of network tokens already minted for the pool
         uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
 
-        // return 0 if too many network tokens have already been minted
-        if (mintingLimit < networkTokensMinted) {
-            return 0;
-        }
+        // get the amount of network tokens which can minted for the pool
+        uint256 networkTokensCanBeMinted = mintingLimit > networkTokensMinted ? mintingLimit - networkTokensMinted : 0;
 
         // return the maximum amount of base token liquidity that can be single-sided staked in the pool
-        return mintingLimit.sub(networkTokensMinted).mul(reserveBalanceBase).div(reserveBalanceNetwork);
+        return networkTokensCanBeMinted.mul(reserveBalanceBase).div(reserveBalanceNetwork);
     }
 
     /**
