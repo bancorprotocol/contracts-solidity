@@ -697,7 +697,7 @@ describe('LiquidityProtection', () => {
                 );
                 await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseSpaceAvailable);
 
-                const networkSpaceAvailable = (await liquidityProtection.poolAvailableSpace(poolToken.address))[1].addn(4);
+                const networkSpaceAvailable = (await liquidityProtection.poolAvailableSpace(poolToken.address))[1];
                 await expectRevert(
                     liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkSpaceAvailable.addn(1)),
                     'ERR_UNDERFLOW'
