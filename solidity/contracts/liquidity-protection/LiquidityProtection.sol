@@ -520,10 +520,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
 
         // get the base token
-        IERC20Token baseToken = converter.connectorTokens(0);
-        if (baseToken == _networkToken) {
-            baseToken = converter.connectorTokens(1);
-        }
+        IERC20Token baseToken = converterOtherReserve(converter, _networkToken);
 
         // get the reserve balances
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
@@ -1039,11 +1036,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         )
     {
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
-
-        IERC20Token otherReserve = converter.connectorTokens(0);
-        if (otherReserve == _reserveToken) {
-            otherReserve = converter.connectorTokens(1);
-        }
+        IERC20Token otherReserve = converterOtherReserve(converter, _reserveToken);
 
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
@@ -1374,6 +1367,15 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         IERC20Token _reserveToken2
     ) private view returns (uint256, uint256) {
         return (_converter.getConnectorBalance(_reserveToken1), _converter.getConnectorBalance(_reserveToken2));
+    }
+
+    // utility to get the other reserve
+    function converterOtherReserve(
+        IConverter _converter,
+        IERC20Token _thisReserve
+    ) private view returns (IERC20Token) {
+        IERC20Token otherReserve = _converter.connectorTokens(0);
+        return otherReserve != _thisReserve ? otherReserve : _converter.connectorTokens(1);
     }
 
     // utility to get the owner
