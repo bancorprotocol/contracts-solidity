@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 import "./interfaces/ILiquidityProtectionStore.sol";
-import "../utility/Owned.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/Utils.sol";
@@ -11,12 +11,18 @@ import "../utility/Utils.sol";
  *
  * It holds the data and tokens, and it is generally non-upgradable.
  */
-contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHandler, Utils {
+contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, TokenHandler, Utils {
     using SafeMath for uint256;
 
     uint256 private constant MAX_UINT128 = 2**128 - 1;
     uint256 private constant MAX_UINT112 = 2**112 - 1;
     uint256 private constant MAX_UINT32 = 2**32 - 1;
+
+    // the owner role is used to add values to the store, but it can't update them
+    bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
+
+    // the seeder roles is used to seed the store with past values
+    bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
 
     struct ProtectedLiquidity {
         address provider; // liquidity provider
@@ -51,6 +57,18 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     // total protected pool supplies / reserve amounts
     mapping(IDSToken => uint256) private totalProtectedPoolAmounts;
     mapping(IDSToken => mapping(IERC20Token => uint256)) private totalProtectedReserveAmounts;
+
+    // allows execution by the owner only
+    modifier ownerOnly {
+        require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
+        _;
+    }
+
+    // allows execution by the seeder only
+    modifier seederOnly {
+        require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
+        _;
+    }
 
     /**
      * @dev triggered when a position is added
@@ -134,6 +152,15 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
      * @param _newAmount   new amount
      */
     event SystemBalanceUpdated(IERC20Token _token, uint256 _prevAmount, uint256 _newAmount);
+
+    constructor() public {
+        // set up administrative roles.
+        _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
+        _setRoleAdmin(ROLE_SEEDER, ROLE_OWNER);
+
+        // allow the deployer to initially govern the contract.
+        _setupRole(ROLE_OWNER, msg.sender);
+    }
 
     /**
      * @dev withdraws tokens held by the contract
@@ -571,23 +598,102 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
     }
 
     function encodeReserveRateInfo(
-        uint256 _reserveRateT,
         uint256 _reserveRateN,
-        uint256 _reserveRateD
+        uint256 _reserveRateD,
+        uint256 _reserveRateT
     ) private pure returns (uint256) {
-        assert(_reserveRateT <= MAX_UINT32 && _reserveRateN <= MAX_UINT112 && _reserveRateD <= MAX_UINT112);
-        return (_reserveRateT << 224) | (_reserveRateN << 112) | _reserveRateD;
+        assert(_reserveRateN <= MAX_UINT112 && _reserveRateD <= MAX_UINT112 && _reserveRateT <= MAX_UINT32);
+        return _reserveRateN | (_reserveRateD << 112) | (_reserveRateT << 224);
+    }
+
+    function decodeReserveRateN(uint256 _reserveRateInfo) private pure returns (uint256) {
+        return _reserveRateInfo & MAX_UINT112;
+    }
+
+    function decodeReserveRateD(uint256 _reserveRateInfo) private pure returns (uint256) {
+        return (_reserveRateInfo >> 112) & MAX_UINT112;
     }
 
     function decodeReserveRateT(uint256 _reserveRateInfo) private pure returns (uint256) {
         return _reserveRateInfo >> 224;
     }
 
-    function decodeReserveRateN(uint256 _reserveRateInfo) private pure returns (uint256) {
-        return (_reserveRateInfo >> 112) & MAX_UINT112;
+    function set_protectedLiquidityIdsByProvider(address _provider, uint256[] memory _ids) external {
+        require(protectedLiquidityIdsByProvider[_provider].length == 0);
+        protectedLiquidityIdsByProvider[_provider] =  _ids;
     }
 
-    function decodeReserveRateD(uint256 _reserveRateInfo) private pure returns (uint256) {
-        return _reserveRateInfo & MAX_UINT112;
+    function set_protectedLiquidities(
+        uint256[] memory _ids,
+        uint256[] memory _indexes,
+        address[] memory _poolTokens,
+        address[] memory _reserveTokens,
+        uint256[] memory _poolAmounts,
+        uint256[] memory _reserveAmounts,
+        uint256[] memory _reserveRateNs,
+        uint256[] memory _reserveRateDs,
+        uint256[] memory _timestamps
+    ) external seederOnly {
+        uint256 length = _ids.length;
+        require(length == _indexes.length);
+        require(length == _poolTokens.length);
+        require(length == _reserveTokens.length);
+        require(length == _poolAmounts.length);
+        require(length == _reserveAmounts.length);
+        require(length == _reserveRateNs.length);
+        require(length == _reserveRateDs.length);
+        require(length == _timestamps.length);
+        for (uint256 i = 0; i < length; i++) {
+            protectedLiquidities[_ids[i]].index = _indexes[i];
+            protectedLiquidities[_ids[i]].poolToken = IDSToken(_poolTokens[i]);
+            protectedLiquidities[_ids[i]].reserveToken = IERC20Token(_reserveTokens[i]);
+            protectedLiquidities[_ids[i]].poolAmount = toUint128(_poolAmounts[i]);
+            protectedLiquidities[_ids[i]].reserveAmount = toUint128(_reserveAmounts[i]);
+            protectedLiquidities[_ids[i]].reserveRateInfo = encodeReserveRateInfo(
+                _reserveRateNs[i],
+                _reserveRateDs[i],
+                _timestamps[i]
+            );
+        }
+    }
+
+    function set_lockedBalances(
+        address[] memory _providers,
+        uint256[] memory _amounts,
+        uint256[] memory _expirationTimes    
+    ) external seederOnly {
+        uint256 length = _providers.length;
+        require(length == _amounts.length);
+        require(length == _expirationTimes.length);
+        for (uint256 i = 0; i < length; i++) {
+            lockedBalances[_providers[i]].push(LockedBalance({
+                amount: _amounts[i],
+                expirationTime: _expirationTimes[i]
+            }));
+        }
+    }
+
+    function set_systemBalances(
+        address[] memory _tokens,
+        uint256[] memory _systemBalances,
+        uint256[] memory _poolAmounts,
+        address[] memory _reserve0s,
+        address[] memory _reserve1s,
+        uint256[] memory _reserve0Amounts,
+        uint256[] memory _reserve1Amounts
+    ) external seederOnly {
+        uint256 length = _tokens.length;
+        require(length == _systemBalances.length);
+        require(length == _poolAmounts.length);
+        require(length == _reserve0s.length);
+        require(length == _reserve1s.length);
+        require(length == _reserve0Amounts.length);
+        require(length == _reserve1Amounts.length);
+        for (uint256 i = 0; i < length; i++) {
+            systemBalances[IERC20Token(_tokens[i])] = _systemBalances[i];
+            totalProtectedPoolAmounts[IDSToken(_tokens[i])] = _poolAmounts[i];
+            totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve0s[i])] = _reserve0Amounts[i];
+            totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve1s[i])] = _reserve1Amounts[i];
+        }
     }
 }

@@ -169,24 +169,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     receive() external payable updatingLiquidityOnly() {}
 
     /**
-     * @dev transfers the ownership of the store
-     * can only be called by the contract owner
-     *
-     * @param _newOwner    the new owner of the store
-     */
-    function transferStoreOwnership(address _newOwner) external ownerOnly {
-        store.transferOwnership(_newOwner);
-    }
-
-    /**
-     * @dev accepts the ownership of the store
-     * can only be called by the contract owner
-     */
-    function acceptStoreOwnership() external ownerOnly {
-        store.acceptOwnership();
-    }
-
-    /**
      * @dev adds protection to existing pool tokens
      * also mints new governance tokens for the caller
      *

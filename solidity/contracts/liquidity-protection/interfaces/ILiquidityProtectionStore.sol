@@ -3,12 +3,11 @@ pragma solidity 0.6.12;
 import "../../converter/interfaces/IConverterAnchor.sol";
 import "../../token/interfaces/IDSToken.sol";
 import "../../token/interfaces/IERC20Token.sol";
-import "../../utility/interfaces/IOwned.sol";
 
 /*
     Liquidity Protection Store interface
 */
-interface ILiquidityProtectionStore is IOwned {
+interface ILiquidityProtectionStore {
     function withdrawTokens(
         IERC20Token _token,
         address _to,

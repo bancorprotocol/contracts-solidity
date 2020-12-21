@@ -324,9 +324,8 @@ describe('LiquidityProtection', () => {
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, { from: owner });
+                await liquidityProtectionStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
-                await liquidityProtection.acceptStoreOwnership();
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 
@@ -357,20 +356,6 @@ describe('LiquidityProtection', () => {
 
                 const lastRemoveCheckpointStore = await liquidityProtection.lastRemoveCheckpointStore.call();
                 expect(lastRemoveCheckpointStore).to.eql(checkpointStore.address);
-            });
-
-            it('verifies that the owner can transfer the store ownership', async () => {
-                await liquidityProtection.transferStoreOwnership(accounts[1]);
-                liquidityProtectionStore.acceptOwnership({ from: accounts[1] });
-            });
-
-            it('should revert when a non owner attempts to transfer the store ownership', async () => {
-                await expectRevert(
-                    liquidityProtection.transferStoreOwnership(accounts[2], {
-                        from: accounts[1]
-                    }),
-                    'ERR_ACCESS_DENIED'
-                );
             });
 
             it('verifies that the caller can protect pool tokens', async () => {
