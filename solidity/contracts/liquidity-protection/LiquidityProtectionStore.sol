@@ -618,12 +618,16 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         return _reserveRateInfo >> 224;
     }
 
-    function set_protectedLiquidityIdsByProvider(address _provider, uint256[] memory _ids) external {
+    function seed_nextProtectedLiquidityId(uint256 _nextProtectedLiquidityId) external seederOnly {
+        nextProtectedLiquidityId = _nextProtectedLiquidityId;
+    }
+
+    function seed_protectedLiquidityIdsByProvider(address _provider, uint256[] memory _ids) external seederOnly {
         require(protectedLiquidityIdsByProvider[_provider].length == 0);
         protectedLiquidityIdsByProvider[_provider] =  _ids;
     }
 
-    function set_protectedLiquidities(
+    function seed_protectedLiquidities(
         uint256[] memory _ids,
         uint256[] memory _indexes,
         address[] memory _poolTokens,
@@ -657,7 +661,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         }
     }
 
-    function set_lockedBalances(
+    function seed_lockedBalances(
         address[] memory _providers,
         uint256[] memory _amounts,
         uint256[] memory _expirationTimes    
@@ -673,7 +677,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         }
     }
 
-    function set_systemBalances(
+    function seed_systemBalances(
         address[] memory _tokens,
         uint256[] memory _systemBalances,
         uint256[] memory _poolAmounts,
