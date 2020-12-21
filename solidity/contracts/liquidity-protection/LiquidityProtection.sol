@@ -374,6 +374,119 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     }
 
     /**
+     * @dev returns the single-side staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     * @return maximum amount of network tokens that can be single-side staked in the pool
+     */
+    function poolAvailableSpace(IConverterAnchor _poolAnchor)
+        external
+        view
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        returns (uint256, uint256)
+    {
+        IERC20Token networkTokenLocal = networkToken;
+        return (
+            baseTokenAvailableSpace(_poolAnchor, networkTokenLocal),
+            networkTokenAvailableSpace(_poolAnchor, networkTokenLocal)
+        );
+    }
+
+    /**
+     * @dev returns the base-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     */
+    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor)
+        external
+        view
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        returns (uint256)
+    {
+        return baseTokenAvailableSpace(_poolAnchor, networkToken);
+    }
+
+    /**
+     * @dev returns the network-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of network tokens that can be single-side staked in the pool
+     */
+    function networkTokenAvailableSpace(IConverterAnchor _poolAnchor)
+        external
+        view
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        returns (uint256)
+    {
+        return networkTokenAvailableSpace(_poolAnchor, networkToken);
+    }
+
+    /**
+     * @dev returns the base-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @param _networkToken the network token
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     */
+    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20Token _networkToken)
+        internal
+        view
+        returns (uint256)
+    {
+        // get the pool converter
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
+
+        // get the base token
+        IERC20Token baseToken = converterOtherReserve(converter, _networkToken);
+
+        // get the reserve balances
+        (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
+            converterReserveBalances(converter, baseToken, _networkToken);
+
+        // get the network token minting limit
+        uint256 mintingLimit = settings.networkTokenMintingLimits(_poolAnchor);
+        if (mintingLimit == 0) {
+            mintingLimit = settings.defaultNetworkTokenMintingLimit();
+        }
+
+        // get the amount of network tokens already minted for the pool
+        uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
+
+        // get the amount of network tokens which can minted for the pool
+        uint256 networkTokensCanBeMinted = Math.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
+
+        // return the maximum amount of base token liquidity that can be single-sided staked in the pool
+        return networkTokensCanBeMinted.mul(reserveBalanceBase).div(reserveBalanceNetwork);
+    }
+
+    /**
+     * @dev returns the network-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @param _networkToken the network token
+     * @return maximum amount of network tokens that can be single-side staked in the pool
+     */
+    function networkTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20Token _networkToken)
+        internal
+        view
+        returns (uint256)
+    {
+        // get the pool token
+        IDSToken poolToken = IDSToken(address(_poolAnchor));
+
+        // get the pool token rate
+        Fraction memory poolRate = poolTokenRate(poolToken, _networkToken);
+
+        // return the maximum amount of network token liquidity that can be single-sided staked in the pool
+        return store.systemBalance(poolToken).mul(poolRate.n).add(poolRate.n).sub(1).div(poolRate.d);
+    }
+
+    /**
      * @dev returns the expected/actual amounts the provider will receive for removing liquidity
      * it's also possible to provide the remove liquidity time to get an estimation
      * for the return at that given point
@@ -809,11 +922,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         )
     {
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
-
-        IERC20Token otherReserve = converter.connectorTokens(0);
-        if (otherReserve == _reserveToken) {
-            otherReserve = converter.connectorTokens(1);
-        }
+        IERC20Token otherReserve = converterOtherReserve(converter, _reserveToken);
 
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
@@ -1144,6 +1253,15 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         IERC20Token _reserveToken2
     ) private view returns (uint256, uint256) {
         return (_converter.getConnectorBalance(_reserveToken1), _converter.getConnectorBalance(_reserveToken2));
+    }
+
+    // utility to get the other reserve
+    function converterOtherReserve(
+        IConverter _converter,
+        IERC20Token _thisReserve
+    ) private view returns (IERC20Token) {
+        IERC20Token otherReserve = _converter.connectorTokens(0);
+        return otherReserve != _thisReserve ? otherReserve : _converter.connectorTokens(1);
     }
 
     // utility to get the owner
