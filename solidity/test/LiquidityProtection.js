@@ -37,14 +37,14 @@ const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
 
 const POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES = [
-    {baseBalance: new BN(1000000), networkBalance: new BN(1000000)},
-    {baseBalance: new BN(1234567), networkBalance: new BN(2000000)},
-    {baseBalance: new BN(2345678), networkBalance: new BN(3000000)},
-    {baseBalance: new BN(3456789), networkBalance: new BN(4000000)},
-    {baseBalance: new BN(4000000), networkBalance: new BN(4000000)},
-    {baseBalance: new BN(5000000), networkBalance: new BN(3000000)},
-    {baseBalance: new BN(6000000), networkBalance: new BN(2000000)},
-    {baseBalance: new BN(7000000), networkBalance: new BN(1000000)},
+    {baseBalance: 1000000, networkBalance: 1000000},
+    {baseBalance: 1234567, networkBalance: 2000000},
+    {baseBalance: 2345678, networkBalance: 3000000},
+    {baseBalance: 3456789, networkBalance: 4000000},
+    {baseBalance: 4000000, networkBalance: 4000000},
+    {baseBalance: 5000000, networkBalance: 3000000},
+    {baseBalance: 6000000, networkBalance: 2000000},
+    {baseBalance: 7000000, networkBalance: 1000000},
 ];
 
 describe('LiquidityProtection', () => {
