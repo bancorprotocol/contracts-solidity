@@ -187,84 +187,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     }
 
     /**
-     * @dev adds protection to existing pool tokens
-     * also mints new governance tokens for the caller
-     *
-     * @param _poolAnchor  anchor of the pool
-     * @param _amount      amount of pool tokens to protect
-     */
-    function protectLiquidity(IConverterAnchor _poolAnchor, uint256 _amount)
-        external
-        protected
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
-        greaterThanZero(_amount)
-    {
-        // get the converter
-        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
-
-        // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
-
-        // protect both reserves
-        IDSToken poolToken = IDSToken(address(_poolAnchor));
-        protectLiquidity(poolToken, converter, networkTokenLocal, 0, _amount / 2);
-        protectLiquidity(poolToken, converter, networkTokenLocal, 1, _amount - _amount / 2);
-
-        // transfer the pool tokens from the caller directly to the store
-        safeTransferFrom(poolToken, msg.sender, address(store), _amount);
-    }
-
-    /**
-     * @dev cancels the protection and returns the pool tokens to the caller
-     * also burns governance tokens from the caller
-     * must be called with the indices of both the base token and the network token protections
-     *
-     * @param _id1 id in the caller's list of protected liquidity
-     * @param _id2 matching id in the caller's list of protected liquidity
-     */
-    function unprotectLiquidity(uint256 _id1, uint256 _id2) external protected {
-        require(_id1 != _id2, "ERR_SAME_ID");
-
-        ProtectedLiquidity memory liquidity1 = protectedLiquidity(_id1, msg.sender);
-        ProtectedLiquidity memory liquidity2 = protectedLiquidity(_id2, msg.sender);
-
-        // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
-
-        // verify that the two protected liquidities were added together (using `protect`)
-        require(
-            liquidity1.poolToken == liquidity2.poolToken &&
-                liquidity1.reserveToken != liquidity2.reserveToken &&
-                (liquidity1.reserveToken == networkTokenLocal || liquidity2.reserveToken == networkTokenLocal) &&
-                liquidity1.timestamp == liquidity2.timestamp &&
-                liquidity1.poolAmount <= liquidity2.poolAmount.add(1) &&
-                liquidity2.poolAmount <= liquidity1.poolAmount.add(1),
-            "ERR_PROTECTIONS_MISMATCH"
-        );
-
-        // verify that the two protected liquidities are not removed on the same block in which they were added
-        require(liquidity1.timestamp < time(), "ERR_TOO_EARLY");
-
-        // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
-        // token holders can burn their tokens
-        uint256 amount =
-            liquidity1.reserveToken == networkTokenLocal ? liquidity1.reserveAmount : liquidity2.reserveAmount;
-        safeTransferFrom(govToken, msg.sender, address(this), amount);
-        govTokenGovernance.burn(amount);
-
-        // update last liquidity removal checkpoint
-        lastRemoveCheckpointStore.addCheckpoint(msg.sender);
-
-        // remove the two protected liquidities from the provider
-        store.removeProtectedLiquidity(_id1);
-        store.removeProtectedLiquidity(_id2);
-
-        // transfer the pool tokens back to the caller
-        store.withdrawTokens(liquidity1.poolToken, msg.sender, liquidity1.poolAmount.add(liquidity2.poolAmount));
-    }
-
-    /**
      * @dev adds protected liquidity to a pool for a specific recipient
      * also mints new governance tokens for the caller if the caller adds network tokens
      *
@@ -899,42 +821,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         // calculate the ROI as the ratio between the current fully protected return and the initial amount
         return protectedReturn.mul(PPM_RESOLUTION).div(_reserveAmount);
-    }
-
-    /**
-     * @dev utility to protect existing liquidity
-     * also mints new governance tokens for the caller when protecting the network token reserve
-     *
-     * @param _poolAnchor      pool anchor
-     * @param _converter       pool converter
-     * @param _networkToken    the network reserve token of the pool
-     * @param _reserveIndex    index of the reserve to protect
-     * @param _poolAmount      amount of pool tokens to protect
-     */
-    function protectLiquidity(
-        IDSToken _poolAnchor,
-        IConverter _converter,
-        IERC20Token _networkToken,
-        uint256 _reserveIndex,
-        uint256 _poolAmount
-    ) internal {
-        // get the reserves token
-        IERC20Token reserveToken = _converter.connectorTokens(_reserveIndex);
-
-        // get the pool token rate
-        IDSToken poolToken = IDSToken(address(_poolAnchor));
-        Fraction memory poolRate = poolTokenRate(poolToken, reserveToken);
-
-        // calculate the reserve balance based on the amount provided and the pool token rate
-        uint256 reserveAmount = _poolAmount.mul(poolRate.n).div(poolRate.d);
-
-        // protect the liquidity
-        addProtectedLiquidity(msg.sender, poolToken, reserveToken, _poolAmount, reserveAmount);
-
-        // for network token liquidity, mint governance tokens to the caller
-        if (reserveToken == _networkToken) {
-            govTokenGovernance.mint(msg.sender, reserveAmount);
-        }
     }
 
     /**
