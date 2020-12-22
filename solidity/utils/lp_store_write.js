@@ -3,8 +3,9 @@ const os = require("os");
 const Web3 = require("web3");
 const path = require("path");
 
-const NODE_ADDRESS = process.argv[2];
-const PRIVATE_KEY  = process.argv[3];
+const NODE_ADDRESS  = process.argv[2];
+const STORE_ADDRESS = process.argv[3];
+const PRIVATE_KEY   = process.argv[4];
 
 const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize: 50};
 const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize: 50};
@@ -14,7 +15,9 @@ const MIN_GAS_LIMIT = 100000;
 
 const CFG_FILE_NAME = "migration.json";
 const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
-const ROLE_SEEDER   = Web3.utils.keccak256("ROLE_SEEDER");
+
+const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
+const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
 
 function getConfig() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
@@ -154,6 +157,10 @@ async function run() {
     await writeData(CFG_PROTECTED_LIQUIDITIES, execute, store.methods.seed_protectedLiquidities);
     await writeData(CFG_LOCKED_BALANCES      , execute, store.methods.seed_lockedBalances      );
     await writeData(CFG_SYSTEM_BALANCES      , execute, store.methods.seed_systemBalances      );
+
+    const owned = deployed(web3, "Owned", STORE_ADDRESS);
+    await execute(store.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
+    await execute(store.methods.grantRole(ROLE_OWNER, await owned.methods.owner().call()));
 
     if (web3.currentProvider.disconnect) {
         web3.currentProvider.disconnect();
