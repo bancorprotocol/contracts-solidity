@@ -121,19 +121,13 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
-async function writeProtectedLiquidities(execute, store) {
-    const lines = fs.readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
-    for (let i = 0; i < lines.length; i += BATCH_SIZE) {
-        const entries = lines.slice(i, i + BATCH_SIZE).map(line => line.split(","));
+async function writeData(fileName, batchSize, execute, func) {
+    const lines = fs.readFileSync(fileName, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
+    for (let i = 0; i < lines.length; i += batchSize) {
+        const entries = lines.slice(i, i + batchSize).map(line => line.split(","));
         const values = [...Array(entries[0].length).keys()].map(n => entries.map(entry => entry[n]));
-        await execute(store.methods.seed_protectedLiquidities(...values));
+        await execute(func(...values));
     }
-}
-
-async function writeLockedBalances(execute, store) {
-}
-
-async function writeSystemBalances(execute, store) {
 }
 
 async function run() {
@@ -158,9 +152,10 @@ async function run() {
 
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
-    await writeProtectedLiquidities(execute, store);
-    await writeLockedBalances(execute, store);
-    await writeSystemBalances(execute, store);
+
+    await writeData(PROTECTED_LIQUIDITIES_FILE_NAME, BATCH_SIZE, execute, store.methods.seed_protectedLiquidities);
+    await writeData(LOCKED_BALANCES_FILE_NAME      , BATCH_SIZE, execute, store.methods.seed_lockedBalances      );
+    await writeData(SYSTEM_BALANCES_FILE_NAME      , BATCH_SIZE, execute, store.methods.seed_systemBalances      );
 
     if (web3.currentProvider.disconnect) {
         web3.currentProvider.disconnect();
