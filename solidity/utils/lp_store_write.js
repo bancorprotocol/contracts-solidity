@@ -1,6 +1,7 @@
 const fs = require("fs");
 const os = require("os");
 const Web3 = require("web3");
+const path = require("path");
 
 const NODE_ADDRESS = process.argv[2];
 const PRIVATE_KEY  = process.argv[3];
@@ -17,6 +18,9 @@ const ROLE_OWNER = Web3.utils.keccak256("ROLE_OWNER");
 const ROLE_GOVERNOR = Web3.utils.keccak256("ROLE_GOVERNOR");
 const ROLE_MINTER = Web3.utils.keccak256("ROLE_MINTER");
 const ROLE_MINTED_TOKENS_ADMIN = Web3.utils.keccak256("ROLE_MINTED_TOKENS_ADMIN");
+
+const CFG_FILE_NAME = "migration.json";
+const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 
 function getConfig() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
@@ -149,3 +153,5 @@ async function run() {
         await execute(store.methods.seed_protectedLiquidities(...values));
     }
 }
+
+run();
