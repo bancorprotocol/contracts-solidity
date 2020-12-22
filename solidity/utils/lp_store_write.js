@@ -6,11 +6,9 @@ const path = require("path");
 const NODE_ADDRESS = process.argv[2];
 const PRIVATE_KEY  = process.argv[3];
 
-const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
-const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";
-const SYSTEM_BALANCES_FILE_NAME       = "system_balances.csv";
-
-const BATCH_SIZE = 50;
+const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize = 50};
+const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize = 50};
+const CFG_SYSTEM_BALANCES       = {fileName: "system_balances.csv"      , batchSize = 50};
 
 const MIN_GAS_LIMIT = 100000;
 
@@ -121,10 +119,10 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
-async function writeData(fileName, batchSize, execute, func) {
-    const lines = fs.readFileSync(fileName, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
-    for (let i = 0; i < lines.length; i += batchSize) {
-        const entries = lines.slice(i, i + batchSize).map(line => line.split(","));
+async function writeData(config, execute, func) {
+    const lines = fs.readFileSync(config.fileName, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
+    for (let i = 0; i < lines.length; i += config.batchSize) {
+        const entries = lines.slice(i, i + config.batchSize).map(line => line.split(","));
         const values = [...Array(entries[0].length).keys()].map(n => entries.map(entry => entry[n]));
         await execute(func(...values));
     }
@@ -153,9 +151,9 @@ async function run() {
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
 
-    await writeData(PROTECTED_LIQUIDITIES_FILE_NAME, BATCH_SIZE, execute, store.methods.seed_protectedLiquidities);
-    await writeData(LOCKED_BALANCES_FILE_NAME      , BATCH_SIZE, execute, store.methods.seed_lockedBalances      );
-    await writeData(SYSTEM_BALANCES_FILE_NAME      , BATCH_SIZE, execute, store.methods.seed_systemBalances      );
+    await writeData(CFG_PROTECTED_LIQUIDITIES, execute, store.methods.seed_protectedLiquidities);
+    await writeData(CFG_LOCKED_BALANCES      , execute, store.methods.seed_lockedBalances      );
+    await writeData(CFG_SYSTEM_BALANCES      , execute, store.methods.seed_systemBalances      );
 
     if (web3.currentProvider.disconnect) {
         web3.currentProvider.disconnect();
