@@ -68,7 +68,7 @@ async function getPastEvents(contract, eventName, fromBlock, toBlock, filter) {
     return [];
 }
 
-async function fetchProtectedLiquidities(web3, store) {
+async function readProtectedLiquidities(web3, store) {
     fs.writeFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, "", {encoding: "utf8"});
 
     printRow(
@@ -97,7 +97,7 @@ async function fetchProtectedLiquidities(web3, store) {
     }
 }
 
-async function fetchLockedBalances(web3, store) {
+async function readLockedBalances(web3, store) {
     fs.writeFileSync(LOCKED_BALANCES_FILE_NAME, "", {encoding: "utf8"});
 
     printRow(
@@ -122,7 +122,7 @@ async function fetchLockedBalances(web3, store) {
     }
 }
 
-async function fetchSystemBalances(web3, store) {
+async function readSystemBalances(web3, store) {
     fs.writeFileSync(SYSTEM_BALANCES_FILE_NAME, "", {encoding: "utf8"});
 
     printRow(
@@ -164,9 +164,9 @@ async function fetchSystemBalances(web3, store) {
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
     const store = new web3.eth.Contract(STORE_ABI, STORE_ADDRESS);
-    await fetchProtectedLiquidities(web3, store);
-    await fetchLockedBalances(web3, store);
-    await fetchSystemBalances(web3, store);
+    await readProtectedLiquidities(web3, store);
+    await readLockedBalances(web3, store);
+    await readSystemBalances(web3, store);
     if (web3.currentProvider.disconnect) {
         web3.currentProvider.disconnect();
     }
