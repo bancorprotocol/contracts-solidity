@@ -2,7 +2,9 @@ const fs = require("fs");
 const os = require("os");
 const Web3 = require("web3");
 
-const NODE_ADDRESS = process.argv[2];
+const NODE_ADDRESS    = process.argv[2];
+const STORE_ADDRESS   = process.argv[3];
+const STORE_BLOCK_NUM = process.argv[4];
 
 const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
 const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";
@@ -10,11 +12,7 @@ const SYSTEM_BALANCES_FILE_NAME       = "system_balances.csv";
 
 const BATCH_SIZE = 100;
 
-const LP_STORE_BLOCK_NUMBER = 11039642;
-
-const LP_STORE_ADDRESS = "0xf5FAB5DBD2f3bf675dE4cB76517d4767013cfB55";
-
-const LP_STORE_ABI = [
+const STORE_ABI = [
     {"inputs":[{"internalType":"uint256","name":"_id","type":"uint256"}],"name":"protectedLiquidity","outputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"contract IDSToken","name":"","type":"address"},{"internalType":"contract IERC20Token","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
     {"inputs":[{"internalType":"address","name":"_provider","type":"address"}],"name":"lockedBalanceCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
     {"inputs":[{"internalType":"address","name":"_provider","type":"address"},{"internalType":"uint256","name":"_startIndex","type":"uint256"},{"internalType":"uint256","name":"_endIndex","type":"uint256"}],"name":"lockedBalanceRange","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"},{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
@@ -75,6 +73,7 @@ async function fetchProtectedLiquidities(web3, store) {
 
     printRow(
         PROTECTED_LIQUIDITIES_FILE_NAME,
+        "id           ",
         "provider     ",
         "poolToken    ",
         "reserveToken ",
@@ -85,12 +84,15 @@ async function fetchProtectedLiquidities(web3, store) {
         "timestamp    ",
     );
 
-    const count = Web3.utils.toBN(await web3.eth.getStorageAt(LP_STORE_ADDRESS, 4)).toNumber();
+    const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, 4)).toNumber();
     for (let i = 0; i < count; i += BATCH_SIZE) {
         const ids = [...Array(Math.min(count, BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const pls = await Promise.all(ids.map(id => rpc(store.methods.protectedLiquidity(id))));
-        for (const pl of pls) {
-            printRow(PROTECTED_LIQUIDITIES_FILE_NAME, ...[...Array(8).keys()].map(n => pl[n]));
+        for (let id = 0; id < pls.length; id++) {
+            const values = Object(pls[id]).keys().map(key => pls[id][key]);
+            if (values.some(value => Web3.utils.toBN(value).gtn(0))) {
+                printRow(PROTECTED_LIQUIDITIES_FILE_NAME, id, ...values);
+            }
         }
     }
 }
@@ -105,7 +107,7 @@ async function fetchLockedBalances(web3, store) {
         "expirationTime",
     );
 
-    const providers = [...new Set(fs.readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, {encoding: "utf8"}).split(os.EOL).slice(1, -1).map(line => line.split(",")[0]))];
+    const providers = [...new Set(fs.readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, {encoding: "utf8"}).split(os.EOL).slice(1, -1).map(line => line.split(",")[1]))];
     for (let i = 0; i < providers.length; i += BATCH_SIZE) {
         const indexes = [...Array(Math.min(providers.length, BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const counts = await Promise.all(indexes.map(index => rpc(store.methods.lockedBalanceCount(providers[index]))));
@@ -134,7 +136,7 @@ async function fetchSystemBalances(web3, store) {
         "reserve1Amount",
     );
 
-    const events          = await getPastEvents(store, "SystemBalanceUpdated", LP_STORE_BLOCK_NUMBER, await web3.eth.getBlockNumber());
+    const events          = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK_NUM, await web3.eth.getBlockNumber());
     const tokens          = [...new Set(events.map(event => event.returnValues._token))];
     const owners          = await Promise.all(tokens.map(token => rpc(new web3.eth.Contract(TOKEN_ABI, token).methods.owner())));
     const converters      = owners.map(owner => new web3.eth.Contract(CONVERTER_ABI, owner));
@@ -161,7 +163,7 @@ async function fetchSystemBalances(web3, store) {
 
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
-    const store = new web3.eth.Contract(LP_STORE_ABI, LP_STORE_ADDRESS);
+    const store = new web3.eth.Contract(STORE_ABI, STORE_ADDRESS);
     await fetchProtectedLiquidities(web3, store);
     await fetchLockedBalances(web3, store);
     await fetchSystemBalances(web3, store);
