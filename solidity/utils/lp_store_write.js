@@ -3,6 +3,7 @@ const os = require("os");
 const Web3 = require("web3");
 
 const NODE_ADDRESS = process.argv[2];
+const PRIVATE_KEY  = process.argv[3];
 
 const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
 const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";
