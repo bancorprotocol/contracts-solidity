@@ -6,9 +6,9 @@ const path = require("path");
 const NODE_ADDRESS = process.argv[2];
 const PRIVATE_KEY  = process.argv[3];
 
-const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize = 50};
-const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize = 50};
-const CFG_SYSTEM_BALANCES       = {fileName: "system_balances.csv"      , batchSize = 50};
+const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize: 50};
+const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize: 50};
+const CFG_SYSTEM_BALANCES       = {fileName: "system_balances.csv"      , batchSize: 50};
 
 const MIN_GAS_LIMIT = 100000;
 
