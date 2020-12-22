@@ -88,7 +88,7 @@ async function fetchProtectedLiquidities(web3, store) {
     for (let i = 0; i < count; i += BATCH_SIZE) {
         const ids = [...Array(Math.min(count, BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const pls = await Promise.all(ids.map(id => rpc(store.methods.protectedLiquidity(id))));
-        for (let id = 0; id < pls.length; id++) {
+        for (const id of ids) {
             const values = Object.keys(pls[id]).map(key => pls[id][key]);
             if (values.some(value => Web3.utils.toBN(value).gtn(0))) {
                 printRow(PROTECTED_LIQUIDITIES_FILE_NAME, id, ...values);
