@@ -10,7 +10,7 @@ const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
 const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";
 const SYSTEM_BALANCES_FILE_NAME       = "system_balances.csv";
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 50;
 
 const MIN_GAS_LIMIT = 100000;
 
@@ -121,6 +121,21 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
+async function writeProtectedLiquidities(execute, store) {
+    const lines = fs.readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
+    for (let i = 0; i < lines.length; i += BATCH_SIZE) {
+        const entries = lines.slice(i, i + BATCH_SIZE).map(line => line.split(","));
+        const values = [...Array(entries[0].length).keys()].map(n => entries.map(entry => entry[n]));
+        await execute(store.methods.seed_protectedLiquidities(...values));
+    }
+}
+
+async function writeLockedBalances(execute, store) {
+}
+
+async function writeSystemBalances(execute, store) {
+}
+
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
 
@@ -143,12 +158,12 @@ async function run() {
 
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
+    await writeProtectedLiquidities(execute, store);
+    await writeLockedBalances(execute, store);
+    await writeSystemBalances(execute, store);
 
-    const lines = fs.readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
-    for (let i = 0; i < lines.length; i += BATCH_SIZE) {
-        const entries = lines.slice(i, i + BATCH_SIZE).map(line => line.split(","));
-        const values = [...Array(entries[0].length).keys()].map(n => entries.map(entry => entry[n]));
-        await execute(store.methods.seed_protectedLiquidities(...values));
+    if (web3.currentProvider.disconnect) {
+        web3.currentProvider.disconnect();
     }
 }
 
