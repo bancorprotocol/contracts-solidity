@@ -154,6 +154,25 @@ async function run() {
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
 
+    const nextProtectedLiquidityId = fs.readFileSync("NextProtectedLiquidityId.txt", {encoding: "utf8"});
+    await execute(store.methods.seed_nextProtectedLiquidityId(nextProtectedLiquidityId));
+
+    const providers = {};
+    for (const line of fs.readFileSync(CFG_PROTECTED_LIQUIDITIES.fileName, {encoding: "utf8"}).split(os.EOL).slice(1, -1)) {
+        const words = line.split(",");
+        const provider = words[1];
+        const id = words[0];
+        if (providers[provider] === undefined) {
+            providers[provider] = [id];
+        }
+        else {
+            providers[provider].push(id);
+        }
+    }
+    for (const [provider, ids] of Object.entries(providers)) {
+        await execute(store.methods.seed_protectedLiquidityIdsByProvider(provider, ids));
+    }
+
     await writeData(CFG_PROTECTED_LIQUIDITIES, execute, store.methods.seed_protectedLiquidities);
     await writeData(CFG_LOCKED_BALANCES      , execute, store.methods.seed_lockedBalances      );
     await writeData(CFG_SYSTEM_BALANCES      , execute, store.methods.seed_systemBalances      );

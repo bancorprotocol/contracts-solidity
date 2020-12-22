@@ -85,6 +85,8 @@ async function readProtectedLiquidities(web3, store) {
     );
 
     const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, 4)).toNumber();
+    fs.writeFileSync("NextProtectedLiquidityId.txt", String(count), {encoding: "utf8"});
+
     for (let i = 0; i < count; i += BATCH_SIZE) {
         const ids = [...Array(Math.min(count, BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const pls = await Promise.all(ids.map(id => rpc(store.methods.protectedLiquidity(id))));
