@@ -14,13 +14,9 @@ const BATCH_SIZE = 100;
 
 const MIN_GAS_LIMIT = 100000;
 
-const ROLE_OWNER = Web3.utils.keccak256("ROLE_OWNER");
-const ROLE_GOVERNOR = Web3.utils.keccak256("ROLE_GOVERNOR");
-const ROLE_MINTER = Web3.utils.keccak256("ROLE_MINTER");
-const ROLE_MINTED_TOKENS_ADMIN = Web3.utils.keccak256("ROLE_MINTED_TOKENS_ADMIN");
-
 const CFG_FILE_NAME = "migration.json";
-const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
+const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
+const ROLE_SEEDER   = Web3.utils.keccak256("ROLE_SEEDER");
 
 function getConfig() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
@@ -145,7 +141,9 @@ async function run() {
         }
     };
 
-    const store = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
+    const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
+    await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
+
     const lines = fs.readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
     for (let i = 0; i < lines.length; i += BATCH_SIZE) {
         const entries = lines.slice(i, i + BATCH_SIZE).map(line => line.split(","));
