@@ -24,17 +24,16 @@ const readFileSync   = (fileName          ) => fs.readFileSync  (DATA_FOLDER + "
 const writeFileSync  = (fileName, fileData) => fs.writeFileSync (DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
 const appendFileSync = (fileName, fileData) => fs.appendFileSync(DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
 
-if (!fs.existsSync(DATA_FOLDER)) {
-    fs.mkdirSync(DATA_FOLDER);
-    writeFileSync(CFG_FILE_NAME, "{}");
+if (!fs.existsSync(CFG_FILE_NAME)) {
+    fs.writeFileSync(CFG_FILE_NAME, "{}");
 }
 
 function getConfig() {
-    return JSON.parse(readFileSync(CFG_FILE_NAME));
+    return JSON.parse(fs.readFileSync(CFG_FILE_NAME), {encoding: "utf8"});
 }
 
 function setConfig(record) {
-    writeFileSync(CFG_FILE_NAME, JSON.stringify({...getConfig(), ...record}, null, 4));
+    fs.writeFileSync(CFG_FILE_NAME, JSON.stringify({...getConfig(), ...record}, null, 4));
 }
 
 async function scan(message) {
