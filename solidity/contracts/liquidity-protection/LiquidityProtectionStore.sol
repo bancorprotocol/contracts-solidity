@@ -643,18 +643,19 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         require(length == _reserveRateDs.length);
         require(length == _timestamps.length);
         for (uint256 i = 0; i < length; i++) {
-            protectedLiquidities[_ids[i]].provider = _providers[i];
-            protectedLiquidities[_ids[i]].poolToken = IDSToken(_poolTokens[i]);
-            protectedLiquidities[_ids[i]].reserveToken = IERC20Token(_reserveTokens[i]);
-            protectedLiquidities[_ids[i]].poolAmount = toUint128(_poolAmounts[i]);
-            protectedLiquidities[_ids[i]].reserveAmount = toUint128(_reserveAmounts[i]);
-            protectedLiquidities[_ids[i]].reserveRateInfo = encodeReserveRateInfo(
+            uint256 id = _ids[i];
+            protectedLiquidities[id].provider = _providers[i];
+            protectedLiquidities[id].poolToken = IDSToken(_poolTokens[i]);
+            protectedLiquidities[id].reserveToken = IERC20Token(_reserveTokens[i]);
+            protectedLiquidities[id].poolAmount = toUint128(_poolAmounts[i]);
+            protectedLiquidities[id].reserveAmount = toUint128(_reserveAmounts[i]);
+            protectedLiquidities[id].reserveRateInfo = encodeReserveRateInfo(
                 _reserveRateNs[i],
                 _reserveRateDs[i],
                 _timestamps[i]
             );
-            protectedLiquidities[_ids[i]].index = protectedLiquidityIdsByProvider[_providers[i]].length;
-            protectedLiquidityIdsByProvider[_providers[i]].push(_ids[i]);
+            protectedLiquidities[id].index = protectedLiquidityIdsByProvider[_providers[i]].length;
+            protectedLiquidityIdsByProvider[_providers[i]].push(id);
         }
     }
 
