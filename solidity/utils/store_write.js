@@ -6,6 +6,7 @@ const path = require("path");
 const NODE_ADDRESS  = process.argv[2];
 const STORE_ADDRESS = process.argv[3];
 const PRIVATE_KEY   = process.argv[4];
+const DATA_FOLDER   = process.argv[5];
 
 const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize: 50};
 const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize: 50};
@@ -19,12 +20,21 @@ const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
 const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
 
+const readFileSync   = (fileName          ) => fs.readFileSync  (DATA_FOLDER + "/" + fileName,           {encoding: "utf8"});
+const writeFileSync  = (fileName, fileData) => fs.writeFileSync (DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
+const appendFileSync = (fileName, fileData) => fs.appendFileSync(DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
+
+if (!fs.existsSync(DATA_FOLDER)) {
+    fs.mkdirSync(DATA_FOLDER);
+    writeFileSync(CFG_FILE_NAME, "{}");
+}
+
 function getConfig() {
-    return JSON.parse(fs.readFileSync(CFG_FILE_NAME, {encoding: "utf8"}));
+    return JSON.parse(readFileSync(CFG_FILE_NAME));
 }
 
 function setConfig(record) {
-    fs.writeFileSync(CFG_FILE_NAME, JSON.stringify({...getConfig(), ...record}, null, 4));
+    writeFileSync(CFG_FILE_NAME, JSON.stringify({...getConfig(), ...record}, null, 4));
 }
 
 async function scan(message) {
@@ -123,7 +133,7 @@ function deployed(web3, contractName, contractAddr) {
 }
 
 async function writeData(config, execute, func) {
-    const lines = fs.readFileSync(config.fileName, {encoding: "utf8"}).split(os.EOL).slice(1, -1);
+    const lines = readFileSync(config.fileName).split(os.EOL).slice(1, -1);
     for (let i = 0; i < lines.length; i += config.batchSize) {
         const entries = lines.slice(i, i + config.batchSize).map(line => line.split(","));
         const values = [...Array(entries[0].length).keys()].map(n => entries.map(entry => entry[n]));
@@ -154,11 +164,11 @@ async function run() {
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
 
-    const nextProtectedLiquidityId = fs.readFileSync("NextProtectedLiquidityId.txt", {encoding: "utf8"});
+    const nextProtectedLiquidityId = readFileSync("NextProtectedLiquidityId.txt");
     await execute(store.methods.seed_nextProtectedLiquidityId(nextProtectedLiquidityId));
 
     const providers = {};
-    for (const line of fs.readFileSync(CFG_PROTECTED_LIQUIDITIES.fileName, {encoding: "utf8"}).split(os.EOL).slice(1, -1)) {
+    for (const line of readFileSync(CFG_PROTECTED_LIQUIDITIES.fileName).split(os.EOL).slice(1, -1)) {
         const words = line.split(",");
         const provider = words[1];
         const id = words[0];

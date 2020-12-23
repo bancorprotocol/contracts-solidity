@@ -5,6 +5,7 @@ const Web3 = require("web3");
 const NODE_ADDRESS    = process.argv[2];
 const STORE_ADDRESS   = process.argv[3];
 const STORE_BLOCK_NUM = process.argv[4];
+const DATA_FOLDER     = process.argv[5];
 
 const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
 const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";
@@ -30,9 +31,17 @@ const CONVERTER_ABI = [
     {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"connectorTokens","outputs":[{"internalType":"contract IERC20Token","name":"","type":"address"}],"stateMutability":"view","type":"function"},
 ];
 
+const readFileSync   = (fileName          ) => fs.readFileSync  (DATA_FOLDER + "/" + fileName,           {encoding: "utf8"});
+const writeFileSync  = (fileName, fileData) => fs.writeFileSync (DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
+const appendFileSync = (fileName, fileData) => fs.appendFileSync(DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
+
+if (!fs.existsSync(DATA_FOLDER)) {
+    fs.mkdirSync(DATA_FOLDER);
+}
+
 function printRow(fileName, ...cellValues) {
     const row = cellValues.map(value => String(value).trim()).join(",") + os.EOL;
-    fs.appendFileSync(fileName, row, {encoding: "utf8"});
+    appendFileSync(fileName, row);
     process.stdout.write(row);
 }
 
@@ -69,7 +78,7 @@ async function getPastEvents(contract, eventName, fromBlock, toBlock, filter) {
 }
 
 async function readProtectedLiquidities(web3, store) {
-    fs.writeFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, "", {encoding: "utf8"});
+    writeFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, "");
 
     printRow(
         PROTECTED_LIQUIDITIES_FILE_NAME,
@@ -85,22 +94,22 @@ async function readProtectedLiquidities(web3, store) {
     );
 
     const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, 4)).toNumber();
-    fs.writeFileSync("NextProtectedLiquidityId.txt", String(count), {encoding: "utf8"});
+    writeFileSync("NextProtectedLiquidityId.txt", String(count));
 
     for (let i = 0; i < count; i += BATCH_SIZE) {
         const ids = [...Array(Math.min(count, BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const pls = await Promise.all(ids.map(id => rpc(store.methods.protectedLiquidity(id))));
-        for (const id of ids) {
-            const values = Object.keys(pls[id]).map(key => pls[id][key]);
+        for (let j = 0; j < ids.length; j++) {
+            const values = Object.keys(pls[j]).map(key => pls[j][key]);
             if (values.some(value => Web3.utils.toBN(value).gtn(0))) {
-                printRow(PROTECTED_LIQUIDITIES_FILE_NAME, id, ...values);
+                printRow(PROTECTED_LIQUIDITIES_FILE_NAME, ids[j], ...values);
             }
         }
     }
 }
 
 async function readLockedBalances(web3, store) {
-    fs.writeFileSync(LOCKED_BALANCES_FILE_NAME, "", {encoding: "utf8"});
+    writeFileSync(LOCKED_BALANCES_FILE_NAME, "");
 
     printRow(
         LOCKED_BALANCES_FILE_NAME,
@@ -109,7 +118,7 @@ async function readLockedBalances(web3, store) {
         "expirationTime",
     );
 
-    const providers = [...new Set(fs.readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, {encoding: "utf8"}).split(os.EOL).slice(1, -1).map(line => line.split(",")[1]))];
+    const providers = [...new Set(readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME).split(os.EOL).slice(1, -1).map(line => line.split(",")[1]))];
     for (let i = 0; i < providers.length; i += BATCH_SIZE) {
         const indexes = [...Array(Math.min(providers.length, BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const counts = await Promise.all(indexes.map(index => rpc(store.methods.lockedBalanceCount(providers[index]))));
@@ -125,7 +134,7 @@ async function readLockedBalances(web3, store) {
 }
 
 async function readSystemBalances(web3, store) {
-    fs.writeFileSync(SYSTEM_BALANCES_FILE_NAME, "", {encoding: "utf8"});
+    writeFileSync(SYSTEM_BALANCES_FILE_NAME, "");
 
     printRow(
         SYSTEM_BALANCES_FILE_NAME,
