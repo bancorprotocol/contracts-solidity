@@ -159,7 +159,7 @@ async function readSystemBalances(web3, store) {
 
 function deployed(web3, contractName, contractAddr) {
     const abi = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + ".abi"), {encoding: "utf8"});
-    return deployed(web3, JSON.parse(abi), contractAddr);
+    return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
 async function run() {
