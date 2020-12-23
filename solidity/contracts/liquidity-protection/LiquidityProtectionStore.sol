@@ -622,14 +622,9 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         nextProtectedLiquidityId = _nextProtectedLiquidityId;
     }
 
-    function seed_protectedLiquidityIdsByProvider(address _provider, uint256[] memory _ids) external seederOnly {
-        require(protectedLiquidityIdsByProvider[_provider].length == 0);
-        protectedLiquidityIdsByProvider[_provider] =  _ids;
-    }
-
     function seed_protectedLiquidities(
         uint256[] memory _ids,
-        uint256[] memory _indexes,
+        address[] memory _providers,
         address[] memory _poolTokens,
         address[] memory _reserveTokens,
         uint256[] memory _poolAmounts,
@@ -639,7 +634,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         uint256[] memory _timestamps
     ) external seederOnly {
         uint256 length = _ids.length;
-        require(length == _indexes.length);
+        require(length == _providers.length);
         require(length == _poolTokens.length);
         require(length == _reserveTokens.length);
         require(length == _poolAmounts.length);
@@ -648,7 +643,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         require(length == _reserveRateDs.length);
         require(length == _timestamps.length);
         for (uint256 i = 0; i < length; i++) {
-            protectedLiquidities[_ids[i]].index = _indexes[i];
+            protectedLiquidities[_ids[i]].provider = _providers[i];
             protectedLiquidities[_ids[i]].poolToken = IDSToken(_poolTokens[i]);
             protectedLiquidities[_ids[i]].reserveToken = IERC20Token(_reserveTokens[i]);
             protectedLiquidities[_ids[i]].poolAmount = toUint128(_poolAmounts[i]);
@@ -658,6 +653,8 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
                 _reserveRateDs[i],
                 _timestamps[i]
             );
+            protectedLiquidities[_ids[i]].index = protectedLiquidityIdsByProvider[_providers[i]].length;
+            protectedLiquidityIdsByProvider[_providers[i]].push(_ids[i]);
         }
     }
 

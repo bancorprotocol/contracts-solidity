@@ -167,22 +167,6 @@ async function run() {
     const nextProtectedLiquidityId = readFileSync("NextProtectedLiquidityId.txt");
     await execute(store.methods.seed_nextProtectedLiquidityId(nextProtectedLiquidityId));
 
-    const providers = {};
-    for (const line of readFileSync(CFG_PROTECTED_LIQUIDITIES.fileName).split(os.EOL).slice(1, -1)) {
-        const words = line.split(",");
-        const provider = words[1];
-        const id = words[0];
-        if (providers[provider] === undefined) {
-            providers[provider] = [id];
-        }
-        else {
-            providers[provider].push(id);
-        }
-    }
-    for (const [provider, ids] of Object.entries(providers)) {
-        await execute(store.methods.seed_protectedLiquidityIdsByProvider(provider, ids));
-    }
-
     await writeData(CFG_PROTECTED_LIQUIDITIES, execute, store.methods.seed_protectedLiquidities);
     await writeData(CFG_LOCKED_BALANCES      , execute, store.methods.seed_lockedBalances      );
     await writeData(CFG_SYSTEM_BALANCES      , execute, store.methods.seed_systemBalances      );

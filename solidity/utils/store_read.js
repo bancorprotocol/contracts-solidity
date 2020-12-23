@@ -1,6 +1,7 @@
 const fs = require("fs");
 const os = require("os");
 const Web3 = require("web3");
+const path = require("path");
 
 const NODE_ADDRESS    = process.argv[2];
 const STORE_ADDRESS   = process.argv[3];
@@ -13,23 +14,7 @@ const SYSTEM_BALANCES_FILE_NAME       = "system_balances.csv";
 
 const BATCH_SIZE = 100;
 
-const STORE_ABI = [
-    {"inputs":[{"internalType":"uint256","name":"_id","type":"uint256"}],"name":"protectedLiquidity","outputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"contract IDSToken","name":"","type":"address"},{"internalType":"contract IERC20Token","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"_provider","type":"address"}],"name":"lockedBalanceCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"_provider","type":"address"},{"internalType":"uint256","name":"_startIndex","type":"uint256"},{"internalType":"uint256","name":"_endIndex","type":"uint256"}],"name":"lockedBalanceRange","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"},{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"contract IERC20Token","name":"_token","type":"address"}],"name":"systemBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"contract IDSToken","name":"_poolToken","type":"address"}],"name":"totalProtectedPoolAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"contract IDSToken","name":"_poolToken","type":"address"},{"internalType":"contract IERC20Token","name":"_reserveToken","type":"address"}],"name":"totalProtectedReserveAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"contract IERC20Token","name":"_token","type":"address"},{"indexed":false,"internalType":"uint256","name":"_prevAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"_newAmount","type":"uint256"}],"name":"SystemBalanceUpdated","type":"event"},
-];
-
-const TOKEN_ABI = [
-    {'inputs':[],'name':'owner','outputs':[{'internalType':'address','name':'','type':'address'}],'stateMutability':'view','type':'function'},
-];
-
-const CONVERTER_ABI = [
-    {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"connectorTokens","outputs":[{"internalType":"contract IERC20Token","name":"","type":"address"}],"stateMutability":"view","type":"function"},
-];
+const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 
 const readFileSync   = (fileName          ) => fs.readFileSync  (DATA_FOLDER + "/" + fileName,           {encoding: "utf8"});
 const writeFileSync  = (fileName, fileData) => fs.writeFileSync (DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
@@ -149,8 +134,8 @@ async function readSystemBalances(web3, store) {
 
     const events          = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK_NUM, await web3.eth.getBlockNumber());
     const tokens          = [...new Set(events.map(event => event.returnValues._token))];
-    const owners          = await Promise.all(tokens.map(token => rpc(new web3.eth.Contract(TOKEN_ABI, token).methods.owner())));
-    const converters      = owners.map(owner => new web3.eth.Contract(CONVERTER_ABI, owner));
+    const owners          = await Promise.all(tokens.map(token => rpc(deployed(web3, "DSToken", token).methods.owner())));
+    const converters      = owners.map(owner => deployed(web3, "ConverterBase", owner));
     const systemBalances  = await Promise.all(tokens.map(token => rpc(store.methods.systemBalance(token))));
     const poolAmounts     = await Promise.all(tokens.map(token => rpc(store.methods.totalProtectedPoolAmount(token))));
     const reserve0s       = await Promise.all(converters.map(converter => rpc(converter.methods.connectorTokens(0))));
@@ -172,9 +157,14 @@ async function readSystemBalances(web3, store) {
     }
 }
 
+function deployed(web3, contractName, contractAddr) {
+    const abi = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + ".abi"), {encoding: "utf8"});
+    return deployed(web3, JSON.parse(abi), contractAddr);
+}
+
 async function run() {
     const web3 = new Web3(NODE_ADDRESS);
-    const store = new web3.eth.Contract(STORE_ABI, STORE_ADDRESS);
+    const store = deployed(web3, "LiquidityProtectionStore", STORE_ADDRESS);
     await readProtectedLiquidities(web3, store);
     await readLockedBalances(web3, store);
     await readSystemBalances(web3, store);
