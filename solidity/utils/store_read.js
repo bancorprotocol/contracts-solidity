@@ -3,11 +3,11 @@ const os = require("os");
 const path = require("path");
 const Web3 = require("web3");
 
-const NODE_ADDRESS    = process.argv[2];
-const STORE_ADDRESS   = process.argv[3];
-const SCRIPT_INFO     = process.argv[4]; // either 'contract deployment block number' or 'system balances file path'
-const STORAGE_INDEX   = process.argv[5];
-const DATA_FOLDER     = process.argv[6];
+const DATA_FOLDER   = process.argv[2];
+const NODE_ADDRESS  = process.argv[3];
+const STORE_ADDRESS = process.argv[4];
+const STORAGE_INDEX = process.argv[5];
+const SCRIPT_INFO   = process.argv[6]; // either 'contract deployment block number' or 'system balances file path'
 
 const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
 const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";

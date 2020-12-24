@@ -3,10 +3,10 @@ const os = require("os");
 const path = require("path");
 const Web3 = require("web3");
 
-const NODE_ADDRESS  = process.argv[2];
-const STORE_ADDRESS = process.argv[3];
-const PRIVATE_KEY   = process.argv[4];
-const DATA_FOLDER   = process.argv[5];
+const DATA_FOLDER   = process.argv[2];
+const NODE_ADDRESS  = process.argv[3];
+const STORE_ADDRESS = process.argv[4];
+const PRIVATE_KEY   = process.argv[5];
 
 const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize: 40};
 const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize: 80};
