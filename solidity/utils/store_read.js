@@ -5,7 +5,7 @@ const Web3 = require("web3");
 
 const NODE_ADDRESS    = process.argv[2];
 const STORE_ADDRESS   = process.argv[3];
-const STORE_BLOCK_NUM = process.argv[4];
+const SCRIPT_INFO     = process.argv[4]; // either 'contract deployment block number' or 'system balances file path'
 const STORAGE_INDEX   = process.argv[5];
 const DATA_FOLDER     = process.argv[6];
 
@@ -61,6 +61,26 @@ async function getPastEvents(contract, eventName, fromBlock, toBlock, filter) {
         }
     }
     return [];
+}
+
+async function getPoolInfo(web3, store) {
+    const fromBlock = Number(SCRIPT_INFO);
+    if (fromBlock >= 0 && fromBlock % 1 == 0) {
+        const events     = await getPastEvents(store, "SystemBalanceUpdated", fromBlock, await web3.eth.getBlockNumber());
+        const tokens     = [...new Set(events.map(event => event.returnValues._token))];
+        const owners     = await Promise.all(tokens.map(token => rpc(deployed(web3, "DSToken", token).methods.owner())));
+        const converters = owners.map(owner => deployed(web3, "ConverterBase", owner));
+        const reserve0s  = await Promise.all(converters.map(converter => rpc(converter.methods.connectorTokens(0))));
+        const reserve1s  = await Promise.all(converters.map(converter => rpc(converter.methods.connectorTokens(1))));
+        return [tokens, reserve0s, reserve1s];
+    }
+    else {
+        const lines     = fs.readFileSync(path.resolve(SCRIPT_INFO, SYSTEM_BALANCES_FILE_NAME), {encoding: "utf8"}).split(os.EOL).slice(1, -1);
+        const tokens    = lines.map(line => line.split(",")[0]);
+        const reserve0s = lines.map(line => line.split(",")[3]);
+        const reserve1s = lines.map(line => line.split(",")[4]);
+        return [tokens, reserve0s, reserve1s];
+    }
 }
 
 async function readProtectedLiquidities(web3, store) {
@@ -133,14 +153,10 @@ async function readSystemBalances(web3, store) {
         "reserve1Amount",
     );
 
-    const events          = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK_NUM, await web3.eth.getBlockNumber());
-    const tokens          = [...new Set(events.map(event => event.returnValues._token))];
-    const owners          = await Promise.all(tokens.map(token => rpc(deployed(web3, "DSToken", token).methods.owner())));
-    const converters      = owners.map(owner => deployed(web3, "ConverterBase", owner));
+    const [tokens, reserve0s, reserve1s] = await getPoolInfo(web3, store);
+
     const systemBalances  = await Promise.all(tokens.map(token => rpc(store.methods.systemBalance(token))));
     const poolAmounts     = await Promise.all(tokens.map(token => rpc(store.methods.totalProtectedPoolAmount(token))));
-    const reserve0s       = await Promise.all(converters.map(converter => rpc(converter.methods.connectorTokens(0))));
-    const reserve1s       = await Promise.all(converters.map(converter => rpc(converter.methods.connectorTokens(1))));
     const reserve0Amounts = await Promise.all(tokens.map((token, i) => rpc(store.methods.totalProtectedReserveAmount(token, reserve0s[i]))));
     const reserve1Amounts = await Promise.all(tokens.map((token, i) => rpc(store.methods.totalProtectedReserveAmount(token, reserve1s[i]))));
 
