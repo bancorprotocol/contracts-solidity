@@ -8,9 +8,9 @@ const STORE_ADDRESS = process.argv[3];
 const PRIVATE_KEY   = process.argv[4];
 const DATA_FOLDER   = process.argv[5];
 
-const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize: 50};
-const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize: 50};
-const CFG_SYSTEM_BALANCES       = {fileName: "system_balances.csv"      , batchSize: 50};
+const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize: 40};
+const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize: 80};
+const CFG_SYSTEM_BALANCES       = {fileName: "system_balances.csv"      , batchSize: 60};
 
 const MIN_GAS_LIMIT = 100000;
 
