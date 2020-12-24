@@ -1,7 +1,7 @@
 const fs = require("fs");
 const os = require("os");
-const Web3 = require("web3");
 const path = require("path");
+const Web3 = require("web3");
 
 const NODE_ADDRESS    = process.argv[2];
 const STORE_ADDRESS   = process.argv[3];
