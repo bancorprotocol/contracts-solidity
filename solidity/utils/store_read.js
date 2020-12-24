@@ -6,7 +6,8 @@ const path = require("path");
 const NODE_ADDRESS    = process.argv[2];
 const STORE_ADDRESS   = process.argv[3];
 const STORE_BLOCK_NUM = process.argv[4];
-const DATA_FOLDER     = process.argv[5];
+const STORAGE_INDEX   = process.argv[5];
+const DATA_FOLDER     = process.argv[6];
 
 const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
 const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";
@@ -78,7 +79,7 @@ async function readProtectedLiquidities(web3, store) {
         "timestamp    ",
     );
 
-    const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, 4)).toNumber();
+    const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, STORAGE_INDEX)).toNumber();
     writeFileSync("NextProtectedLiquidityId.txt", String(count));
 
     for (let i = 0; i < count; i += BATCH_SIZE) {
