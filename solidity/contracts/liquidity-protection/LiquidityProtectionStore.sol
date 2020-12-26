@@ -618,11 +618,11 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         return _reserveRateInfo >> 224;
     }
 
-    function seed_nextProtectedLiquidityId(uint256 _nextProtectedLiquidityId) external seederOnly {
+    function setNextProtectedLiquidityId(uint256 _nextProtectedLiquidityId) external seederOnly {
         nextProtectedLiquidityId = _nextProtectedLiquidityId;
     }
 
-    function seed_protectedLiquidities(
+    function addProtectedLiquidities(
         uint256[] memory _ids,
         address[] memory _providers,
         address[] memory _poolTokens,
@@ -659,7 +659,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         }
     }
 
-    function seed_lockedBalances(
+    function addLockedBalances(
         address[] memory _providers,
         uint256[] memory _amounts,
         uint256[] memory _expirationTimes    
@@ -675,7 +675,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         }
     }
 
-    function seed_systemBalances(
+    function addSystemBalances(
         address[] memory _tokens,
         uint256[] memory _systemBalances,
         uint256[] memory _poolAmounts,
@@ -696,6 +696,58 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
             totalProtectedPoolAmounts[IDSToken(_tokens[i])] = _poolAmounts[i];
             totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve0s[i])] = _reserve0Amounts[i];
             totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve1s[i])] = _reserve1Amounts[i];
+        }
+    }
+
+    function updateProtectedLiquidities(
+        uint256[] memory _ids,
+        uint256[] memory _newPoolAmounts,
+        uint256[] memory _newReserveAmounts
+    ) external seederOnly {
+        uint256 length = _ids.length;
+        require(length == _newPoolAmounts.length);
+        require(length == _newReserveAmounts.length);
+        for (uint256 i = 0; i < length; i++) {
+            ProtectedLiquidity storage liquidity = protectedLiquidities[_ids[i]];
+            uint256 newPoolAmount = _newPoolAmounts[i];
+            uint256 newReserveAmount = _newReserveAmounts[i];
+
+            IDSToken poolToken = liquidity.poolToken;
+            IERC20Token reserveToken = liquidity.reserveToken;
+            uint256 prevPoolAmount = uint256(liquidity.poolAmount);
+            uint256 prevReserveAmount = uint256(liquidity.reserveAmount);
+            liquidity.poolAmount = toUint128(newPoolAmount);
+            liquidity.reserveAmount = toUint128(newReserveAmount);
+
+            totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken]
+                .add(newPoolAmount)
+                .sub(prevPoolAmount);
+
+            totalProtectedReserveAmounts[poolToken][reserveToken] = totalProtectedReserveAmounts[poolToken][reserveToken]
+                .add(newReserveAmount)
+                .sub(prevReserveAmount);
+        }
+    }
+
+    function removeProtectedLiquidities(uint256[] memory _ids) external seederOnly {
+        uint256 length = _ids.length;
+        for (uint256 i = 0; i < length; i++) {
+            ProtectedLiquidity storage liquidity = protectedLiquidities[_ids[i]];
+
+            uint256 index = liquidity.index;
+            delete protectedLiquidities[_ids[i]];
+
+            uint256[] storage ids = protectedLiquidityIdsByProvider[liquidity.provider];
+            assert(ids.length > 0);
+
+            uint256 lastIndex = ids.length - 1;
+            if (index < lastIndex) {
+                uint256 lastId = ids[lastIndex];
+                ids[index] = lastId;
+                protectedLiquidities[lastId].index = index;
+            }
+
+            ids.pop();
         }
     }
 }

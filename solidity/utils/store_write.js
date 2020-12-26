@@ -164,11 +164,11 @@ async function run() {
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
 
     const nextProtectedLiquidityId = readFileSync("NextProtectedLiquidityId.txt");
-    await execute(store.methods.seed_nextProtectedLiquidityId(nextProtectedLiquidityId));
+    await execute(store.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
 
-    await writeData(CFG_PROTECTED_LIQUIDITIES, execute, store.methods.seed_protectedLiquidities);
-    await writeData(CFG_LOCKED_BALANCES      , execute, store.methods.seed_lockedBalances      );
-    await writeData(CFG_SYSTEM_BALANCES      , execute, store.methods.seed_systemBalances      );
+    await writeData(CFG_PROTECTED_LIQUIDITIES, execute, store.methods.addProtectedLiquidities);
+    await writeData(CFG_LOCKED_BALANCES      , execute, store.methods.addLockedBalances      );
+    await writeData(CFG_SYSTEM_BALANCES      , execute, store.methods.addSystemBalances      );
 
     const owned = deployed(web3, "Owned", STORE_ADDRESS);
     await execute(store.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
