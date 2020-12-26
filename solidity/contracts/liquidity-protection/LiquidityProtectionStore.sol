@@ -738,9 +738,10 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
             delete protectedLiquidities[_ids[i]];
 
             uint256[] storage storageIds = protectedLiquidityIdsByProvider[liquidity.provider];
-            assert(storageIds.length > 0);
+            uint256 storageIdsLength = storageIds.length;
+            assert(storageIdsLength > 0);
 
-            uint256 lastIndex = storageIds.length - 1;
+            uint256 lastIndex = storageIdsLength - 1;
             if (index < lastIndex) {
                 uint256 lastId = storageIds[lastIndex];
                 storageIds[index] = lastId;
