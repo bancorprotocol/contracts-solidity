@@ -177,20 +177,20 @@ async function run() {
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
 
     switch (CURRENT_PHASE) {
-    case "Phase1":
+    case "phase1":
         await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
         await writeData(execute, ADD_PROTECTED_LIQUIDITIES, store.methods.addProtectedLiquidities);
         await writeData(execute, ADD_LOCKED_BALANCES      , store.methods.addLockedBalances      );
         await writeData(execute, ADD_SYSTEM_BALANCES      , store.methods.addSystemBalances      );
         break;
-    case "Phase2":
+    case "phase2":
         await writeData(execute, ADD_PROTECTED_LIQUIDITIES, store.methods.addProtectedLiquidities);
         await writeData(execute, ADD_LOCKED_BALANCES      , store.methods.addLockedBalances      );
         await writeData(execute, ADD_SYSTEM_BALANCES      , store.methods.addSystemBalances      );
         const nextProtectedLiquidityId = readFileSync(NEXT_PROTECTED_LIQUIDITY_ID);
         await execute(store.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
         break;
-    case "Phase3":
+    case "phase3":
         const owned = deployed(web3, "Owned", STORE_ADDRESS);
         await execute(store.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
         await execute(store.methods.grantRole(ROLE_OWNER, await owned.methods.owner().call()));
