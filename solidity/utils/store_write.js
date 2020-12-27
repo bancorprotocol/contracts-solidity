@@ -3,14 +3,27 @@ const os = require("os");
 const path = require("path");
 const Web3 = require("web3");
 
+const {
+    ADD_PROTECTED_LIQUIDITIES   ,
+    ADD_LOCKED_BALANCES         ,
+    ADD_SYSTEM_BALANCES         ,
+    UPDATE_PROTECTED_LIQUIDITIES,
+    REMOVE_PROTECTED_LIQUIDITIES,
+    NEXT_PROTECTED_LIQUIDITY_ID ,
+} = require("./file_names.js");
+
 const DATA_FOLDER   = process.argv[2];
 const NODE_ADDRESS  = process.argv[3];
 const STORE_ADDRESS = process.argv[4];
 const PRIVATE_KEY   = process.argv[5];
 
-const CFG_PROTECTED_LIQUIDITIES = {fileName: "protected_liquidities.csv", batchSize: 40};
-const CFG_LOCKED_BALANCES       = {fileName: "locked_balances.csv"      , batchSize: 80};
-const CFG_SYSTEM_BALANCES       = {fileName: "system_balances.csv"      , batchSize: 60};
+const BATCH_SIZES = {
+    [ADD_PROTECTED_LIQUIDITIES   ]: 20,
+    [ADD_LOCKED_BALANCES         ]: 80,
+    [ADD_SYSTEM_BALANCES         ]: 50,
+    [UPDATE_PROTECTED_LIQUIDITIES]: 60,
+    [REMOVE_PROTECTED_LIQUIDITIES]: 90,
+};
 
 const MIN_GAS_LIMIT = 100000;
 
@@ -20,9 +33,9 @@ const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
 const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
 
-const readFileSync   = (fileName          ) => fs.readFileSync  (DATA_FOLDER + "/" + fileName,           {encoding: "utf8"});
-const writeFileSync  = (fileName, fileData) => fs.writeFileSync (DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
-const appendFileSync = (fileName, fileData) => fs.appendFileSync(DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
+const readFileSync   = (fileName          ) => fs.readFileSync  (path.resolve(DATA_FOLDER, fileName),           {encoding: "utf8"});
+const writeFileSync  = (fileName, fileData) => fs.writeFileSync (path.resolve(DATA_FOLDER, fileName), fileData, {encoding: "utf8"});
+const appendFileSync = (fileName, fileData) => fs.appendFileSync(path.resolve(DATA_FOLDER, fileName), fileData, {encoding: "utf8"});
 
 if (!fs.existsSync(CFG_FILE_NAME)) {
     fs.writeFileSync(CFG_FILE_NAME, "{}");
@@ -131,12 +144,12 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
-async function writeData(config, execute, func) {
-    const lines = readFileSync(config.fileName).split(os.EOL).slice(1, -1);
-    for (let i = 0; i < lines.length; i += config.batchSize) {
-        const entries = lines.slice(i, i + config.batchSize).map(line => line.split(","));
+async function writeData(fileName, contractMethod) {
+    const lines = readFileSync(fileName).split(os.EOL).slice(1, -1);
+    for (let i = 0; i < lines.length; i += BATCH_SIZES[fileName]) {
+        const entries = lines.slice(i, i + BATCH_SIZES[fileName]).map(line => line.split(","));
         const values = [...Array(entries[0].length).keys()].map(n => entries.map(entry => entry[n]));
-        await execute(func(...values));
+        await execute(contractMethod(...values));
     }
 }
 
@@ -163,12 +176,12 @@ async function run() {
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
 
-    const nextProtectedLiquidityId = readFileSync("NextProtectedLiquidityId.txt");
+    const nextProtectedLiquidityId = readFileSync(NEXT_PROTECTED_LIQUIDITY_ID);
     await execute(store.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
 
-    await writeData(CFG_PROTECTED_LIQUIDITIES, execute, store.methods.addProtectedLiquidities);
-    await writeData(CFG_LOCKED_BALANCES      , execute, store.methods.addLockedBalances      );
-    await writeData(CFG_SYSTEM_BALANCES      , execute, store.methods.addSystemBalances      );
+    await writeData(ADD_PROTECTED_LIQUIDITIES, execute, store.methods.addProtectedLiquidities);
+    await writeData(ADD_LOCKED_BALANCES      , execute, store.methods.addLockedBalances      );
+    await writeData(ADD_SYSTEM_BALANCES      , execute, store.methods.addSystemBalances      );
 
     const owned = deployed(web3, "Owned", STORE_ADDRESS);
     await execute(store.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));

@@ -3,23 +3,26 @@ const os = require("os");
 const path = require("path");
 const Web3 = require("web3");
 
+const {
+    ADD_PROTECTED_LIQUIDITIES  ,
+    ADD_LOCKED_BALANCES        ,
+    ADD_SYSTEM_BALANCES        ,
+    NEXT_PROTECTED_LIQUIDITY_ID,
+} = require("./file_names.js");
+
 const DATA_FOLDER   = process.argv[2];
 const NODE_ADDRESS  = process.argv[3];
 const STORE_ADDRESS = process.argv[4];
 const STORAGE_INDEX = process.argv[5];
 const SCRIPT_INFO   = process.argv[6]; // either 'contract deployment block number' or 'system balances file path'
 
-const PROTECTED_LIQUIDITIES_FILE_NAME = "protected_liquidities.csv";
-const LOCKED_BALANCES_FILE_NAME       = "locked_balances.csv";
-const SYSTEM_BALANCES_FILE_NAME       = "system_balances.csv";
-
 const BATCH_SIZE = 100;
 
 const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 
-const readFileSync   = (fileName          ) => fs.readFileSync  (DATA_FOLDER + "/" + fileName,           {encoding: "utf8"});
-const writeFileSync  = (fileName, fileData) => fs.writeFileSync (DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
-const appendFileSync = (fileName, fileData) => fs.appendFileSync(DATA_FOLDER + "/" + fileName, fileData, {encoding: "utf8"});
+const readFileSync   = (fileName          ) => fs.readFileSync  (path.resolve(DATA_FOLDER, fileName),           {encoding: "utf8"});
+const writeFileSync  = (fileName, fileData) => fs.writeFileSync (path.resolve(DATA_FOLDER, fileName), fileData, {encoding: "utf8"});
+const appendFileSync = (fileName, fileData) => fs.appendFileSync(path.resolve(DATA_FOLDER, fileName), fileData, {encoding: "utf8"});
 
 if (!fs.existsSync(DATA_FOLDER)) {
     fs.mkdirSync(DATA_FOLDER);
@@ -75,7 +78,7 @@ async function getPoolInfo(web3, store) {
         return [tokens, reserve0s, reserve1s];
     }
     else {
-        const lines     = fs.readFileSync(path.resolve(SCRIPT_INFO, SYSTEM_BALANCES_FILE_NAME), {encoding: "utf8"}).split(os.EOL).slice(1, -1);
+        const lines     = fs.readFileSync(path.resolve(SCRIPT_INFO, ADD_SYSTEM_BALANCES), {encoding: "utf8"}).split(os.EOL).slice(1, -1);
         const tokens    = lines.map(line => line.split(",")[0]);
         const reserve0s = lines.map(line => line.split(",")[3]);
         const reserve1s = lines.map(line => line.split(",")[4]);
@@ -84,10 +87,10 @@ async function getPoolInfo(web3, store) {
 }
 
 async function readProtectedLiquidities(web3, store) {
-    writeFileSync(PROTECTED_LIQUIDITIES_FILE_NAME, "");
+    writeFileSync(ADD_PROTECTED_LIQUIDITIES, "");
 
     printRow(
-        PROTECTED_LIQUIDITIES_FILE_NAME,
+        ADD_PROTECTED_LIQUIDITIES,
         "id           ",
         "provider     ",
         "poolToken    ",
@@ -100,7 +103,7 @@ async function readProtectedLiquidities(web3, store) {
     );
 
     const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, STORAGE_INDEX)).toNumber();
-    writeFileSync("NextProtectedLiquidityId.txt", String(count));
+    writeFileSync(NEXT_PROTECTED_LIQUIDITY_ID, String(count));
 
     for (let i = 0; i < count; i += BATCH_SIZE) {
         const ids = [...Array(Math.min(count, BATCH_SIZE + i) - i).keys()].map(n => n + i);
@@ -108,23 +111,23 @@ async function readProtectedLiquidities(web3, store) {
         for (let j = 0; j < ids.length; j++) {
             const values = Object.keys(pls[j]).map(key => pls[j][key]);
             if (values.some(value => Web3.utils.toBN(value).gtn(0))) {
-                printRow(PROTECTED_LIQUIDITIES_FILE_NAME, ids[j], ...values);
+                printRow(ADD_PROTECTED_LIQUIDITIES, ids[j], ...values);
             }
         }
     }
 }
 
 async function readLockedBalances(web3, store) {
-    writeFileSync(LOCKED_BALANCES_FILE_NAME, "");
+    writeFileSync(ADD_LOCKED_BALANCES, "");
 
     printRow(
-        LOCKED_BALANCES_FILE_NAME,
+        ADD_LOCKED_BALANCES,
         "provider      ",
         "amount        ",
         "expirationTime",
     );
 
-    const providers = [...new Set(readFileSync(PROTECTED_LIQUIDITIES_FILE_NAME).split(os.EOL).slice(1, -1).map(line => line.split(",")[1]))];
+    const providers = [...new Set(readFileSync(ADD_PROTECTED_LIQUIDITIES).split(os.EOL).slice(1, -1).map(line => line.split(",")[1]))];
     for (let i = 0; i < providers.length; i += BATCH_SIZE) {
         const indexes = [...Array(Math.min(providers.length, BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const counts = await Promise.all(indexes.map(index => rpc(store.methods.lockedBalanceCount(providers[index]))));
@@ -132,7 +135,7 @@ async function readLockedBalances(web3, store) {
             if (counts[j] > 0) {
                 const lbs = await rpc(store.methods.lockedBalanceRange(providers[indexes[j]], 0, counts[j]));
                 for (let i = 0; i < counts[j]; i++) {
-                    printRow(LOCKED_BALANCES_FILE_NAME, providers[indexes[j]], ...[...Array(2).keys()].map(n => lbs[n][i]));
+                    printRow(ADD_LOCKED_BALANCES, providers[indexes[j]], ...[...Array(2).keys()].map(n => lbs[n][i]));
                 }
             }
         }
@@ -140,10 +143,10 @@ async function readLockedBalances(web3, store) {
 }
 
 async function readSystemBalances(web3, store) {
-    writeFileSync(SYSTEM_BALANCES_FILE_NAME, "");
+    writeFileSync(ADD_SYSTEM_BALANCES, "");
 
     printRow(
-        SYSTEM_BALANCES_FILE_NAME,
+        ADD_SYSTEM_BALANCES,
         "token         ",
         "systemBalance ",
         "poolAmount    ",
@@ -162,7 +165,7 @@ async function readSystemBalances(web3, store) {
 
     for (let i = 0; i < tokens.length; i++) {
         printRow(
-            SYSTEM_BALANCES_FILE_NAME,
+            ADD_SYSTEM_BALANCES,
             tokens         [i],
             systemBalances [i],
             poolAmounts    [i],
