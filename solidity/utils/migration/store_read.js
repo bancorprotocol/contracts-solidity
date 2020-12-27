@@ -18,7 +18,7 @@ const SCRIPT_INFO   = process.argv[6]; // either 'contract deployment block numb
 
 const BATCH_SIZE = 100;
 
-const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
+const ARTIFACTS_DIR = path.resolve(__dirname, "../../build");
 
 const readFileSync   = (fileName          ) => fs.readFileSync  (path.resolve(DATA_FOLDER, fileName),           {encoding: "utf8"});
 const writeFileSync  = (fileName, fileData) => fs.writeFileSync (path.resolve(DATA_FOLDER, fileName), fileData, {encoding: "utf8"});

@@ -29,7 +29,7 @@ const BATCH_SIZES = {
 const MIN_GAS_LIMIT = 100000;
 
 const CFG_FILE_NAME = "migration.json";
-const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
+const ARTIFACTS_DIR = path.resolve(__dirname, "../../build");
 
 const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
 const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
