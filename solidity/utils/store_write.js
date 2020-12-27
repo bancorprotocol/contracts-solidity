@@ -176,12 +176,12 @@ async function run() {
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
 
-    const nextProtectedLiquidityId = readFileSync(NEXT_PROTECTED_LIQUIDITY_ID);
-    await execute(store.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
-
     await writeData(ADD_PROTECTED_LIQUIDITIES, execute, store.methods.addProtectedLiquidities);
     await writeData(ADD_LOCKED_BALANCES      , execute, store.methods.addLockedBalances      );
     await writeData(ADD_SYSTEM_BALANCES      , execute, store.methods.addSystemBalances      );
+
+    const nextProtectedLiquidityId = readFileSync(NEXT_PROTECTED_LIQUIDITY_ID);
+    await execute(store.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
 
     const owned = deployed(web3, "Owned", STORE_ADDRESS);
     await execute(store.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
