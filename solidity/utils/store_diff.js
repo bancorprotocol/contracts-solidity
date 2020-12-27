@@ -11,9 +11,9 @@ const {
     NEXT_PROTECTED_LIQUIDITY_ID ,
 } = require("./file_names.js");
 
-const SRC_FOLDER1 = process.argv[2];
-const SRC_FOLDER2 = process.argv[3];
-const DST_FOLDER  = process.argv[4];
+const DST_FOLDER  = process.argv[2];
+const SRC_FOLDER1 = process.argv[3];
+const SRC_FOLDER2 = process.argv[4];
 
 if (!fs.existsSync(DST_FOLDER)) {
     fs.mkdirSync(DST_FOLDER);
