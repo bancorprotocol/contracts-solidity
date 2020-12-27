@@ -8,6 +8,7 @@ const {
     ADD_SYSTEM_BALANCES         ,
     UPDATE_PROTECTED_LIQUIDITIES,
     REMOVE_PROTECTED_LIQUIDITIES,
+    NEXT_PROTECTED_LIQUIDITY_ID ,
 } = require("./file_names.js");
 
 const SRC_FOLDER1 = process.argv[2];
@@ -41,6 +42,10 @@ function run() {
     createAddFile(ADD_PROTECTED_LIQUIDITIES);
     createAddFile(ADD_LOCKED_BALANCES      );
     createAddFile(ADD_SYSTEM_BALANCES      );
+
+    const srcFilePath = path.join(SRC_FOLDER2, NEXT_PROTECTED_LIQUIDITY_ID);
+    const dstFilePath = path.join(DST_FOLDER , NEXT_PROTECTED_LIQUIDITY_ID);
+    fs.writeFileSync(dstFilePath, fs.readFileSync(srcFilePath, {encoding: "utf8"}), {encoding: "utf8"});
 }
 
 run();

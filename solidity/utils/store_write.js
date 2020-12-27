@@ -16,6 +16,7 @@ const DATA_FOLDER   = process.argv[2];
 const NODE_ADDRESS  = process.argv[3];
 const STORE_ADDRESS = process.argv[4];
 const PRIVATE_KEY   = process.argv[5];
+const CURRENT_PHASE = process.argv[6];
 
 const BATCH_SIZES = {
     [ADD_PROTECTED_LIQUIDITIES   ]: 20,
@@ -144,7 +145,7 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
-async function writeData(fileName, contractMethod) {
+async function writeData(execute, fileName, contractMethod) {
     const lines = readFileSync(fileName).split(os.EOL).slice(1, -1);
     for (let i = 0; i < lines.length; i += BATCH_SIZES[fileName]) {
         const entries = lines.slice(i, i + BATCH_SIZES[fileName]).map(line => line.split(","));
@@ -161,31 +162,40 @@ async function run() {
     const web3Func = (func, ...args) => func(web3, account, gasPrice, ...args);
 
     let phase = 0;
-    if (getConfig().phase === undefined) {
-        setConfig({phase});
+    if (getConfig()[CURRENT_PHASE] === undefined) {
+        setConfig({[CURRENT_PHASE]: phase});
     }
 
     const execute = async (transaction, ...args) => {
-        if (getConfig().phase === phase++) {
+        if (getConfig()[CURRENT_PHASE] === phase++) {
             await web3Func(send, transaction, ...args);
             console.log(`phase ${phase} executed`);
-            setConfig({phase});
+            setConfig({[CURRENT_PHASE]: phase});
         }
     };
 
     const store = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
-    await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
 
-    await writeData(ADD_PROTECTED_LIQUIDITIES, execute, store.methods.addProtectedLiquidities);
-    await writeData(ADD_LOCKED_BALANCES      , execute, store.methods.addLockedBalances      );
-    await writeData(ADD_SYSTEM_BALANCES      , execute, store.methods.addSystemBalances      );
-
-    const nextProtectedLiquidityId = readFileSync(NEXT_PROTECTED_LIQUIDITY_ID);
-    await execute(store.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
-
-    const owned = deployed(web3, "Owned", STORE_ADDRESS);
-    await execute(store.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
-    await execute(store.methods.grantRole(ROLE_OWNER, await owned.methods.owner().call()));
+    switch (CURRENT_PHASE) {
+    case "1":
+        await execute(store.methods.grantRole(ROLE_SEEDER, account.address));
+        await writeData(execute, ADD_PROTECTED_LIQUIDITIES, store.methods.addProtectedLiquidities);
+        await writeData(execute, ADD_LOCKED_BALANCES      , store.methods.addLockedBalances      );
+        await writeData(execute, ADD_SYSTEM_BALANCES      , store.methods.addSystemBalances      );
+        break;
+    case "2":
+        await writeData(execute, ADD_PROTECTED_LIQUIDITIES, store.methods.addProtectedLiquidities);
+        await writeData(execute, ADD_LOCKED_BALANCES      , store.methods.addLockedBalances      );
+        await writeData(execute, ADD_SYSTEM_BALANCES      , store.methods.addSystemBalances      );
+        const nextProtectedLiquidityId = readFileSync(NEXT_PROTECTED_LIQUIDITY_ID);
+        await execute(store.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
+        break;
+    case "3":
+        const owned = deployed(web3, "Owned", STORE_ADDRESS);
+        await execute(store.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
+        await execute(store.methods.grantRole(ROLE_OWNER, await owned.methods.owner().call()));
+        break;
+    }
 
     if (web3.currentProvider.disconnect) {
         web3.currentProvider.disconnect();
