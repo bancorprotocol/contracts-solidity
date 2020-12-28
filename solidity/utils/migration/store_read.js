@@ -13,7 +13,7 @@ const {
 const DATA_FOLDER   = process.argv[2];
 const NODE_ADDRESS  = process.argv[3];
 const STORE_ADDRESS = process.argv[4];
-const STORAGE_INDEX = process.argv[5];
+const STORAGE_SLOT  = process.argv[5];
 const SCRIPT_INFO   = process.argv[6]; // either 'contract deployment block number' or 'system balances file path'
 
 const BATCH_SIZE = 100;
@@ -102,7 +102,7 @@ async function readProtectedLiquidities(web3, store) {
         "timestamp    ",
     );
 
-    const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, STORAGE_INDEX)).toNumber();
+    const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, STORAGE_SLOT)).toNumber();
     writeFileSync(NEXT_PROTECTED_LIQUIDITY_ID, String(count));
 
     for (let i = 0; i < count; i += BATCH_SIZE) {
