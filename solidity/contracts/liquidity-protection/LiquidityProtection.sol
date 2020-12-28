@@ -187,84 +187,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     }
 
     /**
-     * @dev adds protection to existing pool tokens
-     * also mints new governance tokens for the caller
-     *
-     * @param _poolAnchor  anchor of the pool
-     * @param _amount      amount of pool tokens to protect
-     */
-    function protectLiquidity(IConverterAnchor _poolAnchor, uint256 _amount)
-        external
-        protected
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
-        greaterThanZero(_amount)
-    {
-        // get the converter
-        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
-
-        // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
-
-        // protect both reserves
-        IDSToken poolToken = IDSToken(address(_poolAnchor));
-        protectLiquidity(poolToken, converter, networkTokenLocal, 0, _amount / 2);
-        protectLiquidity(poolToken, converter, networkTokenLocal, 1, _amount - _amount / 2);
-
-        // transfer the pool tokens from the caller directly to the store
-        safeTransferFrom(poolToken, msg.sender, address(store), _amount);
-    }
-
-    /**
-     * @dev cancels the protection and returns the pool tokens to the caller
-     * also burns governance tokens from the caller
-     * must be called with the indices of both the base token and the network token protections
-     *
-     * @param _id1 id in the caller's list of protected liquidity
-     * @param _id2 matching id in the caller's list of protected liquidity
-     */
-    function unprotectLiquidity(uint256 _id1, uint256 _id2) external protected {
-        require(_id1 != _id2, "ERR_SAME_ID");
-
-        ProtectedLiquidity memory liquidity1 = protectedLiquidity(_id1, msg.sender);
-        ProtectedLiquidity memory liquidity2 = protectedLiquidity(_id2, msg.sender);
-
-        // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
-
-        // verify that the two protected liquidities were added together (using `protect`)
-        require(
-            liquidity1.poolToken == liquidity2.poolToken &&
-                liquidity1.reserveToken != liquidity2.reserveToken &&
-                (liquidity1.reserveToken == networkTokenLocal || liquidity2.reserveToken == networkTokenLocal) &&
-                liquidity1.timestamp == liquidity2.timestamp &&
-                liquidity1.poolAmount <= liquidity2.poolAmount.add(1) &&
-                liquidity2.poolAmount <= liquidity1.poolAmount.add(1),
-            "ERR_PROTECTIONS_MISMATCH"
-        );
-
-        // verify that the two protected liquidities are not removed on the same block in which they were added
-        require(liquidity1.timestamp < time(), "ERR_TOO_EARLY");
-
-        // burn the governance tokens from the caller. we need to transfer the tokens to the contract itself, since only
-        // token holders can burn their tokens
-        uint256 amount =
-            liquidity1.reserveToken == networkTokenLocal ? liquidity1.reserveAmount : liquidity2.reserveAmount;
-        safeTransferFrom(govToken, msg.sender, address(this), amount);
-        govTokenGovernance.burn(amount);
-
-        // update last liquidity removal checkpoint
-        lastRemoveCheckpointStore.addCheckpoint(msg.sender);
-
-        // remove the two protected liquidities from the provider
-        store.removeProtectedLiquidity(_id1);
-        store.removeProtectedLiquidity(_id2);
-
-        // transfer the pool tokens back to the caller
-        store.withdrawTokens(liquidity1.poolToken, msg.sender, liquidity1.poolAmount.add(liquidity2.poolAmount));
-    }
-
-    /**
      * @dev adds protected liquidity to a pool for a specific recipient
      * also mints new governance tokens for the caller if the caller adds network tokens
      *
@@ -449,6 +371,119 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // increase the system's pool token balance and add protected liquidity for the caller
         store.incSystemBalance(poolToken, poolTokenAmount - poolTokenAmount / 2); // account for rounding errors
         return addProtectedLiquidity(_owner, poolToken, _baseToken, poolTokenAmount / 2, _amount);
+    }
+
+    /**
+     * @dev returns the single-side staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     * @return maximum amount of network tokens that can be single-side staked in the pool
+     */
+    function poolAvailableSpace(IConverterAnchor _poolAnchor)
+        external
+        view
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        returns (uint256, uint256)
+    {
+        IERC20Token networkTokenLocal = networkToken;
+        return (
+            baseTokenAvailableSpace(_poolAnchor, networkTokenLocal),
+            networkTokenAvailableSpace(_poolAnchor, networkTokenLocal)
+        );
+    }
+
+    /**
+     * @dev returns the base-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     */
+    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor)
+        external
+        view
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        returns (uint256)
+    {
+        return baseTokenAvailableSpace(_poolAnchor, networkToken);
+    }
+
+    /**
+     * @dev returns the network-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @return maximum amount of network tokens that can be single-side staked in the pool
+     */
+    function networkTokenAvailableSpace(IConverterAnchor _poolAnchor)
+        external
+        view
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+        returns (uint256)
+    {
+        return networkTokenAvailableSpace(_poolAnchor, networkToken);
+    }
+
+    /**
+     * @dev returns the base-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @param _networkToken the network token
+     * @return maximum amount of base tokens that can be single-side staked in the pool
+     */
+    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20Token _networkToken)
+        internal
+        view
+        returns (uint256)
+    {
+        // get the pool converter
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
+
+        // get the base token
+        IERC20Token baseToken = converterOtherReserve(converter, _networkToken);
+
+        // get the reserve balances
+        (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
+            converterReserveBalances(converter, baseToken, _networkToken);
+
+        // get the network token minting limit
+        uint256 mintingLimit = settings.networkTokenMintingLimits(_poolAnchor);
+        if (mintingLimit == 0) {
+            mintingLimit = settings.defaultNetworkTokenMintingLimit();
+        }
+
+        // get the amount of network tokens already minted for the pool
+        uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
+
+        // get the amount of network tokens which can minted for the pool
+        uint256 networkTokensCanBeMinted = Math.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
+
+        // return the maximum amount of base token liquidity that can be single-sided staked in the pool
+        return networkTokensCanBeMinted.mul(reserveBalanceBase).div(reserveBalanceNetwork);
+    }
+
+    /**
+     * @dev returns the network-token staking limits of a given pool
+     *
+     * @param _poolAnchor   anchor of the pool
+     * @param _networkToken the network token
+     * @return maximum amount of network tokens that can be single-side staked in the pool
+     */
+    function networkTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20Token _networkToken)
+        internal
+        view
+        returns (uint256)
+    {
+        // get the pool token
+        IDSToken poolToken = IDSToken(address(_poolAnchor));
+
+        // get the pool token rate
+        Fraction memory poolRate = poolTokenRate(poolToken, _networkToken);
+
+        // return the maximum amount of network token liquidity that can be single-sided staked in the pool
+        return store.systemBalance(poolToken).mul(poolRate.n).add(poolRate.n).sub(1).div(poolRate.d);
     }
 
     /**
@@ -789,42 +824,6 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     }
 
     /**
-     * @dev utility to protect existing liquidity
-     * also mints new governance tokens for the caller when protecting the network token reserve
-     *
-     * @param _poolAnchor      pool anchor
-     * @param _converter       pool converter
-     * @param _networkToken    the network reserve token of the pool
-     * @param _reserveIndex    index of the reserve to protect
-     * @param _poolAmount      amount of pool tokens to protect
-     */
-    function protectLiquidity(
-        IDSToken _poolAnchor,
-        IConverter _converter,
-        IERC20Token _networkToken,
-        uint256 _reserveIndex,
-        uint256 _poolAmount
-    ) internal {
-        // get the reserves token
-        IERC20Token reserveToken = _converter.connectorTokens(_reserveIndex);
-
-        // get the pool token rate
-        IDSToken poolToken = IDSToken(address(_poolAnchor));
-        Fraction memory poolRate = poolTokenRate(poolToken, reserveToken);
-
-        // calculate the reserve balance based on the amount provided and the pool token rate
-        uint256 reserveAmount = _poolAmount.mul(poolRate.n).div(poolRate.d);
-
-        // protect the liquidity
-        addProtectedLiquidity(msg.sender, poolToken, reserveToken, _poolAmount, reserveAmount);
-
-        // for network token liquidity, mint governance tokens to the caller
-        if (reserveToken == _networkToken) {
-            govTokenGovernance.mint(msg.sender, reserveAmount);
-        }
-    }
-
-    /**
      * @dev adds protected liquidity for the caller to the store
      *
      * @param _provider        protected liquidity provider
@@ -923,11 +922,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         )
     {
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
-
-        IERC20Token otherReserve = converter.connectorTokens(0);
-        if (otherReserve == _reserveToken) {
-            otherReserve = converter.connectorTokens(1);
-        }
+        IERC20Token otherReserve = converterOtherReserve(converter, _reserveToken);
 
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
@@ -1258,6 +1253,15 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         IERC20Token _reserveToken2
     ) private view returns (uint256, uint256) {
         return (_converter.getConnectorBalance(_reserveToken1), _converter.getConnectorBalance(_reserveToken2));
+    }
+
+    // utility to get the other reserve
+    function converterOtherReserve(
+        IConverter _converter,
+        IERC20Token _thisReserve
+    ) private view returns (IERC20Token) {
+        IERC20Token otherReserve = _converter.connectorTokens(0);
+        return otherReserve != _thisReserve ? otherReserve : _converter.connectorTokens(1);
     }
 
     // utility to get the owner

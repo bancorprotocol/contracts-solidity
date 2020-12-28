@@ -1,3 +1,12 @@
+### 0.6.28
+LiquidityProtection
+* Removed support for protecting/unprotecting existing pool tokens
+* Added a function that returns the current available space in the pool (`poolAvailableSpace`)
+
+ConverterUpgrader
+* Added support for upgrading a converter with reserve tokens that revert on transfer(0)
+
+
 ### 0.6.27
 General
 * Added a gas optimized standard pool converter (type 3) for 2 reserves, 50%/50% weights

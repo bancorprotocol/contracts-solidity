@@ -29,11 +29,23 @@ const PPM_RESOLUTION = new BN(1000000);
 
 const RESERVE1_AMOUNT = new BN(1000000);
 const RESERVE2_AMOUNT = new BN(2500000);
+const TOTAL_SUPPLY = new BN(10).pow(new BN(24));
 
 const PROTECTION_NO_PROTECTION = 0;
 const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
 const PROTECTION_EXCESSIVE_PROTECTION = 3;
+
+const POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES = [
+    {baseBalance: 1000000, networkBalance: 1000000},
+    {baseBalance: 1234567, networkBalance: 2000000},
+    {baseBalance: 2345678, networkBalance: 3000000},
+    {baseBalance: 3456789, networkBalance: 4000000},
+    {baseBalance: 4000000, networkBalance: 4000000},
+    {baseBalance: 5000000, networkBalance: 3000000},
+    {baseBalance: 6000000, networkBalance: 2000000},
+    {baseBalance: 7000000, networkBalance: 1000000},
+];
 
 describe('LiquidityProtection', () => {
     for (const converterType of [1, 3]) {
@@ -44,7 +56,7 @@ describe('LiquidityProtection', () => {
                 } else {
                     // create a pool with ERC20 as the base token
                     baseToken = await DSToken.new('RSV1', 'RSV1', 18);
-                    await baseToken.issue(owner, 1000000000);
+                    await baseToken.issue(owner, TOTAL_SUPPLY);
                     baseTokenAddress = baseToken.address;
                 }
 
@@ -292,7 +304,7 @@ describe('LiquidityProtection', () => {
 
             beforeEach(async () => {
                 networkToken = await DSToken.new('BNT', 'BNT', 18);
-                await networkToken.issue(owner, 1000000000);
+                await networkToken.issue(owner, TOTAL_SUPPLY);
                 networkTokenGovernance = await TokenGovernance.new(networkToken.address);
                 await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
                 await networkToken.transferOwnership(networkTokenGovernance.address);
@@ -373,302 +385,36 @@ describe('LiquidityProtection', () => {
                 );
             });
 
-            it('verifies that the caller can protect pool tokens', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-                expect(protectionIds.length).to.eql(2);
-
-                let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
-                protection1 = getProtection(protection1);
-                expect(protection1.poolToken).to.eql(poolToken.address);
-                expect(protection1.reserveToken).to.eql(baseTokenAddress);
-                expect(protection1.poolAmount).to.be.bignumber.equal(balance.div(new BN(2)));
-                expect(protection1.reserveAmount).to.be.bignumber.equal(RESERVE1_AMOUNT);
-                expect(protection1.reserveRateN).to.be.bignumber.equal(RESERVE2_AMOUNT);
-                expect(protection1.reserveRateD).to.be.bignumber.equal(RESERVE1_AMOUNT);
-                expect(protection1.timestamp).to.be.bignumber.equal(new BN(now));
-
-                let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
-                protection2 = getProtection(protection2);
-                expect(protection2.poolToken).to.eql(poolToken.address);
-                expect(protection2.reserveToken).to.eql(networkToken.address);
-                expect(protection2.poolAmount).to.be.bignumber.equal(balance.sub(balance.div(new BN(2))));
-                expect(protection2.reserveAmount).to.be.bignumber.equal(RESERVE2_AMOUNT);
-                expect(protection2.reserveRateN).to.be.bignumber.equal(RESERVE1_AMOUNT);
-                expect(protection2.reserveRateD).to.be.bignumber.equal(RESERVE2_AMOUNT);
-                expect(protection2.timestamp).to.be.bignumber.equal(new BN(now));
-
-                const newBalance = await poolToken.balanceOf.call(owner);
-                expect(newBalance).to.be.bignumber.equal(new BN(0));
-
-                const storeBalance = await poolToken.balanceOf.call(liquidityProtectionStore.address);
-                expect(storeBalance).to.be.bignumber.equal(balance);
-
-                const govBalance = await govToken.balanceOf.call(owner);
-                expect(govBalance).to.be.bignumber.equal(RESERVE2_AMOUNT);
-            });
-
-            if (converterType === 1) {
-                it('should revert when attempting to protect pool tokens for an unsupported pool', async () => {
-                    await initPool(false, false, false);
-
-                    await expectRevert(liquidityProtection.protectLiquidity(poolToken.address, '100'), 'ERR_POOL_NOT_SUPPORTED');
-                });
-            }
-
-            it('should revert when attempting to protect pool tokens for a non whitelisted pool', async () => {
-                await initPool(false, false, true);
-
-                await expectRevert(liquidityProtection.protectLiquidity(poolToken.address, '100'), 'ERR_POOL_NOT_WHITELISTED');
-            });
-
-            it('should revert when attempting to protect 0 pool tokens', async () => {
-                await expectRevert(liquidityProtection.protectLiquidity(poolToken.address, 0), 'ERR_ZERO_VALUE');
-            });
-
-            it('verifies that the caller can unprotect pool tokens', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-                let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
-                protection1 = getProtection(protection1);
-                let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
-                protection2 = getProtection(protection2);
-
-                const amount =
-                    protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
-
-                await govToken.approve(liquidityProtection.address, amount);
-                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                await liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]);
-                protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-                expect(protectionIds.length).to.eql(0);
-
-                const newBalance = await poolToken.balanceOf.call(owner);
-                expect(newBalance).to.be.bignumber.equal(balance);
-
-                const storeBalance = await poolToken.balanceOf.call(liquidityProtectionStore.address);
-                expect(storeBalance).to.be.bignumber.equal(new BN(0));
-
-                const govBalance = await govToken.balanceOf.call(owner);
-                expect(govBalance).to.be.bignumber.equal(new BN(0));
-            });
-
-            it('verifies that unprotecting updates the removal checkpoint', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-
-                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-                let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
-                protection1 = getProtection(protection1);
-                let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
-                protection2 = getProtection(protection2);
-
-                await setTime(now.add(duration.days(3)));
-
-                const amount =
-                    protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
-
-                await govToken.approve(liquidityProtection.address, amount);
-
-                expect(await checkpointStore.checkpoint.call(owner)).to.be.bignumber.equal(new BN(0));
-
-                await liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]);
-
-                expect(await checkpointStore.checkpoint.call(owner)).to.be.bignumber.equal(now);
-            });
-
-            it('should revert when the caller attempts to protect and unprotect pool tokens on the same block', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-                let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
-                protection1 = getProtection(protection1);
-                let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[1]);
-                protection2 = getProtection(protection2);
-
-                const amount =
-                    protection1.reserveToken === networkToken.address ? protection1.reserveAmount : protection2.reserveAmount;
-
-                await govToken.approve(liquidityProtection.address, amount);
-                await expectRevert(liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]), 'ERR_TOO_EARLY');
-                protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-                expect(protectionIds.length).to.eql(2);
-
-                const newBalance = await poolToken.balanceOf.call(owner);
-                expect(newBalance).to.be.bignumber.equal(new BN(0));
-
-                const storeBalance = await poolToken.balanceOf.call(liquidityProtectionStore.address);
-                expect(storeBalance).to.be.bignumber.equal(balance);
-
-                const govBalance = await govToken.balanceOf.call(owner);
-                expect(govBalance).to.be.bignumber.equal(amount);
-            });
-
-            it('should revert when attempting to unprotect pool tokens with a first id that does not exist', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(liquidityProtection.unprotectLiquidity('1234', protectionIds[1]), 'ERR_ACCESS_DENIED');
-            });
-
-            it('should revert when attempting to unprotect pool tokens with a second id that does not exist', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(liquidityProtection.unprotectLiquidity(protectionIds[0], '1234'), 'ERR_ACCESS_DENIED');
-            });
-
-            it('should revert when attempting to unprotect pool tokens with the same protection id', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[0]), 'ERR_SAME_ID');
-            });
-
-            it('should revert when attempting to unprotect pool tokens owned by another account', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(
-                    liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1], { from: accounts[1] }),
-                    'ERR_ACCESS_DENIED'
-                );
-            });
-
-            it('should revert when attempting to unprotect pool tokens with ids that point to different pools', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-
-                await initPool();
-
-                const balance2 = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance2);
-                await liquidityProtection.protectLiquidity(poolToken.address, balance2);
-
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(
-                    liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[2]),
-                    'ERR_PROTECTIONS_MISMATCH'
-                );
-            });
-
-            it('should revert when attempting to unprotect pool tokens with ids that point to protections with the same reserve', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-                await liquidityProtection.protectLiquidity(poolToken.address, '200');
-                await liquidityProtection.protectLiquidity(poolToken.address, '200');
-
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(
-                    liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[2]),
-                    'ERR_PROTECTIONS_MISMATCH'
-                );
-            });
-
-            it('should revert when attempting to unprotect pool tokens with ids that point to protections with different pool token amounts', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-                await liquidityProtection.protectLiquidity(poolToken.address, '50');
-                await liquidityProtection.protectLiquidity(poolToken.address, '200');
-
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(
-                    liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[3]),
-                    'ERR_PROTECTIONS_MISMATCH'
-                );
-            });
-
-            it('should revert when attempting to unprotect pool tokens with ids that point to protections with different timestamps', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-                await liquidityProtection.protectLiquidity(poolToken.address, '200');
-
-                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                await liquidityProtection.protectLiquidity(poolToken.address, '200');
-
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                await expectRevert(
-                    liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[3]),
-                    'ERR_PROTECTIONS_MISMATCH'
-                );
-            });
-
-            it('should revert when attempting to unprotect pool tokens while the caller does not hold enough governance tokens', async () => {
-                const balance = await poolToken.balanceOf.call(owner);
-                await poolToken.approve(liquidityProtection.address, balance);
-
-                await liquidityProtection.protectLiquidity(poolToken.address, balance);
-                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-
-                const govBalance = await govToken.balanceOf.call(owner);
-                await govToken.transfer(accounts[1], govBalance);
-
-                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                await expectRevert(
-                    liquidityProtection.unprotectLiquidity(protectionIds[0], protectionIds[1]),
-                    'ERR_TRANSFER_FROM_FAILED'
-                );
-            });
-
             it('should revert when the caller attempts to add and remove base tokens on the same block', async () => {
                 const balance = await baseToken.balanceOf.call(owner);
-                await baseToken.approve(liquidityProtection.address, balance);
+                const amount = (await liquidityProtection.poolAvailableSpace(poolToken.address))[0];
+                await baseToken.approve(liquidityProtection.address, amount);
 
-                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, balance);
+                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, amount);
                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
                 protection1 = getProtection(protection1);
 
-                const amount = protection1.reserveAmount;
-
-                await govToken.approve(liquidityProtection.address, amount);
+                await govToken.approve(liquidityProtection.address, protection1.reserveAmount);
                 await expectRevert(liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION), 'ERR_TOO_EARLY');
                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 expect(protectionIds.length).to.eql(1);
 
                 const newBalance = await baseToken.balanceOf.call(owner);
-                expect(newBalance).to.be.bignumber.equal(new BN(0));
+                expect(newBalance).to.be.bignumber.equal(balance.sub(amount));
             });
 
             it('should revert when the caller attempts to add and partially remove base tokens on the same block', async () => {
                 const balance = await baseToken.balanceOf.call(owner);
-                await baseToken.approve(liquidityProtection.address, balance);
+                const amount = (await liquidityProtection.poolAvailableSpace(poolToken.address))[0];
+                await baseToken.approve(liquidityProtection.address, amount);
 
-                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, balance);
+                await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, amount);
                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
                 let protection1 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds[0]);
                 protection1 = getProtection(protection1);
 
-                const amount = protection1.reserveAmount;
-
-                await govToken.approve(liquidityProtection.address, amount);
+                await govToken.approve(liquidityProtection.address, protection1.reserveAmount);
                 await expectRevert(
                     liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION.div(new BN(2))),
                     'ERR_TOO_EARLY'
@@ -677,8 +423,33 @@ describe('LiquidityProtection', () => {
                 expect(protectionIds.length).to.eql(1);
 
                 const newBalance = await baseToken.balanceOf.call(owner);
-                expect(newBalance).to.be.bignumber.equal(new BN(0));
+                expect(newBalance).to.be.bignumber.equal(balance.sub(amount));
             });
+
+            for (const { baseBalance, networkBalance } of POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES) {
+                it(`pool available space with additional balances of ${baseBalance} and ${networkBalance}`, async () => {
+                    await baseToken.approve(converter.address, baseBalance);
+                    await networkToken.approve(converter.address, networkBalance);
+                    await converter.addLiquidity([baseToken.address, networkToken.address], [baseBalance, networkBalance], 1);
+
+                    await baseToken.approve(liquidityProtection.address, TOTAL_SUPPLY);
+                    await networkToken.approve(liquidityProtection.address, TOTAL_SUPPLY);
+
+                    const baseTokenAvailableSpace = await liquidityProtection.baseTokenAvailableSpace(poolToken.address);
+                    await expectRevert(
+                        liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseTokenAvailableSpace.addn(1)),
+                        'ERR_MAX_AMOUNT_REACHED'
+                    );
+                    await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, baseTokenAvailableSpace);
+
+                    const networkTokenAvailableSpace = await liquidityProtection.networkTokenAvailableSpace(poolToken.address);
+                    await expectRevert(
+                        liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkTokenAvailableSpace.addn(1)),
+                        'ERR_UNDERFLOW'
+                    );
+                    await liquidityProtection.addLiquidity(poolToken.address, networkToken.address, networkTokenAvailableSpace);
+                });
+            }
 
             describe('add liquidity', () => {
                 // test both addLiquidity and addLiquidityFor
