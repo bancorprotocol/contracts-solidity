@@ -42,7 +42,7 @@ function allZeros(values) {
 }
 
 function isEmpty(object) {
-    return typeof object === 'object' && Object.values(object).every(isEmpty);
+    return Object(object) === object && Object.values(object).every(isEmpty);
 }
 
 function setState(state, key, values) {
