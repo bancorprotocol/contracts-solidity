@@ -18,11 +18,12 @@ const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
 const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
 
 const READ_BATCH_SIZE = 100;
+const READ_TIMEOUT    = 10000;
 
 const WRITE_CONFIG = {
-    pls: {methodName: "addProtectedLiquidities", batchSize: 20},
-    lbs: {methodName: "addLockedBalances",       batchSize: 80},
-    sbs: {methodName: "addSystemBalances",       batchSize: 50},
+    pls: {batchSize: 20, toTable: toTable2d, methodName: "seedProtectedLiquidities"},
+    lbs: {batchSize: 80, toTable: toTable3d, methodName: "seedLockedBalances"      },
+    sbs: {batchSize: 50, toTable: toTable2d, methodName: "seedSystemBalances"      },
 };
 
 if (!fs.existsSync(CFG_FILE_NAME)) {
@@ -45,9 +46,32 @@ function isEmpty(object) {
     return Object(object) === object && Object.values(object).every(isEmpty);
 }
 
+function toTable2d(state) {
+    return Object.entries(state).map(entry => [entry[0], ...entry[1]]);
+}
+
+function toTable3d(state) {
+    return Object.entries(state).reduce((acc, [key, arrs]) => [...acc, ...arrs.map(arr => [key, ...arr])], []);
+}
+
 function setState(state, key, values) {
     console.log(`${key}: ${values}`);
     state[key] = values;
+}
+
+function extendState(state, key, values) {
+    console.log(`${key}: ${values}`);
+    state[key].push(values);
+}
+
+function getDiff(prev, curr) {
+    const diff = {};
+    for (const key in curr) {
+        if (JSON.stringify(prev[key]) !== JSON.stringify(curr[key])) {
+            diff[key] = curr[key];
+        }
+    }
+    return diff;
 }
 
 async function rpc(func) {
@@ -57,10 +81,10 @@ async function rpc(func) {
         }
         catch (error) {
             console.log(error.message);
-            if (error.message.startsWith("Invalid JSON RPC response") || error.message.endsWith("project ID request rate exceeded")) {
-                await new Promise(r => setTimeout(r, 10000));
+            if (error.message.endsWith("project ID request rate exceeded")) {
+                await new Promise(resolve => setTimeout(resolve, READ_TIMEOUT));
             }
-            else {
+            else if (!error.message.startsWith("Invalid JSON RPC response")) {
                 throw error;
             }
         }
@@ -196,15 +220,21 @@ async function readProtectedLiquidities(web3, store) {
 async function readLockedBalances(web3, store, lastBlock) {
     const state = {};
 
-    const blEvents = await getPastEvents(store, "BalanceLocked"  , STORE_BLOCK, lastBlock);
-    const buEvents = await getPastEvents(store, "BalanceUnlocked", STORE_BLOCK, lastBlock);
-    const events = [...blEvents, ...buEvents].sort((a, b) => a.blockNumber < b.blockNumber);
+    const events = await getPastEvents(store, "BalanceLocked", STORE_BLOCK, lastBlock);
+    const providers = [...new Set(events.map(event => event.returnValues._provider))];
 
-    for (const event of events) {
-        setState(state, event.returnValues._provider, [
-            {"BalanceLocked": event.returnValues._amount        , "BalanceUnlocked": "0"}[event.event],
-            {"BalanceLocked": event.returnValues._expirationTime, "BalanceUnlocked": "0"}[event.event],
-        ]);
+    for (let i = 0; i < providers.length; i += READ_BATCH_SIZE) {
+        const indexes = [...Array(Math.min(providers.length, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
+        const counts = await Promise.all(indexes.map(index => rpc(store.methods.lockedBalanceCount(providers[index]))));
+        for (let j = 0; j < indexes.length; j++) {
+            setState(state, providers[indexes[j]], [["0", "0"]]);
+            if (counts[j] > 0) {
+                const lbs = await rpc(store.methods.lockedBalanceRange(providers[indexes[j]], 0, counts[j]));
+                for (let k = 0; k < counts[j]; k++) {
+                    extendState(state, providers[indexes[j]], [lbs[0][k], lbs[1][k]]);
+                }
+            }
+        }
     }
 
     return state;
@@ -248,22 +278,13 @@ async function readState(web3, store) {
     };
 }
 
-function getDiff(prevState, currState) {
-    const diffState = {};
-    for (const key in currState) {
-        if (JSON.stringify(prevState[key]) !== JSON.stringify(currState[key])) {
-            diffState[key] = currState[key];
-        }
-    }
-    return diffState;
-}
-
-async function writeState(execute, store, config, state, firstTime) {
-    const entries = Object.entries(state).filter(entry => !firstTime || !allZeros(entry[1]));
-    for (let i = 0; i < entries.length; i += config.batchSize) {
-        const table = entries.slice(i, i + config.batchSize).map(entry => [entry[0], ...entry[1]]);        
-        const columns = [...Array(table[0].length).keys()].map(n => table.map(row => row[n]));
-        await execute(store.methods[config.methodName](...columns));
+async function writeData(execute, store, config, state, firstTime) {
+    const table = config.toTable(state);
+    const rows = table.filter(row => !(firstTime && allZeros(row.slice(1))));
+    const cols = rows[0].map((x, n) => rows.map(row => row[n]));
+    for (let i = 0; i < rows.length; i += config.batchSize) {
+        const params = cols.map(col => col.slice(i, i + config.batchSize));
+        await execute(store.methods[config.methodName](...params));
     }
 }
 
@@ -308,7 +329,7 @@ async function run() {
             }
         }
         for (const key of keys) {
-            await writeState(execute, newStore, WRITE_CONFIG[key], diffState[key], isEmpty(prevState));
+            await writeData(execute, newStore, WRITE_CONFIG[key], diffState[key], isEmpty(prevState));
         }
         prevState = currState;
     }

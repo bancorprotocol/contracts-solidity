@@ -618,11 +618,11 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         return _reserveRateInfo >> 224;
     }
 
-    function setNextProtectedLiquidityId(uint256 _nextProtectedLiquidityId) external seederOnly {
+    function seedNextProtectedLiquidityId(uint256 _nextProtectedLiquidityId) external seederOnly {
         nextProtectedLiquidityId = _nextProtectedLiquidityId;
     }
 
-    function addProtectedLiquidities(
+    function seedProtectedLiquidities(
         uint256[] memory _ids,
         address[] memory _providers,
         address[] memory _poolTokens,
@@ -644,22 +644,41 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         require(length == _timestamps.length);
         for (uint256 i = 0; i < length; i++) {
             uint256 id = _ids[i];
-            protectedLiquidities[id].provider = _providers[i];
-            protectedLiquidities[id].poolToken = IDSToken(_poolTokens[i]);
-            protectedLiquidities[id].reserveToken = IERC20Token(_reserveTokens[i]);
-            protectedLiquidities[id].poolAmount = toUint128(_poolAmounts[i]);
-            protectedLiquidities[id].reserveAmount = toUint128(_reserveAmounts[i]);
-            protectedLiquidities[id].reserveRateInfo = encodeReserveRateInfo(
-                _reserveRateNs[i],
-                _reserveRateDs[i],
-                _timestamps[i]
-            );
-            protectedLiquidities[id].index = protectedLiquidityIdsByProvider[_providers[i]].length;
-            protectedLiquidityIdsByProvider[_providers[i]].push(id);
+            if (_providers[i] != address(0)) {
+                if (protectedLiquidities[id].provider == address(0)) {
+                    protectedLiquidities[id].index = protectedLiquidityIdsByProvider[_providers[i]].length;
+                    protectedLiquidityIdsByProvider[_providers[i]].push(id);
+                }
+                protectedLiquidities[id].provider = _providers[i];
+                protectedLiquidities[id].poolToken = IDSToken(_poolTokens[i]);
+                protectedLiquidities[id].reserveToken = IERC20Token(_reserveTokens[i]);
+                protectedLiquidities[id].poolAmount = toUint128(_poolAmounts[i]);
+                protectedLiquidities[id].reserveAmount = toUint128(_reserveAmounts[i]);
+                protectedLiquidities[id].reserveRateInfo = encodeReserveRateInfo(
+                    _reserveRateNs[i],
+                    _reserveRateDs[i],
+                    _timestamps[i]
+                );
+            }
+            else {
+                ProtectedLiquidity storage liquidity = protectedLiquidities[id];
+                uint256 index = liquidity.index;
+                delete protectedLiquidities[id];
+                uint256[] storage storageIds = protectedLiquidityIdsByProvider[liquidity.provider];
+                uint256 storageIdsLength = storageIds.length;
+                assert(storageIdsLength > 0);
+                uint256 lastIndex = storageIdsLength - 1;
+                if (index < lastIndex) {
+                    uint256 lastId = storageIds[lastIndex];
+                    storageIds[index] = lastId;
+                    protectedLiquidities[lastId].index = index;
+                }
+                storageIds.pop();
+            }
         }
     }
 
-    function addLockedBalances(
+    function seedLockedBalances(
         address[] memory _providers,
         uint256[] memory _amounts,
         uint256[] memory _expirationTimes    
@@ -668,14 +687,19 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         require(length == _amounts.length);
         require(length == _expirationTimes.length);
         for (uint256 i = 0; i < length; i++) {
-            lockedBalances[_providers[i]].push(LockedBalance({
-                amount: _amounts[i],
-                expirationTime: _expirationTimes[i]
-            }));
+            if (_amounts[i] > 0 || _expirationTimes[i] > 0) {
+                lockedBalances[_providers[i]].push(LockedBalance({
+                    amount: _amounts[i],
+                    expirationTime: _expirationTimes[i]
+                }));
+            }
+            else {
+                delete lockedBalances[_providers[i]];
+            }
         }
     }
 
-    function addSystemBalances(
+    function seedSystemBalances(
         address[] memory _tokens,
         uint256[] memory _systemBalances,
         uint256[] memory _poolAmounts,
@@ -696,59 +720,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
             totalProtectedPoolAmounts[IDSToken(_tokens[i])] = _poolAmounts[i];
             totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve0s[i])] = _reserve0Amounts[i];
             totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve1s[i])] = _reserve1Amounts[i];
-        }
-    }
-
-    function updateProtectedLiquidities(
-        uint256[] memory _ids,
-        uint256[] memory _newPoolAmounts,
-        uint256[] memory _newReserveAmounts
-    ) external seederOnly {
-        uint256 length = _ids.length;
-        require(length == _newPoolAmounts.length);
-        require(length == _newReserveAmounts.length);
-        for (uint256 i = 0; i < length; i++) {
-            ProtectedLiquidity storage liquidity = protectedLiquidities[_ids[i]];
-            uint256 newPoolAmount = _newPoolAmounts[i];
-            uint256 newReserveAmount = _newReserveAmounts[i];
-
-            IDSToken poolToken = liquidity.poolToken;
-            IERC20Token reserveToken = liquidity.reserveToken;
-            uint256 prevPoolAmount = uint256(liquidity.poolAmount);
-            uint256 prevReserveAmount = uint256(liquidity.reserveAmount);
-            liquidity.poolAmount = toUint128(newPoolAmount);
-            liquidity.reserveAmount = toUint128(newReserveAmount);
-
-            totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken]
-                .add(newPoolAmount)
-                .sub(prevPoolAmount);
-
-            totalProtectedReserveAmounts[poolToken][reserveToken] = totalProtectedReserveAmounts[poolToken][reserveToken]
-                .add(newReserveAmount)
-                .sub(prevReserveAmount);
-        }
-    }
-
-    function removeProtectedLiquidities(uint256[] memory _ids) external seederOnly {
-        uint256 length = _ids.length;
-        for (uint256 i = 0; i < length; i++) {
-            ProtectedLiquidity storage liquidity = protectedLiquidities[_ids[i]];
-
-            uint256 index = liquidity.index;
-            delete protectedLiquidities[_ids[i]];
-
-            uint256[] storage storageIds = protectedLiquidityIdsByProvider[liquidity.provider];
-            uint256 storageIdsLength = storageIds.length;
-            assert(storageIdsLength > 0);
-
-            uint256 lastIndex = storageIdsLength - 1;
-            if (index < lastIndex) {
-                uint256 lastId = storageIds[lastIndex];
-                storageIds[index] = lastId;
-                protectedLiquidities[lastId].index = index;
-            }
-
-            storageIds.pop();
         }
     }
 }
