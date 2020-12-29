@@ -3,10 +3,9 @@ const path = require("path");
 const Web3 = require("web3");
 
 const SRC_NODE_URL  = process.argv[2];
-const DST_NODE_URL  = process.argv[2];
-const STORE_ADDRESS = process.argv[3];
-const STORE_BLOCK   = process.argv[4];
-const STORAGE_SLOT  = process.argv[5];
+const DST_NODE_URL  = process.argv[3];
+const STORE_ADDRESS = process.argv[4];
+const STORE_BLOCK   = process.argv[5];
 const PRIVATE_KEY   = process.argv[6];
 
 const MIN_GAS_LIMIT = 100000;
@@ -16,6 +15,9 @@ const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 
 const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
 const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
+
+const OLD_STORE_SLOT  = 4;
+const NEW_STORE_SLOT  = 1;
 
 const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT    = 10000;
@@ -201,10 +203,10 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
-async function readProtectedLiquidities(web3, store) {
+async function readProtectedLiquidities(web3, store, slot) {
     const state = {};
 
-    const count = await getNextProtectedLiquidityId(web3);
+    const count = await web3.eth.getStorageAt(store._address, slot);
 
     for (let i = 0; i < count; i += READ_BATCH_SIZE) {
         const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
@@ -269,10 +271,10 @@ async function readSystemBalances(web3, store, lastBlock) {
     return state;
 }
 
-async function readState(web3, store) {
+async function readState(web3, store, slot) {
     const lastBlock = await web3.eth.getBlockNumber();
     return {
-        pls: await readProtectedLiquidities(web3, store),
+        pls: await readProtectedLiquidities(web3, store, slot),
         lbs: await readLockedBalances(web3, store, lastBlock),
         sbs: await readSystemBalances(web3, store, lastBlock),
     };
@@ -286,10 +288,6 @@ async function writeData(execute, store, config, state, firstTime) {
         const params = cols.map(col => col.slice(i, i + config.batchSize));
         await execute(store.methods[config.methodName](...params));
     }
-}
-
-async function getNextProtectedLiquidityId(web3) {
-    return await web3.eth.getStorageAt(STORE_ADDRESS, STORAGE_SLOT);
 }
 
 async function run() {
@@ -321,7 +319,7 @@ async function run() {
     let prevState = keys.reduce((acc, key) => ({...acc, ...{[key]: {}}}), {});
 
     while (true) {
-        const currState = await readState(srcWeb3, oldStore);
+        const currState = await readState(srcWeb3, oldStore, OLD_STORE_SLOT);
         const diffState = keys.reduce((acc, key) => ({...acc, ...{[key]: getDiff(prevState[key], currState[key])}}), {});
         if (isEmpty(diffState)) {
             let status;
@@ -341,7 +339,7 @@ async function run() {
         prevState = currState;
     }
 
-    const nextProtectedLiquidityId = await getNextProtectedLiquidityId(srcWeb3);
+    const nextProtectedLiquidityId = await srcWeb3.eth.getStorageAt(STORE_ADDRESS, OLD_STORE_SLOT);
     await execute(newStore.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
 
     const owned = deployed(srcWeb3, "Owned", STORE_ADDRESS);
