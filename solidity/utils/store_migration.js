@@ -204,7 +204,7 @@ function deployed(web3, contractName, contractAddr) {
 async function readProtectedLiquidities(web3, store) {
     const state = {};
 
-    const count = Web3.utils.toBN(await web3.eth.getStorageAt(STORE_ADDRESS, STORAGE_SLOT)).toNumber();
+    const count = await getNextProtectedLiquidityId(web3);
 
     for (let i = 0; i < count; i += READ_BATCH_SIZE) {
         const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
@@ -288,6 +288,10 @@ async function writeData(execute, store, config, state, firstTime) {
     }
 }
 
+async function getNextProtectedLiquidityId(web3) {
+    return await web3.eth.getStorageAt(STORE_ADDRESS, STORAGE_SLOT);
+}
+
 async function run() {
     const srcWeb3 = new Web3(SRC_NODE_URL);
     const dstWeb3 = new Web3(DST_NODE_URL);
@@ -336,6 +340,9 @@ async function run() {
         }
         prevState = currState;
     }
+
+    const nextProtectedLiquidityId = await getNextProtectedLiquidityId(srcWeb3);
+    await execute(newStore.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
 
     const owned = deployed(srcWeb3, "Owned", STORE_ADDRESS);
     await execute(newStore.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
