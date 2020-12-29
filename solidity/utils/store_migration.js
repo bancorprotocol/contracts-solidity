@@ -324,6 +324,9 @@ async function run() {
             while (status !== "1" && status !== "2") {
                 status = await scan("enter '1' after locking the old contract or '2' before locking the new contract: ");
             }
+            if (status === "1") {
+                continue;
+            }
             if (status === "2") {
                 break;
             }
@@ -336,7 +339,7 @@ async function run() {
 
     const owned = deployed(srcWeb3, "Owned", STORE_ADDRESS);
     await execute(newStore.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
-    await execute(newStore.methods.grantRole(ROLE_OWNER, await oldStore.methods.owner().call()));
+    await execute(newStore.methods.grantRole(ROLE_OWNER, await owned.methods.owner().call()));
 
     for (const web3 of [srcWeb3, dstWeb3]) {
         if (web3.currentProvider.disconnect) {
