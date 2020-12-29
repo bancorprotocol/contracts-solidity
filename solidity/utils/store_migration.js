@@ -326,7 +326,7 @@ async function run() {
         if (isEmpty(diffState)) {
             let status;
             while (status !== "1" && status !== "2") {
-                status = await scan("enter '1' after locking the old contract or '2' before locking the new contract: ");
+                status = await scan("Enter '1' after locking the old contract or '2' before locking the new contract: ");
             }
             if (status === "1") {
                 continue;
