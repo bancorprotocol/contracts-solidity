@@ -14,7 +14,7 @@ interface ILiquidityProtectionStore {
         uint256 _amount
     ) external;
 
-    function protectedLiquidity(uint256 _id)
+    function position(uint256 _id)
         external
         view
         returns (
@@ -28,7 +28,7 @@ interface ILiquidityProtectionStore {
             uint256
         );
 
-    function addProtectedLiquidity(
+    function addPosition(
         address _provider,
         IDSToken _poolToken,
         IERC20Token _reserveToken,
@@ -39,13 +39,13 @@ interface ILiquidityProtectionStore {
         uint256 _timestamp
     ) external returns (uint256);
 
-    function updateProtectedLiquidityAmounts(
+    function updatePositionAmounts(
         uint256 _id,
         uint256 _poolNewAmount,
         uint256 _reserveNewAmount
     ) external;
 
-    function removeProtectedLiquidity(uint256 _id) external;
+    function removePosition(uint256 _id) external;
 
     function lockedBalance(address _provider, uint256 _index) external view returns (uint256, uint256);
 

@@ -23,9 +23,9 @@ const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT    = 10000;
 
 const WRITE_CONFIG = {
-    pls: {batchSize: 20, toTable: toTable2d, methodName: "seedProtectedLiquidities"},
-    lbs: {batchSize: 80, toTable: toTable3d, methodName: "seedLockedBalances"      },
-    sbs: {batchSize: 50, toTable: toTable2d, methodName: "seedSystemBalances"      },
+    pls: {batchSize: 20, toTable: toTable2d, methodName: "seedPositions"     },
+    lbs: {batchSize: 80, toTable: toTable3d, methodName: "seedLockedBalances"},
+    sbs: {batchSize: 50, toTable: toTable2d, methodName: "seedSystemBalances"},
 };
 
 if (!fs.existsSync(CFG_FILE_NAME)) {
@@ -345,8 +345,8 @@ async function run() {
         prevState = currState;
     }
 
-    const nextProtectedLiquidityId = await srcWeb3.eth.getStorageAt(STORE_ADDRESS, OLD_STORE_SLOT);
-    await execute(newStore.methods.setNextProtectedLiquidityId(nextProtectedLiquidityId));
+    const nextPositionId = await srcWeb3.eth.getStorageAt(STORE_ADDRESS, OLD_STORE_SLOT);
+    await execute(newStore.methods.setNextPositionId(nextPositionId));
 
     const owned = deployed(srcWeb3, "Owned", STORE_ADDRESS);
     await execute(newStore.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));

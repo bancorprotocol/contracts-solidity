@@ -24,7 +24,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     // the seeder roles is used to seed the store with past values
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
 
-    struct ProtectedLiquidity {
+    struct Position {
         address provider; // liquidity provider
         uint256 index; // index in the provider liquidity ids array
         IDSToken poolToken; // pool token address
@@ -43,10 +43,10 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         uint256 expirationTime; // lock expiration time
     }
 
-    // protected liquidity by provider
-    uint256 private nextProtectedLiquidityId;
-    mapping(address => uint256[]) private protectedLiquidityIdsByProvider;
-    mapping(uint256 => ProtectedLiquidity) private protectedLiquidities;
+    // position by provider
+    uint256 private nextPositionId;
+    mapping(address => uint256[]) private positionIdsByProvider;
+    mapping(uint256 => Position) private positions;
 
     // user locked network token balances
     mapping(address => LockedBalance[]) private lockedBalances;
@@ -179,40 +179,40 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     }
 
     /**
-     * @dev returns the number of protected liquidities for the given provider
+     * @dev returns the number of positions for the given provider
      *
      * @param _provider    liquidity provider
-     * @return number of protected liquidities
+     * @return number of positions
      */
-    function protectedLiquidityCount(address _provider) external view returns (uint256) {
-        return protectedLiquidityIdsByProvider[_provider].length;
+    function positionCount(address _provider) external view returns (uint256) {
+        return positionIdsByProvider[_provider].length;
     }
 
     /**
-     * @dev returns the list of protected liquidity ids for the given provider
+     * @dev returns the list of position ids for the given provider
      *
      * @param _provider    liquidity provider
-     * @return protected liquidity ids
+     * @return position ids
      */
-    function protectedLiquidityIds(address _provider) external view returns (uint256[] memory) {
-        return protectedLiquidityIdsByProvider[_provider];
+    function positionIds(address _provider) external view returns (uint256[] memory) {
+        return positionIdsByProvider[_provider];
     }
 
     /**
-     * @dev returns the id of a protected liquidity for the given provider at a specific index
+     * @dev returns the id of a position for the given provider at a specific index
      *
      * @param _provider    liquidity provider
-     * @param _index       protected liquidity index
-     * @return protected liquidity id
+     * @param _index       position index
+     * @return position id
      */
-    function protectedLiquidityId(address _provider, uint256 _index) external view returns (uint256) {
-        return protectedLiquidityIdsByProvider[_provider][_index];
+    function positionId(address _provider, uint256 _index) external view returns (uint256) {
+        return positionIdsByProvider[_provider][_index];
     }
 
     /**
-     * @dev returns an existing protected liquidity details
+     * @dev returns an existing position details
      *
-     * @param _id  protected liquidity id
+     * @param _id  position id
      *
      * @return liquidity provider
      * @return pool token address
@@ -223,7 +223,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
      * @return rate of 1 protected reserve token in units of the other reserve token (denominator)
      * @return timestamp
      */
-    function protectedLiquidity(uint256 _id)
+    function position(uint256 _id)
         external
         view
         override
@@ -238,14 +238,14 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
             uint256
         )
     {
-        ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
-        uint256 reserveRateInfo = liquidity.reserveRateInfo;
+        Position storage pos = positions[_id];
+        uint256 reserveRateInfo = pos.reserveRateInfo;
         return (
-            liquidity.provider,
-            liquidity.poolToken,
-            liquidity.reserveToken,
-            uint256(liquidity.poolAmount),
-            uint256(liquidity.reserveAmount),
+            pos.provider,
+            pos.poolToken,
+            pos.reserveToken,
+            uint256(pos.poolAmount),
+            uint256(pos.reserveAmount),
             decodeReserveRateN(reserveRateInfo),
             decodeReserveRateD(reserveRateInfo),
             decodeReserveRateT(reserveRateInfo)
@@ -253,7 +253,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     }
 
     /**
-     * @dev adds protected liquidity
+     * @dev adds position
      * can only be called by the contract owner
      *
      * @param _provider        liquidity provider
@@ -264,9 +264,9 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
      * @param _reserveRateN    rate of 1 protected reserve token in units of the other reserve token (numerator)
      * @param _reserveRateD    rate of 1 protected reserve token in units of the other reserve token (denominator)
      * @param _timestamp       timestamp
-     * @return new protected liquidity id
+     * @return new position id
      */
-    function addProtectedLiquidity(
+    function addPosition(
         address _provider,
         IDSToken _poolToken,
         IERC20Token _reserveToken,
@@ -291,12 +291,12 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
             "ERR_ZERO_VALUE"
         );
 
-        // add the protected liquidity
-        uint256[] storage ids = protectedLiquidityIdsByProvider[_provider];
-        uint256 id = nextProtectedLiquidityId;
-        nextProtectedLiquidityId += 1;
+        // add the position
+        uint256[] storage ids = positionIdsByProvider[_provider];
+        uint256 id = nextPositionId;
+        nextPositionId += 1;
 
-        protectedLiquidities[id] = ProtectedLiquidity({
+        positions[id] = Position({
             provider: _provider,
             index: ids.length,
             poolToken: _poolToken,
@@ -318,30 +318,30 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     }
 
     /**
-     * @dev updates an existing protected liquidity pool/reserve amounts
+     * @dev updates an existing position pool/reserve amounts
      * can only be called by the contract owner
      *
-     * @param _id                  protected liquidity id
+     * @param _id                  position id
      * @param _newPoolAmount       new pool tokens amount
      * @param _newReserveAmount    new reserve tokens amount
      */
-    function updateProtectedLiquidityAmounts(
+    function updatePositionAmounts(
         uint256 _id,
         uint256 _newPoolAmount,
         uint256 _newReserveAmount
     ) external override ownerOnly greaterThanZero(_newPoolAmount) greaterThanZero(_newReserveAmount) {
-        // update the protected liquidity
-        ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
+        // update the position
+        Position storage pos = positions[_id];
 
         // validate input
-        require(liquidity.provider != address(0), "ERR_INVALID_ID");
+        require(pos.provider != address(0), "ERR_INVALID_ID");
 
-        IDSToken poolToken = liquidity.poolToken;
-        IERC20Token reserveToken = liquidity.reserveToken;
-        uint256 prevPoolAmount = uint256(liquidity.poolAmount);
-        uint256 prevReserveAmount = uint256(liquidity.reserveAmount);
-        liquidity.poolAmount = toUint128(_newPoolAmount);
-        liquidity.reserveAmount = toUint128(_newReserveAmount);
+        IDSToken poolToken = pos.poolToken;
+        IERC20Token reserveToken = pos.reserveToken;
+        uint256 prevPoolAmount = uint256(pos.poolAmount);
+        uint256 prevReserveAmount = uint256(pos.reserveAmount);
+        pos.poolAmount = toUint128(_newPoolAmount);
+        pos.reserveAmount = toUint128(_newReserveAmount);
 
         // update the total amounts
         totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken].add(_newPoolAmount).sub(
@@ -354,31 +354,31 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         int256 _deltaPoolAmount = int256(prevPoolAmount) - int256(_newPoolAmount);
         int256 _deltaReserveAmount = int256(prevReserveAmount) - int256(_newReserveAmount);
 
-        emit PositionUpdated(_id, liquidity.provider, poolToken, reserveToken, _deltaPoolAmount, _deltaReserveAmount);
+        emit PositionUpdated(_id, pos.provider, poolToken, reserveToken, _deltaPoolAmount, _deltaReserveAmount);
     }
 
     /**
-     * @dev removes protected liquidity
+     * @dev removes position
      * can only be called by the contract owner
      *
-     * @param _id  protected liquidity id
+     * @param _id  position id
      */
-    function removeProtectedLiquidity(uint256 _id) external override ownerOnly {
-        // remove the protected liquidity
-        ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
+    function removePosition(uint256 _id) external override ownerOnly {
+        // remove the position
+        Position storage pos = positions[_id];
 
         // validate input
-        address provider = liquidity.provider;
+        address provider = pos.provider;
         require(provider != address(0), "ERR_INVALID_ID");
 
-        uint256 index = liquidity.index;
-        IDSToken poolToken = liquidity.poolToken;
-        IERC20Token reserveToken = liquidity.reserveToken;
-        uint256 poolAmount = uint256(liquidity.poolAmount);
-        uint256 reserveAmount = uint256(liquidity.reserveAmount);
-        delete protectedLiquidities[_id];
+        uint256 index = pos.index;
+        IDSToken poolToken = pos.poolToken;
+        IERC20Token reserveToken = pos.reserveToken;
+        uint256 poolAmount = uint256(pos.poolAmount);
+        uint256 reserveAmount = uint256(pos.reserveAmount);
+        delete positions[_id];
 
-        uint256[] storage ids = protectedLiquidityIdsByProvider[provider];
+        uint256[] storage ids = positionIdsByProvider[provider];
         uint256 length = ids.length;
         assert(length > 0);
 
@@ -386,7 +386,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         if (index < lastIndex) {
             uint256 lastId = ids[lastIndex];
             ids[index] = lastId;
-            protectedLiquidities[lastId].index = index;
+            positions[lastId].index = index;
         }
 
         ids.pop();
@@ -618,11 +618,11 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         return _reserveRateInfo >> 224;
     }
 
-    function seedNextProtectedLiquidityId(uint256 _nextProtectedLiquidityId) external seederOnly {
-        nextProtectedLiquidityId = _nextProtectedLiquidityId;
+    function seedNextPositionId(uint256 _nextPositionId) external seederOnly {
+        nextPositionId = _nextPositionId;
     }
 
-    function seedProtectedLiquidities(
+    function seedPositions(
         uint256[] memory _ids,
         address[] memory _providers,
         address[] memory _poolTokens,
@@ -645,33 +645,33 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         for (uint256 i = 0; i < length; i++) {
             uint256 id = _ids[i];
             if (_providers[i] != address(0)) {
-                if (protectedLiquidities[id].provider == address(0)) {
-                    protectedLiquidities[id].index = protectedLiquidityIdsByProvider[_providers[i]].length;
-                    protectedLiquidityIdsByProvider[_providers[i]].push(id);
+                if (positions[id].provider == address(0)) {
+                    positions[id].index = positionIdsByProvider[_providers[i]].length;
+                    positionIdsByProvider[_providers[i]].push(id);
                 }
-                protectedLiquidities[id].provider = _providers[i];
-                protectedLiquidities[id].poolToken = IDSToken(_poolTokens[i]);
-                protectedLiquidities[id].reserveToken = IERC20Token(_reserveTokens[i]);
-                protectedLiquidities[id].poolAmount = toUint128(_poolAmounts[i]);
-                protectedLiquidities[id].reserveAmount = toUint128(_reserveAmounts[i]);
-                protectedLiquidities[id].reserveRateInfo = encodeReserveRateInfo(
+                positions[id].provider = _providers[i];
+                positions[id].poolToken = IDSToken(_poolTokens[i]);
+                positions[id].reserveToken = IERC20Token(_reserveTokens[i]);
+                positions[id].poolAmount = toUint128(_poolAmounts[i]);
+                positions[id].reserveAmount = toUint128(_reserveAmounts[i]);
+                positions[id].reserveRateInfo = encodeReserveRateInfo(
                     _reserveRateNs[i],
                     _reserveRateDs[i],
                     _timestamps[i]
                 );
             }
             else {
-                ProtectedLiquidity storage liquidity = protectedLiquidities[id];
-                uint256 index = liquidity.index;
-                delete protectedLiquidities[id];
-                uint256[] storage storageIds = protectedLiquidityIdsByProvider[liquidity.provider];
+                Position storage pos = positions[id];
+                uint256 index = pos.index;
+                delete positions[id];
+                uint256[] storage storageIds = positionIdsByProvider[pos.provider];
                 uint256 storageIdsLength = storageIds.length;
                 assert(storageIdsLength > 0);
                 uint256 lastIndex = storageIdsLength - 1;
                 if (index < lastIndex) {
                     uint256 lastId = storageIds[lastIndex];
                     storageIds[index] = lastId;
-                    protectedLiquidities[lastId].index = index;
+                    positions[lastId].index = index;
                 }
                 storageIds.pop();
             }

@@ -73,10 +73,10 @@ describe('LiquidityProtectionStore', () => {
         });
     });
 
-    describe('protected liquidities basic verification', () => {
+    describe('positions basic verification', () => {
         it('should revert when a non owner attempts to add a protected-liquidity item', async () => {
             await expectRevert(
-                liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
+                liquidityProtectionStore.addPosition(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
                     from: nonOwner
                 }),
                 'ERR_ACCESS_DENIED'
@@ -84,27 +84,27 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should revert when a non owner attempts to update a protected-liquidity item', async () => {
-            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
+            await liquidityProtectionStore.addPosition(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
                 from: owner
             });
             await expectRevert(
-                liquidityProtectionStore.updateProtectedLiquidityAmounts(0, 6, 7, { from: nonOwner }),
+                liquidityProtectionStore.updatePositionAmounts(0, 6, 7, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
         });
 
         it('should revert when a non owner attempts to remove a protected-liquidity item', async () => {
-            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
+            await liquidityProtectionStore.addPosition(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
                 from: owner
             });
             await expectRevert(
-                liquidityProtectionStore.removeProtectedLiquidity(0, { from: nonOwner }),
+                liquidityProtectionStore.removePosition(0, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
         });
 
         it('should succeed when the owner attempts to add a protected-liquidity item', async () => {
-            const response = await liquidityProtectionStore.addProtectedLiquidity(
+            const response = await liquidityProtectionStore.addPosition(
                 provider,
                 poolToken,
                 reserveToken,
@@ -135,10 +135,10 @@ describe('LiquidityProtectionStore', () => {
             const newPoolAmount = new BN(333);
             const oldReserveAmount = new BN(999);
             const newReserveAmount = new BN(555);
-            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, oldPoolAmount, oldReserveAmount, 1, 2, 3, {
+            await liquidityProtectionStore.addPosition(provider, poolToken, reserveToken, oldPoolAmount, oldReserveAmount, 1, 2, 3, {
                 from: owner
             });
-            const response = await liquidityProtectionStore.updateProtectedLiquidityAmounts(0, newPoolAmount, newReserveAmount, { from: owner });
+            const response = await liquidityProtectionStore.updatePositionAmounts(0, newPoolAmount, newReserveAmount, { from: owner });
             expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken)).to.be.bignumber.equal(newPoolAmount);
             expect(
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
@@ -155,10 +155,10 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should succeed when the owner attempts to remove a protected-liquidity item', async () => {
-            await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
+            await liquidityProtectionStore.addPosition(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
                 from: owner
             });
-            const response = await liquidityProtectionStore.removeProtectedLiquidity(0, { from: owner });
+            const response = await liquidityProtectionStore.removePosition(0, { from: owner });
             expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken)).to.be.bignumber.equal('0');
             expect(
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
@@ -243,24 +243,24 @@ describe('LiquidityProtectionStore', () => {
         });
     });
 
-    describe('protected liquidities advanced verification', () => {
+    describe('positions advanced verification', () => {
         const removeAllOneByOne = async (direction) => {
             console.log(`adding ${accounts.length} items...`);
             for (const account of accounts)
-                await liquidityProtectionStore.addProtectedLiquidity(provider, account, DUMMY_ADDRESS, 1, 2, 3, 4, 5, {
+                await liquidityProtectionStore.addPosition(provider, account, DUMMY_ADDRESS, 1, 2, 3, 4, 5, {
                     from: owner
                 });
             for (let items = accounts.slice(); items.length > 0; items.length--) {
                 const index = ((items.length - 1) * (1 - direction)) / 2;
-                const id = await liquidityProtectionStore.protectedLiquidityId(provider, index);
-                const item = (await liquidityProtectionStore.protectedLiquidity(id))[1];
+                const id = await liquidityProtectionStore.positionId(provider, index);
+                const item = (await liquidityProtectionStore.position(id))[1];
                 expect(item).to.be.equal(items[index]);
                 items[index] = items[items.length - 1];
-                await liquidityProtectionStore.removeProtectedLiquidity(id, { from: owner });
+                await liquidityProtectionStore.removePosition(id, { from: owner });
                 console.log(`item ${index} removed`);
             }
-            expect(await liquidityProtectionStore.protectedLiquidityCount(provider)).to.be.bignumber.equal('0');
-            expect((await liquidityProtectionStore.protectedLiquidityIds(provider)).length).to.be.equal(0);
+            expect(await liquidityProtectionStore.positionCount(provider)).to.be.bignumber.equal('0');
+            expect((await liquidityProtectionStore.positionIds(provider)).length).to.be.equal(0);
         };
 
         it('remove first item until all items removed', async function () {

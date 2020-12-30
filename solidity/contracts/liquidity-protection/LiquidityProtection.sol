@@ -572,7 +572,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         if (_portion == PPM_RESOLUTION) {
             // remove the protected liquidity from the provider
-            store.removeProtectedLiquidity(_id);
+            store.removePosition(_id);
         } else {
             // remove a portion of the protected liquidity from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
@@ -580,7 +580,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
 
-            store.updateProtectedLiquidityAmounts(
+            store.updatePositionAmounts(
                 _id,
                 fullPoolAmount - liquidity.poolAmount,
                 fullReserveAmount - liquidity.reserveAmount
@@ -824,7 +824,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     ) internal returns (uint256) {
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
         return
-            store.addProtectedLiquidity(
+            store.addPosition(
                 _provider,
                 _poolToken,
                 _reserveToken,
@@ -1067,7 +1067,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             liquidity.reserveRateN,
             liquidity.reserveRateD,
             liquidity.timestamp
-        ) = store.protectedLiquidity(_id);
+        ) = store.position(_id);
 
         return liquidity;
     }
