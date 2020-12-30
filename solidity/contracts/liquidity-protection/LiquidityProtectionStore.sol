@@ -253,7 +253,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     }
 
     /**
-     * @dev adds position
+     * @dev adds a position
      * can only be called by the contract owner
      *
      * @param _provider        liquidity provider
@@ -358,7 +358,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     }
 
     /**
-     * @dev removes position
+     * @dev removes a position
      * can only be called by the contract owner
      *
      * @param _id  position id
@@ -459,7 +459,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     }
 
     /**
-     * @dev adds new locked network token balance
+     * @dev adds a locked network token balance
      * can only be called by the contract owner
      *
      * @param _provider        liquidity provider
