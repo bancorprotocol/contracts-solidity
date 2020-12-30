@@ -16,16 +16,16 @@ const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
 const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
 
-const OLD_STORE_SLOT  = 4;
-const NEW_STORE_SLOT  = 1;
+const OLD_STORE_SLOT = 4;
+const NEW_STORE_SLOT = 1;
 
 const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT    = 10000;
 
 const WRITE_CONFIG = {
     pls: {batchSize: 20, toTable: toTable2d, methodName: "seedPositions"     },
-    lbs: {batchSize: 80, toTable: toTable3d, methodName: "seedLockedBalances"},
-    sbs: {batchSize: 50, toTable: toTable2d, methodName: "seedSystemBalances"},
+    lbs: {batchSize: 50, toTable: toTable3d, methodName: "seedLockedBalances"},
+    sbs: {batchSize: 80, toTable: toTable2d, methodName: "seedSystemBalances"},
 };
 
 if (!fs.existsSync(CFG_FILE_NAME)) {
@@ -251,27 +251,12 @@ async function readLockedBalances(web3, store, lastBlock) {
 async function readSystemBalances(web3, store, lastBlock) {
     const state = {};
 
-    const events     = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK, lastBlock);
-    const tokens     = [...new Set(events.map(event => event.returnValues._token))];
-    const owners     = await Promise.all(tokens.map(token => rpc(deployed(web3, "DSToken", token).methods.owner())));
-    const converters = owners.map(owner => deployed(web3, "ConverterBase", owner));
-    const reserve0s  = await Promise.all(converters.map(converter => rpc(converter.methods.connectorTokens(0))));
-    const reserve1s  = await Promise.all(converters.map(converter => rpc(converter.methods.connectorTokens(1))));
-
-    const systemBalances  = await Promise.all(tokens.map(token => rpc(store.methods.systemBalance(token))));
-    const poolAmounts     = await Promise.all(tokens.map(token => rpc(store.methods.totalProtectedPoolAmount(token))));
-    const reserve0Amounts = await Promise.all(tokens.map((token, i) => rpc(store.methods.totalProtectedReserveAmount(token, reserve0s[i]))));
-    const reserve1Amounts = await Promise.all(tokens.map((token, i) => rpc(store.methods.totalProtectedReserveAmount(token, reserve1s[i]))));
+    const events = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK, lastBlock);
+    const tokens = [...new Set(events.map(event => event.returnValues._token))];
+    const balances = await Promise.all(tokens.map(token => rpc(store.methods.systemBalance(token))));
 
     for (let i = 0; i < tokens.length; i++) {
-        setState(state, tokens[i], [
-            systemBalances [i],
-            poolAmounts    [i],
-            reserve0s      [i],
-            reserve1s      [i],
-            reserve0Amounts[i],
-            reserve1Amounts[i],
-        ]);
+        setState(state, tokens[i], [balances[i]]);
     }
 
     return state;
@@ -346,7 +331,7 @@ async function run() {
     }
 
     const nextPositionId = await srcWeb3.eth.getStorageAt(STORE_ADDRESS, OLD_STORE_SLOT);
-    await execute(newStore.methods.setNextPositionId(nextPositionId));
+    await execute(newStore.methods.seedNextPositionId(nextPositionId));
 
     await execute(newStore.methods.grantRole(ROLE_OWNER, await oldStore.methods.owner().call()));
     await execute(newStore.methods.revokeRole(ROLE_SEEDER, account.address));

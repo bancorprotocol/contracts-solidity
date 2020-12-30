@@ -54,10 +54,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
     // system balances
     mapping(IERC20Token => uint256) private systemBalances;
 
-    // total protected pool supplies / reserve amounts
-    mapping(IDSToken => uint256) private totalProtectedPoolAmounts;
-    mapping(IDSToken => mapping(IERC20Token => uint256)) private totalProtectedReserveAmounts;
-
     // allows execution by the owner only
     modifier ownerOnly {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
@@ -308,11 +304,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
 
         ids.push(id);
 
-        // update the total amounts
-        totalProtectedPoolAmounts[_poolToken] = totalProtectedPoolAmounts[_poolToken].add(_poolAmount);
-        totalProtectedReserveAmounts[_poolToken][_reserveToken] = totalProtectedReserveAmounts[_poolToken][_reserveToken]
-            .add(_reserveAmount);
-
         emit PositionAdded(id, _provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         return id;
     }
@@ -342,14 +333,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         uint256 prevReserveAmount = uint256(pos.reserveAmount);
         pos.poolAmount = toUint128(_newPoolAmount);
         pos.reserveAmount = toUint128(_newReserveAmount);
-
-        // update the total amounts
-        totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken].add(_newPoolAmount).sub(
-            prevPoolAmount
-        );
-        totalProtectedReserveAmounts[poolToken][reserveToken] = totalProtectedReserveAmounts[poolToken][reserveToken]
-            .add(_newReserveAmount)
-            .sub(prevReserveAmount);
 
         int256 _deltaPoolAmount = int256(prevPoolAmount) - int256(_newPoolAmount);
         int256 _deltaReserveAmount = int256(prevReserveAmount) - int256(_newReserveAmount);
@@ -390,11 +373,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         }
 
         ids.pop();
-
-        // update the total amounts
-        totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken].sub(poolAmount);
-        totalProtectedReserveAmounts[poolToken][reserveToken] = totalProtectedReserveAmounts[poolToken][reserveToken]
-            .sub(reserveAmount);
 
         emit PositionRemoved(_id, provider, poolToken, reserveToken, poolAmount, reserveAmount);
     }
@@ -567,31 +545,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
         emit SystemBalanceUpdated(_token, prevAmount, newAmount);
     }
 
-    /**
-     * @dev returns the total protected pool token amount for a given pool
-     *
-     * @param _poolToken   pool token address
-     * @return total protected amount
-     */
-    function totalProtectedPoolAmount(IDSToken _poolToken) external view returns (uint256) {
-        return totalProtectedPoolAmounts[_poolToken];
-    }
-
-    /**
-     * @dev returns the total protected reserve amount for a given pool
-     *
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
-     * @return total protected amount
-     */
-    function totalProtectedReserveAmount(IDSToken _poolToken, IERC20Token _reserveToken)
-        external
-        view
-        returns (uint256)
-    {
-        return totalProtectedReserveAmounts[_poolToken][_reserveToken];
-    }
-
     function toUint128(uint256 _amount) private pure returns (uint128) {
         require(_amount <= MAX_UINT128, "ERR_AMOUNT_TOO_HIGH");
         return uint128(_amount);
@@ -701,25 +654,12 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
 
     function seedSystemBalances(
         address[] memory _tokens,
-        uint256[] memory _systemBalances,
-        uint256[] memory _poolAmounts,
-        address[] memory _reserve0s,
-        address[] memory _reserve1s,
-        uint256[] memory _reserve0Amounts,
-        uint256[] memory _reserve1Amounts
+        uint256[] memory _systemBalances
     ) external seederOnly {
         uint256 length = _tokens.length;
         require(length == _systemBalances.length);
-        require(length == _poolAmounts.length);
-        require(length == _reserve0s.length);
-        require(length == _reserve1s.length);
-        require(length == _reserve0Amounts.length);
-        require(length == _reserve1Amounts.length);
         for (uint256 i = 0; i < length; i++) {
             systemBalances[IERC20Token(_tokens[i])] = _systemBalances[i];
-            totalProtectedPoolAmounts[IDSToken(_tokens[i])] = _poolAmounts[i];
-            totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve0s[i])] = _reserve0Amounts[i];
-            totalProtectedReserveAmounts[IDSToken(_tokens[i])][IERC20Token(_reserve1s[i])] = _reserve1Amounts[i];
         }
     }
 }

@@ -115,10 +115,6 @@ describe('LiquidityProtectionStore', () => {
                 5,
                 { from: owner }
             );
-            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken)).to.be.bignumber.equal('1');
-            expect(
-                await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
-            ).to.be.bignumber.equal('2');
             const expectedEvent = {
                 _id: '0',
                 _provider: provider,
@@ -139,10 +135,6 @@ describe('LiquidityProtectionStore', () => {
                 from: owner
             });
             const response = await liquidityProtectionStore.updatePositionAmounts(0, newPoolAmount, newReserveAmount, { from: owner });
-            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken)).to.be.bignumber.equal(newPoolAmount);
-            expect(
-                await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
-            ).to.be.bignumber.equal(newReserveAmount);
             const expectedEvent = {
                 _id: '0',
                 _provider: provider,
@@ -159,10 +151,6 @@ describe('LiquidityProtectionStore', () => {
                 from: owner
             });
             const response = await liquidityProtectionStore.removePosition(0, { from: owner });
-            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken)).to.be.bignumber.equal('0');
-            expect(
-                await liquidityProtectionStore.totalProtectedReserveAmount(poolToken, reserveToken)
-            ).to.be.bignumber.equal('0');
             const expectedEvent = {
                 _id: '0',
                 _provider: provider,
