@@ -348,9 +348,8 @@ async function run() {
     const nextPositionId = await srcWeb3.eth.getStorageAt(STORE_ADDRESS, OLD_STORE_SLOT);
     await execute(newStore.methods.setNextPositionId(nextPositionId));
 
-    const owned = deployed(srcWeb3, "Owned", STORE_ADDRESS);
     await execute(newStore.methods.grantRole(ROLE_SEEDER, "0x".padEnd(42, "0")));
-    await execute(newStore.methods.grantRole(ROLE_OWNER, await owned.methods.owner().call()));
+    await execute(newStore.methods.grantRole(ROLE_OWNER, await oldStore.methods.owner().call()));
 
     for (const web3 of [srcWeb3, dstWeb3]) {
         if (web3.currentProvider.disconnect) {
