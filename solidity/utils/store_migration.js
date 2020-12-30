@@ -32,6 +32,12 @@ if (!fs.existsSync(CFG_FILE_NAME)) {
     fs.writeFileSync(CFG_FILE_NAME, "{}");
 }
 
+if (!fs.existsSync(ARTIFACTS_DIR)) {
+    throw new Error("Artifacts not found");
+}
+
+fs.copyFileSync("LiquidityProtectionStoreOld.abi", path.resolve(ARTIFACTS_DIR, "LiquidityProtectionStoreOld.abi"));
+
 function getConfig() {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME), {encoding: "utf8"});
 }
@@ -311,7 +317,7 @@ async function run() {
         }
     };
 
-    const oldStore = deployed(srcWeb3, "LiquidityProtectionStore", STORE_ADDRESS);
+    const oldStore = deployed(srcWeb3, "LiquidityProtectionStoreOld", STORE_ADDRESS);
     const newStore = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
     await execute(newStore.methods.grantRole(ROLE_SEEDER, account.address));
 
