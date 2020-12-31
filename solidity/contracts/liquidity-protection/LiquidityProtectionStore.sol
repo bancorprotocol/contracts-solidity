@@ -619,7 +619,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
                 uint256 index = pos.index;
                 delete positions[id];
                 uint256[] storage ids = positionIdsByProvider[provider];
-                uint256 lastIndex = ids.length;
+                uint256 lastIndex = ids.length - 1;
                 if (index < lastIndex) {
                     uint256 lastId = ids[lastIndex];
                     ids[index] = lastId;
