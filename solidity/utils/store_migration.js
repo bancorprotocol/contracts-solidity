@@ -209,10 +209,8 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
-async function readProtectedLiquidities(web3, store, slot) {
+async function readProtectedLiquidities(store, count) {
     const state = {};
-
-    const count = await web3.eth.getStorageAt(store._address, slot);
 
     for (let i = 0; i < count; i += READ_BATCH_SIZE) {
         const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
@@ -225,11 +223,8 @@ async function readProtectedLiquidities(web3, store, slot) {
     return state;
 }
 
-async function readLockedBalances(web3, store, lastBlock) {
+async function readLockedBalances(store, providers) {
     const state = {};
-
-    const events = await getPastEvents(store, "BalanceLocked", STORE_BLOCK, lastBlock);
-    const providers = [...new Set(events.map(event => event.returnValues._provider))];
 
     for (let i = 0; i < providers.length; i += READ_BATCH_SIZE) {
         const indexes = [...Array(Math.min(providers.length, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
@@ -248,11 +243,9 @@ async function readLockedBalances(web3, store, lastBlock) {
     return state;
 }
 
-async function readSystemBalances(web3, store, lastBlock) {
+async function readSystemBalances(store, tokens) {
     const state = {};
 
-    const events = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK, lastBlock);
-    const tokens = [...new Set(events.map(event => event.returnValues._token))];
     const balances = await Promise.all(tokens.map(token => rpc(store.methods.systemBalance(token))));
 
     for (let i = 0; i < tokens.length; i++) {
@@ -263,11 +256,17 @@ async function readSystemBalances(web3, store, lastBlock) {
 }
 
 async function readState(web3, store, slot) {
+    const count     = await web3.eth.getStorageAt(store._address, slot);
     const lastBlock = await web3.eth.getBlockNumber();
+    const lbEvents  = await getPastEvents(store, "BalanceLocked", STORE_BLOCK, lastBlock);
+    const sbEvents  = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK, lastBlock);
+    const providers = [...new Set(lbEvents.map(event => event.returnValues._provider))];
+    const tokens    = [...new Set(sbEvents.map(event => event.returnValues._token))];
+
     return {
-        pls: await readProtectedLiquidities(web3, store, slot),
-        lbs: await readLockedBalances(web3, store, lastBlock),
-        sbs: await readSystemBalances(web3, store, lastBlock),
+        pls: await readProtectedLiquidities(store, count),
+        lbs: await readLockedBalances(store, providers),
+        sbs: await readSystemBalances(store, tokens),
     };
 }
 
