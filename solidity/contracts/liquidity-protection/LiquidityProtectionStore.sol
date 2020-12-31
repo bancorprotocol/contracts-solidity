@@ -615,18 +615,17 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
             }
             else {
                 Position storage pos = positions[id];
+                address provider = pos.provider;
                 uint256 index = pos.index;
                 delete positions[id];
-                uint256[] storage storageIds = positionIdsByProvider[pos.provider];
-                uint256 storageIdsLength = storageIds.length;
-                assert(storageIdsLength > 0);
-                uint256 lastIndex = storageIdsLength - 1;
+                uint256[] storage ids = positionIdsByProvider[provider];
+                uint256 lastIndex = ids.length;
                 if (index < lastIndex) {
-                    uint256 lastId = storageIds[lastIndex];
-                    storageIds[index] = lastId;
+                    uint256 lastId = ids[lastIndex];
+                    ids[index] = lastId;
                     positions[lastId].index = index;
                 }
-                storageIds.pop();
+                ids.pop();
             }
         }
     }
