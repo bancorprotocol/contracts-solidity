@@ -30,6 +30,11 @@ const WRITE_CONFIG = {
 
 const KEYS = Object.keys(WRITE_CONFIG);
 
+const STANDARD_ERRORS = [
+    "nonce too low",
+    "replacement transaction underpriced",
+];
+
 if (!fs.existsSync(CFG_FILE_NAME)) {
     fs.writeFileSync(CFG_FILE_NAME, "{}");
 }
@@ -176,10 +181,15 @@ async function send(web3, account, gasPrice, transaction, value = 0) {
             return receipt;
         }
         catch (error) {
-            console.log(error.message);
-            const receipt = await getTransactionReceipt(web3);
-            if (receipt) {
-                return receipt;
+            if (STANDARD_ERRORS.some(suffix => error.message.endsWith(suffix))) {
+                console.log(error.message + "; retrying...");
+            }
+            else {
+                console.log(error.message);
+                const receipt = await getTransactionReceipt(web3);
+                if (receipt) {
+                    return receipt;
+                }
             }
         }
     }
@@ -341,7 +351,7 @@ async function run() {
             await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], isEmpty(sourceState));
         }
         targetState = sourceState;
-        sourceState = await readSourceStore(sourceWeb3, sourceStore);
+        sourceState = await readSource(sourceWeb3, sourceStore);
     }
 
     const nextPositionId = await sourceWeb3.eth.getStorageAt(STORE_ADDRESS, SOURCE_SLOT);
