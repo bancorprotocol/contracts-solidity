@@ -247,7 +247,6 @@ async function readSystemBalances(store, tokens) {
     const state = {};
 
     const balances = await Promise.all(tokens.map(token => rpc(store.methods.systemBalance(token))));
-
     for (let i = 0; i < tokens.length; i++) {
         setState(state, tokens[i], [balances[i]]);
     }
