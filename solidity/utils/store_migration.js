@@ -2,8 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const Web3 = require("web3");
 
-const SRC_NODE_URL  = process.argv[2];
-const DST_NODE_URL  = process.argv[3];
+const SOURCE_NODE   = process.argv[2];
+const TARGET_NODE   = process.argv[3];
 const STORE_ADDRESS = process.argv[4];
 const STORE_BLOCK   = process.argv[5];
 const PRIVATE_KEY   = process.argv[6];
@@ -16,8 +16,8 @@ const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
 const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
 
-const OLD_STORE_SLOT = 4;
-const NEW_STORE_SLOT = 1;
+const SOURCE_SLOT = 4;
+const TARGET_SLOT = 1;
 
 const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT    = 10000;
@@ -27,6 +27,8 @@ const WRITE_CONFIG = {
     lbs: {batchSize: 50, toTable: toTable3d, methodName: "seedLockedBalances"},
     sbs: {batchSize: 80, toTable: toTable2d, methodName: "seedSystemBalances"},
 };
+
+const KEYS = Object.keys(WRITE_CONFIG);
 
 if (!fs.existsSync(CFG_FILE_NAME)) {
     fs.writeFileSync(CFG_FILE_NAME, "{}");
@@ -254,14 +256,7 @@ async function readSystemBalances(store, tokens) {
     return state;
 }
 
-async function readState(web3, store, slot) {
-    const count     = await web3.eth.getStorageAt(store._address, slot);
-    const lastBlock = await web3.eth.getBlockNumber();
-    const lbEvents  = await getPastEvents(store, "BalanceLocked", STORE_BLOCK, lastBlock);
-    const sbEvents  = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK, lastBlock);
-    const providers = [...new Set(lbEvents.map(event => event.returnValues._provider))];
-    const tokens    = [...new Set(sbEvents.map(event => event.returnValues._token))];
-
+async function readState(store, count, providers, tokens) {
     return {
         pls: await readProtectedLiquidities(store, count),
         lbs: await readLockedBalances(store, providers),
@@ -269,23 +264,42 @@ async function readState(web3, store, slot) {
     };
 }
 
-async function writeData(execute, store, config, state, firstTime) {
+async function readSource(web3, store) {
+    const lastBlock = await web3.eth.getBlockNumber();
+    const lbEvents  = await getPastEvents(store, "BalanceLocked", STORE_BLOCK, lastBlock);
+    const sbEvents  = await getPastEvents(store, "SystemBalanceUpdated", STORE_BLOCK, lastBlock);
+    const count     = await web3.eth.getStorageAt(store._address, SOURCE_SLOT);
+    const providers = [...new Set(lbEvents.map(event => event.returnValues._provider))];
+    const tokens    = [...new Set(sbEvents.map(event => event.returnValues._token))];
+    return await readState(store, count, providers, tokens);
+}
+
+async function readTarget(state, store) {
+    const count     = Object.keys(state.pls).length;
+    const providers = Object.keys(state.lbs);
+    const tokens    = Object.keys(state.sbs);
+    return await readState(store, count, providers, tokens);
+}
+
+async function writeTarget(web3Func, store, config, state, firstTime) {
     const table = config.toTable(state);
     const rows = table.filter(row => !(firstTime && allZeros(row.slice(1))));
     const cols = rows[0].map((x, n) => rows.map(row => row[n]));
+    const count = Math.ceil(rows.length / config.batchSize);
     for (let i = 0; i < rows.length; i += config.batchSize) {
         const params = cols.map(col => col.slice(i, i + config.batchSize));
-        await execute(store.methods[config.methodName](...params));
+        await web3Func(send, store.methods[config.methodName](...params));
+        console.log(config.methodName, i / config.batchSize + 1, "out of", count);
     }
 }
 
 async function run() {
-    const srcWeb3 = new Web3(SRC_NODE_URL);
-    const dstWeb3 = new Web3(DST_NODE_URL);
+    const sourceWeb3 = new Web3(SOURCE_NODE);
+    const targetWeb3 = new Web3(TARGET_NODE);
 
-    const gasPrice = await getGasPrice(dstWeb3);
-    const account  = dstWeb3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
-    const web3Func = (func, ...args) => func(dstWeb3, account, gasPrice, ...args);
+    const gasPrice = await getGasPrice(targetWeb3);
+    const account  = targetWeb3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
+    const web3Func = (func, ...args) => func(targetWeb3, account, gasPrice, ...args);
 
     let phase = 0;
     if (getConfig().phase === undefined) {
@@ -300,20 +314,21 @@ async function run() {
         }
     };
 
-    const oldStore = deployed(srcWeb3, "LiquidityProtectionStoreOld", STORE_ADDRESS);
-    const newStore = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
-    await execute(newStore.methods.grantRole(ROLE_SEEDER, account.address));
+    const sourceStore = deployed(sourceWeb3, "LiquidityProtectionStoreOld", STORE_ADDRESS);
+    const targetStore = await web3Func(deploy, "liquidityProtectionStore", "LiquidityProtectionStore", []);
+    await execute(targetStore.methods.grantRole(ROLE_SEEDER, account.address));
 
-    const keys = Object.keys(WRITE_CONFIG);
-    let prevState = keys.reduce((acc, key) => ({...acc, ...{[key]: {}}}), {});
+    targetStore.methods.protectedLiquidity = targetStore.methods.position;
+
+    let sourceState = await readSource(sourceWeb3 , sourceStore);
+    let targetState = await readTarget(sourceState, targetStore);
 
     while (true) {
-        const currState = await readState(srcWeb3, oldStore, OLD_STORE_SLOT);
-        const diffState = keys.reduce((acc, key) => ({...acc, ...{[key]: getDiff(prevState[key], currState[key])}}), {});
+        const diffState = KEYS.reduce((acc, key) => ({...acc, ...{[key]: getDiff(targetState[key], sourceState[key])}}), {});
         if (isEmpty(diffState)) {
             let status;
             while (status !== "1" && status !== "2") {
-                status = await scan("Enter '1' after locking the old store or '2' before locking the new store: ");
+                status = await scan("Enter '1' after locking the source store or '2' before locking the target store: ");
             }
             if (status === "1") {
                 continue;
@@ -322,20 +337,21 @@ async function run() {
                 break;
             }
         }
-        for (const key of keys) {
-            await writeData(execute, newStore, WRITE_CONFIG[key], diffState[key], isEmpty(prevState));
+        for (const key of KEYS) {
+            await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], isEmpty(sourceState));
         }
-        prevState = currState;
+        targetState = sourceState;
+        sourceState = await readSourceStore(sourceWeb3, sourceStore);
     }
 
-    const nextPositionId = await srcWeb3.eth.getStorageAt(STORE_ADDRESS, OLD_STORE_SLOT);
-    await execute(newStore.methods.seedNextPositionId(nextPositionId));
+    const nextPositionId = await sourceWeb3.eth.getStorageAt(STORE_ADDRESS, SOURCE_SLOT);
+    await execute(targetStore.methods.seedNextPositionId(nextPositionId));
 
-    await execute(newStore.methods.grantRole(ROLE_OWNER, await oldStore.methods.owner().call()));
-    await execute(newStore.methods.revokeRole(ROLE_SEEDER, account.address));
-    await execute(newStore.methods.revokeRole(ROLE_OWNER, account.address));
+    await execute(targetStore.methods.grantRole(ROLE_OWNER, await sourceStore.methods.owner().call()));
+    await execute(targetStore.methods.revokeRole(ROLE_SEEDER, account.address));
+    await execute(targetStore.methods.revokeRole(ROLE_OWNER, account.address));
 
-    for (const web3 of [srcWeb3, dstWeb3]) {
+    for (const web3 of [sourceWeb3, targetWeb3]) {
         if (web3.currentProvider.disconnect) {
             web3.currentProvider.disconnect();
         }
