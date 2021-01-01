@@ -305,7 +305,7 @@ async function writeTarget(web3Func, store, config, state, firstTime) {
 
 async function stop() {
     while (true) {
-        switch (await scan("Enter '1' after locking the source store or '2' before locking the target store: ")) {
+        switch (await scan("Lock the store and enter '1' if you haven't done so already, or enter '2' if you have: ")) {
             case "1": return false;
             case "2": return true;
         }
@@ -344,11 +344,13 @@ async function run() {
 
     while (true) {
         const diffState = KEYS.reduce((acc, key) => ({...acc, ...{[key]: getDiff(targetState[key], sourceState[key])}}), {});
-        if (isEmpty(diffState) && await stop()) {
-            break;
+        const diffKeys  = KEYS.filter(key => !isEmpty(diffState[key]));
+        const firstTime = isEmpty(targetState);
+        for (const key of diffKeys) {
+            await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], firstTime);
         }
-        else for (const key of KEYS) {
-            await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], isEmpty(targetState));
+        if (diffKeys.length == 0 && await stop()) {
+            break;
         }
         targetState = sourceState;
         sourceState = await readSource(sourceWeb3, sourceStore);
