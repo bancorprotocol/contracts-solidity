@@ -305,12 +305,9 @@ async function writeTarget(web3Func, store, config, state, firstTime) {
 
 async function stop() {
     while (true) {
-        const choice = await scan("Enter '1' after locking the source store or '2' before locking the target store: ");
-        if (choice === "1") {
-            return false;
-        }
-        if (choice === "2") {
-            return true;
+        switch (await scan("Enter '1' after locking the source store or '2' before locking the target store: ")) {
+            case "1" return false;
+            case "2" return true;
         }
     }
 }
