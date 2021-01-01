@@ -348,7 +348,7 @@ async function run() {
             break;
         }
         else for (const key of KEYS) {
-            await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], isEmpty(sourceState));
+            await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], isEmpty(targetState));
         }
         targetState = sourceState;
         sourceState = await readSource(sourceWeb3, sourceStore);
