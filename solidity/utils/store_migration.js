@@ -303,6 +303,18 @@ async function writeTarget(web3Func, store, config, state, firstTime) {
     }
 }
 
+async function stop() {
+    while (true) {
+        const choice = await scan("Enter '1' after locking the source store or '2' before locking the target store: ");
+        if (choice === "1") {
+            return false;
+        }
+        if (choice === "2") {
+            return true;
+        }
+    }
+}
+
 async function run() {
     const sourceWeb3 = new Web3(SOURCE_NODE);
     const targetWeb3 = new Web3(TARGET_NODE);
@@ -335,27 +347,23 @@ async function run() {
 
     while (true) {
         const diffState = KEYS.reduce((acc, key) => ({...acc, ...{[key]: getDiff(targetState[key], sourceState[key])}}), {});
-        if (isEmpty(diffState)) {
-            let status;
-            while (status !== "1" && status !== "2") {
-                status = await scan("Enter '1' after locking the source store or '2' before locking the target store: ");
-            }
-            if (status === "1") {
-                continue;
-            }
-            if (status === "2") {
-                break;
-            }
+        if (isEmpty(diffState) && await stop()) {
+            break;
         }
-        for (const key of KEYS) {
+        else for (const key of KEYS) {
             await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], isEmpty(sourceState));
         }
         targetState = sourceState;
         sourceState = await readSource(sourceWeb3, sourceStore);
     }
 
-    const nextPositionId = await sourceWeb3.eth.getStorageAt(STORE_ADDRESS, SOURCE_SLOT);
-    await execute(targetStore.methods.seedNextPositionId(nextPositionId));
+    const sourceNextPositionId = await sourceWeb3.eth.getStorageAt(sourceStore._address, SOURCE_SLOT);
+    await execute(targetStore.methods.seedNextPositionId(sourceNextPositionId));
+    const targetNextPositionId = await targetWeb3.eth.getStorageAt(targetStore._address, TARGET_SLOT);
+
+    if (sourceNextPositionId !== targetNextPositionId) {
+        throw new Error("Migration failed");
+    }
 
     await execute(targetStore.methods.grantRole(ROLE_OWNER, await sourceStore.methods.owner().call()));
     await execute(targetStore.methods.revokeRole(ROLE_SEEDER, account.address));
