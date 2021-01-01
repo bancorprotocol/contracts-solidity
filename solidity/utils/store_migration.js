@@ -7,6 +7,7 @@ const TARGET_NODE   = process.argv[3];
 const STORE_ADDRESS = process.argv[4];
 const STORE_BLOCK   = process.argv[5];
 const PRIVATE_KEY   = process.argv[6];
+const TEST_MODE     = process.argv[7];
 
 const MIN_GAS_LIMIT = 100000;
 
@@ -293,8 +294,8 @@ async function readTarget(state, store) {
 
 async function writeTarget(web3Func, store, config, state, firstTime) {
     const table = config.toTable(state);
-    const rows = table.filter(row => !(firstTime && allZeros(row.slice(1))));
-    const cols = rows[0].map((x, n) => rows.map(row => row[n]));
+    const rows  = table.filter(row => !(firstTime && allZeros(row.slice(1))));
+    const cols  = rows[0].map((x, n) => rows.map(row => row[n]));
     const count = Math.ceil(rows.length / config.batchSize);
     for (let i = 0; i < rows.length; i += config.batchSize) {
         const params = cols.map(col => col.slice(i, i + config.batchSize));
@@ -303,13 +304,10 @@ async function writeTarget(web3Func, store, config, state, firstTime) {
     }
 }
 
-async function stop() {
-    while (true) {
-        switch (await scan("Lock the store and enter '1' if you haven't done so already, or enter '2' if you have: ")) {
-            case "1": return false;
-            case "2": return true;
-        }
-    }
+async function isLocked(web3, store) {
+    const owner = await store.methods.owner().call();
+    const code  = await web3.eth.getCode(owner);
+    return code === "0x";
 }
 
 async function run() {
@@ -349,8 +347,13 @@ async function run() {
         for (const key of diffKeys) {
             await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], firstTime);
         }
-        if (diffKeys.length == 0 && await stop()) {
-            break;
+        if (diffKeys.length == 0) {
+            if (TEST_MODE || await isLocked(sourceWeb3, sourceStore)) {
+                break;
+            }
+            while (!(await isLocked(sourceWeb3, sourceStore))) {
+                await scan("Lock the store and press enter when ready...");
+            }
         }
         targetState = sourceState;
         sourceState = await readSource(sourceWeb3, sourceStore);
