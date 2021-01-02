@@ -305,7 +305,7 @@ async function writeTarget(web3Func, store, config, state, firstTime) {
 }
 
 async function isLocked(web3, store) {
-    const owner = await store.methods.owner().call();
+    const owner = await rpc(store.methods.owner());
     const code  = await web3.eth.getCode(owner);
     return code === "0x";
 }
@@ -367,7 +367,7 @@ async function run() {
         throw new Error("Migration failed");
     }
 
-    await execute(targetStore.methods.grantRole(ROLE_OWNER, await sourceStore.methods.owner().call()));
+    await execute(targetStore.methods.grantRole(ROLE_OWNER, await rpc(sourceStore.methods.owner())));
     await execute(targetStore.methods.revokeRole(ROLE_SEEDER, account.address));
     await execute(targetStore.methods.revokeRole(ROLE_OWNER, account.address));
 
