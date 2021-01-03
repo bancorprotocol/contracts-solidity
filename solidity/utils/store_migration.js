@@ -367,7 +367,7 @@ async function run() {
     const diffState = getOuterDiff(KEYS, targetState, sourceState);
 
     if (!isEmpty(diffState)) {
-        throw new Error("Migration failed");
+        throw new Error("Data migration failed");
     }
 
     const sourceNextPositionId = await sourceWeb3.eth.getStorageAt(sourceStore._address, SOURCE_SLOT);
@@ -375,7 +375,7 @@ async function run() {
     const targetNextPositionId = await targetWeb3.eth.getStorageAt(targetStore._address, TARGET_SLOT);
 
     if (sourceNextPositionId !== targetNextPositionId) {
-        throw new Error("Migration failed");
+        throw new Error("Next position ID migration failed");
     }
 
     await execute(targetStore.methods.grantRole(ROLE_OWNER, await rpc(sourceStore.methods.owner())));
