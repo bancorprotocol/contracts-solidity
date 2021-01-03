@@ -359,6 +359,9 @@ describe('LiquidityProtection', () => {
                 const store = await liquidityProtection.store.call();
                 expect(store).to.eql(liquidityProtectionStore.address);
 
+                const stats = await liquidityProtection.stats.call();
+                expect(stats).to.eql(liquidityProtectionStats.address);
+
                 const networkTknGovernance = await liquidityProtection.networkTokenGovernance.call();
                 expect(networkTknGovernance).to.eql(networkTokenGovernance.address);
 
