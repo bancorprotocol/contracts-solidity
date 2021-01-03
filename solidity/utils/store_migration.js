@@ -80,7 +80,7 @@ function extendState(state, key, value) {
     state[key].push(value);
 }
 
-function getDiff(prev, curr) {
+function getInnerDiff(prev, curr) {
     const diff = {};
     for (const key in curr) {
         if (JSON.stringify(prev[key]) !== JSON.stringify(curr[key])) {
@@ -88,6 +88,10 @@ function getDiff(prev, curr) {
         }
     }
     return diff;
+}
+
+function getOuterDiff(keys, prev, curr) {
+    return keys.reduce((acc, key) => ({...acc, ...{[key]: getInnerDiff(prev[key], curr[key])}}), {});
 }
 
 async function rpc(func) {
@@ -341,7 +345,7 @@ async function run() {
     let targetState = await readTarget(sourceState, targetStore);
 
     while (true) {
-        const diffState = KEYS.reduce((acc, key) => ({...acc, ...{[key]: getDiff(targetState[key], sourceState[key])}}), {});
+        const diffState = getOuterDiff(KEYS, targetState, sourceState);
         const diffKeys  = KEYS.filter(key => !isEmpty(diffState[key]));
         const firstTime = isEmpty(targetState);
         for (const key of diffKeys) {
