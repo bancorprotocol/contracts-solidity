@@ -6,9 +6,10 @@ const Decimal = require('decimal.js');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
 const MIN_AMOUNT = Decimal(2).pow(0);
 const MAX_AMOUNT = Decimal(2).pow(127);
@@ -26,6 +27,7 @@ describe('LiquidityProtectionStateless', () => {
         const liquidityProtectionSettings = await LiquidityProtectionSettings.new(defaultSender, defaultSender);
         const liquidityProtectionStore = await LiquidityProtectionStore.new();
         const liquidityProtectionStats = await LiquidityProtectionStats.new();
+        const liquidityProtectionWallet = await TokenHolder.new();
         const networkTokenGovernance = await TokenGovernance.new(defaultSender);
         const govTokenGovernance = await TokenGovernance.new(defaultSender);
         const checkpointStore = await CheckpointStore.new();
@@ -34,6 +36,7 @@ describe('LiquidityProtectionStateless', () => {
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             liquidityProtectionStats.address,
+            liquidityProtectionWallet.address,
             networkTokenGovernance.address,
             govTokenGovernance.address,
             checkpointStore.address

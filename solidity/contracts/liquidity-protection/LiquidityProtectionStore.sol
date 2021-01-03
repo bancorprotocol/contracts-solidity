@@ -3,7 +3,6 @@ pragma solidity 0.6.12;
 import "./interfaces/ILiquidityProtectionStore.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../utility/SafeMath.sol";
-import "../utility/TokenHandler.sol";
 import "../utility/Utils.sol";
 
 /**
@@ -11,7 +10,7 @@ import "../utility/Utils.sol";
  *
  * It holds the data and tokens, and it is generally non-upgradable.
  */
-contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, TokenHandler, Utils {
+contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, Utils {
     using SafeMath for uint256;
 
     uint256 private constant MAX_UINT128 = 2**128 - 1;
@@ -156,22 +155,6 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, T
 
         // allow the deployer to initially govern the contract.
         _setupRole(ROLE_OWNER, msg.sender);
-    }
-
-    /**
-     * @dev withdraws tokens held by the contract
-     * can only be called by the contract owner
-     *
-     * @param _token   token address
-     * @param _to      recipient address
-     * @param _amount  amount to withdraw
-     */
-    function withdrawTokens(
-        IERC20Token _token,
-        address _to,
-        uint256 _amount
-    ) external override ownerOnly validAddress(_to) notThis(_to) {
-        safeTransfer(_token, _to, _amount);
     }
 
     /**

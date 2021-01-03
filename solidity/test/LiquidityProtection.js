@@ -19,12 +19,13 @@ const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPool
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
 const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
 const PPM_RESOLUTION = new BN(1000000);
 
@@ -273,6 +274,7 @@ describe('LiquidityProtection', () => {
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
             let liquidityProtectionStats;
+            let liquidityProtectionWallet;
             let liquidityProtection;
             let baseToken;
             let baseTokenAddress;
@@ -329,10 +331,12 @@ describe('LiquidityProtection', () => {
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
+                liquidityProtectionWallet = await TokenHolder.new();
                 liquidityProtection = await LiquidityProtection.new(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
+                    liquidityProtectionWallet.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
@@ -342,6 +346,8 @@ describe('LiquidityProtection', () => {
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+                await liquidityProtectionWallet.transferOwnership(liquidityProtection.address, { from: owner });
+                await liquidityProtection.acceptWalletOwnership({ from: owner });
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
@@ -362,6 +368,9 @@ describe('LiquidityProtection', () => {
                 const stats = await liquidityProtection.stats.call();
                 expect(stats).to.eql(liquidityProtectionStats.address);
 
+                const wallet = await liquidityProtection.wallet.call();
+                expect(wallet).to.eql(liquidityProtectionWallet.address);
+
                 const networkTknGovernance = await liquidityProtection.networkTokenGovernance.call();
                 expect(networkTknGovernance).to.eql(networkTokenGovernance.address);
 
@@ -376,6 +385,20 @@ describe('LiquidityProtection', () => {
 
                 const lastRemoveCheckpointStore = await liquidityProtection.lastRemoveCheckpointStore.call();
                 expect(lastRemoveCheckpointStore).to.eql(checkpointStore.address);
+            });
+
+            it('verifies that the owner can transfer the wallet ownership', async () => {
+                await liquidityProtection.transferWalletOwnership(accounts[1]);
+                liquidityProtectionWallet.acceptOwnership({ from: accounts[1] });
+            });
+
+            it('should revert when a non owner attempts to transfer the wallet ownership', async () => {
+                await expectRevert(
+                    liquidityProtection.transferWalletOwnership(accounts[2], {
+                        from: accounts[1]
+                    }),
+                    'ERR_ACCESS_DENIED'
+                );
             });
 
             it('should revert when the caller attempts to add and remove base tokens on the same block', async () => {

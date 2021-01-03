@@ -13,6 +13,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ILiquidityProtectionStats _stats,
+        ITokenHolder _wallet,
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance,
         ICheckpointStore _lastRemoveCheckpointStore
@@ -20,6 +21,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         _settings,
         _store,
         _stats,
+        _wallet,
         _networkTokenGovernance,
         _govTokenGovernance,
         _lastRemoveCheckpointStore

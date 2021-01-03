@@ -13,6 +13,7 @@ import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
+import "../utility/interfaces/ITokenHolder.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
 import "./interfaces/ILiquidityProtectionStats.sol";
 import "./interfaces/ILiquidityProtectionSettings.sol";
@@ -74,6 +75,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     ILiquidityProtectionSettings public immutable settings;
     ILiquidityProtectionStore public immutable store;
     ILiquidityProtectionStats public immutable stats;
+    ITokenHolder public immutable wallet;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -88,7 +90,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      *
      * @param _settings liquidity protection settings
      * @param _store liquidity protection store
-     * @param _store liquidity protection stats
+     * @param _stats liquidity protection stats
+     * @param _wallet liquidity protection wallet
      * @param _networkTokenGovernance network token governance
      * @param _govTokenGovernance governance token governance
      * @param _lastRemoveCheckpointStore last liquidity removal/unprotection checkpoints store
@@ -97,6 +100,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
         ILiquidityProtectionStats _stats,
+        ITokenHolder _wallet,
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance,
         ICheckpointStore _lastRemoveCheckpointStore
@@ -105,17 +109,14 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         validAddress(address(_settings))
         validAddress(address(_store))
         validAddress(address(_stats))
+        validAddress(address(_wallet))
         validAddress(address(_networkTokenGovernance))
         validAddress(address(_govTokenGovernance))
-        notThis(address(_settings))
-        notThis(address(_store))
-        notThis(address(_stats))
-        notThis(address(_networkTokenGovernance))
-        notThis(address(_govTokenGovernance))
     {
         settings = _settings;
         store = _store;
         stats = _stats;
+        wallet = _wallet;
 
         networkTokenGovernance = _networkTokenGovernance;
         networkToken = IERC20Token(address(_networkTokenGovernance.token()));
@@ -174,6 +175,24 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * used when removing liquidity from ETH converters
      */
     receive() external payable updatingLiquidityOnly() {}
+
+    /**
+     * @dev transfers the ownership of the wallet
+     * can only be called by the contract owner
+     *
+     * @param _newOwner    the new owner of the wallet
+     */
+    function transferWalletOwnership(address _newOwner) external ownerOnly {
+        wallet.transferOwnership(_newOwner);
+    }
+
+    /**
+     * @dev accepts the ownership of the wallet
+     * can only be called by the contract owner
+     */
+    function acceptWalletOwnership() external ownerOnly {
+        wallet.acceptOwnership();
+    }
 
     /**
      * @dev adds protected liquidity to a pool for a specific recipient
@@ -352,9 +371,9 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         // add liquidity
         addLiquidity(converter, _baseToken, _networkToken, _amount, newNetworkLiquidityAmount, msg.value);
 
-        // transfer the new pool tokens to the store
+        // transfer the new pool tokens to the wallet
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
-        safeTransfer(poolToken, address(store), poolTokenAmount);
+        safeTransfer(poolToken, address(wallet), poolTokenAmount);
 
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
@@ -660,7 +679,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         // withdraw the pool tokens from the store
         store.decSystemBalance(liquidity.poolToken, poolAmount);
-        store.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
+        wallet.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
         removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, networkTokenLocal);
@@ -685,7 +704,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             }
 
             // lock network tokens for the caller
-            safeTransfer(networkTokenLocal, address(store), delta);
+            safeTransfer(networkTokenLocal, address(wallet), delta);
             lockTokens(msg.sender, delta);
         }
 
@@ -772,7 +791,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         if (totalAmount > 0) {
             // transfer the tokens to the caller in a single call
-            store.withdrawTokens(networkToken, msg.sender, totalAmount);
+            wallet.withdrawTokens(networkToken, msg.sender, totalAmount);
         }
     }
 

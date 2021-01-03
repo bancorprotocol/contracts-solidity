@@ -21,17 +21,6 @@ describe('LiquidityProtectionStore', () => {
     });
 
     describe('general verification', () => {
-        it('should revert when a non owner attempts to withdraw tokens', async () => {
-            const erc20Token = await ERC20Token.new('name', 'symbol', 0, 1);
-            await erc20Token.transfer(liquidityProtectionStore.address, 1);
-            await expectRevert(
-                liquidityProtectionStore.withdrawTokens(erc20Token.address, defaultSender, 1, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-            expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.bignumber.equal('1');
-            expect(await erc20Token.balanceOf(defaultSender)).to.be.bignumber.equal('0');
-        });
-
         it('should revert when a non owner attempts to increase system balance', async () => {
             await expectRevert(
                 liquidityProtectionStore.incSystemBalance(defaultSender, 1, { from: nonOwner }),
@@ -47,14 +36,6 @@ describe('LiquidityProtectionStore', () => {
                 'ERR_ACCESS_DENIED'
             );
             expect(await liquidityProtectionStore.systemBalance(defaultSender)).to.be.bignumber.equal('1');
-        });
-
-        it('should succeed when the owner attempts to withdraw tokens', async () => {
-            const erc20Token = await ERC20Token.new('name', 'symbol', 0, 1);
-            await erc20Token.transfer(liquidityProtectionStore.address, 1);
-            await liquidityProtectionStore.withdrawTokens(erc20Token.address, defaultSender, 1, { from: owner });
-            expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.bignumber.equal('0');
-            expect(await erc20Token.balanceOf(defaultSender)).to.be.bignumber.equal('1');
         });
 
         it('should succeed when the owner attempts to increase system balance', async () => {
