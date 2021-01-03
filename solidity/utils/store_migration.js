@@ -363,6 +363,13 @@ async function run() {
         sourceState = await readSource(sourceWeb3, sourceStore);
     }
 
+    targetState = await readTarget(sourceState, targetStore);
+    const diffState = getOuterDiff(KEYS, targetState, sourceState);
+
+    if (!isEmpty(diffState)) {
+        throw new Error("Migration failed");
+    }
+
     const sourceNextPositionId = await sourceWeb3.eth.getStorageAt(sourceStore._address, SOURCE_SLOT);
     await execute(targetStore.methods.seedNextPositionId(sourceNextPositionId));
     const targetNextPositionId = await targetWeb3.eth.getStorageAt(targetStore._address, TARGET_SLOT);
