@@ -8,21 +8,25 @@ import "../../token/interfaces/IERC20Token.sol";
     Liquidity Protection Stats interface
 */
 interface ILiquidityProtectionStats {
-    function setTotalProtectedPoolAmount(
-        IDSToken _poolToken,
-        uint256 _amount
-    ) external;
-
-    function setTotalProtectedReserveAmount(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        uint256 _amount
-    ) external;
-
-    function setTotalProtectedProviderAmount(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
+    function increaseTotalAmounts(
         address _provider,
-        uint256 _amount
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        uint256 _poolAmount,
+        uint256 _reserveAmount
+    ) external;
+
+    function decreaseTotalAmounts(
+        address _provider,
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        uint256 _poolAmount,
+        uint256 _reserveAmount
+    ) external;
+
+    function resetTotalAmounts(
+        address _provider,
+        IDSToken _poolToken,
+        IERC20Token _reserveToken
     ) external;
 }
