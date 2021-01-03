@@ -12,12 +12,13 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     constructor(
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
+        ILiquidityProtectionStats _stats,
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance,
         ICheckpointStore _lastRemoveCheckpointStore
     )
         public
-        LiquidityProtection(_settings, _store, _networkTokenGovernance, _govTokenGovernance, _lastRemoveCheckpointStore)
+        LiquidityProtection(_settings, _store, _stats, _networkTokenGovernance, _govTokenGovernance, _lastRemoveCheckpointStore)
     {}
 
     function protectedAmountPlusFeeTest(

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+import "./interfaces/ILiquidityProtectionStats.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../utility/Utils.sol";
 import "../token/interfaces/IDSToken.sol";
@@ -8,7 +9,7 @@ import "../token/interfaces/IERC20Token.sol";
 /**
  * @dev This contract aggregates the statistics of the liquidity protection mechanism.
  */
-contract LiquidityProtectionStats is AccessControl, Utils {
+contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, Utils {
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
 
@@ -37,7 +38,7 @@ contract LiquidityProtectionStats is AccessControl, Utils {
     function setTotalProtectedPoolAmount(
         IDSToken _poolToken,
         uint256 _amount
-    ) external ownerOnly {
+    ) external override ownerOnly {
         totalProtectedPoolAmount[_poolToken] = _amount;
     }
 
@@ -52,7 +53,7 @@ contract LiquidityProtectionStats is AccessControl, Utils {
         IDSToken _poolToken,
         IERC20Token _reserveToken,
         uint256 _amount
-    ) external ownerOnly {
+    ) external override ownerOnly {
         totalProtectedReserveAmount[_poolToken][_reserveToken] = _amount;
     }
 
@@ -69,7 +70,7 @@ contract LiquidityProtectionStats is AccessControl, Utils {
         IERC20Token _reserveToken,
         address _provider,
         uint256 _amount
-    ) external ownerOnly {
+    ) external override ownerOnly {
         totalProtectedProviderAmount[_poolToken][_reserveToken][_provider] = _amount;
     }
 
