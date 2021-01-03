@@ -362,6 +362,8 @@ const run = async () => {
         [reserves.BNT.address, contractRegistry._address]
     );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
+    const liquidityProtectionStats = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
+    const liquidityProtectionWallet = await web3Func(deploy, 'liquidityProtectionWallet', 'TokenHolder', []);
 
     const liquidityProtection = await web3Func(
         deploy,
@@ -370,6 +372,8 @@ const run = async () => {
         [
             liquidityProtectionSettings._address,
             liquidityProtectionStore._address,
+            liquidityProtectionStats._address,
+            liquidityProtectionWallet._address,
             bntTokenGovernance._address,
             vbntTokenGovernance._address,
             checkpointStore._address
@@ -384,6 +388,9 @@ const run = async () => {
 
     await execute(liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address));
     await execute(liquidityProtectionStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionStats.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionWallet.methods.transferOwnership(liquidityProtection._address));
+    await execute(liquidityProtection.methods.acceptWalletOwnership());
 
     await execute(
         contractRegistry.methods.registerAddress(
