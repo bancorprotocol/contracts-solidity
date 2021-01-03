@@ -15,6 +15,11 @@
     "engines": {
         "npm": "^3.0.0"
     },
+    "files": [
+        "/solidity/contracts/**/*.sol",
+        "/solidity/build/contracts/*.json",
+        "!/solidity/contracts/helpers"
+    ],
     "scripts": {
         "build": "truffle compile",
         "test": "npm run build && npm run qtest",
@@ -30,7 +35,7 @@
         "verify": "node scripts/verify-all.js",
         "flatten": "node scripts/flatten.js",
         "snyk-protect": "snyk protect",
-        "prepare": "npm run snyk-protect"
+        "prepare": "npm run build && npm run snyk-protect"
     },
     "devDependencies": {
         "@bancor/token-governance": "bancorprotocol/token-governance",
