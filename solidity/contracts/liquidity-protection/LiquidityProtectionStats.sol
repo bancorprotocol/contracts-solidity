@@ -29,6 +29,15 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         _;
     }
 
+    constructor() public {
+        // set up administrative roles.
+        _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
+        _setRoleAdmin(ROLE_SEEDER, ROLE_OWNER);
+
+        // allow the deployer to initially govern the contract.
+        _setupRole(ROLE_OWNER, msg.sender);
+    }
+
     /**
      * @dev sets the total protected pool token amount for a given pool
      *
