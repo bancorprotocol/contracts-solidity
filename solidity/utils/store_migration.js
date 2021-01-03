@@ -70,14 +70,14 @@ function toTable3d(state) {
     return Object.entries(state).reduce((acc, [key, arrs]) => [...acc, ...arrs.map(arr => [key, ...arr])], []);
 }
 
-function setState(state, key, values) {
-    console.log(`${key}: ${values}`);
-    state[key] = values;
+function setState(state, key, value) {
+    console.log(`${key}: ${value}`);
+    state[key] = value;
 }
 
-function extendState(state, key, values) {
-    console.log(`${key}: ${values}`);
-    state[key].push(values);
+function extendState(state, key, value) {
+    console.log(`${key}: ${value}`);
+    state[key].push(value);
 }
 
 function getDiff(prev, curr) {
