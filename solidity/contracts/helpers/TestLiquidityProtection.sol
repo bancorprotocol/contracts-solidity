@@ -16,10 +16,15 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance,
         ICheckpointStore _lastRemoveCheckpointStore
-    )
-        public
-        LiquidityProtection(_settings, _store, _stats, _networkTokenGovernance, _govTokenGovernance, _lastRemoveCheckpointStore)
-    {}
+    ) public LiquidityProtection(
+        _settings,
+        _store,
+        _stats,
+        _networkTokenGovernance,
+        _govTokenGovernance,
+        _lastRemoveCheckpointStore
+    ) {
+    }
 
     function protectedAmountPlusFeeTest(
         uint256 _poolAmount,
@@ -94,7 +99,16 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
             removeAverageRateD: _removeAverageRateD
         });
 
-        uint256 targetAmount = removeLiquidityTargetAmount(IDSToken(0), IERC20Token(0), _poolAmount, _reserveAmount, packedRates, _addTimestamp, _removeTimestamp);
+        uint256 targetAmount = removeLiquidityTargetAmount(
+            IDSToken(0),
+            IERC20Token(0),
+            _poolAmount,
+            _reserveAmount,
+            packedRates,
+            _addTimestamp,
+            _removeTimestamp
+        );
+
         poolTokenRateOverride = false;
         return targetAmount;
     }
