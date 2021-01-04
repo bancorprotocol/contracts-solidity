@@ -17,11 +17,9 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, U
     uint256 private constant MAX_UINT112 = 2**112 - 1;
     uint256 private constant MAX_UINT32 = 2**32 - 1;
 
-    // the owner role is used to add values to the store, but it can't update them
-    bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
-
-    // the seeder roles is used to seed the store with past values
+    bytes32 public constant ROLE_SUPERVISOR = keccak256("ROLE_SUPERVISOR");
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
+    bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     struct Position {
         address provider; // liquidity provider
@@ -149,12 +147,13 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, U
     event SystemBalanceUpdated(IERC20Token _token, uint256 _prevAmount, uint256 _newAmount);
 
     constructor() public {
-        // set up administrative roles.
-        _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
-        _setRoleAdmin(ROLE_SEEDER, ROLE_OWNER);
+        // set up administrative roles
+        _setRoleAdmin(ROLE_SUPERVISOR, ROLE_SUPERVISOR);
+        _setRoleAdmin(ROLE_SEEDER, ROLE_SUPERVISOR);
+        _setRoleAdmin(ROLE_OWNER, ROLE_SUPERVISOR);
 
-        // allow the deployer to initially govern the contract.
-        _setupRole(ROLE_OWNER, msg.sender);
+        // allow the deployer to initially govern the contract
+        _setupRole(ROLE_SUPERVISOR, msg.sender);
     }
 
     /**

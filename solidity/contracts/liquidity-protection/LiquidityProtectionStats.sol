@@ -13,8 +13,9 @@ import "../token/interfaces/IERC20Token.sol";
 contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, Utils {
     using SafeMath for uint256;
 
-    bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
+    bytes32 public constant ROLE_SUPERVISOR = keccak256("ROLE_SUPERVISOR");
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
+    bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     mapping(IDSToken => uint256) public totalPoolAmount;
     mapping(IDSToken => mapping(IERC20Token => uint256)) public totalReserveAmount;
@@ -33,12 +34,13 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     }
 
     constructor() public {
-        // set up administrative roles.
-        _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
-        _setRoleAdmin(ROLE_SEEDER, ROLE_OWNER);
+        // set up administrative roles
+        _setRoleAdmin(ROLE_SUPERVISOR, ROLE_SUPERVISOR);
+        _setRoleAdmin(ROLE_SEEDER, ROLE_SUPERVISOR);
+        _setRoleAdmin(ROLE_OWNER, ROLE_SUPERVISOR);
 
-        // allow the deployer to initially govern the contract.
-        _setupRole(ROLE_OWNER, msg.sender);
+        // allow the deployer to initially govern the contract
+        _setupRole(ROLE_SUPERVISOR, msg.sender);
     }
 
     /**

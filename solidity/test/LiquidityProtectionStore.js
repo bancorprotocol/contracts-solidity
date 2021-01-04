@@ -1,6 +1,7 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
+const { roles } = require('./helpers/Constants');
 
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const ERC20Token = contract.fromArtifact('ERC20Token');
@@ -18,6 +19,7 @@ describe('LiquidityProtectionStore', () => {
 
     beforeEach(async () => {
         liquidityProtectionStore = await LiquidityProtectionStore.new();
+        await liquidityProtectionStore.grantRole(roles.ROLE_OWNER, owner, { from: owner });
     });
 
     describe('general verification', () => {

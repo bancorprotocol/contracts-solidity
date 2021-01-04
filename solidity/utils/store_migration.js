@@ -14,8 +14,8 @@ const MIN_GAS_LIMIT = 100000;
 const CFG_FILE_NAME = "store_migration.json";
 const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 
-const ROLE_SEEDER = Web3.utils.keccak256("ROLE_SEEDER");
-const ROLE_OWNER  = Web3.utils.keccak256("ROLE_OWNER");
+const ROLE_SUPERVISOR = Web3.utils.keccak256("ROLE_SUPERVISOR");
+const ROLE_SEEDER     = Web3.utils.keccak256("ROLE_SEEDER");
 
 const SOURCE_SLOT = 4;
 const TARGET_SLOT = 1;
@@ -378,9 +378,9 @@ async function run() {
         throw new Error("Next position ID migration failed");
     }
 
-    await execute(targetStore.methods.grantRole(ROLE_OWNER, await rpc(sourceStore.methods.owner())));
+    await execute(targetStore.methods.grantRole(ROLE_SUPERVISOR, await rpc(sourceStore.methods.owner())));
     await execute(targetStore.methods.revokeRole(ROLE_SEEDER, account.address));
-    await execute(targetStore.methods.revokeRole(ROLE_OWNER, account.address));
+    await execute(targetStore.methods.revokeRole(ROLE_SUPERVISOR, account.address));
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
         if (web3.currentProvider.disconnect) {
