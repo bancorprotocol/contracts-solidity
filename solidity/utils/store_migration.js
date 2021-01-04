@@ -137,6 +137,16 @@ async function scan(message) {
     });
 }
 
+async function userDecision(options) {
+    const message = Object.entries(options).map(entry => `'${entry[0]}' for ${entry[1]}`).join(" or ");
+    while (true) {
+        const input = await scan("Enter " + message + ": ");
+        if (options[input] !== undefined) {
+            return input;
+        }
+    }
+}
+
 async function getGasPrice(web3) {
     while (true) {
         const nodeGasPrice = await web3.eth.getGasPrice();
@@ -346,12 +356,11 @@ async function run() {
 
     while (true) {
         const diffState = getOuterDiff(KEYS, targetState, sourceState);
-        const diffKeys  = KEYS.filter(key => !isEmpty(diffState[key]));
         const firstTime = isEmpty(targetState);
-        for (const key of diffKeys) {
+        for (const key of KEYS.filter(key => !isEmpty(diffState[key]))) {
             await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], firstTime);
         }
-        if (diffKeys.length == 0) {
+        if ((await userDecision({1: "another iteration", 2: "final iteration"})) === "2") {
             if (TEST_MODE || await isLocked(sourceWeb3, sourceStore)) {
                 break;
             }
