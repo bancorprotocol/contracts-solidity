@@ -140,7 +140,7 @@ async function scan(message) {
 async function userDecision(options) {
     const message = Object.entries(options).map(entry => `'${entry[0]}' for ${entry[1]}`).join(" or ");
     while (true) {
-        const input = await scan("Enter " + message + ": ");
+        const input = await scan(`Enter ${message}: `);
         if (options[input] !== undefined) {
             return input;
         }
