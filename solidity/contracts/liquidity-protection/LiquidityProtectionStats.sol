@@ -97,14 +97,16 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         uint256[] memory _provider1Amounts
     ) external seederOnly {
         uint256 length = _tokens.length;
-        require(length == _reserve0s.length);
-        require(length == _reserve1s.length);
-        require(length == _providers.length);
-        require(length == _poolAmounts.length);
-        require(length == _reserve0Amounts.length);
-        require(length == _reserve1Amounts.length);
-        require(length == _provider0Amounts.length);
-        require(length == _provider1Amounts.length);
+        require(length == _reserve0s.length &&
+                length == _reserve1s.length &&
+                length == _providers.length &&
+                length == _poolAmounts.length &&
+                length == _reserve0Amounts.length &&
+                length == _reserve1Amounts.length &&
+                length == _provider0Amounts.length &&
+                length == _provider1Amounts.length,
+            "ERR_INVALID_INPUT_LENGTH"
+        );
         for (uint256 i = 0; i < length; i++) {
             totalPoolAmount[IDSToken(_tokens[i])] = _poolAmounts[i];
             totalReserveAmount[IDSToken(_tokens[i])][IERC20Token(_reserve0s[i])] = _reserve0Amounts[i];

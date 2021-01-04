@@ -569,14 +569,16 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, U
         uint256[] memory _timestamps
     ) external seederOnly {
         uint256 length = _ids.length;
-        require(length == _providers.length);
-        require(length == _poolTokens.length);
-        require(length == _reserveTokens.length);
-        require(length == _poolAmounts.length);
-        require(length == _reserveAmounts.length);
-        require(length == _reserveRateNs.length);
-        require(length == _reserveRateDs.length);
-        require(length == _timestamps.length);
+        require(length == _providers.length &&
+                length == _poolTokens.length &&
+                length == _reserveTokens.length &&
+                length == _poolAmounts.length &&
+                length == _reserveAmounts.length &&
+                length == _reserveRateNs.length &&
+                length == _reserveRateDs.length &&
+                length == _timestamps.length,
+            "ERR_INVALID_INPUT_LENGTH"
+        );
         for (uint256 i = 0; i < length; i++) {
             uint256 id = _ids[i];
             if (_providers[i] != address(0)) {
@@ -618,8 +620,10 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, U
         uint256[] memory _expirationTimes    
     ) external seederOnly {
         uint256 length = _providers.length;
-        require(length == _amounts.length);
-        require(length == _expirationTimes.length);
+        require(length == _amounts.length &&
+                length == _expirationTimes.length,
+            "ERR_INVALID_INPUT_LENGTH"
+        );
         for (uint256 i = 0; i < length; i++) {
             if (_amounts[i] > 0 || _expirationTimes[i] > 0) {
                 lockedBalances[_providers[i]].push(LockedBalance({
@@ -638,7 +642,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, U
         uint256[] memory _systemBalances
     ) external seederOnly {
         uint256 length = _tokens.length;
-        require(length == _systemBalances.length);
+        require(length == _systemBalances.length, "ERR_INVALID_INPUT_LENGTH");
         for (uint256 i = 0; i < length; i++) {
             systemBalances[IERC20Token(_tokens[i])] = _systemBalances[i];
         }
