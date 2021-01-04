@@ -108,11 +108,15 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
             "ERR_INVALID_INPUT_LENGTH"
         );
         for (uint256 i = 0; i < length; i++) {
-            totalPoolAmount[IDSToken(_tokens[i])] = _poolAmounts[i];
-            totalReserveAmount[IDSToken(_tokens[i])][IERC20Token(_reserve0s[i])] = _reserve0Amounts[i];
-            totalReserveAmount[IDSToken(_tokens[i])][IERC20Token(_reserve1s[i])] = _reserve1Amounts[i];
-            totalProviderAmount[IDSToken(_tokens[i])][IERC20Token(_reserve0s[i])][_providers[i]] = _provider0Amounts[i];
-            totalProviderAmount[IDSToken(_tokens[i])][IERC20Token(_reserve1s[i])][_providers[i]] = _provider1Amounts[i];
+            address token = _tokens[i];
+            address reserve0 = _reserve0s[i];
+            address reserve1 = _reserve1s[i];
+            address provider = _providers[i];
+            totalPoolAmount[IDSToken(token)] = _poolAmounts[i];
+            totalReserveAmount[IDSToken(token)][IERC20Token(reserve0)] = _reserve0Amounts[i];
+            totalReserveAmount[IDSToken(token)][IERC20Token(reserve1)] = _reserve1Amounts[i];
+            totalProviderAmount[IDSToken(token)][IERC20Token(reserve0)][provider] = _provider0Amounts[i];
+            totalProviderAmount[IDSToken(token)][IERC20Token(reserve1)][provider] = _provider1Amounts[i];
         }
     }
 }

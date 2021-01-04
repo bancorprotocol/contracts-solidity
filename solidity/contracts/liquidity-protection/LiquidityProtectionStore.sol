@@ -580,28 +580,27 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, AccessControl, U
             "ERR_INVALID_INPUT_LENGTH"
         );
         for (uint256 i = 0; i < length; i++) {
-            uint256 id = _ids[i];
+            Position storage pos = positions[_ids[i]];
             if (_providers[i] != address(0)) {
-                if (positions[id].provider == address(0)) {
-                    positions[id].index = positionIdsByProvider[_providers[i]].length;
-                    positionIdsByProvider[_providers[i]].push(id);
+                if (pos.provider == address(0)) {
+                    pos.index = positionIdsByProvider[_providers[i]].length;
+                    positionIdsByProvider[_providers[i]].push(_ids[i]);
                 }
-                positions[id].provider = _providers[i];
-                positions[id].poolToken = IDSToken(_poolTokens[i]);
-                positions[id].reserveToken = IERC20Token(_reserveTokens[i]);
-                positions[id].poolAmount = toUint128(_poolAmounts[i]);
-                positions[id].reserveAmount = toUint128(_reserveAmounts[i]);
-                positions[id].reserveRateInfo = encodeReserveRateInfo(
+                pos.provider = _providers[i];
+                pos.poolToken = IDSToken(_poolTokens[i]);
+                pos.reserveToken = IERC20Token(_reserveTokens[i]);
+                pos.poolAmount = toUint128(_poolAmounts[i]);
+                pos.reserveAmount = toUint128(_reserveAmounts[i]);
+                pos.reserveRateInfo = encodeReserveRateInfo(
                     _reserveRateNs[i],
                     _reserveRateDs[i],
                     _timestamps[i]
                 );
             }
             else {
-                Position storage pos = positions[id];
                 address provider = pos.provider;
                 uint256 index = pos.index;
-                delete positions[id];
+                delete positions[_ids[i]];
                 uint256[] storage ids = positionIdsByProvider[provider];
                 uint256 lastIndex = ids.length - 1;
                 if (index < lastIndex) {
