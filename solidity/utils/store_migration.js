@@ -354,17 +354,17 @@ async function run() {
     let sourceState = await readSource(sourceWeb3 , sourceStore);
     let targetState = await readTarget(sourceState, targetStore);
 
-    while (true) {
+    for (let locked = false; true; ) {
         const diffState = getOuterDiff(KEYS, targetState, sourceState);
         const firstTime = isEmpty(targetState);
         for (const key of KEYS.filter(key => !isEmpty(diffState[key]))) {
             await writeTarget(web3Func, targetStore, WRITE_CONFIG[key], diffState[key], firstTime);
         }
+        if (locked) {
+            break;
+        }
         if ((await userDecision({1: "another iteration", 2: "final iteration"})) === "2") {
-            if (TEST_MODE || await isLocked(sourceWeb3, sourceStore)) {
-                break;
-            }
-            while (!(await isLocked(sourceWeb3, sourceStore))) {
+            for (locked = TEST_MODE; !locked; locked = await isLocked(sourceWeb3, sourceStore)) {
                 await scan("Lock the store and press enter when ready...");
             }
         }
