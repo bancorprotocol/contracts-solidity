@@ -85,23 +85,6 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         totalProviderAmount[_poolToken][_reserveToken][_provider] = totalProviderAmount[_poolToken][_reserveToken][_provider].sub(_reserveAmount);
     }
 
-    /**
-     * @dev resets the total amounts
-     *
-     * @param _provider         liquidity provider address
-     * @param _poolToken        pool token address
-     * @param _reserveToken     reserve token address
-     */
-    function resetTotalAmounts(
-        address _provider,
-        IDSToken _poolToken,
-        IERC20Token _reserveToken
-    ) external override ownerOnly {
-        totalPoolAmount[_poolToken] = 0;
-        totalReserveAmount[_poolToken][_reserveToken] = 0;
-        totalProviderAmount[_poolToken][_reserveToken][_provider] = 0;
-    }
-
     function seed(
         address[] memory _tokens,
         address[] memory _reserve0s,

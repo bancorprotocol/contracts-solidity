@@ -23,10 +23,4 @@ interface ILiquidityProtectionStats {
         uint256 _poolAmount,
         uint256 _reserveAmount
     ) external;
-
-    function resetTotalAmounts(
-        address _provider,
-        IDSToken _poolToken,
-        IERC20Token _reserveToken
-    ) external;
 }

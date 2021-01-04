@@ -598,7 +598,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         if (_portion == PPM_RESOLUTION) {
             // remove the protected liquidity from the provider
-            stats.resetTotalAmounts(liquidity.provider, liquidity.poolToken, liquidity.reserveToken);
+            stats.decreaseTotalAmounts(
+                liquidity.provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount
+            );
             store.removePosition(_id);
         } else {
             // remove a portion of the protected liquidity from the provider
