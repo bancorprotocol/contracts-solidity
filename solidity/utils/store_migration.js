@@ -218,13 +218,7 @@ async function deploy(web3, account, gasPrice, contractId, contractName, contrac
         const receipt = await send(web3, account, gasPrice, transaction);
         const args = transaction.encodeABI().slice(options.data.length);
         console.log(`${contractId} deployed at ${receipt.contractAddress}`);
-        setConfig({
-            [contractId]: {
-                name: contractName,
-                addr: receipt.contractAddress,
-                args: args
-            }
-        });
+        setConfig({[contractId]: {name: contractName, addr: receipt.contractAddress, args: args}});
     }
     return deployed(web3, contractName, getConfig()[contractId].addr);
 }
