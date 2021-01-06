@@ -19,11 +19,12 @@ const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPool
 const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
 const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
+const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
 const PPM_RESOLUTION = new BN(1000000);
 
@@ -271,6 +272,7 @@ describe('LiquidityProtection', () => {
             let converter;
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
+            let liquidityProtectionStats;
             let liquidityProtection;
             let baseToken;
             let baseTokenAddress;
@@ -326,9 +328,11 @@ describe('LiquidityProtection', () => {
                 await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
+                liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtection = await LiquidityProtection.new(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
+                    liquidityProtectionStats.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
@@ -336,6 +340,7 @@ describe('LiquidityProtection', () => {
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, { from: owner });
+                await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
@@ -354,6 +359,9 @@ describe('LiquidityProtection', () => {
 
                 const store = await liquidityProtection.store.call();
                 expect(store).to.eql(liquidityProtectionStore.address);
+
+                const stats = await liquidityProtection.stats.call();
+                expect(stats).to.eql(liquidityProtectionStats.address);
 
                 const networkTknGovernance = await liquidityProtection.networkTokenGovernance.call();
                 expect(networkTknGovernance).to.eql(networkTokenGovernance.address);

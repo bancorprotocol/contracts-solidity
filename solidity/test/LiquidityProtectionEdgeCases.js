@@ -20,9 +20,10 @@ const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConv
 const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -116,6 +117,7 @@ describe('LiquidityProtectionEdgeCases', () => {
             let converter;
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
+            let liquidityProtectionStats;
             let liquidityProtection;
 
             const owner = defaultSender;
@@ -194,15 +196,18 @@ describe('LiquidityProtectionEdgeCases', () => {
                 await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
+                liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtection = await LiquidityProtection.new(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
+                    liquidityProtectionStats.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
                 );
 
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, { from: owner });
+                await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();

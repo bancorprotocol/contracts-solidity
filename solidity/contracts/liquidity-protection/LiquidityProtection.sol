@@ -14,6 +14,7 @@ import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtectionStore.sol";
+import "./interfaces/ILiquidityProtectionStats.sol";
 import "./interfaces/ILiquidityProtectionSettings.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
@@ -72,6 +73,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
     ILiquidityProtectionSettings public immutable settings;
     ILiquidityProtectionStore public immutable store;
+    ILiquidityProtectionStats public immutable stats;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -86,6 +88,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      *
      * @param _settings liquidity protection settings
      * @param _store liquidity protection store
+     * @param _stats liquidity protection stats
      * @param _networkTokenGovernance network token governance
      * @param _govTokenGovernance governance token governance
      * @param _lastRemoveCheckpointStore last liquidity removal/unprotection checkpoints store
@@ -93,6 +96,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     constructor(
         ILiquidityProtectionSettings _settings,
         ILiquidityProtectionStore _store,
+        ILiquidityProtectionStats _stats,
         ITokenGovernance _networkTokenGovernance,
         ITokenGovernance _govTokenGovernance,
         ICheckpointStore _lastRemoveCheckpointStore
@@ -100,15 +104,18 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         public
         validAddress(address(_settings))
         validAddress(address(_store))
+        validAddress(address(_stats))
         validAddress(address(_networkTokenGovernance))
         validAddress(address(_govTokenGovernance))
         notThis(address(_settings))
         notThis(address(_store))
+        notThis(address(_stats))
         notThis(address(_networkTokenGovernance))
         notThis(address(_govTokenGovernance))
     {
         settings = _settings;
         store = _store;
+        stats = _stats;
 
         networkTokenGovernance = _networkTokenGovernance;
         networkToken = IERC20Token(address(_networkTokenGovernance.token()));
@@ -590,6 +597,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
 
         if (_portion == PPM_RESOLUTION) {
             // remove the protected liquidity from the provider
+            stats.decreaseTotalAmounts(
+                liquidity.provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount
+            );
             store.removeProtectedLiquidity(_id);
         } else {
             // remove a portion of the protected liquidity from the provider
@@ -598,6 +612,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
 
+            stats.decreaseTotalAmounts(
+                liquidity.provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                fullPoolAmount,
+                fullReserveAmount
+            );
             store.updateProtectedLiquidityAmounts(
                 _id,
                 fullPoolAmount - liquidity.poolAmount,
@@ -841,6 +862,13 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
         uint256 _reserveAmount
     ) internal returns (uint256) {
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
+        stats.increaseTotalAmounts(
+            _provider,
+            _poolToken,
+            _reserveToken,
+            _poolAmount,
+            _reserveAmount
+        );
         return
             store.addProtectedLiquidity(
                 _provider,
