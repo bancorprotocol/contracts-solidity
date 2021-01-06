@@ -85,38 +85,36 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         totalProviderAmount[_poolToken][_reserveToken][_provider] = totalProviderAmount[_poolToken][_reserveToken][_provider].sub(_reserveAmount);
     }
 
-    function seed(
-        address[] memory _tokens,
-        address[] memory _reserve0s,
-        address[] memory _reserve1s,
-        address[] memory _providers,
-        uint256[] memory _poolAmounts,
-        uint256[] memory _reserve0Amounts,
-        uint256[] memory _reserve1Amounts,
-        uint256[] memory _provider0Amounts,
-        uint256[] memory _provider1Amounts
+    function seedPoolAmounts(
+        IDSToken[] calldata _tokens,
+        uint256[] calldata _amounts
     ) external seederOnly {
         uint256 length = _tokens.length;
-        require(length == _reserve0s.length &&
-                length == _reserve1s.length &&
-                length == _providers.length &&
-                length == _poolAmounts.length &&
-                length == _reserve0Amounts.length &&
-                length == _reserve1Amounts.length &&
-                length == _provider0Amounts.length &&
-                length == _provider1Amounts.length,
-            "ERR_INVALID_INPUT_LENGTH"
-        );
         for (uint256 i = 0; i < length; i++) {
-            address token = _tokens[i];
-            address reserve0 = _reserve0s[i];
-            address reserve1 = _reserve1s[i];
-            address provider = _providers[i];
-            totalPoolAmount[IDSToken(token)] = _poolAmounts[i];
-            totalReserveAmount[IDSToken(token)][IERC20Token(reserve0)] = _reserve0Amounts[i];
-            totalReserveAmount[IDSToken(token)][IERC20Token(reserve1)] = _reserve1Amounts[i];
-            totalProviderAmount[IDSToken(token)][IERC20Token(reserve0)][provider] = _provider0Amounts[i];
-            totalProviderAmount[IDSToken(token)][IERC20Token(reserve1)][provider] = _provider1Amounts[i];
+            totalPoolAmount[_tokens[i]] = _amounts[i];
+        }
+    }
+
+    function seedReserveAmounts(
+        IDSToken[] calldata _tokens,
+        IERC20Token[] calldata _reserves,
+        uint256[] calldata _amounts
+    ) external seederOnly {
+        uint256 length = _tokens.length;
+        for (uint256 i = 0; i < length; i++) {
+            totalReserveAmount[_tokens[i]][_reserves[i]] = _amounts[i];
+        }
+    }
+
+    function seedProviderAmounts(
+        IDSToken[] calldata _tokens,
+        IERC20Token[] calldata _reserves,
+        address[] calldata _providers,
+        uint256[] calldata _amounts
+    ) external seederOnly {
+        uint256 length = _tokens.length;
+        for (uint256 i = 0; i < length; i++) {
+            totalProviderAmount[_tokens[i]][_reserves[i]][_providers[i]] = _amounts[i];
         }
     }
 }
