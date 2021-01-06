@@ -114,7 +114,7 @@ async function rpc(func) {
 async function getPastEvents(contract, eventName, fromBlock, toBlock, filter) {
     if (fromBlock <= toBlock) {
         try {
-            return await contract.getPastEvents(eventName, {fromBlock: fromBlock, toBlock: toBlock, filter: filter});
+            return await contract.getPastEvents(eventName, {fromBlock, toBlock, filter});
         }
         catch (error) {
             const midBlock = (fromBlock + toBlock) >> 1;
@@ -180,18 +180,16 @@ async function getTransactionReceipt(web3) {
     }
 }
 
-async function send(web3, account, gasPrice, transaction, value = 0) {
+async function send(web3, account, gasPrice, transaction) {
     while (true) {
         try {
-            const tx = {
-                to: transaction._parent._address,
-                data: transaction.encodeABI(),
-                gas: Math.max(await transaction.estimateGas({from: account.address, value: value}), MIN_GAS_LIMIT),
-                gasPrice: gasPrice || (await getGasPrice(web3)),
-                chainId: await web3.eth.net.getId(),
-                value: value
+            const options = {
+                to      : transaction._parent._address,
+                data    : transaction.encodeABI(),
+                gas     : Math.max(await transaction.estimateGas({from: account.address}), MIN_GAS_LIMIT),
+                gasPrice: gasPrice
             };
-            const signed = await web3.eth.accounts.signTransaction(tx, account.privateKey);
+            const signed  = await web3.eth.accounts.signTransaction(options, account.privateKey);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
         }
