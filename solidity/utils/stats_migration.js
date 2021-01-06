@@ -17,8 +17,6 @@ const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 const ROLE_SUPERVISOR = Web3.utils.keccak256("ROLE_SUPERVISOR");
 const ROLE_SEEDER     = Web3.utils.keccak256("ROLE_SEEDER");
 
-const STORAGE_SLOT = 4;
-
 const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT    = 10000;
 
@@ -198,7 +196,7 @@ function deployed(web3, contractName, contractAddr) {
 
 async function readSource(web3, store) {
     const state = {};
-    const count = await web3.eth.getStorageAt(store._address, STORAGE_SLOT);
+    const count = await web3.eth.getStorageAt(store._address, 4);
 
     for (let i = 0; i < count; i += READ_BATCH_SIZE) {
         const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
@@ -350,14 +348,6 @@ async function run() {
 
     if (!isEmpty(diffState)) {
         throw new Error("Data migration failed");
-    }
-
-    const sourceNextPositionId = await sourceWeb3.eth.getStorageAt(store._address, SOURCE_SLOT);
-    await execute(stats.methods.seedNextPositionId(sourceNextPositionId));
-    const targetNextPositionId = await targetWeb3.eth.getStorageAt(stats._address, TARGET_SLOT);
-
-    if (sourceNextPositionId !== targetNextPositionId) {
-        throw new Error("Next position ID migration failed");
     }
 
     await execute(stats.methods.grantRole(ROLE_SUPERVISOR, await rpc(store.methods.owner())));
