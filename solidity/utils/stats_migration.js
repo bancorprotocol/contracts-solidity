@@ -28,6 +28,8 @@ const WRITE_CONFIG = {
 
 const KEYS = Object.keys(WRITE_CONFIG);
 
+const DELIMITER = ".";
+
 const STANDARD_ERRORS = [
     "nonce too low",
     "replacement transaction underpriced",
@@ -49,16 +51,26 @@ function setConfig(record) {
     fs.writeFileSync(CFG_FILE_NAME, JSON.stringify({...getConfig(), ...record}, null, 4));
 }
 
-function allZeros(values) {
-    return values.every(value => Web3.utils.toBN(value).eqn(0));
-}
-
 function isEmpty(object) {
     return Object(object) === object && Object.values(object).every(isEmpty);
 }
 
-function addressKeys(object) {
-    return Object.keys(object).filter(Web3.utils.isAddress);
+function toKey(keys) {
+    return keys.join(DELIMITER);
+}
+
+function toKeys(key) {
+    return key.split(DELIMITER);
+}
+
+function setState(state, keys, value) {
+    const key = toKey(keys);
+    if (state[key] === undefined) {
+        state[key] = value;
+    }
+    else {
+        state[key] = Web3.utils.toBN(state[key]).add(Web3.utils.toBN(value)).toString();
+    }
 }
 
 function getInnerDiff(prev, curr) {
@@ -195,93 +207,53 @@ function deployed(web3, contractName, contractAddr) {
 }
 
 async function readSource(web3, store) {
-    const state = {};
+    const poolAmounts = {};
+    const reserveAmounts = {};
+    const providerAmounts = {};
+
     const count = await web3.eth.getStorageAt(store._address, 4);
 
     for (let i = 0; i < count; i += READ_BATCH_SIZE) {
         const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const pls = await Promise.all(ids.map(id => rpc(store.methods.protectedLiquidity(id))));
-
         for (let j = 0; j < ids.length; j++) {
-            console.log(ids[j], JSON.stringify(pls[j]));
-
+            console.log(`${ids[j]}: ${Object.values(pls[j])}`);
             const provider      = pls[j][0];
             const poolToken     = pls[j][1];
             const reserveToken  = pls[j][2];
-            const poolAmount    = Web3.utils.toBN(pls[j][3]);
-            const reserveAmount = Web3.utils.toBN(pls[j][4]);
-
-            if (state[poolToken] === undefined) {
-                state[poolToken] = {amount: Web3.utils.toBN(0)};
-            }
-
-            if (state[poolToken][reserveToken] === undefined) {
-                state[poolToken][reserveToken] = {amount: Web3.utils.toBN(0)};
-            }
-
-            if (state[poolToken][reserveToken][provider] === undefined) {
-                state[poolToken][reserveToken][provider] = {amount: Web3.utils.toBN(0)};
-            }
-
-            state[poolToken].amount = state[poolToken].amount.add(poolAmount);
-            state[poolToken][reserveToken].amount = state[poolToken][reserveToken].amount.add(reserveAmount);
-            state[poolToken][reserveToken][provider].amount = state[poolToken][reserveToken][provider].amount.add(reserveAmount);
-        }
-    }
-
-    const poolAmounts = [];
-    const reserveAmounts = [];
-    const providerAmounts = [];
-
-    for (const poolToken of addressKeys(state)) {
-        poolAmounts.push([poolToken, state[poolToken].amount.toString()]);
-        for (const reserveToken of addressKeys(state[poolToken])) {
-            reserveAmounts.push([poolToken, reserveToken, state[poolToken][reserveToken].amount.toString()]);
-            for (const provider of addressKeys(state[poolToken][reserveToken])) {
-                providerAmounts.push([poolToken, reserveToken, provider, state[poolToken][reserveToken][provider].amount.toString()]);
-            }
+            const poolAmount    = pls[j][3];
+            const reserveAmount = pls[j][4];
+            setState(poolAmounts, [poolToken], poolAmount);
+            setState(reserveAmounts, [poolToken, reserveToken], reserveAmount);
+            setState(providerAmounts, [poolToken, reserveToken, provider], reserveAmount);
         }
     }
 
     return {poolAmounts, reserveAmounts, providerAmounts};
 }
 
-async function readTargetAmounts(params, func) {
-    const amounts = [];
-    for (let i = 0; i < params.length; i += READ_BATCH_SIZE) {
-        const inputs = params.slice(i, i + READ_BATCH_SIZE);
-        const outputs = await Promise.all(inputs.map(args => rpc(func(...args))));
-        for (let j = 0; j < inputs.length; j++) {
-            amounts.push([...inputs[j], outputs[j]]);
+async function readTargetAmounts(state, func) {
+    const amounts = {};
+    for (let i = 0; i < Object.keys(state).length; i += READ_BATCH_SIZE) {
+        const keys = Object.keys(state).slice(i, i + READ_BATCH_SIZE);
+        const values = await Promise.all(keys.map(key => rpc(func(...toKeys(key)))));
+        for (let j = 0; j < keys.length; j++) {
+            amounts[keys[j]] = values[j];
         }
     }
-    return amounts
+    return amounts;
 }
 
 async function readTarget(state, stats) {
-    const totalPoolAmountParams = [];
-    const totalReserveAmountParams = [];
-    const totalProviderAmountParams = [];
-
-    for (const poolToken in state) {
-        totalPoolAmountParams.push([poolToken]);
-        for (const reserveToken in state[poolToken]) {
-            totalReserveAmountParams.push([poolToken, reserveToken]);
-            for (const provider in state[poolToken][reserveToken]) {
-                totalProviderAmountParams.push([poolToken, reserveToken, provider]);
-            }
-        }
-    }
-
     return {
-        poolAmounts: await readTargetAmounts(totalPoolAmountParams, stats.methods.totalPoolAmount),
-        reserveAmounts: await readTargetAmounts(totalReserveAmountParams, stats.methods.totalReserveAmount),
-        providerAmounts: await readTargetAmounts(totalProviderAmountParams, stats.methods.totalProviderAmount),
+        poolAmounts: await readTargetAmounts(state.poolAmounts, stats.methods.totalPoolAmount),
+        reserveAmounts: await readTargetAmounts(state.reserveAmounts, stats.methods.totalReserveAmount),
+        providerAmounts: await readTargetAmounts(state.providerAmounts, stats.methods.totalProviderAmount),
     };
 }
 
-async function writeTarget(web3Func, stats, config, table, firstTime) {
-    const rows  = table.filter(row => !(firstTime && allZeros(row.slice(1))));
+async function writeTarget(web3Func, stats, config, state) {
+    const rows  = Object.entries(state).map(([key, value]) => [...toKeys(key), value]);
     const cols  = rows[0].map((x, n) => rows.map(row => row[n]));
     const count = Math.ceil(rows.length / config.batchSize);
     for (let i = 0; i < rows.length; i += config.batchSize) {
@@ -327,9 +299,8 @@ async function run() {
 
     for (let locked = false; true; ) {
         const diffState = getOuterDiff(KEYS, targetState, sourceState);
-        const firstTime = isEmpty(targetState);
         for (const key of KEYS.filter(key => !isEmpty(diffState[key]))) {
-            await writeTarget(web3Func, stats, WRITE_CONFIG[key], diffState[key], firstTime);
+            await writeTarget(web3Func, stats, WRITE_CONFIG[key], diffState[key]);
         }
         if (locked) {
             break;
