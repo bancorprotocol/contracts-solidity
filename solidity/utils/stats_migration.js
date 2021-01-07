@@ -202,14 +202,14 @@ async function readSource(web3, store) {
         const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
         const pls = await Promise.all(ids.map(id => rpc(store.methods.protectedLiquidity(id))));
 
-        for (const pl of pls) {
-            console.log(JSON.stringify(pl));
+        for (let j = 0; j < ids.length; j++) {
+            console.log(ids[j], JSON.stringify(pls[j]));
 
-            const provider      = pl[0];
-            const poolToken     = pl[1];
-            const reserveToken  = pl[2];
-            const poolAmount    = Web3.utils.toBN(pl[3]);
-            const reserveAmount = Web3.utils.toBN(pl[4]);
+            const provider      = pls[j][0];
+            const poolToken     = pls[j][1];
+            const reserveToken  = pls[j][2];
+            const poolAmount    = Web3.utils.toBN(pls[j][3]);
+            const reserveAmount = Web3.utils.toBN(pls[j][4]);
 
             if (state[poolToken] === undefined) {
                 state[poolToken] = {amount: Web3.utils.toBN(0)};
