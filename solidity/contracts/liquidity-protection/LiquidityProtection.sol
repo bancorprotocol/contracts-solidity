@@ -616,8 +616,8 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
                 liquidity.provider,
                 liquidity.poolToken,
                 liquidity.reserveToken,
-                fullPoolAmount,
-                fullReserveAmount
+                liquidity.poolAmount,
+                liquidity.reserveAmount
             );
             store.updateProtectedLiquidityAmounts(
                 _id,
