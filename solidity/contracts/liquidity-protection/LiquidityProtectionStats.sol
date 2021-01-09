@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "./interfaces/ILiquidityProtectionStats.sol";
+
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/EnumerableSet.sol";
+
+import "./interfaces/ILiquidityProtectionStats.sol";
 import "../utility/Utils.sol";
 import "../utility/SafeMath.sol";
 import "../token/interfaces/IDSToken.sol";
@@ -12,6 +15,7 @@ import "../token/interfaces/IERC20Token.sol";
  */
 contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, Utils {
     using SafeMath for uint256;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 public constant ROLE_SUPERVISOR = keccak256("ROLE_SUPERVISOR");
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
@@ -20,6 +24,8 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     mapping(IDSToken => uint256) public totalPoolAmount;
     mapping(IDSToken => mapping(IERC20Token => uint256)) public totalReserveAmount;
     mapping(IDSToken => mapping(IERC20Token => mapping(address => uint256))) public totalProviderAmount;
+
+    mapping(address => EnumerableSet.AddressSet) private _providerPoolTokens;
 
     // allows execution by the owner only
     modifier ownerOnly {
@@ -62,6 +68,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         totalPoolAmount[_poolToken] = totalPoolAmount[_poolToken].add(_poolAmount);
         totalReserveAmount[_poolToken][_reserveToken] = totalReserveAmount[_poolToken][_reserveToken].add(_reserveAmount);
         totalProviderAmount[_poolToken][_reserveToken][_provider] = totalProviderAmount[_poolToken][_reserveToken][_provider].add(_reserveAmount);
+        if (totalProviderAmount[_poolToken][_reserveToken][_provider] != 0) {
+            _providerPoolTokens[_provider].add(address(_poolToken));
+        }
     }
 
     /**
@@ -83,6 +92,19 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         totalPoolAmount[_poolToken] = totalPoolAmount[_poolToken].sub(_poolAmount);
         totalReserveAmount[_poolToken][_reserveToken] = totalReserveAmount[_poolToken][_reserveToken].sub(_reserveAmount);
         totalProviderAmount[_poolToken][_reserveToken][_provider] = totalProviderAmount[_poolToken][_reserveToken][_provider].sub(_reserveAmount);
+        if (totalProviderAmount[_poolToken][_reserveToken][_provider] == 0) {
+            _providerPoolTokens[_provider].remove(address(_poolToken));
+        }
+    }
+
+    function providerPoolTokens(address _provider) external view returns (IDSToken[] memory) {
+        EnumerableSet.AddressSet storage set = _providerPoolTokens[_provider];
+        uint256 length = set.length();
+        IDSToken[] memory arr = new IDSToken[](length);
+        for (uint256 i = 0; i < length; i++) {
+            arr[i] = IDSToken(set.at(i));
+        }
+        return arr;
     }
 
     function seedPoolAmounts(
