@@ -91,6 +91,12 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         totalProviderAmount[_poolToken][_reserveToken][_provider] = totalProviderAmount[_poolToken][_reserveToken][_provider].sub(_reserveAmount);
     }
 
+    /**
+     * @dev adds a pool to the list of pools of a liquidity provider
+     *
+     * @param _provider         liquidity provider address
+     * @param _poolToken        pool token address
+     */
     function addProviderPoolToken(
         address _provider,
         IDSToken _poolToken
@@ -98,6 +104,12 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         return _providerPoolTokens[_provider].add(address(_poolToken));
     }
 
+    /**
+     * @dev removes a pool from the list of pools of a liquidity provider
+     *
+     * @param _provider         liquidity provider address
+     * @param _poolToken        pool token address
+     */
     function removeProviderPoolToken(
         address _provider,
         IDSToken _poolToken
@@ -105,6 +117,12 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         return _providerPoolTokens[_provider].remove(address(_poolToken));
     }
 
+    /**
+     * @dev returns the list of pools of a liquidity provider
+     *
+     * @param _provider         liquidity provider address
+     * @return pool tokens
+     */
     function providerPoolTokens(
         address _provider
     ) external override view returns (IDSToken[] memory) {
