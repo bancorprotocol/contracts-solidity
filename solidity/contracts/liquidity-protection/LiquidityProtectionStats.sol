@@ -68,9 +68,6 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         totalPoolAmount[_poolToken] = totalPoolAmount[_poolToken].add(_poolAmount);
         totalReserveAmount[_poolToken][_reserveToken] = totalReserveAmount[_poolToken][_reserveToken].add(_reserveAmount);
         totalProviderAmount[_poolToken][_reserveToken][_provider] = totalProviderAmount[_poolToken][_reserveToken][_provider].add(_reserveAmount);
-        if (totalProviderAmount[_poolToken][_reserveToken][_provider] != 0) {
-            _providerPoolTokens[_provider].add(address(_poolToken));
-        }
     }
 
     /**
@@ -92,12 +89,25 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         totalPoolAmount[_poolToken] = totalPoolAmount[_poolToken].sub(_poolAmount);
         totalReserveAmount[_poolToken][_reserveToken] = totalReserveAmount[_poolToken][_reserveToken].sub(_reserveAmount);
         totalProviderAmount[_poolToken][_reserveToken][_provider] = totalProviderAmount[_poolToken][_reserveToken][_provider].sub(_reserveAmount);
-        if (totalProviderAmount[_poolToken][_reserveToken][_provider] == 0) {
-            _providerPoolTokens[_provider].remove(address(_poolToken));
-        }
     }
 
-    function providerPoolTokens(address _provider) external view returns (IDSToken[] memory) {
+    function addProviderPoolToken(
+        address _provider,
+        IDSToken _poolToken
+    ) external override ownerOnly returns (bool) {
+        return _providerPoolTokens[_provider].add(address(_poolToken));
+    }
+
+    function removeProviderPoolToken(
+        address _provider,
+        IDSToken _poolToken
+    ) external override ownerOnly returns (bool) {
+        return _providerPoolTokens[_provider].remove(address(_poolToken));
+    }
+
+    function providerPoolTokens(
+        address _provider
+    ) external override view returns (IDSToken[] memory) {
         EnumerableSet.AddressSet storage set = _providerPoolTokens[_provider];
         uint256 length = set.length();
         IDSToken[] memory arr = new IDSToken[](length);

@@ -869,6 +869,10 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
             _poolAmount,
             _reserveAmount
         );
+        stats.addProviderPoolToken(
+            _provider,
+            _poolToken
+        );
         return
             store.addProtectedLiquidity(
                 _provider,
