@@ -165,6 +165,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         uint256 length = _tokens.length;
         for (uint256 i = 0; i < length; i++) {
             totalProviderAmount[_tokens[i]][_reserves[i]][_providers[i]] = _amounts[i];
+            _providerPools[_providers[i]].add(address(_tokens[i]));
         }
     }
 }
