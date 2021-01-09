@@ -25,7 +25,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     mapping(IDSToken => mapping(IERC20Token => uint256)) public totalReserveAmount;
     mapping(IDSToken => mapping(IERC20Token => mapping(address => uint256))) public totalProviderAmount;
 
-    mapping(address => EnumerableSet.AddressSet) private _providerPoolTokens;
+    mapping(address => EnumerableSet.AddressSet) private _providerPools;
 
     // allows execution by the owner only
     modifier ownerOnly {
@@ -97,11 +97,11 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param _provider         liquidity provider address
      * @param _poolToken        pool token address
      */
-    function addProviderPoolToken(
+    function addProviderPool(
         address _provider,
         IDSToken _poolToken
     ) external override ownerOnly returns (bool) {
-        return _providerPoolTokens[_provider].add(address(_poolToken));
+        return _providerPools[_provider].add(address(_poolToken));
     }
 
     /**
@@ -110,11 +110,11 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param _provider         liquidity provider address
      * @param _poolToken        pool token address
      */
-    function removeProviderPoolToken(
+    function removeProviderPool(
         address _provider,
         IDSToken _poolToken
     ) external override ownerOnly returns (bool) {
-        return _providerPoolTokens[_provider].remove(address(_poolToken));
+        return _providerPools[_provider].remove(address(_poolToken));
     }
 
     /**
@@ -123,10 +123,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param _provider         liquidity provider address
      * @return pool tokens
      */
-    function providerPoolTokens(
+    function providerPools(
         address _provider
     ) external override view returns (IDSToken[] memory) {
-        EnumerableSet.AddressSet storage set = _providerPoolTokens[_provider];
+        EnumerableSet.AddressSet storage set = _providerPools[_provider];
         uint256 length = set.length();
         IDSToken[] memory arr = new IDSToken[](length);
         for (uint256 i = 0; i < length; i++) {
