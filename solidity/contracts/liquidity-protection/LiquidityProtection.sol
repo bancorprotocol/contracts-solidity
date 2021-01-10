@@ -13,9 +13,7 @@ import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
-import "./interfaces/ILiquidityProtectionStore.sol";
-import "./interfaces/ILiquidityProtectionStats.sol";
-import "./interfaces/ILiquidityProtectionSettings.sol";
+import "./interfaces/ILiquidityProtection.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
@@ -41,7 +39,7 @@ interface ILiquidityPoolConverter is IConverter {
 /**
  * @dev This contract implements the liquidity protection mechanism.
  */
-contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Time {
+contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned, ReentrancyGuard, Time {
     using SafeMath for uint256;
     using Math for *;
 
@@ -71,9 +69,9 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
 
-    ILiquidityProtectionSettings public immutable settings;
-    ILiquidityProtectionStore public immutable store;
-    ILiquidityProtectionStats public immutable stats;
+    ILiquidityProtectionSettings public override immutable settings;
+    ILiquidityProtectionStore public override immutable store;
+    ILiquidityProtectionStats public override immutable stats;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -211,6 +209,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     )
         external
         payable
+        override
         protected
         validAddress(_owner)
         poolSupported(_poolAnchor)
@@ -237,6 +236,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
     )
         external
         payable
+        override
         protected
         poolSupported(_poolAnchor)
         poolWhitelisted(_poolAnchor)
@@ -583,7 +583,7 @@ contract LiquidityProtection is TokenHandler, Utils, Owned, ReentrancyGuard, Tim
      * @param _id      id in the caller's list of protected liquidity
      * @param _portion portion of liquidity to remove, in PPM
      */
-    function removeLiquidity(uint256 _id, uint32 _portion) external validPortion(_portion) protected {
+    function removeLiquidity(uint256 _id, uint32 _portion) external override protected validPortion(_portion) {
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
 
         // save a local copy of `networkToken`
