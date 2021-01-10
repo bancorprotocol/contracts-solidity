@@ -15,17 +15,17 @@ interface ILiquidityProtection {
     function settings() external view returns (ILiquidityProtectionSettings);
 
     function addLiquidityFor(
-        address _owner,
-        IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
-        uint256 _amount
+        address owner,
+        IConverterAnchor poolAnchor,
+        IERC20Token reserveToken,
+        uint256 amount
     ) external payable returns (uint256);
 
     function addLiquidity(
-        IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
-        uint256 _amount
+        IConverterAnchor poolAnchor,
+        IERC20Token reserveToken,
+        uint256 amount
     ) external payable returns (uint256);
 
-    function removeLiquidity(uint256 _id, uint32 _portion) external;
+    function removeLiquidity(uint256 id, uint32 portion) external;
 }
