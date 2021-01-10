@@ -9,19 +9,20 @@ describe('LiquidityProtectionStats', () => {
     let liquidityProtectionStats;
 
     const owner = accounts[1];
-    const nonOwner = accounts[2];
+    const seeder = accounts[2];
     const provider = accounts[3];
     const poolToken = accounts[4];
     const reserveToken = accounts[5];
 
     beforeEach(async () => {
         liquidityProtectionStats = await LiquidityProtectionStats.new();
-        await liquidityProtectionStats.grantRole(roles.ROLE_OWNER, owner, { from: defaultSender });
+        await liquidityProtectionStats.grantRole(roles.ROLE_OWNER, owner);
+        await liquidityProtectionStats.grantRole(roles.ROLE_SEEDER, seeder);
     });
 
     it('should revert when a non owner attempts to increase total amounts', async () => {
         await expectRevert(
-            liquidityProtectionStats.increaseTotalAmounts(provider, poolToken, reserveToken, 1, 2, { from: nonOwner }),
+            liquidityProtectionStats.increaseTotalAmounts(provider, poolToken, reserveToken, 1, 2),
             'ERR_ACCESS_DENIED'
         );
         expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
@@ -32,7 +33,7 @@ describe('LiquidityProtectionStats', () => {
     it('should revert when a non owner attempts to decrease total amounts', async () => {
         await liquidityProtectionStats.increaseTotalAmounts(provider, poolToken, reserveToken, 1, 2, { from: owner });
         await expectRevert(
-            liquidityProtectionStats.decreaseTotalAmounts(provider, poolToken, reserveToken, 1, 2, { from: nonOwner }),
+            liquidityProtectionStats.decreaseTotalAmounts(provider, poolToken, reserveToken, 1, 2),
             'ERR_ACCESS_DENIED'
         );
         expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('1');
@@ -42,7 +43,7 @@ describe('LiquidityProtectionStats', () => {
 
     it('should revert when a non owner attempts to add a provider pool', async () => {
         await expectRevert(
-            liquidityProtectionStats.addProviderPool(provider, poolToken, { from: nonOwner }),
+            liquidityProtectionStats.addProviderPool(provider, poolToken),
             'ERR_ACCESS_DENIED'
         );
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.empty();
@@ -51,7 +52,7 @@ describe('LiquidityProtectionStats', () => {
     it('should revert when a non owner attempts to remove a provider pool', async () => {
         await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner }),
         await expectRevert(
-            liquidityProtectionStats.removeProviderPool(provider, poolToken, { from: nonOwner }),
+            liquidityProtectionStats.removeProviderPool(provider, poolToken),
             'ERR_ACCESS_DENIED'
         );
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.not.empty();
