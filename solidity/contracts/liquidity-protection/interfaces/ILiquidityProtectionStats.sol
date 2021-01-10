@@ -34,6 +34,21 @@ interface ILiquidityProtectionStats {
         IDSToken _poolToken
     ) external returns (bool);
 
+    function totalPoolAmount(
+        IDSToken _poolToken
+    ) external view returns (uint256);
+
+    function totalReserveAmount(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken
+    ) external view returns (uint256);
+
+    function totalProviderAmount(
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        address _provider
+    ) external view returns (uint256);
+
     function providerPools(
         address _provider
     ) external view returns (IDSToken[] memory);

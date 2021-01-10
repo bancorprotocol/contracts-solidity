@@ -21,9 +21,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
-    mapping(IDSToken => uint256) public totalPoolAmount;
-    mapping(IDSToken => mapping(IERC20Token => uint256)) public totalReserveAmount;
-    mapping(IDSToken => mapping(IERC20Token => mapping(address => uint256))) public totalProviderAmount;
+    mapping(IDSToken => uint256) public override totalPoolAmount;
+    mapping(IDSToken => mapping(IERC20Token => uint256)) public override totalReserveAmount;
+    mapping(IDSToken => mapping(IERC20Token => mapping(address => uint256))) public override totalProviderAmount;
 
     mapping(address => EnumerableSet.AddressSet) private _providerPools;
 
