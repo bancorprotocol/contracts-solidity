@@ -62,7 +62,7 @@ describe('LiquidityProtectionStats', () => {
             expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
             expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('0');
             expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('0');
-            const response = await liquidityProtectionStats.increaseTotalAmounts(provider, poolToken, reserveToken, 1, 2, { from: owner });
+            await liquidityProtectionStats.increaseTotalAmounts(provider, poolToken, reserveToken, 1, 2, { from: owner });
             expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('1');
             expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('2');
             expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('2');
@@ -73,7 +73,7 @@ describe('LiquidityProtectionStats', () => {
             expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('1');
             expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('2');
             expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('2');
-            const response = await liquidityProtectionStats.decreaseTotalAmounts(provider, poolToken, reserveToken, 1, 2, { from: owner });
+            await liquidityProtectionStats.decreaseTotalAmounts(provider, poolToken, reserveToken, 1, 2, { from: owner });
             expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
             expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('0');
             expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('0');
