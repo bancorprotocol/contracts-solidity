@@ -9,47 +9,47 @@ import "../../token/interfaces/IERC20Token.sol";
 */
 interface ILiquidityProtectionStats {
     function increaseTotalAmounts(
-        address _provider,
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        address provider,
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     ) external;
 
     function decreaseTotalAmounts(
-        address _provider,
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        address provider,
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     ) external;
 
     function addProviderPool(
-        address _provider,
-        IDSToken _poolToken
+        address provider,
+        IDSToken poolToken
     ) external returns (bool);
 
     function removeProviderPool(
-        address _provider,
-        IDSToken _poolToken
+        address provider,
+        IDSToken poolToken
     ) external returns (bool);
 
     function totalPoolAmount(
-        IDSToken _poolToken
+        IDSToken poolToken
     ) external view returns (uint256);
 
     function totalReserveAmount(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken
+        IDSToken poolToken,
+        IERC20Token reserveToken
     ) external view returns (uint256);
 
     function totalProviderAmount(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        address _provider
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        address provider
     ) external view returns (uint256);
 
     function providerPools(
-        address _provider
+        address provider
     ) external view returns (IDSToken[] memory);
 }

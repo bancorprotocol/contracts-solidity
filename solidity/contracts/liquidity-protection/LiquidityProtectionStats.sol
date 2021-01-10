@@ -52,123 +52,123 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     /**
      * @dev increases the total amounts
      *
-     * @param _provider         liquidity provider address
-     * @param _poolToken        pool token address
-     * @param _reserveToken     reserve token address
-     * @param _poolAmount       pool token amount
-     * @param _reserveAmount    reserve token amount
+     * @param provider          liquidity provider address
+     * @param poolToken         pool token address
+     * @param reserveToken      reserve token address
+     * @param poolAmount        pool token amount
+     * @param reserveAmount     reserve token amount
      */
     function increaseTotalAmounts(
-        address _provider,
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        address provider,
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     ) external override ownerOnly {
-        _totalPoolAmount[_poolToken] = _totalPoolAmount[_poolToken].add(_poolAmount);
-        _totalReserveAmount[_poolToken][_reserveToken] = _totalReserveAmount[_poolToken][_reserveToken].add(_reserveAmount);
-        _totalProviderAmount[_poolToken][_reserveToken][_provider] = _totalProviderAmount[_poolToken][_reserveToken][_provider].add(_reserveAmount);
+        _totalPoolAmount[poolToken] = _totalPoolAmount[poolToken].add(poolAmount);
+        _totalReserveAmount[poolToken][reserveToken] = _totalReserveAmount[poolToken][reserveToken].add(reserveAmount);
+        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][provider].add(reserveAmount);
     }
 
     /**
      * @dev decreases the total amounts
      *
-     * @param _provider         liquidity provider address
-     * @param _poolToken        pool token address
-     * @param _reserveToken     reserve token address
-     * @param _poolAmount       pool token amount
-     * @param _reserveAmount    reserve token amount
+     * @param provider          liquidity provider address
+     * @param poolToken         pool token address
+     * @param reserveToken      reserve token address
+     * @param poolAmount        pool token amount
+     * @param reserveAmount     reserve token amount
      */
     function decreaseTotalAmounts(
-        address _provider,
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        address provider,
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     ) external override ownerOnly {
-        _totalPoolAmount[_poolToken] = _totalPoolAmount[_poolToken].sub(_poolAmount);
-        _totalReserveAmount[_poolToken][_reserveToken] = _totalReserveAmount[_poolToken][_reserveToken].sub(_reserveAmount);
-        _totalProviderAmount[_poolToken][_reserveToken][_provider] = _totalProviderAmount[_poolToken][_reserveToken][_provider].sub(_reserveAmount);
+        _totalPoolAmount[poolToken] = _totalPoolAmount[poolToken].sub(poolAmount);
+        _totalReserveAmount[poolToken][reserveToken] = _totalReserveAmount[poolToken][reserveToken].sub(reserveAmount);
+        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][provider].sub(reserveAmount);
     }
 
     /**
      * @dev adds a pool to the list of pools of a liquidity provider
      *
-     * @param _provider         liquidity provider address
-     * @param _poolToken        pool token address
+     * @param provider          liquidity provider address
+     * @param poolToken         pool token address
      */
     function addProviderPool(
-        address _provider,
-        IDSToken _poolToken
+        address provider,
+        IDSToken poolToken
     ) external override ownerOnly returns (bool) {
-        return _providerPools[_provider].add(address(_poolToken));
+        return _providerPools[provider].add(address(poolToken));
     }
 
     /**
      * @dev removes a pool from the list of pools of a liquidity provider
      *
-     * @param _provider         liquidity provider address
-     * @param _poolToken        pool token address
+     * @param provider          liquidity provider address
+     * @param poolToken         pool token address
      */
     function removeProviderPool(
-        address _provider,
-        IDSToken _poolToken
+        address provider,
+        IDSToken poolToken
     ) external override ownerOnly returns (bool) {
-        return _providerPools[_provider].remove(address(_poolToken));
+        return _providerPools[provider].remove(address(poolToken));
     }
 
     /**
      * @dev returns the total amount of protected pool tokens
      *
-     * @param _poolToken    pool token address
+     * @param poolToken     pool token address
      * @return total amount of protected pool tokens
      */
     function totalPoolAmount(
-        IDSToken _poolToken
+        IDSToken poolToken
     ) external view override returns (uint256) {
-        return _totalPoolAmount[_poolToken];
+        return _totalPoolAmount[poolToken];
     }
 
     /**
      * @dev returns the total amount of protected reserve tokens
      *
-     * @param _poolToken    pool token address
-     * @param _reserveToken reserve token address
+     * @param poolToken     pool token address
+     * @param reserveToken  reserve token address
      * @return total amount of protected reserve tokens
      */
     function totalReserveAmount(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken
+        IDSToken poolToken,
+        IERC20Token reserveToken
     ) external view override returns (uint256) {
-        return _totalReserveAmount[_poolToken][_reserveToken];
+        return _totalReserveAmount[poolToken][reserveToken];
     }
 
     /**
      * @dev returns the total amount of a liquidity provider's protected reserve tokens
      *
-     * @param _poolToken    pool token address
-     * @param _reserveToken reserve token address
-     * @param _provider     liquidity provider address
+     * @param poolToken     pool token address
+     * @param reserveToken  reserve token address
+     * @param provider      liquidity provider address
      * @return total amount of the liquidity provider's protected reserve tokens
      */
     function totalProviderAmount(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        address _provider
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        address provider
     ) external view override returns (uint256) {
-        return _totalProviderAmount[_poolToken][_reserveToken][_provider];
+        return _totalProviderAmount[poolToken][reserveToken][provider];
     }
 
     /**
      * @dev returns the list of pools of a liquidity provider
      *
-     * @param _provider liquidity provider address
+     * @param provider  liquidity provider address
      * @return pool tokens
      */
     function providerPools(
-        address _provider
+        address provider
     ) external view override returns (IDSToken[] memory) {
-        EnumerableSet.AddressSet storage set = _providerPools[_provider];
+        EnumerableSet.AddressSet storage set = _providerPools[provider];
         uint256 length = set.length();
         IDSToken[] memory arr = new IDSToken[](length);
         for (uint256 i = 0; i < length; i++) {
@@ -178,36 +178,36 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     }
 
     function seedPoolAmounts(
-        IDSToken[] calldata _tokens,
-        uint256[] calldata _amounts
+        IDSToken[] calldata tokens,
+        uint256[] calldata amounts
     ) external seederOnly {
-        uint256 length = _tokens.length;
+        uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalPoolAmount[_tokens[i]] = _amounts[i];
+            _totalPoolAmount[tokens[i]] = amounts[i];
         }
     }
 
     function seedReserveAmounts(
-        IDSToken[] calldata _tokens,
-        IERC20Token[] calldata _reserves,
-        uint256[] calldata _amounts
+        IDSToken[] calldata tokens,
+        IERC20Token[] calldata reserves,
+        uint256[] calldata amounts
     ) external seederOnly {
-        uint256 length = _tokens.length;
+        uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalReserveAmount[_tokens[i]][_reserves[i]] = _amounts[i];
+            _totalReserveAmount[tokens[i]][reserves[i]] = amounts[i];
         }
     }
 
     function seedProviderAmounts(
-        IDSToken[] calldata _tokens,
-        IERC20Token[] calldata _reserves,
-        address[] calldata _providers,
-        uint256[] calldata _amounts
+        IDSToken[] calldata tokens,
+        IERC20Token[] calldata reserves,
+        address[] calldata providers,
+        uint256[] calldata amounts
     ) external seederOnly {
-        uint256 length = _tokens.length;
+        uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalProviderAmount[_tokens[i]][_reserves[i]][_providers[i]] = _amounts[i];
-            _providerPools[_providers[i]].add(address(_tokens[i]));
+            _totalProviderAmount[tokens[i]][reserves[i]][providers[i]] = amounts[i];
+            _providerPools[providers[i]].add(address(tokens[i]));
         }
     }
 }
