@@ -58,6 +58,39 @@ describe('LiquidityProtectionStats', () => {
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.not.empty();
     });
 
+    it('should revert when a non seeder attempts to seed pool amounts', async () => {
+        await expectRevert(
+            liquidityProtectionStats.seedPoolAmounts([poolToken], [1]),
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
+    });
+
+    it('should revert when a non seeder attempts to seed reserve amounts', async () => {
+        await expectRevert(
+            liquidityProtectionStats.seedReserveAmounts([poolToken], [reserveToken], [1]),
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('0');
+    });
+
+    it('should revert when a non seeder attempts to seed provider amounts', async () => {
+        await expectRevert(
+            liquidityProtectionStats.seedProviderAmounts([poolToken], [reserveToken], [provider], [1]),
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('0');
+        expect(await liquidityProtectionStats.providerPools(provider)).to.be.empty();
+    });
+
+    it('should revert when a non seeder attempts to seed pool amounts', async () => {
+        await expectRevert(
+            liquidityProtectionStats.seedPoolAmounts([poolToken], [1]),
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
+    });
+
     it('should succeed when the owner attempts to increase total amounts', async () => {
         expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
         expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('0');
@@ -90,5 +123,25 @@ describe('LiquidityProtectionStats', () => {
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.not.empty();
         await liquidityProtectionStats.removeProviderPool(provider, poolToken, { from: owner }),
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.empty();
+    });
+
+    it('should succeed when a seeder attempts to seed pool amounts', async () => {
+        expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
+        await liquidityProtectionStats.seedPoolAmounts([poolToken], [1], { from: seeder });
+        expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('1');
+    });
+
+    it('should succeed when a seeder attempts to seed reserve amounts', async () => {
+        expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('0');
+        await liquidityProtectionStats.seedReserveAmounts([poolToken], [reserveToken], [1], { from: seeder });
+        expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('1');
+    });
+
+    it('should succeed when a seeder attempts to seed provider amounts', async () => {
+        expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('0');
+        expect(await liquidityProtectionStats.providerPools(provider)).to.be.empty();
+        await liquidityProtectionStats.seedProviderAmounts([poolToken], [reserveToken], [provider], [1], { from: seeder });
+        expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('1');
+        expect(await liquidityProtectionStats.providerPools(provider)).to.be.not.empty();
     });
 });
