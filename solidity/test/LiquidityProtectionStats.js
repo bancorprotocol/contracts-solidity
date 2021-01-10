@@ -41,6 +41,23 @@ describe('LiquidityProtectionStats', () => {
             expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('2');
         });
 
+        it('should revert when a non owner attempts to add a provider pool', async () => {
+            await expectRevert(
+                liquidityProtectionStats.addProviderPool(provider, poolToken, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
+            expect(await liquidityProtectionStats.providerPools(provider)).to.be.empty();
+        });
+
+        it('should revert when a non owner attempts to remove a provider pool', async () => {
+            await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner }),
+            await expectRevert(
+                liquidityProtectionStats.removeProviderPool(provider, poolToken, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
+            expect(await liquidityProtectionStats.providerPools(provider)).to.be.not.empty();
+        });
+
         it('should succeed when the owner attempts to increase total amounts', async () => {
             expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
             expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('0');
@@ -60,6 +77,19 @@ describe('LiquidityProtectionStats', () => {
             expect(await liquidityProtectionStats.totalPoolAmount(poolToken)).to.be.bignumber.equal('0');
             expect(await liquidityProtectionStats.totalReserveAmount(poolToken, reserveToken)).to.be.bignumber.equal('0');
             expect(await liquidityProtectionStats.totalProviderAmount(poolToken, reserveToken, provider)).to.be.bignumber.equal('0');
+        });
+
+        it('should succeed when the owner attempts to add a provider pool', async () => {
+            expect(await liquidityProtectionStats.providerPools(provider)).to.be.empty();
+            await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner }),
+            expect(await liquidityProtectionStats.providerPools(provider)).to.be.not.empty();
+        });
+
+        it('should succeed when the owner attempts to remove a provider pool', async () => {
+            await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner }),
+            expect(await liquidityProtectionStats.providerPools(provider)).to.be.not.empty();
+            await liquidityProtectionStats.removeProviderPool(provider, poolToken, { from: owner }),
+            expect(await liquidityProtectionStats.providerPools(provider)).to.be.empty();
         });
     });
 });
