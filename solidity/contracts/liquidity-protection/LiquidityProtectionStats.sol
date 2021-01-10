@@ -14,8 +14,8 @@ import "../token/interfaces/IERC20Token.sol";
  * @dev This contract aggregates the statistics of the liquidity protection mechanism.
  */
 contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, Utils {
-    using SafeMath for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using SafeMath for uint256;
 
     bytes32 public constant ROLE_SUPERVISOR = keccak256("ROLE_SUPERVISOR");
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
@@ -94,8 +94,8 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     /**
      * @dev adds a pool to the list of pools of a liquidity provider
      *
-     * @param provider          liquidity provider address
-     * @param poolToken         pool token address
+     * @param provider  liquidity provider address
+     * @param poolToken pool token address
      */
     function addProviderPool(
         address provider,
@@ -107,8 +107,8 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     /**
      * @dev removes a pool from the list of pools of a liquidity provider
      *
-     * @param provider          liquidity provider address
-     * @param poolToken         pool token address
+     * @param provider  liquidity provider address
+     * @param poolToken pool token address
      */
     function removeProviderPool(
         address provider,
@@ -120,7 +120,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     /**
      * @dev returns the total amount of protected pool tokens
      *
-     * @param poolToken     pool token address
+     * @param poolToken pool token address
      * @return total amount of protected pool tokens
      */
     function totalPoolAmount(
@@ -177,6 +177,12 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         return arr;
     }
 
+    /**
+     * @dev seeds the total amount of protected pool tokens
+     *
+     * @param tokens    pool token addresses
+     * @param amounts   pool token amounts
+     */
     function seedPoolAmounts(
         IDSToken[] calldata tokens,
         uint256[] calldata amounts
@@ -187,6 +193,13 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         }
     }
 
+    /**
+     * @dev seeds the total amount of protected reserve tokens
+     *
+     * @param tokens    pool token addresses
+     * @param reserves  reserve token addresses
+     * @param amounts   reserve token amounts
+     */
     function seedReserveAmounts(
         IDSToken[] calldata tokens,
         IERC20Token[] calldata reserves,
@@ -198,6 +211,14 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         }
     }
 
+    /**
+     * @dev seeds the total amount of protected reserve tokens per liquidity provider
+     *
+     * @param tokens    pool token addresses
+     * @param reserves  reserve token addresses
+     * @param providers liquidity provider addresses
+     * @param amounts   reserve token amounts
+     */
     function seedProviderAmounts(
         IDSToken[] calldata tokens,
         IERC20Token[] calldata reserves,
