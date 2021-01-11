@@ -4,18 +4,18 @@ const Web3 = require("web3");
 
 const SOURCE_NODE   = process.argv[2];
 const TARGET_NODE   = process.argv[3];
-const STORE_ADDRESS = process.argv[4];
-const STORE_BLOCK   = process.argv[5];
-const PRIVATE_KEY   = process.argv[6];
-const TEST_MODE     = process.argv[7];
+const OWNER_ADDRESS = process.argv[4];
+const STORE_ADDRESS = process.argv[5];
+const STORE_BLOCK   = process.argv[6];
+const PRIVATE_KEY   = process.argv[7];
 
 const MIN_GAS_LIMIT = 100000;
 
 const CFG_FILE_NAME = "stats_migration.json";
 const ARTIFACTS_DIR = path.resolve(__dirname, "../build");
 
-const ROLE_SUPERVISOR = Web3.utils.keccak256("ROLE_SUPERVISOR");
 const ROLE_SEEDER     = Web3.utils.keccak256("ROLE_SEEDER");
+const ROLE_SUPERVISOR = Web3.utils.keccak256("ROLE_SUPERVISOR");
 
 const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT    = 10000;
@@ -263,12 +263,6 @@ async function writeTarget(web3Func, stats, config, state) {
     }
 }
 
-async function isLocked(web3, store) {
-    const owner = await rpc(store.methods.owner());
-    const code  = await web3.eth.getCode(owner);
-    return code === "0x";
-}
-
 async function run() {
     const sourceWeb3 = new Web3(SOURCE_NODE);
     const targetWeb3 = new Web3(TARGET_NODE);
@@ -293,22 +287,18 @@ async function run() {
     const store = deployed(sourceWeb3, "LiquidityProtectionStore", STORE_ADDRESS);
     const stats = await web3Func(deploy, "liquidityProtectionStats", "LiquidityProtectionStats", []);
     await execute(stats.methods.grantRole(ROLE_SEEDER, account.address));
+    await execute(stats.methods.grantRole(ROLE_SUPERVISOR, OWNER_ADDRESS));
 
-    let sourceState = await readSource(sourceWeb3 , store);
+    let sourceState = await readSource(sourceWeb3, store);
     let targetState = await readTarget(sourceState, stats);
 
-    for (let locked = false; true; ) {
+    while (true) {
         const diffState = getOuterDiff(KEYS, targetState, sourceState);
         for (const key of KEYS.filter(key => !isEmpty(diffState[key]))) {
             await writeTarget(web3Func, stats, WRITE_CONFIG[key], diffState[key]);
         }
-        if (locked) {
+        if ((await userDecision({1: "another iteration", 2: "conclusion"})) === "2") {
             break;
-        }
-        if ((await userDecision({1: "another iteration", 2: "final iteration"})) === "2") {
-            for (locked = TEST_MODE; !locked; locked = await isLocked(sourceWeb3, store)) {
-                await scan("Lock the store and press enter when ready...");
-            }
         }
         targetState = sourceState;
         sourceState = await readSource(sourceWeb3, store);
@@ -321,9 +311,8 @@ async function run() {
         throw new Error("Data migration failed");
     }
 
-    await execute(stats.methods.grantRole(ROLE_SUPERVISOR, await rpc(store.methods.owner())));
-    await execute(stats.methods.revokeRole(ROLE_SEEDER, account.address));
-    await execute(stats.methods.revokeRole(ROLE_SUPERVISOR, account.address));
+    await execute(stats.methods.renounceRole(ROLE_SEEDER, account.address));
+    await execute(stats.methods.renounceRole(ROLE_SUPERVISOR, account.address));
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
         if (web3.currentProvider.disconnect) {
