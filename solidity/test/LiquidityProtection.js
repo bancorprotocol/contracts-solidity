@@ -444,7 +444,7 @@ describe('LiquidityProtection', () => {
             });
 
             for (const { baseBalance, networkBalance } of POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES) {
-                it.skip(`pool available space with additional balances of ${baseBalance} and ${networkBalance}`, async () => {
+                it(`pool available space with additional balances of ${baseBalance} and ${networkBalance}`, async () => {
                     await baseToken.approve(converter.address, baseBalance);
                     await networkToken.approve(converter.address, networkBalance);
                     await converter.addLiquidity(
@@ -482,7 +482,7 @@ describe('LiquidityProtection', () => {
                             networkToken.address,
                             networkTokenAvailableSpace.addn(1)
                         ),
-                        'ERR_UNDERFLOW'
+                        'SafeMath: subtraction overflow'
                     );
                     await liquidityProtection.addLiquidity(
                         poolToken.address,
@@ -898,7 +898,7 @@ describe('LiquidityProtection', () => {
                                         owner,
                                         recipient
                                     ),
-                                    'ERR_UNDERFLOW'
+                                    'SafeMath: subtraction overflow'
                                 );
                             });
                         });
