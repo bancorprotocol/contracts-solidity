@@ -11,9 +11,7 @@ import "../../converter/interfaces/IConverterAnchor.sol";
 */
 interface ILiquidityProtection {
     function store() external view returns (ILiquidityProtectionStore);
-
     function stats() external view returns (ILiquidityProtectionStats);
-
     function settings() external view returns (ILiquidityProtectionSettings);
 
     function addLiquidityFor(

@@ -69,9 +69,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
 
-    ILiquidityProtectionSettings public immutable override settings;
-    ILiquidityProtectionStore public immutable override store;
-    ILiquidityProtectionStats public immutable override stats;
+    ILiquidityProtectionSettings public override immutable settings;
+    ILiquidityProtectionStore public override immutable store;
+    ILiquidityProtectionStats public override immutable stats;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -862,8 +862,17 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _reserveAmount
     ) internal returns (uint256) {
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
-        stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
-        stats.addProviderPool(_provider, _poolToken);
+        stats.increaseTotalAmounts(
+            _provider,
+            _poolToken,
+            _reserveToken,
+            _poolAmount,
+            _reserveAmount
+        );
+        stats.addProviderPool(
+            _provider,
+            _poolToken
+        );
         return
             store.addProtectedLiquidity(
                 _provider,
@@ -894,12 +903,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _poolToken       pool token
      * @param _reserveToken    reserve token
      */
-    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken)
-        internal
-        view
-        virtual
-        returns (Fraction memory)
-    {
+    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view virtual returns (Fraction memory) {
         // get the pool token supply
         uint256 poolTokenSupply = _poolToken.totalSupply();
 
@@ -1159,7 +1163,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 min = (hi / d).mul(lo);
 
         if (q > 0) {
-            return Math.max(min, (p * lo) / q);
+            return Math.max(min, p * lo / q);
         }
         return min;
     }
@@ -1284,7 +1288,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     // utility to get the other reserve
-    function converterOtherReserve(IConverter _converter, IERC20Token _thisReserve) private view returns (IERC20Token) {
+    function converterOtherReserve(
+        IConverter _converter,
+        IERC20Token _thisReserve
+    ) private view returns (IERC20Token) {
         IERC20Token otherReserve = _converter.connectorTokens(0);
         return otherReserve != _thisReserve ? otherReserve : _converter.connectorTokens(1);
     }

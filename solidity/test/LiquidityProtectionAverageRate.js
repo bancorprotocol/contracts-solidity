@@ -141,7 +141,8 @@ describe('LiquidityProtectionAverageRate', () => {
                 poolToken = await DSToken.at(await converterRegistry.getAnchor(0));
                 if (converterType === 1) {
                     converter = await LiquidityPoolV1Converter.at(await poolToken.owner());
-                } else {
+                }
+                else {
                     converter = await StandardPoolConverter.at(await poolToken.owner());
                 }
 
@@ -153,9 +154,7 @@ describe('LiquidityProtectionAverageRate', () => {
                 for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
                     for (let maxDeviation = 1; maxDeviation <= 10; maxDeviation += 1) {
                         it(`minutesElapsed = ${minutesElapsed}, convertPortion = ${convertPortion}%, maxDeviation = ${maxDeviation}%`, async () => {
-                            await liquidityProtectionSettings.setAverageRateMaxDeviation(
-                                percentageToPPM(`${maxDeviation}%`)
-                            );
+                            await liquidityProtectionSettings.setAverageRateMaxDeviation(percentageToPPM(`${maxDeviation}%`));
                             await reserveToken1.approve(converter.address, INITIAL_AMOUNT);
                             await reserveToken2.approve(converter.address, INITIAL_AMOUNT);
                             await converter.addLiquidity(
@@ -168,9 +167,7 @@ describe('LiquidityProtectionAverageRate', () => {
                             await converter.setTime(time);
                             const averageRate = await converter.recentAverageRate(reserveToken1.address);
                             const actualRate = await Promise.all(
-                                [reserveToken2, reserveToken1].map((reserveToken) =>
-                                    reserveToken.balanceOf(converter.address)
-                                )
+                                [reserveToken2, reserveToken1].map((reserveToken) => reserveToken.balanceOf(converter.address))
                             );
                             const min = Decimal(actualRate[0].toString())
                                 .div(actualRate[1].toString())

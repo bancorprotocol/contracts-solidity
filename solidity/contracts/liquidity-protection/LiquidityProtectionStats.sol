@@ -68,10 +68,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     ) external override ownerOnly {
         _totalPoolAmount[poolToken] = _totalPoolAmount[poolToken].add(poolAmount);
         _totalReserveAmount[poolToken][reserveToken] = _totalReserveAmount[poolToken][reserveToken].add(reserveAmount);
-        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][
-            provider
-        ]
-            .add(reserveAmount);
+        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][provider].add(reserveAmount);
     }
 
     /**
@@ -93,10 +90,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     ) external override ownerOnly {
         _totalPoolAmount[poolToken] = _totalPoolAmount[poolToken].sub(poolAmount);
         _totalReserveAmount[poolToken][reserveToken] = _totalReserveAmount[poolToken][reserveToken].sub(reserveAmount);
-        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][
-            provider
-        ]
-            .sub(reserveAmount);
+        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][provider].sub(reserveAmount);
     }
 
     /**
@@ -106,7 +100,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param provider  liquidity provider address
      * @param poolToken pool token address
      */
-    function addProviderPool(address provider, IDSToken poolToken) external override ownerOnly returns (bool) {
+    function addProviderPool(
+        address provider,
+        IDSToken poolToken
+    ) external override ownerOnly returns (bool) {
         return _providerPools[provider].add(address(poolToken));
     }
 
@@ -117,7 +114,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param provider  liquidity provider address
      * @param poolToken pool token address
      */
-    function removeProviderPool(address provider, IDSToken poolToken) external override ownerOnly returns (bool) {
+    function removeProviderPool(
+        address provider,
+        IDSToken poolToken
+    ) external override ownerOnly returns (bool) {
         return _providerPools[provider].remove(address(poolToken));
     }
 
@@ -127,7 +127,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param poolToken pool token address
      * @return total amount of protected pool tokens
      */
-    function totalPoolAmount(IDSToken poolToken) external view override returns (uint256) {
+    function totalPoolAmount(
+        IDSToken poolToken
+    ) external view override returns (uint256) {
         return _totalPoolAmount[poolToken];
     }
 
@@ -138,7 +140,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param reserveToken  reserve token address
      * @return total amount of protected reserve tokens
      */
-    function totalReserveAmount(IDSToken poolToken, IERC20Token reserveToken) external view override returns (uint256) {
+    function totalReserveAmount(
+        IDSToken poolToken,
+        IERC20Token reserveToken
+    ) external view override returns (uint256) {
         return _totalReserveAmount[poolToken][reserveToken];
     }
 
@@ -164,7 +169,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param provider  liquidity provider address
      * @return pool tokens
      */
-    function providerPools(address provider) external view override returns (IDSToken[] memory) {
+    function providerPools(
+        address provider
+    ) external view override returns (IDSToken[] memory) {
         EnumerableSet.AddressSet storage set = _providerPools[provider];
         uint256 length = set.length();
         IDSToken[] memory arr = new IDSToken[](length);
@@ -181,7 +188,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param tokens    pool token addresses
      * @param amounts   pool token amounts
      */
-    function seedPoolAmounts(IDSToken[] calldata tokens, uint256[] calldata amounts) external seederOnly {
+    function seedPoolAmounts(
+        IDSToken[] calldata tokens,
+        uint256[] calldata amounts
+    ) external seederOnly {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
             _totalPoolAmount[tokens[i]] = amounts[i];
