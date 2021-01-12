@@ -29,14 +29,19 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
 
     // allows execution only by an owner
     modifier ownerOnly {
-        require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
+        _hasRole(ROLE_OWNER);
         _;
     }
 
     // allows execution only by a seeder
     modifier seederOnly {
-        require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
+        _hasRole(ROLE_SEEDER);
         _;
+    }
+
+    // error message binary size optimization
+    function _hasRole(bytes32 role) internal view {
+        require(hasRole(role, msg.sender), "ERR_ACCESS_DENIED");
     }
 
     constructor() public {
