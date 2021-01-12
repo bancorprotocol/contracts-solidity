@@ -15,6 +15,7 @@ import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtection.sol";
+import "./interfaces/ILiquidityProtectionEventsSubscriber.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
@@ -78,9 +79,21 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     IERC20Token public immutable govToken;
     ITokenGovernance public immutable govTokenGovernance;
     ICheckpointStore public immutable lastRemoveCheckpointStore;
+    ILiquidityProtectionEventsSubscriber public eventsSubscriber;
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
+
+    /**
+     * @dev updates the event subscriber
+     *
+     * @param _prevEventsSubscriber the previous events subscriber
+     * @param _newEventsSubscriber the new events subscriber
+     */
+    event EventSubscriberUpdated(
+        ILiquidityProtectionEventsSubscriber indexed _prevEventsSubscriber,
+        ILiquidityProtectionEventsSubscriber indexed _newEventsSubscriber
+    );
 
     /**
      * @dev initializes a new LiquidityProtection contract
@@ -190,6 +203,20 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function acceptStoreOwnership() external ownerOnly {
         store.acceptOwnership();
+    }
+
+    /**
+     * @dev sets the events subscriber
+     */
+    function setEventsSubscriber(ILiquidityProtectionEventsSubscriber _eventsSubscriber)
+        external
+        ownerOnly
+        validAddress(address(_eventsSubscriber))
+        notThis(address(_eventsSubscriber))
+    {
+        emit EventSubscriberUpdated(eventsSubscriber, _eventsSubscriber);
+
+        eventsSubscriber = _eventsSubscriber;
     }
 
     /**
@@ -613,6 +640,18 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(liquidity.timestamp < time(), "ERR_TOO_EARLY");
 
         if (_portion == PPM_RESOLUTION) {
+            // notify event subscribers
+            if (address(eventsSubscriber) != address(0)) {
+                eventsSubscriber.onRemovingLiquidity(
+                    _id,
+                    _provider,
+                    liquidity.poolToken,
+                    liquidity.reserveToken,
+                    liquidity.poolAmount,
+                    liquidity.reserveAmount
+                );
+            }
+
             // remove the protected liquidity from the provider
             stats.decreaseTotalAmounts(
                 liquidity.provider,
@@ -628,6 +667,18 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             uint256 fullReserveAmount = liquidity.reserveAmount;
             liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
+
+            // notify event subscribers
+            if (address(eventsSubscriber) != address(0)) {
+                eventsSubscriber.onRemovingLiquidity(
+                    _id,
+                    _provider,
+                    liquidity.poolToken,
+                    liquidity.reserveToken,
+                    liquidity.poolAmount,
+                    liquidity.reserveAmount
+                );
+            }
 
             stats.decreaseTotalAmounts(
                 liquidity.provider,
@@ -878,6 +929,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _poolAmount,
         uint256 _reserveAmount
     ) internal returns (uint256) {
+        // notify event subscribers
+        if (address(eventsSubscriber) != address(0)) {
+            eventsSubscriber.onAddingLiquidity(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
+        }
+
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
         stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         stats.addProviderPool(_provider, _poolToken);
