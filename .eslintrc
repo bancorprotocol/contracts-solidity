@@ -13,7 +13,6 @@
             }
         ],
         "semi": ["error", "always"],
-        "brace-style": ["error", "stroustrup"],
         "no-plusplus": "off",
         "no-await-in-loop": "off",
         "no-restricted-syntax": "off",
