@@ -19,9 +19,10 @@ const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConv
 const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -50,6 +51,7 @@ describe('LiquidityProtectionAverageRate', () => {
             let bancorNetwork;
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
+            let liquidityProtectionStats;
             let liquidityProtection;
             let reserveToken1;
             let reserveToken2;
@@ -86,9 +88,11 @@ describe('LiquidityProtectionAverageRate', () => {
                 const checkpointStore = await CheckpointStore.new({ from: owner });
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
+                liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtection = await LiquidityProtection.new(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
+                    liquidityProtectionStats.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
@@ -96,6 +100,7 @@ describe('LiquidityProtectionAverageRate', () => {
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
+                await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
@@ -136,8 +141,7 @@ describe('LiquidityProtectionAverageRate', () => {
                 poolToken = await DSToken.at(await converterRegistry.getAnchor(0));
                 if (converterType === 1) {
                     converter = await LiquidityPoolV1Converter.at(await poolToken.owner());
-                }
-                else {
+                } else {
                     converter = await StandardPoolConverter.at(await poolToken.owner());
                 }
 
@@ -149,7 +153,9 @@ describe('LiquidityProtectionAverageRate', () => {
                 for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
                     for (let maxDeviation = 1; maxDeviation <= 10; maxDeviation += 1) {
                         it(`minutesElapsed = ${minutesElapsed}, convertPortion = ${convertPortion}%, maxDeviation = ${maxDeviation}%`, async () => {
-                            await liquidityProtectionSettings.setAverageRateMaxDeviation(percentageToPPM(`${maxDeviation}%`));
+                            await liquidityProtectionSettings.setAverageRateMaxDeviation(
+                                percentageToPPM(`${maxDeviation}%`)
+                            );
                             await reserveToken1.approve(converter.address, INITIAL_AMOUNT);
                             await reserveToken2.approve(converter.address, INITIAL_AMOUNT);
                             await converter.addLiquidity(
@@ -162,7 +168,9 @@ describe('LiquidityProtectionAverageRate', () => {
                             await converter.setTime(time);
                             const averageRate = await converter.recentAverageRate(reserveToken1.address);
                             const actualRate = await Promise.all(
-                                [reserveToken2, reserveToken1].map((reserveToken) => reserveToken.balanceOf(converter.address))
+                                [reserveToken2, reserveToken1].map((reserveToken) =>
+                                    reserveToken.balanceOf(converter.address)
+                                )
                             );
                             const min = Decimal(actualRate[0].toString())
                                 .div(actualRate[1].toString())
