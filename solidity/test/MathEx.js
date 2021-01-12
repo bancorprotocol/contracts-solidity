@@ -11,6 +11,8 @@ const MAX_UINT256 = Decimal(2).pow(256).sub(1);
 const SCALES = [6, 18, 30].map((n) => Decimal(10).pow(n)).concat(MAX_UINT128);
 
 describe('MathEx', () => {
+    let mathContract;
+
     before(async () => {
         mathContract = await MathContract.new();
     });
