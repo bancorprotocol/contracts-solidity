@@ -597,13 +597,6 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         if (_portion == PPM_RESOLUTION) {
             // remove the protected liquidity from the provider
-            stats.decreaseTotalAmounts(
-                liquidity.provider,
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.poolAmount,
-                liquidity.reserveAmount
-            );
             store.removeProtectedLiquidity(_id);
         } else {
             // remove a portion of the protected liquidity from the provider
@@ -612,19 +605,21 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
 
-            stats.decreaseTotalAmounts(
-                liquidity.provider,
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.poolAmount,
-                liquidity.reserveAmount
-            );
             store.updateProtectedLiquidityAmounts(
                 _id,
                 fullPoolAmount - liquidity.poolAmount,
                 fullReserveAmount - liquidity.reserveAmount
             );
         }
+
+        // update the statistics
+        stats.decreaseTotalAmounts(
+            liquidity.provider,
+            liquidity.poolToken,
+            liquidity.reserveToken,
+            liquidity.poolAmount,
+            liquidity.reserveAmount
+        );
 
         // update last liquidity removal checkpoint
         lastRemoveCheckpointStore.addCheckpoint(msg.sender);
