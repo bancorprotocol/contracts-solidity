@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
 import "../utility/interfaces/ICheckpointStore.sol";
+import "../utility/MathEx.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/Owned.sol";
-import "../utility/SafeMath.sol";
-import "../utility/Math.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/Types.sol";
 import "../utility/Time.sol";
@@ -41,7 +42,7 @@ interface ILiquidityPoolConverter is IConverter {
  */
 contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned, ReentrancyGuard, Time {
     using SafeMath for uint256;
-    using Math for *;
+    using MathEx for *;
 
     struct ProtectedLiquidity {
         address provider; // liquidity provider
@@ -69,9 +70,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
 
-    ILiquidityProtectionSettings public override immutable settings;
-    ILiquidityProtectionStore public override immutable store;
-    ILiquidityProtectionStats public override immutable stats;
+    ILiquidityProtectionSettings public immutable override settings;
+    ILiquidityProtectionStore public immutable override store;
+    ILiquidityProtectionStats public immutable override stats;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -465,7 +466,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
 
         // get the amount of network tokens which can minted for the pool
-        uint256 networkTokensCanBeMinted = Math.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
+        uint256 networkTokensCanBeMinted = MathEx.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
 
         // return the maximum amount of base token liquidity that can be single-sided staked in the pool
         return networkTokensCanBeMinted.mul(reserveBalanceBase).div(reserveBalanceNetwork);
@@ -584,7 +585,23 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _portion portion of liquidity to remove, in PPM
      */
     function removeLiquidity(uint256 _id, uint32 _portion) external override protected validPortion(_portion) {
-        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, msg.sender);
+        removeLiquidity(msg.sender, _id, _portion);
+    }
+
+    /**
+     * @dev removes protected liquidity from a pool
+     * also burns governance tokens from the caller if the caller removes network tokens
+     *
+     * @param _provider protected liquidity provider
+     * @param _id id in the caller's list of protected liquidity
+     * @param _portion portion of liquidity to remove, in PPM
+     */
+    function removeLiquidity(
+        address payable _provider,
+        uint256 _id,
+        uint32 _portion
+    ) internal {
+        ProtectedLiquidity memory liquidity = protectedLiquidity(_id, _provider);
 
         // save a local copy of `networkToken`
         IERC20Token networkTokenLocal = networkToken;
@@ -627,7 +644,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         }
 
         // update last liquidity removal checkpoint
-        lastRemoveCheckpointStore.addCheckpoint(msg.sender);
+        lastRemoveCheckpointStore.addCheckpoint(_provider);
 
         // add the pool tokens to the system
         store.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
@@ -635,7 +652,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
         // tokens to the contract itself, since only token holders can burn their tokens
         if (liquidity.reserveToken == networkTokenLocal) {
-            safeTransferFrom(govToken, msg.sender, address(this), liquidity.reserveAmount);
+            safeTransferFrom(govToken, _provider, address(this), liquidity.reserveAmount);
             govTokenGovernance.burn(liquidity.reserveAmount);
         }
 
@@ -666,7 +683,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             // mint network tokens for the caller and lock them
             networkTokenGovernance.mint(address(store), targetAmount);
             settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
-            lockTokens(msg.sender, targetAmount);
+            lockTokens(_provider, targetAmount);
             return;
         }
 
@@ -692,10 +709,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 baseBalance;
         if (liquidity.reserveToken == ETH_RESERVE_ADDRESS) {
             baseBalance = address(this).balance;
-            msg.sender.transfer(baseBalance);
+            _provider.transfer(baseBalance);
         } else {
             baseBalance = liquidity.reserveToken.balanceOf(address(this));
-            safeTransfer(liquidity.reserveToken, msg.sender, baseBalance);
+            safeTransfer(liquidity.reserveToken, _provider, baseBalance);
         }
 
         // compensate the caller with network tokens if still needed
@@ -709,7 +726,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
             // lock network tokens for the caller
             safeTransfer(networkTokenLocal, address(store), delta);
-            lockTokens(msg.sender, delta);
+            lockTokens(_provider, delta);
         }
 
         // if the contract still holds network tokens, burn them
@@ -762,7 +779,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         Fraction memory level = protectionLevel(_addTimestamp, _removeTimestamp);
 
         // calculate the compensation amount
-        return compensationAmount(_reserveAmount, Math.max(_reserveAmount, total), loss, level);
+        return compensationAmount(_reserveAmount, MathEx.max(_reserveAmount, total), loss, level);
     }
 
     /**
@@ -862,17 +879,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _reserveAmount
     ) internal returns (uint256) {
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
-        stats.increaseTotalAmounts(
-            _provider,
-            _poolToken,
-            _reserveToken,
-            _poolAmount,
-            _reserveAmount
-        );
-        stats.addProviderPool(
-            _provider,
-            _poolToken
-        );
+        stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
+        stats.addProviderPool(_provider, _poolToken);
         return
             store.addProtectedLiquidity(
                 _provider,
@@ -903,7 +911,12 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _poolToken       pool token
      * @param _reserveToken    reserve token
      */
-    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken) internal view virtual returns (Fraction memory) {
+    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken)
+        internal
+        view
+        virtual
+        returns (Fraction memory)
+    {
         // get the pool token supply
         uint256 poolTokenSupply = _poolToken.totalSupply();
 
@@ -1150,8 +1163,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         Fraction memory _addRate,
         Fraction memory _removeRate
     ) internal pure returns (uint256) {
-        uint256 n = Math.ceilSqrt(_addRate.d.mul(_removeRate.n)).mul(_poolRate.n);
-        uint256 d = Math.floorSqrt(_addRate.n.mul(_removeRate.d)).mul(_poolRate.d);
+        uint256 n = MathEx.ceilSqrt(_addRate.d.mul(_removeRate.n)).mul(_poolRate.n);
+        uint256 d = MathEx.floorSqrt(_addRate.n.mul(_removeRate.d)).mul(_poolRate.d);
 
         uint256 x = n * _poolAmount;
         if (x / n == _poolAmount) {
@@ -1159,11 +1172,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         }
 
         (uint256 hi, uint256 lo) = n > _poolAmount ? (n, _poolAmount) : (_poolAmount, n);
-        (uint256 p, uint256 q) = Math.reducedRatio(hi, d, MAX_UINT256 / lo);
+        (uint256 p, uint256 q) = MathEx.reducedRatio(hi, d, MAX_UINT256 / lo);
         uint256 min = (hi / d).mul(lo);
 
         if (q > 0) {
-            return Math.max(min, p * lo / q);
+            return MathEx.max(min, (p * lo) / q);
         }
         return min;
     }
@@ -1180,7 +1193,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 ratioD = _newRate.d.mul(_prevRate.n);
 
         uint256 prod = ratioN * ratioD;
-        uint256 root = prod / ratioN == ratioD ? Math.floorSqrt(prod) : Math.floorSqrt(ratioN) * Math.floorSqrt(ratioD);
+        uint256 root =
+            prod / ratioN == ratioD ? MathEx.floorSqrt(prod) : MathEx.floorSqrt(ratioN) * MathEx.floorSqrt(ratioD);
         uint256 sum = ratioN.add(ratioD);
 
         // the arithmetic below is safe because `x + y >= sqrt(x * y) * 2`
@@ -1230,8 +1244,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ) internal pure returns (uint256) {
         uint256 levelN = _level.n.mul(_amount);
         uint256 levelD = _level.d;
-        uint256 maxVal = Math.max(Math.max(levelN, levelD), _total);
-        (uint256 lossN, uint256 lossD) = Math.reducedRatio(_loss.n, _loss.d, MAX_UINT256 / maxVal);
+        uint256 maxVal = MathEx.max(MathEx.max(levelN, levelD), _total);
+        (uint256 lossN, uint256 lossD) = MathEx.reducedRatio(_loss.n, _loss.d, MAX_UINT256 / maxVal);
         return _total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).div(lossD.mul(levelD)));
     }
 
@@ -1288,10 +1302,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     // utility to get the other reserve
-    function converterOtherReserve(
-        IConverter _converter,
-        IERC20Token _thisReserve
-    ) private view returns (IERC20Token) {
+    function converterOtherReserve(IConverter _converter, IERC20Token _thisReserve) private view returns (IERC20Token) {
         IERC20Token otherReserve = _converter.connectorTokens(0);
         return otherReserve != _thisReserve ? otherReserve : _converter.connectorTokens(1);
     }

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "./interfaces/ILiquidityProtectionStore.sol";
 import "../utility/Owned.sol";
-import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/Utils.sol";
 
@@ -272,7 +274,9 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
 
         // update the total amounts
         totalProtectedPoolAmounts[_poolToken] = totalProtectedPoolAmounts[_poolToken].add(_poolAmount);
-        totalProtectedReserveAmounts[_poolToken][_reserveToken] = totalProtectedReserveAmounts[_poolToken][_reserveToken]
+        totalProtectedReserveAmounts[_poolToken][_reserveToken] = totalProtectedReserveAmounts[_poolToken][
+            _reserveToken
+        ]
             .add(_reserveAmount);
 
         emit ProtectionAdded(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);

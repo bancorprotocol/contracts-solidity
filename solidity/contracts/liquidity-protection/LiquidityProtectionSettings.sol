@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 
@@ -9,7 +10,6 @@ import "../converter/interfaces/IConverter.sol";
 import "../converter/interfaces/IConverterRegistry.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../utility/ContractRegistryClient.sol";
-import "../utility/SafeMath.sol";
 import "../utility/Utils.sol";
 
 /**
@@ -67,10 +67,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _prevMin  previous minimum amount of network token liquidity for minting
      * @param _newMin   new minimum amount of network token liquidity for minting
      */
-    event MinNetworkTokenLiquidityForMintingUpdated(
-        uint256 _prevMin,
-        uint256 _newMin
-    );
+    event MinNetworkTokenLiquidityForMintingUpdated(uint256 _prevMin, uint256 _newMin);
 
     /**
      * @dev triggered when the default network token minting limit is updated
@@ -78,10 +75,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _prevDefault  previous default network token minting limit
      * @param _newDefault   new default network token minting limit
      */
-    event DefaultNetworkTokenMintingLimitUpdated(
-        uint256 _prevDefault,
-        uint256 _newDefault
-    );
+    event DefaultNetworkTokenMintingLimitUpdated(uint256 _prevDefault, uint256 _newDefault);
 
     /**
      * @dev triggered when a pool network token minting limit is updated
@@ -90,11 +84,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _prevLimit    previous limit
      * @param _newLimit     new limit
      */
-    event NetworkTokenMintingLimitUpdated(
-        IConverterAnchor indexed _poolAnchor,
-        uint256 _prevLimit,
-        uint256 _newLimit
-    );
+    event NetworkTokenMintingLimitUpdated(IConverterAnchor indexed _poolAnchor, uint256 _prevLimit, uint256 _newLimit);
 
     /**
      * @dev triggered when the amount of network tokens minted into a specific pool is updated
@@ -103,11 +93,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _prevAmount  previous amount
      * @param _newAmount   new amount
      */
-    event NetworkTokensMintedUpdated(
-        IConverterAnchor indexed _poolAnchor,
-        uint256 _prevAmount,
-        uint256 _newAmount
-    );
+    event NetworkTokensMintedUpdated(IConverterAnchor indexed _poolAnchor, uint256 _prevAmount, uint256 _newAmount);
 
     /**
      * @dev triggered when the protection delays are updated

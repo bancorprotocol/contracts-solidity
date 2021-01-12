@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
@@ -7,7 +10,6 @@ import "./converter/interfaces/IBancorFormula.sol";
 import "./utility/ContractRegistryClient.sol";
 import "./utility/ReentrancyGuard.sol";
 import "./utility/TokenHolder.sol";
-import "./utility/SafeMath.sol";
 import "./token/interfaces/IEtherToken.sol";
 import "./token/interfaces/IDSToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
