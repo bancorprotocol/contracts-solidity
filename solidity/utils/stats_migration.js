@@ -4,10 +4,9 @@ const Web3 = require('web3');
 
 const SOURCE_NODE = process.argv[2];
 const TARGET_NODE = process.argv[3];
-const OWNER_ADDRESS = process.argv[4];
+const ADMIN_ADDRESS = process.argv[4];
 const STORE_ADDRESS = process.argv[5];
-const STORE_BLOCK = process.argv[6];
-const PRIVATE_KEY = process.argv[7];
+const PRIVATE_KEY = process.argv[6];
 
 const MIN_GAS_LIMIT = 100000;
 
@@ -21,8 +20,8 @@ const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT = 10000;
 
 const WRITE_CONFIG = {
-    poolAmounts: { batchSize: 80, methodName: 'seedPoolAmounts' },
-    reserveAmounts: { batchSize: 70, methodName: 'seedReserveAmounts' },
+    poolAmounts: { batchSize: 120, methodName: 'seedPoolAmounts' },
+    reserveAmounts: { batchSize: 90, methodName: 'seedReserveAmounts' },
     providerAmounts: { batchSize: 60, methodName: 'seedProviderAmounts' }
 };
 
@@ -279,7 +278,7 @@ async function run() {
     const store = deployed(sourceWeb3, 'LiquidityProtectionStore', STORE_ADDRESS);
     const stats = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
     await execute(stats.methods.grantRole(ROLE_SEEDER, account.address));
-    await execute(stats.methods.grantRole(ROLE_SUPERVISOR, OWNER_ADDRESS));
+    await execute(stats.methods.grantRole(ROLE_SUPERVISOR, ADMIN_ADDRESS));
 
     let sourceState = await readSource(sourceWeb3, store);
     let targetState = await readTarget(sourceState, stats);
