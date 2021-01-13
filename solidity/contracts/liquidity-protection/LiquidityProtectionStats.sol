@@ -76,7 +76,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].add(
             reserveAmount
         );
-        _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][reserveToken]
+        _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][
+            reserveToken
+        ]
             .add(reserveAmount);
     }
 
@@ -101,7 +103,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].sub(
             reserveAmount
         );
-        _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][reserveToken]
+        _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][
+            reserveToken
+        ]
             .sub(reserveAmount);
     }
 
