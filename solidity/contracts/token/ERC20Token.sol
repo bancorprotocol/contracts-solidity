@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "./interfaces/IERC20Token.sol";
 import "../utility/Utils.sol";
-import "../utility/SafeMath.sol";
 
 /**
  * @dev ERC20 Standard Token implementation

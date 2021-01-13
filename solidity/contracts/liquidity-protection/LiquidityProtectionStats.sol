@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -72,7 +73,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         uint256 reserveAmount
     ) external override ownerOnly {
         _totalPoolAmounts[poolToken] = _totalPoolAmounts[poolToken].add(poolAmount);
-        _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].add(reserveAmount);
+        _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].add(
+            reserveAmount
+        );
         _totalProviderAmounts[poolToken][reserveToken][provider] = _totalProviderAmounts[poolToken][reserveToken][
             provider
         ]
@@ -97,7 +100,9 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         uint256 reserveAmount
     ) external override ownerOnly {
         _totalPoolAmounts[poolToken] = _totalPoolAmounts[poolToken].sub(poolAmount);
-        _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].sub(reserveAmount);
+        _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].sub(
+            reserveAmount
+        );
         _totalProviderAmounts[poolToken][reserveToken][provider] = _totalProviderAmounts[poolToken][reserveToken][
             provider
         ]

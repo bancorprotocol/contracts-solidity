@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "../../LiquidityPoolConverter.sol";
 import "../../../token/interfaces/IDSToken.sol";
-import "../../../utility/Math.sol";
-import "../../../utility/Types.sol";
+import "../../../utility/MathEx.sol";
 import "../../../utility/Time.sol";
+import "../../../utility/Types.sol";
 
 /**
  * @dev This contract is a specialized version of a converter that manages
@@ -14,7 +15,7 @@ import "../../../utility/Time.sol";
  * is 2 reserves with 50%/50% weights.
  */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
-    using Math for *;
+    using MathEx for *;
 
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
 
@@ -96,13 +97,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         // validate input
         require(_sourceToken != _targetToken, "ERR_SAME_SOURCE_TARGET");
 
-        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveTargetAmount(
-            reserveBalance(_sourceToken),
-            reserves[_sourceToken].weight,
-            reserveBalance(_targetToken),
-            reserves[_targetToken].weight,
-            _amount
-        );
+        uint256 amount =
+            IBancorFormula(addressOf(BANCOR_FORMULA)).crossReserveTargetAmount(
+                reserveBalance(_sourceToken),
+                reserves[_sourceToken].weight,
+                reserveBalance(_targetToken),
+                reserves[_targetToken].weight,
+                _amount
+            );
 
         // return the amount minus the conversion fee and the conversion fee
         uint256 fee = calculateFee(amount);
@@ -180,12 +182,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
-    function recentAverageRate(IERC20Token _token)
-        external
-        view
-        validReserve(_token)
-        returns (uint256, uint256)
-    {
+    function recentAverageRate(IERC20Token _token) external view validReserve(_token) returns (uint256, uint256) {
         // verify that the pool is standard
         require(isStandardPool, "ERR_NON_STANDARD_POOL");
 
@@ -239,7 +236,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
         uint256 newRateD = prevAverage.d.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
 
-        (newRateN, newRateD) = Math.reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
+        (newRateN, newRateD) = MathEx.reducedRatio(newRateN, newRateD, MAX_RATE_FACTOR_LOWER_BOUND);
         return Fraction({ n: newRateN, d: newRateD });
     }
 
@@ -421,12 +418,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
 
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = formula.fundSupplyAmount(
-            totalSupply,
-            reserves[_reserveTokens[_reserveTokenIndex]].balance,
-            reserveRatio,
-            _reserveAmount
-        );
+        uint256 amount =
+            formula.fundSupplyAmount(
+                totalSupply,
+                reserves[_reserveTokens[_reserveTokenIndex]].balance,
+                reserveRatio,
+                _reserveAmount
+            );
 
         for (uint256 i = 0; i < reserveAmounts.length; i++)
             reserveAmounts[i] = formula.fundCost(
@@ -545,7 +543,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         returns (uint256)
     {
         // calculate the geometric-mean of the reserve amounts approved by the user
-        uint256 amount = Math.geometricMean(_reserveAmounts);
+        uint256 amount = MathEx.geometricMean(_reserveAmounts);
 
         // transfer each one of the reserve amounts from the user to the pool
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
