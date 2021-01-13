@@ -13,6 +13,8 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 const ROLE_SEEDER = Web3.utils.keccak256('ROLE_SEEDER');
 const ROLE_SUPERVISOR = Web3.utils.keccak256('ROLE_SUPERVISOR');
 
+const STANDARD_ERRORS = ['nonce too low', 'replacement transaction underpriced'];
+
 if (!fs.existsSync(ARTIFACTS_DIR)) {
     throw new Error('Artifacts not found');
 }
@@ -97,8 +99,8 @@ async function run() {
     const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
     const stats = deployed(web3, 'LiquidityProtectionStats', STATS_ADDRESS);
 
-    await send(account, gasPrice, stats.methods.renounceRole(ROLE_SEEDER, account.address));
-    await send(account, gasPrice, stats.methods.renounceRole(ROLE_SUPERVISOR, account.address));
+    await send(web3, account, gasPrice, stats.methods.renounceRole(ROLE_SEEDER, account.address));
+    await send(web3, account, gasPrice, stats.methods.renounceRole(ROLE_SUPERVISOR, account.address));
 
     if (web3.currentProvider.disconnect) {
         web3.currentProvider.disconnect();
