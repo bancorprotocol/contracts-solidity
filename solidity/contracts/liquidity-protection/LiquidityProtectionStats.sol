@@ -4,6 +4,7 @@ pragma solidity 0.6.12;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/ILiquidityProtectionStats.sol";
 import "../utility/Utils.sol";
@@ -21,22 +22,27 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
-    mapping(IDSToken => uint256) private _totalPoolAmount;
-    mapping(IDSToken => mapping(IERC20Token => uint256)) private _totalReserveAmount;
-    mapping(IDSToken => mapping(IERC20Token => mapping(address => uint256))) private _totalProviderAmount;
+    mapping(IDSToken => uint256) private _totalPoolAmounts;
+    mapping(IDSToken => mapping(IERC20Token => uint256)) private _totalReserveAmounts;
+    mapping(IDSToken => mapping(IERC20Token => mapping(address => uint256))) private _totalProviderAmounts;
 
     mapping(address => EnumerableSet.AddressSet) private _providerPools;
 
     // allows execution only by an owner
     modifier ownerOnly {
-        require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
+        _hasRole(ROLE_OWNER);
         _;
     }
 
     // allows execution only by a seeder
     modifier seederOnly {
-        require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
+        _hasRole(ROLE_SEEDER);
         _;
+    }
+
+    // error message binary size optimization
+    function _hasRole(bytes32 role) internal view {
+        require(hasRole(role, msg.sender), "ERR_ACCESS_DENIED");
     }
 
     constructor() public {
@@ -66,9 +72,11 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override ownerOnly {
-        _totalPoolAmount[poolToken] = _totalPoolAmount[poolToken].add(poolAmount);
-        _totalReserveAmount[poolToken][reserveToken] = _totalReserveAmount[poolToken][reserveToken].add(reserveAmount);
-        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][
+        _totalPoolAmounts[poolToken] = _totalPoolAmounts[poolToken].add(poolAmount);
+        _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].add(
+            reserveAmount
+        );
+        _totalProviderAmounts[poolToken][reserveToken][provider] = _totalProviderAmounts[poolToken][reserveToken][
             provider
         ]
             .add(reserveAmount);
@@ -91,9 +99,11 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override ownerOnly {
-        _totalPoolAmount[poolToken] = _totalPoolAmount[poolToken].sub(poolAmount);
-        _totalReserveAmount[poolToken][reserveToken] = _totalReserveAmount[poolToken][reserveToken].sub(reserveAmount);
-        _totalProviderAmount[poolToken][reserveToken][provider] = _totalProviderAmount[poolToken][reserveToken][
+        _totalPoolAmounts[poolToken] = _totalPoolAmounts[poolToken].sub(poolAmount);
+        _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].sub(
+            reserveAmount
+        );
+        _totalProviderAmounts[poolToken][reserveToken][provider] = _totalProviderAmounts[poolToken][reserveToken][
             provider
         ]
             .sub(reserveAmount);
@@ -128,7 +138,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @return total amount of protected pool tokens
      */
     function totalPoolAmount(IDSToken poolToken) external view override returns (uint256) {
-        return _totalPoolAmount[poolToken];
+        return _totalPoolAmounts[poolToken];
     }
 
     /**
@@ -139,7 +149,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @return total amount of protected reserve tokens
      */
     function totalReserveAmount(IDSToken poolToken, IERC20Token reserveToken) external view override returns (uint256) {
-        return _totalReserveAmount[poolToken][reserveToken];
+        return _totalReserveAmounts[poolToken][reserveToken];
     }
 
     /**
@@ -155,7 +165,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         IERC20Token reserveToken,
         address provider
     ) external view override returns (uint256) {
-        return _totalProviderAmount[poolToken][reserveToken][provider];
+        return _totalProviderAmounts[poolToken][reserveToken][provider];
     }
 
     /**
@@ -184,7 +194,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     function seedPoolAmounts(IDSToken[] calldata tokens, uint256[] calldata amounts) external seederOnly {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalPoolAmount[tokens[i]] = amounts[i];
+            _totalPoolAmounts[tokens[i]] = amounts[i];
         }
     }
 
@@ -203,7 +213,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     ) external seederOnly {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalReserveAmount[tokens[i]][reserves[i]] = amounts[i];
+            _totalReserveAmounts[tokens[i]][reserves[i]] = amounts[i];
         }
     }
 
@@ -224,7 +234,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     ) external seederOnly {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalProviderAmount[tokens[i]][reserves[i]][providers[i]] = amounts[i];
+            _totalProviderAmounts[tokens[i]][reserves[i]][providers[i]] = amounts[i];
             _providerPools[providers[i]].add(address(tokens[i]));
         }
     }

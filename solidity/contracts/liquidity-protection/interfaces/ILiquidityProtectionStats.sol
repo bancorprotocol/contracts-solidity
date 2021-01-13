@@ -24,24 +24,13 @@ interface ILiquidityProtectionStats {
         uint256 reserveAmount
     ) external;
 
-    function addProviderPool(
-        address provider,
-        IDSToken poolToken
-    ) external returns (bool);
+    function addProviderPool(address provider, IDSToken poolToken) external returns (bool);
 
-    function removeProviderPool(
-        address provider,
-        IDSToken poolToken
-    ) external returns (bool);
+    function removeProviderPool(address provider, IDSToken poolToken) external returns (bool);
 
-    function totalPoolAmount(
-        IDSToken poolToken
-    ) external view returns (uint256);
+    function totalPoolAmount(IDSToken poolToken) external view returns (uint256);
 
-    function totalReserveAmount(
-        IDSToken poolToken,
-        IERC20Token reserveToken
-    ) external view returns (uint256);
+    function totalReserveAmount(IDSToken poolToken, IERC20Token reserveToken) external view returns (uint256);
 
     function totalProviderAmount(
         IDSToken poolToken,
@@ -49,7 +38,5 @@ interface ILiquidityProtectionStats {
         address provider
     ) external view returns (uint256);
 
-    function providerPools(
-        address provider
-    ) external view returns (IDSToken[] memory);
+    function providerPools(address provider) external view returns (IDSToken[] memory);
 }

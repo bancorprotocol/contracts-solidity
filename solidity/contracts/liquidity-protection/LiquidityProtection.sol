@@ -640,26 +640,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(liquidity.timestamp < time(), "ERR_TOO_EARLY");
 
         if (_portion == PPM_RESOLUTION) {
-            // notify event subscribers
-            if (address(eventsSubscriber) != address(0)) {
-                eventsSubscriber.onRemovingLiquidity(
-                    _id,
-                    _provider,
-                    liquidity.poolToken,
-                    liquidity.reserveToken,
-                    liquidity.poolAmount,
-                    liquidity.reserveAmount
-                );
-            }
-
             // remove the protected liquidity from the provider
-            stats.decreaseTotalAmounts(
-                liquidity.provider,
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.poolAmount,
-                liquidity.reserveAmount
-            );
             store.removeProtectedLiquidity(_id);
         } else {
             // remove a portion of the protected liquidity from the provider
@@ -668,31 +649,33 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             liquidity.poolAmount = liquidity.poolAmount.mul(_portion) / PPM_RESOLUTION;
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
 
-            // notify event subscribers
-            if (address(eventsSubscriber) != address(0)) {
-                eventsSubscriber.onRemovingLiquidity(
-                    _id,
-                    _provider,
-                    liquidity.poolToken,
-                    liquidity.reserveToken,
-                    liquidity.poolAmount,
-                    liquidity.reserveAmount
-                );
-            }
-
-            stats.decreaseTotalAmounts(
-                liquidity.provider,
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.poolAmount,
-                liquidity.reserveAmount
-            );
             store.updateProtectedLiquidityAmounts(
                 _id,
                 fullPoolAmount - liquidity.poolAmount,
                 fullReserveAmount - liquidity.reserveAmount
             );
         }
+
+        // notify event subscribers
+        if (address(eventsSubscriber) != address(0)) {
+            eventsSubscriber.onRemovingLiquidity(
+                _id,
+                _provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount
+            );
+        }
+
+        // update the statistics
+        stats.decreaseTotalAmounts(
+            liquidity.provider,
+            liquidity.poolToken,
+            liquidity.reserveToken,
+            liquidity.poolAmount,
+            liquidity.reserveAmount
+        );
 
         // update last liquidity removal checkpoint
         lastRemoveCheckpointStore.addCheckpoint(_provider);
