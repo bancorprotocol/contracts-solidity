@@ -37,7 +37,7 @@ function setState(state, keys, value) {
 
 function sumValues(state, key) {
     return Object.entries(state)
-        .filter(entry => entry[0].startsWith(key))
+        .filter((entry) => entry[0].startsWith(key))
         .reduce((sum, entry) => sum.add(Web3.utils.toBN(entry[1])), Web3.utils.toBN(0))
         .toString();
 }
@@ -103,7 +103,7 @@ async function readAmounts(state, func) {
 async function readStoreAmounts(state, store) {
     return {
         poolAmounts: await readAmounts(state.poolAmounts, store.methods.totalProtectedPoolAmount),
-        reserveAmounts: await readAmounts(state.reserveAmounts, store.methods.totalProtectedReserveAmount),
+        reserveAmounts: await readAmounts(state.reserveAmounts, store.methods.totalProtectedReserveAmount)
     };
 }
 
