@@ -37,7 +37,7 @@ function setState(state, keys, value) {
 
 function sumValues(state, key) {
     return Object.entries(state)
-        .filter((entry) => entry[0].startsWith(key))
+        .filter((entry) => entry[0].endsWith(key))
         .reduce((sum, entry) => sum.add(Web3.utils.toBN(entry[1])), Web3.utils.toBN(0))
         .toString();
 }
@@ -81,7 +81,7 @@ async function readState(web3, store) {
             const reserveAmount = pls[j][4];
             setState(poolAmounts, [poolToken], poolAmount);
             setState(reserveAmounts, [poolToken, reserveToken], reserveAmount);
-            setState(providerAmounts, [poolToken, reserveToken, provider], reserveAmount);
+            setState(providerAmounts, [provider, poolToken, reserveToken], reserveAmount);
         }
     }
 

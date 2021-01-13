@@ -24,7 +24,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
 
     mapping(IDSToken => uint256) private _totalPoolAmounts;
     mapping(IDSToken => mapping(IERC20Token => uint256)) private _totalReserveAmounts;
-    mapping(IDSToken => mapping(IERC20Token => mapping(address => uint256))) private _totalProviderAmounts;
+    mapping(address => mapping(IDSToken => mapping(IERC20Token => uint256))) private _totalProviderAmounts;
 
     mapping(address => EnumerableSet.AddressSet) private _providerPools;
 
@@ -76,9 +76,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].add(
             reserveAmount
         );
-        _totalProviderAmounts[poolToken][reserveToken][provider] = _totalProviderAmounts[poolToken][reserveToken][
-            provider
-        ]
+        _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][reserveToken]
             .add(reserveAmount);
     }
 
@@ -103,9 +101,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         _totalReserveAmounts[poolToken][reserveToken] = _totalReserveAmounts[poolToken][reserveToken].sub(
             reserveAmount
         );
-        _totalProviderAmounts[poolToken][reserveToken][provider] = _totalProviderAmounts[poolToken][reserveToken][
-            provider
-        ]
+        _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][reserveToken]
             .sub(reserveAmount);
     }
 
@@ -155,17 +151,17 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
     /**
      * @dev returns the total amount of a liquidity provider's protected reserve tokens
      *
+     * @param provider      liquidity provider address
      * @param poolToken     pool token address
      * @param reserveToken  reserve token address
-     * @param provider      liquidity provider address
      * @return total amount of the liquidity provider's protected reserve tokens
      */
     function totalProviderAmount(
+        address provider,
         IDSToken poolToken,
-        IERC20Token reserveToken,
-        address provider
+        IERC20Token reserveToken
     ) external view override returns (uint256) {
-        return _totalProviderAmounts[poolToken][reserveToken][provider];
+        return _totalProviderAmounts[provider][poolToken][reserveToken];
     }
 
     /**
@@ -221,20 +217,20 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @dev seeds the total amount of protected reserve tokens per liquidity provider
      * can only be executed only by a seeder
      *
+     * @param providers liquidity provider addresses
      * @param tokens    pool token addresses
      * @param reserves  reserve token addresses
-     * @param providers liquidity provider addresses
      * @param amounts   reserve token amounts
      */
     function seedProviderAmounts(
+        address[] calldata providers,
         IDSToken[] calldata tokens,
         IERC20Token[] calldata reserves,
-        address[] calldata providers,
         uint256[] calldata amounts
     ) external seederOnly {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalProviderAmounts[tokens[i]][reserves[i]][providers[i]] = amounts[i];
+            _totalProviderAmounts[providers[i]][tokens[i]][reserves[i]] = amounts[i];
             _providerPools[providers[i]].add(address(tokens[i]));
         }
     }

@@ -216,7 +216,7 @@ async function readSource(web3, store) {
             const reserveAmount = pls[j][4];
             setState(poolAmounts, [poolToken], poolAmount);
             setState(reserveAmounts, [poolToken, reserveToken], reserveAmount);
-            setState(providerAmounts, [poolToken, reserveToken, provider], reserveAmount);
+            setState(providerAmounts, [provider, poolToken, reserveToken], reserveAmount);
         }
     }
 
