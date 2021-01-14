@@ -283,6 +283,7 @@ async function run() {
         sourcePools = await readSource(sourceWeb3, store);
     }
 
+    targetPools = await readTarget(sourcePools, stats);
     const diffPools = getDiff(sourcePools, targetPools);
     console.log('Differences:', JSON.stringify(diffPools, null, 4));
 
