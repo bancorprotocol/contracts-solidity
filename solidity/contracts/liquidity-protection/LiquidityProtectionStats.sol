@@ -188,13 +188,13 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @dev seeds the total amount of protected pool tokens
      * can only be executed only by a seeder
      *
-     * @param tokens    pool token addresses
-     * @param amounts   pool token amounts
+     * @param poolTokens    pool token addresses
+     * @param poolAmounts   pool token amounts
      */
-    function seedPoolAmounts(IDSToken[] calldata tokens, uint256[] calldata amounts) external seederOnly {
-        uint256 length = tokens.length;
+    function seedPoolAmounts(IDSToken[] calldata poolTokens, uint256[] calldata poolAmounts) external seederOnly {
+        uint256 length = poolTokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalPoolAmounts[tokens[i]] = amounts[i];
+            _totalPoolAmounts[poolTokens[i]] = poolAmounts[i];
         }
     }
 
@@ -202,18 +202,18 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @dev seeds the total amount of protected reserve tokens
      * can only be executed only by a seeder
      *
-     * @param tokens    pool token addresses
-     * @param reserves  reserve token addresses
-     * @param amounts   reserve token amounts
+     * @param poolTokens        pool token addresses
+     * @param reserveTokens     reserve token addresses
+     * @param reserveAmounts    reserve token amounts
      */
     function seedReserveAmounts(
-        IDSToken[] calldata tokens,
-        IERC20Token[] calldata reserves,
-        uint256[] calldata amounts
+        IDSToken[] calldata poolTokens,
+        IERC20Token[] calldata reserveTokens,
+        uint256[] calldata reserveAmounts
     ) external seederOnly {
-        uint256 length = tokens.length;
+        uint256 length = poolTokens.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalReserveAmounts[tokens[i]][reserves[i]] = amounts[i];
+            _totalReserveAmounts[poolTokens[i]][reserveTokens[i]] = reserveAmounts[i];
         }
     }
 
@@ -221,21 +221,34 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @dev seeds the total amount of protected reserve tokens per liquidity provider
      * can only be executed only by a seeder
      *
-     * @param providers liquidity provider addresses
-     * @param tokens    pool token addresses
-     * @param reserves  reserve token addresses
-     * @param amounts   reserve token amounts
+     * @param providers         liquidity provider addresses
+     * @param poolTokens        pool token addresses
+     * @param reserveTokens     reserve token addresses
+     * @param reserveAmounts    reserve token amounts
      */
     function seedProviderAmounts(
         address[] calldata providers,
-        IDSToken[] calldata tokens,
-        IERC20Token[] calldata reserves,
-        uint256[] calldata amounts
+        IDSToken[] calldata poolTokens,
+        IERC20Token[] calldata reserveTokens,
+        uint256[] calldata reserveAmounts
     ) external seederOnly {
-        uint256 length = tokens.length;
+        uint256 length = providers.length;
         for (uint256 i = 0; i < length; i++) {
-            _totalProviderAmounts[providers[i]][tokens[i]][reserves[i]] = amounts[i];
-            _providerPools[providers[i]].add(address(tokens[i]));
+            _totalProviderAmounts[providers[i]][poolTokens[i]][reserveTokens[i]] = reserveAmounts[i];
+        }
+    }
+
+    /**
+     * @dev seeds the list of pools per liquidity provider
+     * can only be executed only by a seeder
+     *
+     * @param providers     liquidity provider addresses
+     * @param poolTokens    pool token addresses
+     */
+    function seedProviderPools(address[] calldata providers, IDSToken[] calldata poolTokens) external seederOnly {
+        uint256 length = providers.length;
+        for (uint256 i = 0; i < length; i++) {
+            _providerPools[providers[i]].add(address(poolTokens[i]));
         }
     }
 }

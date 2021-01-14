@@ -16,13 +16,13 @@ const ARTIFACTS_DIR = path.resolve(__dirname, '../build');
 const ROLE_SEEDER = Web3.utils.keccak256('ROLE_SEEDER');
 const ROLE_SUPERVISOR = Web3.utils.keccak256('ROLE_SUPERVISOR');
 
-const READ_BATCH_SIZE = 100;
 const READ_TIMEOUT = 10000;
+const READ_BATCH_SIZE = 100;
 
 const WRITE_CONFIG = {
-    poolAmounts: { batchSize: 120, methodName: 'seedPoolAmounts' },
-    reserveAmounts: { batchSize: 90, methodName: 'seedReserveAmounts' },
-    providerAmounts: { batchSize: 60, methodName: 'seedProviderAmounts' }
+    poolAmounts: { batchSize: 200, methodName: 'seedPoolAmounts' },
+    reserveAmounts: { batchSize: 150, methodName: 'seedReserveAmounts' },
+    providerAmounts: { batchSize: 100, methodName: 'seedProviderAmounts' }
 };
 
 const KEYS = Object.keys(WRITE_CONFIG);

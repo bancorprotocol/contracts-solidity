@@ -115,7 +115,7 @@ async function readStatsAmounts(state, stats) {
     };
 }
 
-async function compare(state, storeState, statsState) {
+function compare(state, storeState, statsState) {
     for (const key of Object.keys(state.poolAmounts)) {
         const storeAmount = storeState.poolAmounts[key];
         const statsAmount = statsState.poolAmounts[key];
