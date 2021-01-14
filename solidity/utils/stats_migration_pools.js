@@ -18,7 +18,7 @@ const ROLE_SUPERVISOR = Web3.utils.keccak256('ROLE_SUPERVISOR');
 
 const READ_TIMEOUT = 10000;
 const READ_BATCH_SIZE = 100;
-const WRITE_BATCH_SIZE = 100;
+const WRITE_BATCH_SIZE = 50;
 
 const DELIMITER = '.';
 
