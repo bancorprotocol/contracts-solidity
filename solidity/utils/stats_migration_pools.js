@@ -218,11 +218,11 @@ async function readSource(web3, store) {
     return pools;
 }
 
-async function readTarget(source, stats) {
+async function readTarget(state, stats) {
     const pools = {};
 
-    for (let i = 0; i < Object.keys(source).length; i += READ_BATCH_SIZE) {
-        const providers = Object.keys(source).slice(i, i + READ_BATCH_SIZE);
+    for (let i = 0; i < Object.keys(state).length; i += READ_BATCH_SIZE) {
+        const providers = Object.keys(state).slice(i, i + READ_BATCH_SIZE);
         const providerPools = await Promise.all(providers.map((provider) => rpc(stats.methods.providerPools(provider))));
         for (let j = 0; j < providers.length; j++) {
             pools[providers[j]] = providerPools[j];
