@@ -232,9 +232,25 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
         IERC20Token[] calldata reserves,
         uint256[] calldata amounts
     ) external seederOnly {
-        uint256 length = tokens.length;
+        uint256 length = providers.length;
         for (uint256 i = 0; i < length; i++) {
             _totalProviderAmounts[providers[i]][tokens[i]][reserves[i]] = amounts[i];
+        }
+    }
+
+    /**
+     * @dev seeds the list of pools per liquidity provider
+     * can only be executed only by a seeder
+     *
+     * @param providers liquidity provider addresses
+     * @param tokens    pool token addresses
+     */
+    function seedProviderPools(
+        address[] calldata providers,
+        IDSToken[] calldata tokens
+    ) external seederOnly {
+        uint256 length = providers.length;
+        for (uint256 i = 0; i < length; i++) {
             _providerPools[providers[i]].add(address(tokens[i]));
         }
     }

@@ -77,6 +77,13 @@ describe('LiquidityProtectionStats', () => {
         expect(
             await liquidityProtectionStats.totalProviderAmount(provider, poolToken, reserveToken)
         ).to.be.bignumber.equal('0');
+    });
+
+    it('should revert when a non seeder attempts to seed provider pools', async () => {
+        await expectRevert(
+            liquidityProtectionStats.seedProviderPools([provider], [poolToken]),
+            'ERR_ACCESS_DENIED'
+        );
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([]);
     });
 
@@ -143,13 +150,17 @@ describe('LiquidityProtectionStats', () => {
         expect(
             await liquidityProtectionStats.totalProviderAmount(provider, poolToken, reserveToken)
         ).to.be.bignumber.equal('0');
-        expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([]);
         await liquidityProtectionStats.seedProviderAmounts([provider], [poolToken], [reserveToken], [1], {
             from: seeder
         });
         expect(
             await liquidityProtectionStats.totalProviderAmount(provider, poolToken, reserveToken)
         ).to.be.bignumber.equal('1');
+    });
+
+    it('should succeed when a seeder attempts to seed provider pools', async () => {
+        expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([]);
+        await liquidityProtectionStats.seedProviderPools([provider], [poolToken], { from: seeder });
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([poolToken]);
     });
 });
