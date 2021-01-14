@@ -110,7 +110,7 @@ async function scan(message) {
 
 async function userDecision(options) {
     const message = Object.entries(options)
-        .map((entry) => `'${entry[0]}' for ${entry[1]}`)
+        .map((entry) => `'${entry[0]}' ${entry[1]}`)
         .join(' or ');
     while (true) {
         const input = await scan(`Enter ${message}: `);
@@ -216,7 +216,7 @@ async function readSource(web3, store) {
             const reserveAmount = pls[j][4];
             setState(poolAmounts, [poolToken], poolAmount);
             setState(reserveAmounts, [poolToken, reserveToken], reserveAmount);
-            setState(providerAmounts, [poolToken, reserveToken, provider], reserveAmount);
+            setState(providerAmounts, [provider, poolToken, reserveToken], reserveAmount);
         }
     }
 
@@ -288,7 +288,7 @@ async function run() {
         for (const key of KEYS.filter((key) => !isEmpty(diffState[key]))) {
             await writeTarget(web3Func, stats, WRITE_CONFIG[key], diffState[key]);
         }
-        if ((await userDecision({ 1: 'another iteration', 2: 'conclusion' })) === '2') {
+        if ((await userDecision({ 1: 'for another iteration', 2: 'for conclusion' })) === '2') {
             break;
         }
         targetState = sourceState;
@@ -297,13 +297,7 @@ async function run() {
 
     targetState = await readTarget(sourceState, stats);
     const diffState = getOuterDiff(KEYS, targetState, sourceState);
-
-    if (!isEmpty(diffState)) {
-        throw new Error('Data migration failed');
-    }
-
-    await execute(stats.methods.renounceRole(ROLE_SEEDER, account.address));
-    await execute(stats.methods.renounceRole(ROLE_SUPERVISOR, account.address));
+    console.log('Differences:', JSON.stringify(diffState, null, 4));
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
         if (web3.currentProvider.disconnect) {
