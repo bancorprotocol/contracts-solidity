@@ -245,10 +245,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, U
      * @param providers     liquidity provider addresses
      * @param poolTokens    pool token addresses
      */
-    function seedProviderPools(
-        address[] calldata providers,
-        IDSToken[] calldata poolTokens
-    ) external seederOnly {
+    function seedProviderPools(address[] calldata providers, IDSToken[] calldata poolTokens) external seederOnly {
         uint256 length = providers.length;
         for (uint256 i = 0; i < length; i++) {
             _providerPools[providers[i]].add(address(poolTokens[i]));

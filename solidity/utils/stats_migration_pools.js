@@ -65,7 +65,9 @@ function encode(pools) {
 function getDiff(prevPools, currPools) {
     prevPools = encode(prevPools);
     currPools = encode(currPools);
-    return Object.keys(prevPools).filter(key => !currPools[key]).map(toKeys);
+    return Object.keys(prevPools)
+        .filter((key) => !currPools[key])
+        .map(toKeys);
 }
 
 async function rpc(func) {
@@ -86,9 +88,8 @@ async function rpc(func) {
 async function getPastEvents(contract, eventName, fromBlock, toBlock, filter) {
     if (fromBlock <= toBlock) {
         try {
-            return await contract.getPastEvents(eventName, {fromBlock, toBlock, filter});
-        }
-        catch (error) {
+            return await contract.getPastEvents(eventName, { fromBlock, toBlock, filter });
+        } catch (error) {
             const midBlock = (fromBlock + toBlock) >> 1;
             const arr1 = await getPastEvents(contract, eventName, fromBlock, midBlock);
             const arr2 = await getPastEvents(contract, eventName, midBlock + 1, toBlock);
@@ -202,7 +203,7 @@ async function readSource(web3, store) {
     const pools = {};
 
     const block = await web3.eth.getBlockNumber();
-    const events = await getPastEvents(store, "ProtectionAdded", 0, block);
+    const events = await getPastEvents(store, 'ProtectionAdded', 0, block);
 
     for (const event of events) {
         const provider = event.returnValues._provider;
@@ -223,7 +224,9 @@ async function readTarget(state, stats) {
 
     for (let i = 0; i < Object.keys(state).length; i += READ_BATCH_SIZE) {
         const providers = Object.keys(state).slice(i, i + READ_BATCH_SIZE);
-        const providerPools = await Promise.all(providers.map((provider) => rpc(stats.methods.providerPools(provider))));
+        const providerPools = await Promise.all(
+            providers.map((provider) => rpc(stats.methods.providerPools(provider)))
+        );
         for (let j = 0; j < providers.length; j++) {
             pools[providers[j]] = providerPools[j];
         }

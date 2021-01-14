@@ -80,10 +80,7 @@ describe('LiquidityProtectionStats', () => {
     });
 
     it('should revert when a non seeder attempts to seed provider pools', async () => {
-        await expectRevert(
-            liquidityProtectionStats.seedProviderPools([provider], [poolToken]),
-            'ERR_ACCESS_DENIED'
-        );
+        await expectRevert(liquidityProtectionStats.seedProviderPools([provider], [poolToken]), 'ERR_ACCESS_DENIED');
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([]);
     });
 
