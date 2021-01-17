@@ -1,3 +1,13 @@
+### 0.6.29
+General
+* Replaced the local SafeMath contract with OpenZepplin's version
+* Renamed Math contract to MathEx contract to prevent conflicts
+
+LiquidityProtection
+* Added `LiquidityProtectionStats` contract that holds totals & provider specific stats
+* Added an event subscriber contract that receives liquidity add/remove events
+
+
 ### 0.6.28
 LiquidityProtection
 * Removed support for protecting/unprotecting existing pool tokens
