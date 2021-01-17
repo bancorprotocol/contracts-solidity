@@ -1,4 +1,4 @@
-const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
+const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, constants, BN, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { roles } = require('./helpers/Constants');
@@ -108,7 +108,6 @@ describe('CheckpointStore', () => {
 
         context('seeder', async () => {
             const nonSeeder = accounts[2];
-            let initTime;
 
             beforeEach(async () => {
                 await checkpointStore.grantRole(ROLE_SEEDER, seeder, { from: owner });

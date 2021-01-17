@@ -19,6 +19,7 @@ contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant BNT_TOKEN = "BNTToken";
     bytes32 internal constant BANCOR_X = "BancorX";
     bytes32 internal constant BANCOR_X_UPGRADER = "BancorXUpgrader";
+    bytes32 internal constant LIQUIDITY_PROTECTION = "LiquidityProtection";
 
     IContractRegistry public registry; // address of the current contract-registry
     IContractRegistry public prevRegistry; // address of the previous contract-registry

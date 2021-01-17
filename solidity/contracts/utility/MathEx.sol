@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 /**
  * @dev This library provides a set of complex math operations.
  */
-library Math {
+library MathEx {
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a positive integer
      *
@@ -90,7 +90,8 @@ library Math {
         if (_a != _b) {
             uint256 n = _a * _scale;
             uint256 d = _a + _b; // can overflow
-            if (d >= _a) { // no overflow in `_a + _b`
+            if (d >= _a) {
+                // no overflow in `_a + _b`
                 uint256 x = roundDiv(n, d); // we can now safely compute `_scale - x`
                 uint256 y = _scale - x;
                 return (x, y);

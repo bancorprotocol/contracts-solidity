@@ -362,19 +362,16 @@ const run = async () => {
         [reserves.BNT.address, contractRegistry._address]
     );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
+    const liquidityProtectionStats = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
 
-    const liquidityProtection = await web3Func(
-        deploy,
-        'liquidityProtection',
-        'LiquidityProtection',
-        [
-            liquidityProtectionSettings._address,
-            liquidityProtectionStore._address,
-            bntTokenGovernance._address,
-            vbntTokenGovernance._address,
-            checkpointStore._address
-        ]
-    );
+    const liquidityProtection = await web3Func(deploy, 'liquidityProtection', 'LiquidityProtection', [
+        liquidityProtectionSettings._address,
+        liquidityProtectionStore._address,
+        liquidityProtectionStats._address,
+        bntTokenGovernance._address,
+        vbntTokenGovernance._address,
+        checkpointStore._address
+    ]);
 
     await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
@@ -382,7 +379,10 @@ const run = async () => {
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
 
-    await execute(liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address));
+    await execute(
+        liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address)
+    );
+    await execute(liquidityProtectionStats.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     await execute(
         contractRegistry.methods.registerAddress(
@@ -408,11 +408,21 @@ const run = async () => {
 
     const params = getConfig().liquidityProtectionParams;
 
-    const minNetworkTokenLiquidityForMinting = decimalToInteger(params.minNetworkTokenLiquidityForMinting, reserves.BNT.decimals);
-    await execute(liquidityProtectionSettings.methods.setMinNetworkTokenLiquidityForMinting(minNetworkTokenLiquidityForMinting));
+    const minNetworkTokenLiquidityForMinting = decimalToInteger(
+        params.minNetworkTokenLiquidityForMinting,
+        reserves.BNT.decimals
+    );
+    await execute(
+        liquidityProtectionSettings.methods.setMinNetworkTokenLiquidityForMinting(minNetworkTokenLiquidityForMinting)
+    );
 
-    const defaultNetworkTokenMintingLimit = decimalToInteger(params.defaultNetworkTokenMintingLimit, reserves.BNT.decimals);
-    await execute(liquidityProtectionSettings.methods.setDefaultNetworkTokenMintingLimit(defaultNetworkTokenMintingLimit));
+    const defaultNetworkTokenMintingLimit = decimalToInteger(
+        params.defaultNetworkTokenMintingLimit,
+        reserves.BNT.decimals
+    );
+    await execute(
+        liquidityProtectionSettings.methods.setDefaultNetworkTokenMintingLimit(defaultNetworkTokenMintingLimit)
+    );
 
     await execute(
         liquidityProtectionSettings.methods.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)

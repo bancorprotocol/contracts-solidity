@@ -20,9 +20,10 @@ const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConv
 const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
+const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -116,6 +117,7 @@ describe('LiquidityProtectionEdgeCases', () => {
             let converter;
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
+            let liquidityProtectionStats;
             let liquidityProtection;
 
             const owner = defaultSender;
@@ -179,8 +181,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                 const converterAddress = await poolToken.owner();
                 if (converterType === 1) {
                     converter = await LiquidityPoolV1Converter.at(converterAddress);
-                }
-                else {
+                } else {
                     converter = await StandardPoolConverter.at(converterAddress);
                 }
                 await converter.acceptOwnership();
@@ -194,15 +195,20 @@ describe('LiquidityProtectionEdgeCases', () => {
                 await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
+                liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtection = await LiquidityProtection.new(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
+                    liquidityProtectionStats.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
                 );
 
-                await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, { from: owner });
+                await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
+                    from: owner
+                });
+                await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
@@ -225,16 +231,36 @@ describe('LiquidityProtectionEdgeCases', () => {
                         let test;
                         if (!config.increaseRate && !config.generateFee) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.0', 3: '0.00000004'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.eq(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.0', 3: '0.00000004' }[converterType]
+                                );
                         } else if (!config.increaseRate && config.generateFee) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.gt(expected), actual, expected, {1: '0.0', 3: '0.0'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.gt(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.0', 3: '0.0' }[converterType]
+                                );
                         } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.lt(expected), actual, expected, {1: '0.0', 3: '0.0'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.lt(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.0', 3: '0.0' }[converterType]
+                                );
                         } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.000000000000001', 3: '0.00000005'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.eq(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.000000000000001', 3: '0.00000005' }[converterType]
+                                );
                         } else {
                             throw new Error('invalid configuration');
                         }
@@ -279,16 +305,36 @@ describe('LiquidityProtectionEdgeCases', () => {
                         let test;
                         if (!config.increaseRate && !config.generateFee) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.0', 3: '0.00000004'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.eq(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.0', 3: '0.00000004' }[converterType]
+                                );
                         } else if (!config.increaseRate && config.generateFee) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.gt(expected), actual, expected, {1: '0.002', 3: '0.002'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.gt(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.002', 3: '0.002' }[converterType]
+                                );
                         } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.lt(expected), actual, expected, {1: '0.0', 3: '0.0'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.lt(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.0', 3: '0.0' }[converterType]
+                                );
                         } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
                             test = (actual, expected) =>
-                                condOrAlmostEqual(actual.eq(expected), actual, expected, {1: '0.002', 3: '0.002'}[converterType]);
+                                condOrAlmostEqual(
+                                    actual.eq(expected),
+                                    actual,
+                                    expected,
+                                    { 1: '0.002', 3: '0.002' }[converterType]
+                                );
                         } else {
                             throw new Error('invalid configuration');
                         }

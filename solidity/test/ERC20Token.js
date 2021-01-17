@@ -53,7 +53,10 @@ describe('ERC20Token', () => {
         const initialTotalSupply = new BN(100);
         const token2 = await ERC20Token.new(name, symbol, decimals, initialTotalSupply);
 
-        await expectRevert(token2.transfer(receiver, initialTotalSupply.add(new BN(1))), 'ERR_UNDERFLOW');
+        await expectRevert(
+            token2.transfer(receiver, initialTotalSupply.add(new BN(1))),
+            'SafeMath: subtraction overflow'
+        );
     });
 
     it('should revert when attempting to transfer to an invalid address', async () => {
@@ -120,7 +123,7 @@ describe('ERC20Token', () => {
 
         await expectRevert(
             token.transferFrom(sender, receiver2, value.add(new BN(1)), { from: receiver }),
-            'ERR_UNDERFLOW'
+            'SafeMath: subtraction overflow'
         );
     });
 

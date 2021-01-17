@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "../../ConverterVersion.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/IConverterAnchor.sol";
 import "../../interfaces/IConverterUpgrader.sol";
 import "../../../token/interfaces/IDSToken.sol";
+import "../../../utility/MathEx.sol";
 import "../../../utility/ContractRegistryClient.sol";
 import "../../../utility/ReentrancyGuard.sol";
-import "../../../utility/SafeMath.sol";
 import "../../../utility/TokenHandler.sol";
 import "../../../utility/TokenHolder.sol";
-import "../../../utility/Math.sol";
 import "../../../utility/Time.sol";
 
 /**
@@ -27,7 +29,7 @@ contract StandardPoolConverter is
     Time
 {
     using SafeMath for uint256;
-    using Math for *;
+    using MathEx for *;
 
     IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint256 private constant MAX_UINT128 = 2**128 - 1;
@@ -462,9 +464,8 @@ contract StandardPoolConverter is
      */
     function syncReserveBalance(IERC20Token _reserveToken) internal {
         uint256 reserveId = __reserveIds[_reserveToken];
-        uint256 balance = _reserveToken == ETH_RESERVE_ADDRESS
-            ? address(this).balance
-            : _reserveToken.balanceOf(address(this));
+        uint256 balance =
+            _reserveToken == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken.balanceOf(address(this));
         setReserveBalance(reserveId, balance);
     }
 
@@ -474,12 +475,10 @@ contract StandardPoolConverter is
     function syncReserveBalances() internal {
         IERC20Token _reserveToken0 = __reserveTokens[0];
         IERC20Token _reserveToken1 = __reserveTokens[1];
-        uint256 balance0 = _reserveToken0 == ETH_RESERVE_ADDRESS
-            ? address(this).balance
-            : _reserveToken0.balanceOf(address(this));
-        uint256 balance1 = _reserveToken1 == ETH_RESERVE_ADDRESS
-            ? address(this).balance
-            : _reserveToken1.balanceOf(address(this));
+        uint256 balance0 =
+            _reserveToken0 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken0.balanceOf(address(this));
+        uint256 balance1 =
+            _reserveToken1 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken1.balanceOf(address(this));
         setReserveBalances(1, 2, balance0, balance1);
     }
 
@@ -491,12 +490,14 @@ contract StandardPoolConverter is
     function syncReserveBalances(uint256 _value) internal {
         IERC20Token _reserveToken0 = __reserveTokens[0];
         IERC20Token _reserveToken1 = __reserveTokens[1];
-        uint256 balance0 = _reserveToken0 == ETH_RESERVE_ADDRESS
-            ? address(this).balance - _value
-            : _reserveToken0.balanceOf(address(this));
-        uint256 balance1 = _reserveToken1 == ETH_RESERVE_ADDRESS
-            ? address(this).balance - _value
-            : _reserveToken1.balanceOf(address(this));
+        uint256 balance0 =
+            _reserveToken0 == ETH_RESERVE_ADDRESS
+                ? address(this).balance - _value
+                : _reserveToken0.balanceOf(address(this));
+        uint256 balance1 =
+            _reserveToken1 == ETH_RESERVE_ADDRESS
+                ? address(this).balance - _value
+                : _reserveToken1.balanceOf(address(this));
         setReserveBalances(1, 2, balance0, balance1);
     }
 
@@ -619,12 +620,7 @@ contract StandardPoolConverter is
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
-    function recentAverageRate(IERC20Token _token)
-        external
-        view
-        validReserve(_token)
-        returns (uint256, uint256)
-    {
+    function recentAverageRate(IERC20Token _token) external view validReserve(_token) returns (uint256, uint256) {
         // get the recent average rate of reserve 0
         uint256 rate = calcRecentAverageRate(averageRateInfo);
 
@@ -675,7 +671,7 @@ contract StandardPoolConverter is
 
         // if the previous average rate was calculated a while ago or never, the average rate is equal to the current rate
         if (timeElapsed >= AVERAGE_RATE_PERIOD || prevAverageRateT == 0) {
-            (currentRateN, currentRateD) = Math.reducedRatio(currentRateN, currentRateD, MAX_UINT112);
+            (currentRateN, currentRateD) = MathEx.reducedRatio(currentRateN, currentRateD, MAX_UINT112);
             return encodeAverageRateInfo(currentTime, currentRateN, currentRateD);
         }
 
@@ -686,7 +682,7 @@ contract StandardPoolConverter is
         uint256 newRateN = y.mul(AVERAGE_RATE_PERIOD - timeElapsed).add(x.mul(timeElapsed));
         uint256 newRateD = prevAverageRateD.mul(currentRateD).mul(AVERAGE_RATE_PERIOD);
 
-        (newRateN, newRateD) = Math.reducedRatio(newRateN, newRateD, MAX_UINT112);
+        (newRateN, newRateD) = MathEx.reducedRatio(newRateN, newRateD, MAX_UINT112);
         return encodeAverageRateInfo(currentTime, newRateN, newRateD);
     }
 
@@ -700,7 +696,11 @@ contract StandardPoolConverter is
      *
      * @return amount of pool tokens issued
      */
-    function addLiquidity(uint256 _reserve1Amount, uint256 _reserve2Amount, uint256 _minReturn) public payable returns (uint256) {
+    function addLiquidity(
+        uint256 _reserve1Amount,
+        uint256 _reserve2Amount,
+        uint256 _minReturn
+    ) public payable returns (uint256) {
         uint256[] memory reserveAmounts = new uint256[](2);
         reserveAmounts[0] = _reserve1Amount;
         reserveAmounts[1] = _reserve2Amount;
@@ -757,10 +757,10 @@ contract StandardPoolConverter is
             for (uint256 i = 0; i < 2; i++) {
                 reserveAmounts[i] = _reserveAmounts[i];
             }
-            amount = Math.geometricMean(reserveAmounts);
-        }
-        else {
-            uint256 index = (_reserveAmounts[0].mul(oldReserveBalances[1]) < _reserveAmounts[1].mul(oldReserveBalances[0])) ? 0 : 1;
+            amount = MathEx.geometricMean(reserveAmounts);
+        } else {
+            uint256 index =
+                (_reserveAmounts[0].mul(oldReserveBalances[1]) < _reserveAmounts[1].mul(oldReserveBalances[0])) ? 0 : 1;
             amount = fundSupplyAmount(totalSupply, oldReserveBalances[index], _reserveAmounts[index]);
             for (uint256 i = 0; i < 2; i++) {
                 reserveAmounts[i] = fundCost(totalSupply, oldReserveBalances[i], amount);
@@ -816,7 +816,11 @@ contract StandardPoolConverter is
      * @return the first reserve amount returned
      * @return the second reserve amount returned
      */
-    function removeLiquidity(uint256 _amount, uint256 _reserve1MinReturn, uint256 _reserve2MinReturn) public returns (uint256, uint256) {
+    function removeLiquidity(
+        uint256 _amount,
+        uint256 _reserve1MinReturn,
+        uint256 _reserve2MinReturn
+    ) public returns (uint256, uint256) {
         uint256[] memory minReturnAmounts = new uint256[](2);
         minReturnAmounts[0] = _reserve1MinReturn;
         minReturnAmounts[1] = _reserve2MinReturn;

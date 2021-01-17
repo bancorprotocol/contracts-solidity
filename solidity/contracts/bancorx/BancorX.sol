@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "./interfaces/IBancorXUpgrader.sol";
 import "./interfaces/IBancorX.sol";
 import "../utility/ContractRegistryClient.sol";
-import "../utility/SafeMath.sol";
 import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
 
@@ -440,9 +442,8 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
      */
     function getCurrentReleaseLimit() public view returns (uint256) {
         // prevReleaseLimit + ((currBlockNumber - prevReleaseBlockNumber) * limitIncPerBlock)
-        uint256 currentReleaseLimit = prevReleaseLimit.add(
-            ((block.number).sub(prevReleaseBlockNumber)).mul(limitIncPerBlock)
-        );
+        uint256 currentReleaseLimit =
+            prevReleaseLimit.add(((block.number).sub(prevReleaseBlockNumber)).mul(limitIncPerBlock));
         if (currentReleaseLimit > maxReleaseLimit) return maxReleaseLimit;
         return currentReleaseLimit;
     }
