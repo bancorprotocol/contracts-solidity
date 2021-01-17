@@ -386,18 +386,6 @@ const run = async () => {
 
     await execute(
         contractRegistry.methods.registerAddress(
-            Web3.utils.asciiToHex('LiquidityProtectionSettings'),
-            liquidityProtectionSettings._address
-        )
-    );
-    await execute(
-        contractRegistry.methods.registerAddress(
-            Web3.utils.asciiToHex('LiquidityProtectionStore'),
-            liquidityProtectionStore._address
-        )
-    );
-    await execute(
-        contractRegistry.methods.registerAddress(
             Web3.utils.asciiToHex('LiquidityProtection'),
             liquidityProtection._address
         )
