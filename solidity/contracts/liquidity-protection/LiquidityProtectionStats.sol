@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/ILiquidityProtectionStats.sol";
-import "../utility/Utils.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 
 /**
  * @dev This contract aggregates the statistics of the liquidity protection mechanism.
  */
-contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl, Utils {
+contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeMath for uint256;
 
