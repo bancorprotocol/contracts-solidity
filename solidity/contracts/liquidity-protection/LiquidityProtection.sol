@@ -323,7 +323,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 poolTokenAmount = _amount.mul(poolRate.d).div(poolRate.n);
 
         // remove the pool tokens from the system's ownership (will revert if not enough tokens are available)
-        store.decSystemBalance(poolToken, poolTokenAmount);
+        systemStore.decSystemBalance(poolToken, poolTokenAmount);
 
         // add protected liquidity for the recipient
         uint256 id = addProtectedLiquidity(_owner, poolToken, _networkToken, poolTokenAmount, _amount);
@@ -398,7 +398,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
-        store.incSystemBalance(poolToken, poolTokenAmount - poolTokenAmount / 2); // account for rounding errors
+        systemStore.incSystemBalance(poolToken, poolTokenAmount - poolTokenAmount / 2); // account for rounding errors
         return addProtectedLiquidity(_owner, poolToken, _baseToken, poolTokenAmount / 2, _amount);
     }
 
@@ -512,7 +512,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         Fraction memory poolRate = poolTokenRate(poolToken, _networkToken);
 
         // return the maximum amount of network token liquidity that can be single-sided staked in the pool
-        return store.systemBalance(poolToken).mul(poolRate.n).add(poolRate.n).sub(1).div(poolRate.d);
+        return systemStore.systemBalance(poolToken).mul(poolRate.n).add(poolRate.n).sub(1).div(poolRate.d);
     }
 
     /**
@@ -587,7 +587,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
 
         // limit the amount of pool tokens by the amount the system/caller holds
-        uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
+        uint256 availableBalance = systemStore.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
         poolAmount = poolAmount > availableBalance ? availableBalance : poolAmount;
 
         // calculate the base token amount received by liquidating the pool tokens
@@ -687,7 +687,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         lastRemoveCheckpointStore.addCheckpoint(_provider);
 
         // add the pool tokens to the system
-        store.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
+        systemStore.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
 
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
         // tokens to the contract itself, since only token holders can burn their tokens
@@ -735,11 +735,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
 
         // limit the amount of pool tokens by the amount the system holds
-        uint256 systemBalance = store.systemBalance(liquidity.poolToken);
+        uint256 systemBalance = systemStore.systemBalance(liquidity.poolToken);
         poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
 
         // withdraw the pool tokens from the store
-        store.decSystemBalance(liquidity.poolToken, poolAmount);
+        systemStore.decSystemBalance(liquidity.poolToken, poolAmount);
         store.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
