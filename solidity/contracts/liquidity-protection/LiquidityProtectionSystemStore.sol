@@ -26,6 +26,12 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
         _;
     }
 
+    // allows execution only by a seeder
+    modifier seederOnly {
+        _hasRole(ROLE_SEEDER);
+        _;
+    }
+
     // error message binary size optimization
     function _hasRole(bytes32 role) internal view {
         require(hasRole(role, msg.sender), "ERR_ACCESS_DENIED");
@@ -97,5 +103,22 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
         systemBalances[_token] = newAmount;
 
         emit SystemBalanceUpdated(_token, prevAmount, newAmount);
+    }
+
+    /**
+     * @dev seeds system balances
+     * can only be executed only by a seeder
+     *
+     * @param _tokens   token addresses
+     * @param _amounts  token amounts
+     */
+    function seedSystemBalances(
+        IERC20Token[] calldata _tokens,
+        uint256[] calldata _amounts
+    ) external seederOnly {
+        uint256 length = _tokens.length;
+        for (uint256 i = 0; i < length; i++) {
+            systemBalances[_tokens[i]] = _amounts[i];
+        }
     }
 }
