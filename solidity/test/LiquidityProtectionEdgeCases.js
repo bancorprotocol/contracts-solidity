@@ -95,7 +95,7 @@ describe('LiquidityProtectionEdgeCases', () => {
             const getNetworkTokenMaxAmount = async () => {
                 const totalSupply = await poolToken.totalSupply();
                 const reserveBalance = await converter.reserveBalance(networkToken.address);
-                const systemBalance = await liquidityProtectionStore.systemBalance(poolToken.address);
+                const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
                 return systemBalance.mul(reserveBalance).div(totalSupply);
             };
 
@@ -224,6 +224,8 @@ describe('LiquidityProtectionEdgeCases', () => {
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
+                await liquidityProtectionTokenHolder.transferOwnership(liquidityProtection.address);
+                await liquidityProtection.acceptTokenHolderOwnership();
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 

@@ -115,6 +115,8 @@ describe('LiquidityProtectionAverageRate', () => {
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
+                await liquidityProtectionTokenHolder.transferOwnership(liquidityProtection.address);
+                await liquidityProtection.acceptTokenHolderOwnership();
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });

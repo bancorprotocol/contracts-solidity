@@ -400,6 +400,9 @@ const run = async () => {
     await execute(liquidityProtectionStore.methods.transferOwnership(liquidityProtection._address));
     await execute(liquidityProtection.methods.acceptStoreOwnership());
 
+    await execute(liquidityProtectionTokenHolder.methods.transferOwnership(liquidityProtection._address));
+    await execute(liquidityProtection.methods.acceptTokenHolderOwnership());
+
     const params = getConfig().liquidityProtectionParams;
 
     const minNetworkTokenLiquidityForMinting = decimalToInteger(
