@@ -385,7 +385,7 @@ describe('LiquidityProtection', () => {
                 expect(stats).to.eql(liquidityProtectionStats.address);
 
                 const userStore = await liquidityProtection.userStore.call();
-                expect(stats).to.eql(liquidityProtectionUserStore.address);
+                expect(userStore).to.eql(liquidityProtectionUserStore.address);
 
                 const systemStore = await liquidityProtection.systemStore.call();
                 expect(systemStore).to.eql(liquidityProtectionSystemStore.address);
