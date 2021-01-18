@@ -206,7 +206,7 @@ async function readSource(web3, source) {
     const events = await getPastEvents(source, 'SystemBalanceUpdated', 0, block);
 
     for (const event of events) {
-        balances[event.returnValues._token] = event.returnValues._newAmount;
+        balances[event.returnValues._token] = [event.returnValues._newAmount];
     }
 
     return balances;
@@ -221,7 +221,7 @@ async function readTarget(state, target) {
             tokens.map((token) => rpc(target.methods.systemBalance(token)))
         );
         for (let j = 0; j < tokens.length; j++) {
-            balances[tokens[j]] = amounts[j];
+            balances[tokens[j]] = [amounts[j]];
         }
     }
 
