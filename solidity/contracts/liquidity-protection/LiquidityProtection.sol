@@ -200,6 +200,39 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     /**
+     * @dev transfers the ownership of the token holder
+     * can only be called by the contract owner
+     *
+     * @param _newOwner    the new owner of the token holder
+     */
+    function transferTokenHolderOwnership(address _newOwner) external ownerOnly {
+        tokenHolder.transferOwnership(_newOwner);
+    }
+
+    /**
+     * @dev accepts the ownership of the token holder
+     * can only be called by the contract owner
+     */
+    function acceptTokenHolderOwnership() external ownerOnly {
+        tokenHolder.acceptOwnership();
+    }
+
+    /**
+     * @dev transfer all equity from the store to the token holder
+     */
+    function withdrawTokens() external {
+        // save local copies of storage variables
+        address storeAddress = address(store);
+        address tokenHolderAddress = address(tokenHolder);
+
+        address[] memory poolWhitelist = settings.poolWhitelist();
+        for (uint256 i = 0; i < poolWhitelist.length; i++) {
+            IERC20Token poolToken = IERC20Token(poolWhitelist[i]);
+            store.withdrawTokens(poolToken, tokenHolderAddress, poolToken.balanceOf(storeAddress));
+        }
+    }
+
+    /**
      * @dev sets the events subscriber
      */
     function setEventsSubscriber(ILiquidityProtectionEventsSubscriber _eventsSubscriber)
