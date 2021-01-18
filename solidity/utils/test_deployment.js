@@ -389,6 +389,8 @@ const run = async () => {
         liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address)
     );
     await execute(liquidityProtectionStats.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionUserStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionSystemStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     await execute(
         contractRegistry.methods.registerAddress(
