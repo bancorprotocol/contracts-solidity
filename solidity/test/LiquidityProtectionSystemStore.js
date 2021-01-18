@@ -1,5 +1,5 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
 const { roles } = require('./helpers/Constants');
 const { expect } = require('../../chai-local');
 
@@ -35,15 +35,17 @@ describe('LiquidityProtectionSystemStore', () => {
     });
 
     it('should succeed when an owner attempts to increase system balance', async () => {
-        await liquidityProtectionSystemStore.incSystemBalance(token, 1, { from: owner });
+        const response = await liquidityProtectionSystemStore.incSystemBalance(token, 1, { from: owner });
         expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('1');
+        expectEvent(response, 'SystemBalanceUpdated', { _token: token, _prevAmount: '0', _newAmount: '1' });
     });
 
     it('should succeed when an owner attempts to decrease system balance', async () => {
         await liquidityProtectionSystemStore.incSystemBalance(token, 1, { from: owner });
         expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('1');
-        await liquidityProtectionSystemStore.decSystemBalance(token, 1, { from: owner });
+        const response = await liquidityProtectionSystemStore.decSystemBalance(token, 1, { from: owner });
         expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('0');
+        expectEvent(response, 'SystemBalanceUpdated', { _token: token, _prevAmount: '1', _newAmount: '0' });
     });
 
     it('should succeed when a seeder attempts to seed system balances', async () => {
