@@ -197,16 +197,16 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
-async function readSource(web3, store) {
+async function readSource(web3, source) {
     const poolAmounts = {};
     const reserveAmounts = {};
     const providerAmounts = {};
 
-    const count = await web3.eth.getStorageAt(store._address, 4);
+    const count = await web3.eth.getStorageAt(source._address, 4);
 
     for (let i = 0; i < count; i += READ_BATCH_SIZE) {
         const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map((n) => n + i);
-        const pls = await Promise.all(ids.map((id) => rpc(store.methods.protectedLiquidity(id))));
+        const pls = await Promise.all(ids.map((id) => rpc(source.methods.protectedLiquidity(id))));
         for (let j = 0; j < ids.length; j++) {
             console.log(`${ids[j]}: ${Object.values(pls[j])}`);
             const provider = pls[j][0];
@@ -235,21 +235,21 @@ async function readTargetAmounts(state, func) {
     return amounts;
 }
 
-async function readTarget(state, stats) {
+async function readTarget(state, target) {
     return {
-        poolAmounts: await readTargetAmounts(state.poolAmounts, stats.methods.totalPoolAmount),
-        reserveAmounts: await readTargetAmounts(state.reserveAmounts, stats.methods.totalReserveAmount),
-        providerAmounts: await readTargetAmounts(state.providerAmounts, stats.methods.totalProviderAmount)
+        poolAmounts: await readTargetAmounts(state.poolAmounts, target.methods.totalPoolAmount),
+        reserveAmounts: await readTargetAmounts(state.reserveAmounts, target.methods.totalReserveAmount),
+        providerAmounts: await readTargetAmounts(state.providerAmounts, target.methods.totalProviderAmount)
     };
 }
 
-async function writeTarget(web3Func, stats, config, state) {
+async function writeTarget(web3Func, target, config, state) {
     const rows = Object.entries(state).map(([key, value]) => [...toKeys(key), value]);
     const cols = rows[0].map((x, n) => rows.map((row) => row[n]));
     const count = Math.ceil(rows.length / config.batchSize);
     for (let i = 0; i < rows.length; i += config.batchSize) {
         const params = cols.map((col) => col.slice(i, i + config.batchSize));
-        await web3Func(send, stats.methods[config.methodName](...params));
+        await web3Func(send, target.methods[config.methodName](...params));
         console.log(config.methodName, i / config.batchSize + 1, 'out of', count);
     }
 }
@@ -275,27 +275,27 @@ async function run() {
         }
     };
 
-    const store = deployed(sourceWeb3, 'LiquidityProtectionStore', STORE_ADDRESS);
-    const stats = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
-    await execute(stats.methods.grantRole(ROLE_SEEDER, account.address));
-    await execute(stats.methods.grantRole(ROLE_SUPERVISOR, ADMIN_ADDRESS));
+    const source = deployed(sourceWeb3, 'LiquidityProtectionStore', STORE_ADDRESS);
+    const target = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
+    await execute(target.methods.grantRole(ROLE_SEEDER, account.address));
+    await execute(target.methods.grantRole(ROLE_SUPERVISOR, ADMIN_ADDRESS));
 
-    let sourceState = await readSource(sourceWeb3, store);
-    let targetState = await readTarget(sourceState, stats);
+    let sourceState = await readSource(sourceWeb3, source);
+    let targetState = await readTarget(sourceState, target);
 
     while (true) {
         const diffState = getOuterDiff(KEYS, targetState, sourceState);
         for (const key of KEYS.filter((key) => !isEmpty(diffState[key]))) {
-            await writeTarget(web3Func, stats, WRITE_CONFIG[key], diffState[key]);
+            await writeTarget(web3Func, target, WRITE_CONFIG[key], diffState[key]);
         }
         if ((await userDecision({ 1: 'for another iteration', 2: 'for conclusion' })) === '2') {
             break;
         }
         targetState = sourceState;
-        sourceState = await readSource(sourceWeb3, store);
+        sourceState = await readSource(sourceWeb3, source);
     }
 
-    targetState = await readTarget(sourceState, stats);
+    targetState = await readTarget(sourceState, target);
     const diffState = getOuterDiff(KEYS, targetState, sourceState);
     console.log('Differences:', JSON.stringify(diffState, null, 4));
 
