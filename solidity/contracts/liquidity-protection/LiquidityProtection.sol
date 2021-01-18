@@ -425,9 +425,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // add liquidity
         addLiquidity(converter, _baseToken, _networkToken, _amount, newNetworkLiquidityAmount, msg.value);
 
-        // transfer the new pool tokens to the store
+        // transfer the new pool tokens to the token holder
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
-        safeTransfer(poolToken, address(store), poolTokenAmount);
+        safeTransfer(poolToken, address(tokenHolder), poolTokenAmount);
 
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
@@ -754,7 +754,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // remove network token liquidity
         if (liquidity.reserveToken == networkTokenLocal) {
             // mint network tokens for the caller and lock them
-            networkTokenGovernance.mint(address(store), targetAmount);
+            networkTokenGovernance.mint(address(tokenHolder), targetAmount);
             settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
             lockTokens(_provider, targetAmount);
             return;
@@ -771,9 +771,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 systemBalance = systemStore.systemBalance(liquidity.poolToken);
         poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
 
-        // withdraw the pool tokens from the store
+        // withdraw the pool tokens from the token holder
         systemStore.decSystemBalance(liquidity.poolToken, poolAmount);
-        store.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
+        tokenHolder.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
         removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, networkTokenLocal);
@@ -798,7 +798,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             }
 
             // lock network tokens for the caller
-            safeTransfer(networkTokenLocal, address(store), delta);
+            safeTransfer(networkTokenLocal, address(tokenHolder), delta);
             lockTokens(_provider, delta);
         }
 
@@ -885,7 +885,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         if (totalAmount > 0) {
             // transfer the tokens to the caller in a single call
-            store.withdrawTokens(networkToken, msg.sender, totalAmount);
+            tokenHolder.withdrawTokens(networkToken, msg.sender, totalAmount);
         }
     }
 
