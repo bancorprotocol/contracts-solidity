@@ -50,6 +50,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     constructor() public {
         // set up administrative roles
         _setRoleAdmin(ROLE_SUPERVISOR, ROLE_SUPERVISOR);
+        _setRoleAdmin(ROLE_SEEDER, ROLE_SUPERVISOR);
         _setRoleAdmin(ROLE_OWNER, ROLE_SUPERVISOR);
 
         // allow the deployer to initially govern the contract
