@@ -15,6 +15,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     using SafeMath for uint256;
 
     bytes32 public constant ROLE_SUPERVISOR = keccak256("ROLE_SUPERVISOR");
+    bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     // system balances
