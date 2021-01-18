@@ -74,6 +74,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ILiquidityProtectionSettings public immutable override settings;
     ILiquidityProtectionStore public immutable override store;
     ILiquidityProtectionStats public immutable override stats;
+    ILiquidityProtectionUserStore public immutable override userStore;
+    ILiquidityProtectionSystemStore public immutable override systemStore;
+    ITokenHolder public immutable override tokenHolder;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -98,43 +101,34 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     /**
      * @dev initializes a new LiquidityProtection contract
      *
-     * @param _settings liquidity protection settings
-     * @param _store liquidity protection store
-     * @param _stats liquidity protection stats
-     * @param _networkTokenGovernance network token governance
-     * @param _govTokenGovernance governance token governance
-     * @param _lastRemoveCheckpointStore last liquidity removal/unprotection checkpoints store
+     * @param contractAddresses:
+     * - [0] liquidity protection settings
+     * - [1] liquidity protection store
+     * - [2] liquidity protection stats
+     * - [3] liquidity protection user store
+     * - [4] liquidity protection system store
+     * - [5] liquidity protection token holder
+     * - [6] network token governance
+     * - [7] governance token governance
+     * - [8] last liquidity removal/unprotection checkpoints store
      */
-    constructor(
-        ILiquidityProtectionSettings _settings,
-        ILiquidityProtectionStore _store,
-        ILiquidityProtectionStats _stats,
-        ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance,
-        ICheckpointStore _lastRemoveCheckpointStore
-    )
-        public
-        validAddress(address(_settings))
-        validAddress(address(_store))
-        validAddress(address(_stats))
-        validAddress(address(_networkTokenGovernance))
-        validAddress(address(_govTokenGovernance))
-        notThis(address(_settings))
-        notThis(address(_store))
-        notThis(address(_stats))
-        notThis(address(_networkTokenGovernance))
-        notThis(address(_govTokenGovernance))
-    {
-        settings = _settings;
-        store = _store;
-        stats = _stats;
+    constructor(address[9] memory contractAddresses) public {
+        for (uint256 i = 0; i < contractAddresses.length; i++) {
+            _validAddress(contractAddresses[i]);
+        }
 
-        networkTokenGovernance = _networkTokenGovernance;
-        networkToken = IERC20Token(address(_networkTokenGovernance.token()));
-        govTokenGovernance = _govTokenGovernance;
-        govToken = IERC20Token(address(_govTokenGovernance.token()));
+        settings = ILiquidityProtectionSettings(contractAddresses[0]);
+        store = ILiquidityProtectionStore(contractAddresses[1]);
+        stats = ILiquidityProtectionStats(contractAddresses[2]);
+        userStore = ILiquidityProtectionUserStore(contractAddresses[3]);
+        systemStore = ILiquidityProtectionSystemStore(contractAddresses[4]);
+        tokenHolder = ITokenHolder(contractAddresses[5]);
+        networkTokenGovernance = ITokenGovernance(contractAddresses[6]);
+        govTokenGovernance = ITokenGovernance(contractAddresses[7]);
+        lastRemoveCheckpointStore = ICheckpointStore(contractAddresses[8]);
 
-        lastRemoveCheckpointStore = _lastRemoveCheckpointStore;
+        networkToken = IERC20Token(address(ITokenGovernance(contractAddresses[6]).token()));
+        govToken = IERC20Token(address(ITokenGovernance(contractAddresses[7]).token()));
     }
 
     // ensures that the contract is currently removing liquidity from a converter

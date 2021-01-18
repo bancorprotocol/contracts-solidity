@@ -20,6 +20,9 @@ const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter')
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
+const LiquidityProtectionUserStore = contract.fromArtifact('LiquidityProtectionUserStore');
+const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
+const LiquidityProtectionTokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -52,6 +55,9 @@ describe('LiquidityProtectionAverageRate', () => {
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
             let liquidityProtectionStats;
+            let liquidityProtectionUserStore;
+            let liquidityProtectionSystemStore;
+            let liquidityProtectionTokenHolder;
             let liquidityProtection;
             let reserveToken1;
             let reserveToken2;
@@ -89,14 +95,20 @@ describe('LiquidityProtectionAverageRate', () => {
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
-                liquidityProtection = await LiquidityProtection.new(
+                liquidityProtectionUserStore = await LiquidityProtectionUserStore.new();
+                liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
+                liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
+                liquidityProtection = await LiquidityProtection.new([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
+                    liquidityProtectionUserStore.address,
+                    liquidityProtectionSystemStore.address,
+                    liquidityProtectionTokenHolder.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                );
+                ]);
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
