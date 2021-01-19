@@ -176,10 +176,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param tokens    token addresses
      * @param amounts   token amounts
      */
-    function seedSystemBalances(
-        IERC20Token[] calldata tokens,
-        uint256[] calldata amounts
-    ) external seederOnly {
+    function seedSystemBalances(IERC20Token[] calldata tokens, uint256[] calldata amounts) external seederOnly {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
             _systemBalances[tokens[i]] = amounts[i];
@@ -193,10 +190,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param anchors   pool anchor addresses
      * @param amounts   network token amounts
      */
-    function seedNetworkTokensMinted(
-        IConverterAnchor[] calldata anchors,
-        uint256[] calldata amounts
-    ) external seederOnly {
+    function seedNetworkTokensMinted(IConverterAnchor[] calldata anchors, uint256[] calldata amounts)
+        external
+        seederOnly
+    {
         uint256 length = anchors.length;
         for (uint256 i = 0; i < length; i++) {
             _networkTokensMinted[anchors[i]] = amounts[i];

@@ -228,7 +228,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the minimum network token liquidity for minting', async () => {
-            await expectRevert(settings.setMinNetworkTokenLiquidityForMinting(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setMinNetworkTokenLiquidityForMinting(100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the owner can set the default network token minting limit', async () => {
@@ -249,7 +252,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the default network token minting limit', async () => {
-            await expectRevert(settings.setDefaultNetworkTokenMintingLimit(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setDefaultNetworkTokenMintingLimit(100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the owner can set the network token minting limit for a pool', async () => {
@@ -270,7 +276,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the network token minting limit for a pool', async () => {
-            await expectRevert(settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the minted tokens admin can increase the minted tokens balance for a pool', async () => {
@@ -291,7 +300,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non minted tokens admin attempts to increase the minted tokens balance for a pool', async () => {
-            await expectRevert(settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the minted tokens admin can decrease the minted tokens balance for a pool', async () => {
@@ -314,7 +326,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non minted tokens admin attempts to decrease the minted tokens balance for a pool', async () => {
-            await expectRevert(settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the minted tokens admin can decrease the minted tokens balance for a pool by a number larger than the current balance', async () => {

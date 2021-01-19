@@ -440,12 +440,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
      * @param provider    liquidity provider
      * @param index       index of the locked balance
      */
-    function removeLockedBalance(address provider, uint256 index)
-        external
-        override
-        ownerOnly
-        validAddress(provider)
-    {
+    function removeLockedBalance(address provider, uint256 index) external override ownerOnly validAddress(provider) {
         LockedBalance[] storage balances = _lockedBalances[provider];
         uint256 length = balances.length;
 

@@ -206,7 +206,9 @@ async function readSource(source1, source2) {
     for (let i = 0; i < poolWhitelist.length; i += READ_BATCH_SIZE) {
         const pools = poolWhitelist.slice(i, i + READ_BATCH_SIZE);
         const systemBalances = await Promise.all(pools.map((pool) => rpc(source1.methods.systemBalance(pool))));
-        const networkTokensMinted = await Promise.all(pools.map((pool) => rpc(source2.methods.networkTokensMinted(pool))));
+        const networkTokensMinted = await Promise.all(
+            pools.map((pool) => rpc(source2.methods.networkTokensMinted(pool)))
+        );
         for (let j = 0; j < pools.length; j++) {
             console.log(`${pools[j]}: ${systemBalances[j]}, ${networkTokensMinted[j]}`);
             setState(poolTokenAmounts, [pools[j]], systemBalances[j]);
@@ -232,7 +234,7 @@ async function readTargetAmounts(state, func) {
 async function readTarget(state, target) {
     return {
         poolTokenAmounts: await readTargetAmounts(state.poolTokenAmounts, target.methods.systemBalance),
-        networkTokenAmounts: await readTargetAmounts(state.networkTokenAmounts, target.methods.networkTokensMinted),
+        networkTokenAmounts: await readTargetAmounts(state.networkTokenAmounts, target.methods.networkTokensMinted)
     };
 }
 
