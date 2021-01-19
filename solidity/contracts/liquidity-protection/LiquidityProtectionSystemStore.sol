@@ -163,13 +163,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
         validAddress(address(poolAnchor))
     {
         uint256 prevAmount = _networkTokensMinted[poolAnchor];
-
-        // allow the amount to reset to 0 if the provided amount is higher than the previous amount
-        uint256 newAmount = 0;
-        if (amount < prevAmount) {
-            newAmount = prevAmount.sub(amount);
-        }
-
+        uint256 newAmount = prevAmount > amount ? prevAmount - amount : 0;
         _networkTokensMinted[poolAnchor] = newAmount;
 
         emit NetworkTokensMintedUpdated(poolAnchor, prevAmount, newAmount);
