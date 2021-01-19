@@ -48,7 +48,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param prevAmount    previous amount
      * @param newAmount     new amount
      */
-    event SystemBalanceUpdated(IERC20Token token, uint256 prevAmount, uint256 newAmount);
+    event SystemBalanceUpdated(IERC20Token indexed token, uint256 prevAmount, uint256 newAmount);
 
     /**
      * @dev triggered when the amount of network tokens minted into a specific pool is updated
