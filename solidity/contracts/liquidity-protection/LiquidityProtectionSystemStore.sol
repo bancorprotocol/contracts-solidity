@@ -44,9 +44,9 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     /**
      * @dev triggered when the system balance for a given token is updated
      *
-     * @param token       token address
-     * @param prevAmount  previous amount
-     * @param newAmount   new amount
+     * @param token         token address
+     * @param prevAmount    previous amount
+     * @param newAmount     new amount
      */
     event SystemBalanceUpdated(IERC20Token token, uint256 prevAmount, uint256 newAmount);
 
@@ -72,7 +72,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     /**
      * @dev returns the system balance for a given token
      *
-     * @param token   token address
+     * @param token token address
      * @return system balance
      */
     function systemBalance(IERC20Token token) external view override returns (uint256) {
@@ -81,10 +81,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev increases the system balance for a given token
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
-     * @param token   token address
-     * @param amount  token amount
+     * @param token     token address
+     * @param amount    token amount
      */
     function incSystemBalance(IERC20Token token, uint256 amount)
         external
@@ -101,10 +101,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev decreases the system balance for a given token
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
-     * @param token   token address
-     * @param amount  token amount
+     * @param token     token address
+     * @param amount    token amount
      */
     function decSystemBalance(IERC20Token token, uint256 amount)
         external
@@ -131,7 +131,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev increases the amount of network tokens minted into a specific pool
-     * can only be called by the minted tokens admin
+     * can be executed only by an owner
      *
      * @param poolAnchor    pool anchor
      * @param amount        amount to increase the minted tokens by
@@ -151,7 +151,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev decreases the amount of network tokens minted into a specific pool
-     * can only be called by the minted tokens admin
+     * can be executed only by an owner
      *
      * @param poolAnchor    pool anchor
      * @param amount        amount to decrease the minted tokens by
@@ -177,10 +177,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev seeds system balances
-     * can only be executed only by a seeder
+     * can be executed only by a seeder
      *
-     * @param tokens   token addresses
-     * @param amounts  token amounts
+     * @param tokens    token addresses
+     * @param amounts   token amounts
      */
     function seedSystemBalances(
         IERC20Token[] calldata tokens,
@@ -194,10 +194,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev seeds network tokens minted
-     * can only be executed only by a seeder
+     * can be executed only by a seeder
      *
-     * @param anchors  pool anchor addresses
-     * @param amounts  network token amounts
+     * @param anchors   pool anchor addresses
+     * @param amounts   network token amounts
      */
     function seedNetworkTokensMinted(
         IConverterAnchor[] calldata anchors,
