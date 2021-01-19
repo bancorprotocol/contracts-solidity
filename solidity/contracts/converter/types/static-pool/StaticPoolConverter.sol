@@ -4,8 +4,8 @@ pragma solidity 0.6.12;
 import "../standard-pool/StandardPoolConverter.sol";
 
 /**
- * @dev This contract is a specialized version of the converter, which is
- * optimized for a liquidity pool that has 2 reserves with 50%/50% weights.
+ * @dev This contract is a specialized version of the converter, which is optimized for a
+ * liquidity pool that has 2 reserves with 50%/50% weights, and a conversion-rate of 1:1.
  */
 contract StaticPoolConverter is StandardPoolConverter {
     /**
@@ -35,8 +35,9 @@ contract StaticPoolConverter is StandardPoolConverter {
         uint256 _targetReserveBalance,
         uint256 _amount
     ) internal pure override returns (uint256) {
-        _sourceReserveBalance;
-        _targetReserveBalance;
+        // validate input
+        require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+
         return _amount;
     }
 }
