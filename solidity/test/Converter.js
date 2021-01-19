@@ -19,9 +19,11 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
+const StaticPoolConverter = contract.fromArtifact('StaticPoolConverter');
 const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
+const StaticPoolConverterFactory = contract.fromArtifact('StaticPoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 
 describe('Converter', () => {
@@ -38,6 +40,8 @@ describe('Converter', () => {
                 return LiquidityPoolV1Converter.new(anchorAddress, registryAddress, maxConversionFee);
             case 3:
                 return StandardPoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
+            case 4:
+                return StaticPoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
         }
     };
 
@@ -49,6 +53,8 @@ describe('Converter', () => {
                 return 'LiquidityPoolV1Converter';
             case 3:
                 return 'StandardPoolConverter';
+            case 4:
+                return 'StaticPoolConverter';
         }
 
         return 'Unknown';
@@ -61,6 +67,7 @@ describe('Converter', () => {
             case 1:
                 return [getReserve1Address(isETHReserve), reserveToken2.address];
             case 3:
+            case 4:
                 return [getReserve1Address(isETHReserve), reserveToken2.address];
         }
 
@@ -74,6 +81,7 @@ describe('Converter', () => {
             case 1:
                 return [250000, 150000];
             case 3:
+            case 4:
                 return [500000, 500000];
         }
 
@@ -98,6 +106,7 @@ describe('Converter', () => {
 
             case 1:
             case 3:
+            case 4:
                 await reserveToken2.transfer(converter.address, 8000);
                 await anchor.issue(owner, 20000);
                 break;
@@ -125,6 +134,7 @@ describe('Converter', () => {
 
             case 1:
             case 3:
+            case 4:
                 anchor = await DSToken.new('Pool1', 'POOL1', 2);
                 break;
         }
@@ -178,6 +188,7 @@ describe('Converter', () => {
         await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
+        await factory.registerTypedConverterFactory((await StaticPoolConverterFactory.new()).address);
     });
 
     beforeEach(async () => {
@@ -191,7 +202,7 @@ describe('Converter', () => {
         reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
-    for (const type of [0, 1, 3]) {
+    for (const type of [0, 1, 3, 4]) {
         it('verifies that converterType returns the correct type', async () => {
             const converter = await initConverter(type, true, true);
             const converterType = await converter.converterType.call();
@@ -258,7 +269,7 @@ describe('Converter', () => {
                     );
                 });
 
-                if (type != 3) {
+                if (type != 3 && type != 4) {
                     it('verifies the owner can update the conversion whitelist contract address', async () => {
                         const converter = await initConverter(type, false, isETHReserve);
                         const prevWhitelist = await converter.conversionWhitelist.call();
@@ -347,7 +358,7 @@ describe('Converter', () => {
                     }
                 });
 
-                if (type != 3) {
+                if (type != 3 && type != 4) {
                     it('should revert when a non owner attempts to add a reserve', async () => {
                         await createAnchor(type);
                         const converter = await createConverter(type, anchorAddress);

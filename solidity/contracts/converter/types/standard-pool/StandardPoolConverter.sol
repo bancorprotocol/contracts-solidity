@@ -163,7 +163,7 @@ contract StandardPoolConverter is
      *
      * @return see the converter types in the the main contract doc
      */
-    function converterType() public pure override returns (uint16) {
+    function converterType() public pure virtual override returns (uint16) {
         return 3;
     }
 
@@ -1104,7 +1104,7 @@ contract StandardPoolConverter is
         uint256 _sourceReserveBalance,
         uint256 _targetReserveBalance,
         uint256 _amount
-    ) private pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         // validate input
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
