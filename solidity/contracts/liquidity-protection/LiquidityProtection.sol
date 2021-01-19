@@ -365,7 +365,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // token holders can burn their tokens
         safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
         networkTokenGovernance.burn(_amount);
-        settings.decNetworkTokensMinted(_poolAnchor, _amount);
+        systemStore.decNetworkTokensMinted(_poolAnchor, _amount);
 
         // mint governance tokens to the recipient
         govTokenGovernance.mint(_owner, _amount);
@@ -408,12 +408,12 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             mintingLimit = settings.defaultNetworkTokenMintingLimit();
         }
 
-        uint256 newNetworkTokensMinted = settings.networkTokensMinted(_poolAnchor).add(newNetworkLiquidityAmount);
+        uint256 newNetworkTokensMinted = systemStore.networkTokensMinted(_poolAnchor).add(newNetworkLiquidityAmount);
         require(newNetworkTokensMinted <= mintingLimit, "ERR_MAX_AMOUNT_REACHED");
 
         // issue new network tokens to the system
         networkTokenGovernance.mint(address(this), newNetworkLiquidityAmount);
-        settings.incNetworkTokensMinted(_poolAnchor, newNetworkLiquidityAmount);
+        systemStore.incNetworkTokensMinted(_poolAnchor, newNetworkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
         ensureAllowance(_networkToken, address(converter), newNetworkLiquidityAmount);
@@ -517,7 +517,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         }
 
         // get the amount of network tokens already minted for the pool
-        uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
+        uint256 networkTokensMinted = systemStore.networkTokensMinted(_poolAnchor);
 
         // get the amount of network tokens which can minted for the pool
         uint256 networkTokensCanBeMinted = MathEx.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
@@ -755,7 +755,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         if (liquidity.reserveToken == networkTokenLocal) {
             // mint network tokens for the caller and lock them
             networkTokenGovernance.mint(address(tokenHolder), targetAmount);
-            settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
+            systemStore.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
             lockTokens(_provider, targetAmount);
             return;
         }
@@ -806,7 +806,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 networkBalance = networkTokenLocal.balanceOf(address(this));
         if (networkBalance > 0) {
             networkTokenGovernance.burn(networkBalance);
-            settings.decNetworkTokensMinted(liquidity.poolToken, networkBalance);
+            systemStore.decNetworkTokensMinted(liquidity.poolToken, networkBalance);
         }
     }
 

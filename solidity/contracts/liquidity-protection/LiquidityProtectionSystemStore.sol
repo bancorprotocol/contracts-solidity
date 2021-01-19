@@ -21,6 +21,9 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     // system balances
     mapping(IERC20Token => uint256) private _systemBalances;
 
+    // network tokens minted
+    mapping(IConverterAnchor => uint256) private _networkTokensMinted;
+
     // allows execution only by an owner
     modifier ownerOnly {
         _hasRole(ROLE_OWNER);
@@ -46,6 +49,15 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param newAmount   new amount
      */
     event SystemBalanceUpdated(IERC20Token token, uint256 prevAmount, uint256 newAmount);
+
+    /**
+     * @dev triggered when the amount of network tokens minted into a specific pool is updated
+     *
+     * @param poolAnchor    pool anchor
+     * @param prevAmount    previous amount
+     * @param newAmount     new amount
+     */
+    event NetworkTokensMintedUpdated(IConverterAnchor indexed poolAnchor, uint256 prevAmount, uint256 newAmount);
 
     constructor() public {
         // set up administrative roles
@@ -108,6 +120,62 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     }
 
     /**
+     * @dev returns the amount of network tokens minted into a specific pool
+     *
+     * @param poolAnchor    pool anchor
+     * @return amount of network tokens
+     */
+    function networkTokensMinted(IConverterAnchor poolAnchor) external view override returns (uint256) {
+        return _networkTokensMinted[poolAnchor];
+    }
+
+    /**
+     * @dev increases the amount of network tokens minted into a specific pool
+     * can only be called by the minted tokens admin
+     *
+     * @param poolAnchor    pool anchor
+     * @param amount        amount to increase the minted tokens by
+     */
+    function incNetworkTokensMinted(IConverterAnchor poolAnchor, uint256 amount)
+        external
+        override
+        ownerOnly
+        validAddress(address(poolAnchor))
+    {
+        uint256 prevAmount = _networkTokensMinted[poolAnchor];
+        uint256 newAmount = prevAmount.add(amount);
+        _networkTokensMinted[poolAnchor] = newAmount;
+
+        emit NetworkTokensMintedUpdated(poolAnchor, prevAmount, newAmount);
+    }
+
+    /**
+     * @dev decreases the amount of network tokens minted into a specific pool
+     * can only be called by the minted tokens admin
+     *
+     * @param poolAnchor    pool anchor
+     * @param amount        amount to decrease the minted tokens by
+     */
+    function decNetworkTokensMinted(IConverterAnchor poolAnchor, uint256 amount)
+        external
+        override
+        ownerOnly
+        validAddress(address(poolAnchor))
+    {
+        uint256 prevAmount = _networkTokensMinted[poolAnchor];
+
+        // allow the amount to reset to 0 if the provided amount is higher than the previous amount
+        uint256 newAmount = 0;
+        if (amount < prevAmount) {
+            newAmount = prevAmount.sub(amount);
+        }
+
+        _networkTokensMinted[poolAnchor] = newAmount;
+
+        emit NetworkTokensMintedUpdated(poolAnchor, prevAmount, newAmount);
+    }
+
+    /**
      * @dev seeds system balances
      * can only be executed only by a seeder
      *
@@ -121,6 +189,23 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
             _systemBalances[tokens[i]] = amounts[i];
+        }
+    }
+
+    /**
+     * @dev seeds network tokens minted
+     * can only be executed only by a seeder
+     *
+     * @param anchors  pool anchor addresses
+     * @param amounts  network token amounts
+     */
+    function seedNetworkTokensMinted(
+        IConverterAnchor[] calldata anchors,
+        uint256[] calldata amounts
+    ) external seederOnly {
+        uint256 length = anchors.length;
+        for (uint256 i = 0; i < length; i++) {
+            _networkTokensMinted[anchors[i]] = amounts[i];
         }
     }
 }
