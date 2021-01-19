@@ -6,7 +6,7 @@ import "../../token/interfaces/IERC20Token.sol";
     Liquidity Protection System Store interface
 */
 interface ILiquidityProtectionSystemStore {
-    function systemBalance(IERC20Token _poolToken) external view returns (uint256);
-    function incSystemBalance(IERC20Token _poolToken, uint256 _poolAmount) external;
-    function decSystemBalance(IERC20Token _poolToken, uint256 _poolAmount) external;
+    function systemBalance(IERC20Token poolToken) external view returns (uint256);
+    function incSystemBalance(IERC20Token poolToken, uint256 poolAmount) external;
+    function decSystemBalance(IERC20Token poolToken, uint256 poolAmount) external;
 }

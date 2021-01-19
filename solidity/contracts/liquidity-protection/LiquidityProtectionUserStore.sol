@@ -42,11 +42,11 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     // position by provider
     uint256 private nextPositionId;
-    mapping(address => uint256[]) private positionIdsByProvider;
-    mapping(uint256 => Position) private positions;
+    mapping(address => uint256[]) private _positionIdsByProvider;
+    mapping(uint256 => Position) private _positions;
 
     // user locked network token balances
-    mapping(address => LockedBalance[]) private lockedBalances;
+    mapping(address => LockedBalance[]) private _lockedBalances;
 
     // allows execution only by an owner
     modifier ownerOnly {
@@ -62,76 +62,76 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     /**
      * @dev triggered when a position is added
      *
-     * @param _id              position id
-     * @param _provider        liquidity provider
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
-     * @param _poolAmount      amount of pool tokens
-     * @param _reserveAmount   amount of reserve tokens
+     * @param id              position id
+     * @param provider        liquidity provider
+     * @param poolToken       pool token address
+     * @param reserveToken    reserve token address
+     * @param poolAmount      amount of pool tokens
+     * @param reserveAmount   amount of reserve tokens
      */
     event PositionAdded(
-        uint256 _id,
-        address indexed _provider,
-        IDSToken indexed _poolToken,
-        IERC20Token indexed _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        uint256 id,
+        address indexed provider,
+        IDSToken indexed poolToken,
+        IERC20Token indexed reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     );
 
     /**
      * @dev triggered when a position is updated
      *
-     * @param _id                  position id
-     * @param _provider            liquidity provider
-     * @param _poolToken           pool token address
-     * @param _reserveToken        reserve token address
-     * @param _deltaPoolAmount     delta amount of pool tokens
-     * @param _deltaReserveAmount  delta amount of reserve tokens
+     * @param id                  position id
+     * @param provider            liquidity provider
+     * @param poolToken           pool token address
+     * @param reserveToken        reserve token address
+     * @param deltaPoolAmount     delta amount of pool tokens
+     * @param deltaReserveAmount  delta amount of reserve tokens
      */
     event PositionUpdated(
-        uint256 _id,
-        address indexed _provider,
-        IDSToken indexed _poolToken,
-        IERC20Token indexed _reserveToken,
-        int256 _deltaPoolAmount,
-        int256 _deltaReserveAmount
+        uint256 id,
+        address indexed provider,
+        IDSToken indexed poolToken,
+        IERC20Token indexed reserveToken,
+        int256 deltaPoolAmount,
+        int256 deltaReserveAmount
     );
 
     /**
      * @dev triggered when a position is removed
      *
-     * @param _id              position id
-     * @param _provider        liquidity provider
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
-     * @param _poolAmount      amount of pool tokens
-     * @param _reserveAmount   amount of reserve tokens
+     * @param id              position id
+     * @param provider        liquidity provider
+     * @param poolToken       pool token address
+     * @param reserveToken    reserve token address
+     * @param poolAmount      amount of pool tokens
+     * @param reserveAmount   amount of reserve tokens
      */
     event PositionRemoved(
-        uint256 _id,
-        address indexed _provider,
-        IDSToken indexed _poolToken,
-        IERC20Token indexed _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        uint256 id,
+        address indexed provider,
+        IDSToken indexed poolToken,
+        IERC20Token indexed reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     );
 
     /**
      * @dev triggered when network tokens are locked
      *
-     * @param _provider        provider of the network tokens
-     * @param _amount          amount of network tokens
-     * @param _expirationTime  lock expiration time
+     * @param provider        provider of the network tokens
+     * @param amount          amount of network tokens
+     * @param expirationTime  lock expiration time
      */
-    event BalanceLocked(address indexed _provider, uint256 _amount, uint256 _expirationTime);
+    event BalanceLocked(address indexed provider, uint256 amount, uint256 expirationTime);
 
     /**
      * @dev triggered when network tokens are unlocked
      *
-     * @param _provider    provider of the network tokens
-     * @param _amount      amount of network tokens
+     * @param provider    provider of the network tokens
+     * @param amount      amount of network tokens
      */
-    event BalanceUnlocked(address indexed _provider, uint256 _amount);
+    event BalanceUnlocked(address indexed provider, uint256 amount);
 
     constructor() public {
         // set up administrative roles
@@ -143,40 +143,40 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     }
 
     /**
-     * @dev returns the number of positions for the given provider
+     * @dev returns the number of _positions for the given provider
      *
-     * @param _provider    liquidity provider
-     * @return number of positions
+     * @param provider    liquidity provider
+     * @return number of _positions
      */
-    function positionCount(address _provider) external view returns (uint256) {
-        return positionIdsByProvider[_provider].length;
+    function positionCount(address provider) external view returns (uint256) {
+        return _positionIdsByProvider[provider].length;
     }
 
     /**
      * @dev returns the list of position ids for the given provider
      *
-     * @param _provider    liquidity provider
+     * @param provider    liquidity provider
      * @return position ids
      */
-    function positionIds(address _provider) external view returns (uint256[] memory) {
-        return positionIdsByProvider[_provider];
+    function positionIds(address provider) external view returns (uint256[] memory) {
+        return _positionIdsByProvider[provider];
     }
 
     /**
      * @dev returns the id of a position for the given provider at a specific index
      *
-     * @param _provider    liquidity provider
-     * @param _index       position index
+     * @param provider    liquidity provider
+     * @param index       position index
      * @return position id
      */
-    function positionId(address _provider, uint256 _index) external view returns (uint256) {
-        return positionIdsByProvider[_provider][_index];
+    function positionId(address provider, uint256 index) external view returns (uint256) {
+        return _positionIdsByProvider[provider][index];
     }
 
     /**
      * @dev returns an existing position details
      *
-     * @param _id  position id
+     * @param id  position id
      *
      * @return liquidity provider
      * @return pool token address
@@ -187,7 +187,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
      * @return rate of 1 protected reserve token in units of the other reserve token (denominator)
      * @return timestamp
      */
-    function position(uint256 _id)
+    function position(uint256 id)
         external
         view
         override
@@ -202,7 +202,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
             uint256
         )
     {
-        Position storage pos = positions[_id];
+        Position storage pos = _positions[id];
         uint256 reserveRateInfo = pos.reserveRateInfo;
         return (
             pos.provider,
@@ -220,59 +220,59 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
      * @dev adds a position
      * can be called only by the contract owner
      *
-     * @param _provider        liquidity provider
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
-     * @param _poolAmount      pool token amount
-     * @param _reserveAmount   reserve token amount
-     * @param _reserveRateN    rate of 1 protected reserve token in units of the other reserve token (numerator)
-     * @param _reserveRateD    rate of 1 protected reserve token in units of the other reserve token (denominator)
-     * @param _timestamp       timestamp
+     * @param provider        liquidity provider
+     * @param poolToken       pool token address
+     * @param reserveToken    reserve token address
+     * @param poolAmount      pool token amount
+     * @param reserveAmount   reserve token amount
+     * @param reserveRateN    rate of 1 protected reserve token in units of the other reserve token (numerator)
+     * @param reserveRateD    rate of 1 protected reserve token in units of the other reserve token (denominator)
+     * @param timestamp       timestamp
      * @return new position id
      */
     function addPosition(
-        address _provider,
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount,
-        uint256 _reserveRateN,
-        uint256 _reserveRateD,
-        uint256 _timestamp
+        address provider,
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        uint256 reserveRateN,
+        uint256 reserveRateD,
+        uint256 timestamp
     ) external override ownerOnly returns (uint256) {
         // validate input
         require(
-            _provider != address(0) &&
-                _provider != address(this) &&
-                address(_poolToken) != address(0) &&
-                address(_poolToken) != address(this) &&
-                address(_reserveToken) != address(0) &&
-                address(_reserveToken) != address(this),
+            provider != address(0) &&
+                provider != address(this) &&
+                address(poolToken) != address(0) &&
+                address(poolToken) != address(this) &&
+                address(reserveToken) != address(0) &&
+                address(reserveToken) != address(this),
             "ERR_INVALID_ADDRESS"
         );
         require(
-            _poolAmount > 0 && _reserveAmount > 0 && _reserveRateN > 0 && _reserveRateD > 0 && _timestamp > 0,
+            poolAmount > 0 && reserveAmount > 0 && reserveRateN > 0 && reserveRateD > 0 && timestamp > 0,
             "ERR_ZERO_VALUE"
         );
 
         // add the position
-        uint256[] storage ids = positionIdsByProvider[_provider];
+        uint256[] storage ids = _positionIdsByProvider[provider];
         uint256 id = nextPositionId;
         nextPositionId += 1;
 
-        positions[id] = Position({
-            provider: _provider,
+        _positions[id] = Position({
+            provider: provider,
             index: ids.length,
-            poolToken: _poolToken,
-            reserveToken: _reserveToken,
-            poolAmount: toUint128(_poolAmount),
-            reserveAmount: toUint128(_reserveAmount),
-            reserveRateInfo: encodeReserveRateInfo(_reserveRateN, _reserveRateD, _timestamp)
+            poolToken: poolToken,
+            reserveToken: reserveToken,
+            poolAmount: toUint128(poolAmount),
+            reserveAmount: toUint128(reserveAmount),
+            reserveRateInfo: encodeReserveRateInfo(reserveRateN, reserveRateD, timestamp)
         });
 
         ids.push(id);
 
-        emit PositionAdded(id, _provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
+        emit PositionAdded(id, provider, poolToken, reserveToken, poolAmount, reserveAmount);
         return id;
     }
 
@@ -280,17 +280,17 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
      * @dev updates an existing position pool/reserve amounts
      * can be called only by the contract owner
      *
-     * @param _id                  position id
-     * @param _newPoolAmount       new pool tokens amount
-     * @param _newReserveAmount    new reserve tokens amount
+     * @param id                  position id
+     * @param newPoolAmount       new pool tokens amount
+     * @param newReserveAmount    new reserve tokens amount
      */
     function updatePositionAmounts(
-        uint256 _id,
-        uint256 _newPoolAmount,
-        uint256 _newReserveAmount
-    ) external override ownerOnly greaterThanZero(_newPoolAmount) greaterThanZero(_newReserveAmount) {
+        uint256 id,
+        uint256 newPoolAmount,
+        uint256 newReserveAmount
+    ) external override ownerOnly greaterThanZero(newPoolAmount) greaterThanZero(newReserveAmount) {
         // update the position
-        Position storage pos = positions[_id];
+        Position storage pos = _positions[id];
 
         // validate input
         require(pos.provider != address(0), "ERR_INVALID_ID");
@@ -299,24 +299,24 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         IERC20Token reserveToken = pos.reserveToken;
         uint256 prevPoolAmount = uint256(pos.poolAmount);
         uint256 prevReserveAmount = uint256(pos.reserveAmount);
-        pos.poolAmount = toUint128(_newPoolAmount);
-        pos.reserveAmount = toUint128(_newReserveAmount);
+        pos.poolAmount = toUint128(newPoolAmount);
+        pos.reserveAmount = toUint128(newReserveAmount);
 
-        int256 _deltaPoolAmount = int256(prevPoolAmount) - int256(_newPoolAmount);
-        int256 _deltaReserveAmount = int256(prevReserveAmount) - int256(_newReserveAmount);
+        int256 deltaPoolAmount = int256(prevPoolAmount) - int256(newPoolAmount);
+        int256 deltaReserveAmount = int256(prevReserveAmount) - int256(newReserveAmount);
 
-        emit PositionUpdated(_id, pos.provider, poolToken, reserveToken, _deltaPoolAmount, _deltaReserveAmount);
+        emit PositionUpdated(id, pos.provider, poolToken, reserveToken, deltaPoolAmount, deltaReserveAmount);
     }
 
     /**
      * @dev removes a position
      * can be called only by the contract owner
      *
-     * @param _id  position id
+     * @param id  position id
      */
-    function removePosition(uint256 _id) external override ownerOnly {
+    function removePosition(uint256 id) external override ownerOnly {
         // remove the position
-        Position storage pos = positions[_id];
+        Position storage pos = _positions[id];
 
         // validate input
         address provider = pos.provider;
@@ -327,9 +327,9 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         IERC20Token reserveToken = pos.reserveToken;
         uint256 poolAmount = uint256(pos.poolAmount);
         uint256 reserveAmount = uint256(pos.reserveAmount);
-        delete positions[_id];
+        delete _positions[id];
 
-        uint256[] storage ids = positionIdsByProvider[provider];
+        uint256[] storage ids = _positionIdsByProvider[provider];
         uint256 length = ids.length;
         assert(length > 0);
 
@@ -337,66 +337,66 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         if (index < lastIndex) {
             uint256 lastId = ids[lastIndex];
             ids[index] = lastId;
-            positions[lastId].index = index;
+            _positions[lastId].index = index;
         }
 
         ids.pop();
 
-        emit PositionRemoved(_id, provider, poolToken, reserveToken, poolAmount, reserveAmount);
+        emit PositionRemoved(id, provider, poolToken, reserveToken, poolAmount, reserveAmount);
     }
 
     /**
      * @dev returns the number of network token locked balances for a given provider
      *
-     * @param _provider    locked balances provider
+     * @param provider    locked balances provider
      * @return the number of network token locked balances
      */
-    function lockedBalanceCount(address _provider) external view returns (uint256) {
-        return lockedBalances[_provider].length;
+    function lockedBalanceCount(address provider) external view returns (uint256) {
+        return _lockedBalances[provider].length;
     }
 
     /**
      * @dev returns an existing locked network token balance details
      *
-     * @param _provider    locked balances provider
-     * @param _index       start index
+     * @param provider    locked balances provider
+     * @param index       start index
      * @return amount of network tokens
      * @return lock expiration time
      */
-    function lockedBalance(address _provider, uint256 _index) external view override returns (uint256, uint256) {
-        LockedBalance storage balance = lockedBalances[_provider][_index];
+    function lockedBalance(address provider, uint256 index) external view override returns (uint256, uint256) {
+        LockedBalance storage balance = _lockedBalances[provider][index];
         return (balance.amount, balance.expirationTime);
     }
 
     /**
      * @dev returns a range of locked network token balances for a given provider
      *
-     * @param _provider    locked balances provider
-     * @param _startIndex  start index
-     * @param _endIndex    end index (exclusive)
+     * @param provider    locked balances provider
+     * @param startIndex  start index
+     * @param endIndex    end index (exclusive)
      * @return locked amounts
      * @return expiration times
      */
     function lockedBalanceRange(
-        address _provider,
-        uint256 _startIndex,
-        uint256 _endIndex
+        address provider,
+        uint256 startIndex,
+        uint256 endIndex
     ) external view override returns (uint256[] memory, uint256[] memory) {
         // limit the end index by the number of locked balances
-        if (_endIndex > lockedBalances[_provider].length) {
-            _endIndex = lockedBalances[_provider].length;
+        if (endIndex > _lockedBalances[provider].length) {
+            endIndex = _lockedBalances[provider].length;
         }
 
         // ensure that the end index is higher than the start index
-        require(_endIndex > _startIndex, "ERR_INVALID_INDICES");
+        require(endIndex > startIndex, "ERR_INVALID_INDICES");
 
         // get the locked balances for the given range and return them
-        uint256 length = _endIndex - _startIndex;
+        uint256 length = endIndex - startIndex;
         uint256[] memory amounts = new uint256[](length);
         uint256[] memory expirationTimes = new uint256[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            LockedBalance storage balance = lockedBalances[_provider][_startIndex + i];
+            LockedBalance storage balance = _lockedBalances[provider][startIndex + i];
             amounts[i] = balance.amount;
             expirationTimes[i] = balance.expirationTime;
         }
@@ -408,84 +408,84 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
      * @dev adds a locked network token balance
      * can be called only by the contract owner
      *
-     * @param _provider        liquidity provider
-     * @param _amount          token amount
-     * @param _expirationTime  lock expiration time
+     * @param provider        liquidity provider
+     * @param amount          token amount
+     * @param expirationTime  lock expiration time
      * @return new locked balance index
      */
     function addLockedBalance(
-        address _provider,
-        uint256 _amount,
-        uint256 _expirationTime
+        address provider,
+        uint256 amount,
+        uint256 expirationTime
     )
         external
         override
         ownerOnly
-        validAddress(_provider)
-        notThis(_provider)
-        greaterThanZero(_amount)
-        greaterThanZero(_expirationTime)
+        validAddress(provider)
+        notThis(provider)
+        greaterThanZero(amount)
+        greaterThanZero(expirationTime)
         returns (uint256)
     {
-        lockedBalances[_provider].push(LockedBalance({ amount: _amount, expirationTime: _expirationTime }));
+        _lockedBalances[provider].push(LockedBalance({ amount: amount, expirationTime: expirationTime }));
 
-        emit BalanceLocked(_provider, _amount, _expirationTime);
-        return lockedBalances[_provider].length - 1;
+        emit BalanceLocked(provider, amount, expirationTime);
+        return _lockedBalances[provider].length - 1;
     }
 
     /**
      * @dev removes a locked network token balance
      * can be called only by the contract owner
      *
-     * @param _provider    liquidity provider
-     * @param _index       index of the locked balance
+     * @param provider    liquidity provider
+     * @param index       index of the locked balance
      */
-    function removeLockedBalance(address _provider, uint256 _index)
+    function removeLockedBalance(address provider, uint256 index)
         external
         override
         ownerOnly
-        validAddress(_provider)
+        validAddress(provider)
     {
-        LockedBalance[] storage balances = lockedBalances[_provider];
+        LockedBalance[] storage balances = _lockedBalances[provider];
         uint256 length = balances.length;
 
         // validate input
-        require(_index < length, "ERR_INVALID_INDEX");
+        require(index < length, "ERR_INVALID_INDEX");
 
-        uint256 amount = balances[_index].amount;
+        uint256 amount = balances[index].amount;
         uint256 lastIndex = length - 1;
-        if (_index < lastIndex) {
-            balances[_index] = balances[lastIndex];
+        if (index < lastIndex) {
+            balances[index] = balances[lastIndex];
         }
 
         balances.pop();
 
-        emit BalanceUnlocked(_provider, amount);
+        emit BalanceUnlocked(provider, amount);
     }
 
-    function toUint128(uint256 _amount) private pure returns (uint128) {
-        require(_amount <= MAX_UINT128, "ERR_AMOUNT_TOO_HIGH");
-        return uint128(_amount);
+    function toUint128(uint256 amount) private pure returns (uint128) {
+        require(amount <= MAX_UINT128, "ERR_AMOUNT_TOO_HIGH");
+        return uint128(amount);
     }
 
     function encodeReserveRateInfo(
-        uint256 _reserveRateN,
-        uint256 _reserveRateD,
-        uint256 _reserveRateT
+        uint256 reserveRateN,
+        uint256 reserveRateD,
+        uint256 reserveRateT
     ) private pure returns (uint256) {
-        assert(_reserveRateN <= MAX_UINT112 && _reserveRateD <= MAX_UINT112 && _reserveRateT <= MAX_UINT32);
-        return _reserveRateN | (_reserveRateD << 112) | (_reserveRateT << 224);
+        assert(reserveRateN <= MAX_UINT112 && reserveRateD <= MAX_UINT112 && reserveRateT <= MAX_UINT32);
+        return reserveRateN | (reserveRateD << 112) | (reserveRateT << 224);
     }
 
-    function decodeReserveRateN(uint256 _reserveRateInfo) private pure returns (uint256) {
-        return _reserveRateInfo & MAX_UINT112;
+    function decodeReserveRateN(uint256 reserveRateInfo) private pure returns (uint256) {
+        return reserveRateInfo & MAX_UINT112;
     }
 
-    function decodeReserveRateD(uint256 _reserveRateInfo) private pure returns (uint256) {
-        return (_reserveRateInfo >> 112) & MAX_UINT112;
+    function decodeReserveRateD(uint256 reserveRateInfo) private pure returns (uint256) {
+        return (reserveRateInfo >> 112) & MAX_UINT112;
     }
 
-    function decodeReserveRateT(uint256 _reserveRateInfo) private pure returns (uint256) {
-        return _reserveRateInfo >> 224;
+    function decodeReserveRateT(uint256 reserveRateInfo) private pure returns (uint256) {
+        return reserveRateInfo >> 224;
     }
 }

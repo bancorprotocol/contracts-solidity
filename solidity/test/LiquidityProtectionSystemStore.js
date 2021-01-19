@@ -37,7 +37,7 @@ describe('LiquidityProtectionSystemStore', () => {
     it('should succeed when an owner attempts to increase system balance', async () => {
         const response = await liquidityProtectionSystemStore.incSystemBalance(token, 1, { from: owner });
         expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('1');
-        expectEvent(response, 'SystemBalanceUpdated', { _token: token, _prevAmount: '0', _newAmount: '1' });
+        expectEvent(response, 'SystemBalanceUpdated', { token: token, prevAmount: '0', newAmount: '1' });
     });
 
     it('should succeed when an owner attempts to decrease system balance', async () => {
@@ -45,7 +45,7 @@ describe('LiquidityProtectionSystemStore', () => {
         expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('1');
         const response = await liquidityProtectionSystemStore.decSystemBalance(token, 1, { from: owner });
         expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('0');
-        expectEvent(response, 'SystemBalanceUpdated', { _token: token, _prevAmount: '1', _newAmount: '0' });
+        expectEvent(response, 'SystemBalanceUpdated', { token: token, prevAmount: '1', newAmount: '0' });
     });
 
     it('should succeed when a seeder attempts to seed system balances', async () => {

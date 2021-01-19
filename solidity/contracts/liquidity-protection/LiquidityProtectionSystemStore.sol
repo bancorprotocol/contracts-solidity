@@ -19,7 +19,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     // system balances
-    mapping(IERC20Token => uint256) private systemBalances;
+    mapping(IERC20Token => uint256) private _systemBalances;
 
     // allows execution only by an owner
     modifier ownerOnly {
@@ -41,11 +41,11 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     /**
      * @dev triggered when the system balance for a given token is updated
      *
-     * @param _token       token address
-     * @param _prevAmount  previous amount
-     * @param _newAmount   new amount
+     * @param token       token address
+     * @param prevAmount  previous amount
+     * @param newAmount   new amount
      */
-    event SystemBalanceUpdated(IERC20Token _token, uint256 _prevAmount, uint256 _newAmount);
+    event SystemBalanceUpdated(IERC20Token token, uint256 prevAmount, uint256 newAmount);
 
     constructor() public {
         // set up administrative roles
@@ -60,67 +60,67 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     /**
      * @dev returns the system balance for a given token
      *
-     * @param _token   token address
+     * @param token   token address
      * @return system balance
      */
-    function systemBalance(IERC20Token _token) external view override returns (uint256) {
-        return systemBalances[_token];
+    function systemBalance(IERC20Token token) external view override returns (uint256) {
+        return _systemBalances[token];
     }
 
     /**
      * @dev increases the system balance for a given token
      * can be called only by the contract owner
      *
-     * @param _token   token address
-     * @param _amount  token amount
+     * @param token   token address
+     * @param amount  token amount
      */
-    function incSystemBalance(IERC20Token _token, uint256 _amount)
+    function incSystemBalance(IERC20Token token, uint256 amount)
         external
         override
         ownerOnly
-        validAddress(address(_token))
+        validAddress(address(token))
     {
-        uint256 prevAmount = systemBalances[_token];
-        uint256 newAmount = prevAmount.add(_amount);
-        systemBalances[_token] = newAmount;
+        uint256 prevAmount = _systemBalances[token];
+        uint256 newAmount = prevAmount.add(amount);
+        _systemBalances[token] = newAmount;
 
-        emit SystemBalanceUpdated(_token, prevAmount, newAmount);
+        emit SystemBalanceUpdated(token, prevAmount, newAmount);
     }
 
     /**
      * @dev decreases the system balance for a given token
      * can be called only by the contract owner
      *
-     * @param _token   token address
-     * @param _amount  token amount
+     * @param token   token address
+     * @param amount  token amount
      */
-    function decSystemBalance(IERC20Token _token, uint256 _amount)
+    function decSystemBalance(IERC20Token token, uint256 amount)
         external
         override
         ownerOnly
-        validAddress(address(_token))
+        validAddress(address(token))
     {
-        uint256 prevAmount = systemBalances[_token];
-        uint256 newAmount = prevAmount.sub(_amount);
-        systemBalances[_token] = newAmount;
+        uint256 prevAmount = _systemBalances[token];
+        uint256 newAmount = prevAmount.sub(amount);
+        _systemBalances[token] = newAmount;
 
-        emit SystemBalanceUpdated(_token, prevAmount, newAmount);
+        emit SystemBalanceUpdated(token, prevAmount, newAmount);
     }
 
     /**
      * @dev seeds system balances
      * can only be executed only by a seeder
      *
-     * @param _tokens   token addresses
-     * @param _amounts  token amounts
+     * @param tokens   token addresses
+     * @param amounts  token amounts
      */
     function seedSystemBalances(
-        IERC20Token[] calldata _tokens,
-        uint256[] calldata _amounts
+        IERC20Token[] calldata tokens,
+        uint256[] calldata amounts
     ) external seederOnly {
-        uint256 length = _tokens.length;
+        uint256 length = tokens.length;
         for (uint256 i = 0; i < length; i++) {
-            systemBalances[_tokens[i]] = _amounts[i];
+            _systemBalances[tokens[i]] = amounts[i];
         }
     }
 }
