@@ -215,7 +215,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                ]);
+                ], 0);
 
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
                     from: owner

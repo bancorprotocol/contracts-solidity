@@ -46,7 +46,7 @@ describe('LiquidityProtectionStateless', () => {
             networkTokenGovernance.address,
             govTokenGovernance.address,
             checkpointStore.address
-        ]);
+        ], 0);
     });
 
     describe('sanity part 1', () => {

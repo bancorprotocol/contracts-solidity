@@ -84,6 +84,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ICheckpointStore public immutable lastRemoveCheckpointStore;
     ILiquidityProtectionEventsSubscriber public eventsSubscriber;
 
+    // value of `store.nextProtectedLiquidityId` upon the deployment of this contract
+    uint256 private nextProtectedLiquidityId;
+
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
 
@@ -111,8 +114,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * - [6] network token governance
      * - [7] governance token governance
      * - [8] last liquidity removal/unprotection checkpoints store
+     * @param _nextProtectedLiquidityId value of `store.nextProtectedLiquidityId`
      */
-    constructor(address[9] memory _contractAddresses) public {
+    constructor(address[9] memory _contractAddresses, uint256 _nextProtectedLiquidityId) public {
         for (uint256 i = 0; i < _contractAddresses.length; i++) {
             _validAddress(_contractAddresses[i]);
         }
@@ -129,6 +133,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         networkToken = IERC20Token(address(ITokenGovernance(_contractAddresses[6]).token()));
         govToken = IERC20Token(address(ITokenGovernance(_contractAddresses[7]).token()));
+
+        nextProtectedLiquidityId = _nextProtectedLiquidityId;
     }
 
     // ensures that the contract is currently removing liquidity from a converter
@@ -682,8 +688,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                 );
             }
 
-            // remove the protected liquidity from the provider
-            store.removeProtectedLiquidity(_id);
+            // remove the position from the provider
+            userStore.removePosition(_id);
         } else {
             // remove a portion of the protected liquidity from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
@@ -703,7 +709,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                 );
             }
 
-            store.updateProtectedLiquidityAmounts(
+            userStore.updatePositionAmounts(
                 _id,
                 fullPoolAmount - liquidity.poolAmount,
                 fullReserveAmount - liquidity.reserveAmount
@@ -868,7 +874,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function claimBalance(uint256 _startIndex, uint256 _endIndex) external protected {
         // get the locked balances from the store
         (uint256[] memory amounts, uint256[] memory expirationTimes) =
-            store.lockedBalanceRange(msg.sender, _startIndex, _endIndex);
+            userStore.lockedBalanceRange(msg.sender, _startIndex, _endIndex);
 
         uint256 totalAmount = 0;
         uint256 length = amounts.length;
@@ -882,7 +888,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             }
 
             // remove the locked balance item
-            store.removeLockedBalance(msg.sender, _startIndex + index);
+            userStore.removeLockedBalance(msg.sender, _startIndex + index);
             totalAmount = totalAmount.add(amounts[index]);
         }
 
@@ -963,7 +969,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         stats.addProviderPool(_provider, _poolToken);
         return
-            store.addProtectedLiquidity(
+            userStore.addPosition(
                 _provider,
                 _poolToken,
                 _reserveToken,
@@ -983,7 +989,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function lockTokens(address _provider, uint256 _amount) internal {
         uint256 expirationTime = time().add(settings.lockDuration());
-        store.addLockedBalance(_provider, _amount, expirationTime);
+        userStore.addLockedBalance(_provider, _amount, expirationTime);
     }
 
     /**
@@ -1211,7 +1217,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             liquidity.reserveRateN,
             liquidity.reserveRateD,
             liquidity.timestamp
-        ) = store.protectedLiquidity(_id);
+        ) = _id < nextProtectedLiquidityId ? store.protectedLiquidity(_id) : userStore.position(_id);
 
         return liquidity;
     }
