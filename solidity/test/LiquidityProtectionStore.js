@@ -239,10 +239,11 @@ describe('LiquidityProtectionStore', () => {
     describe('protected liquidities advanced verification', () => {
         const removeAllOneByOne = async (direction) => {
             console.log(`adding ${accounts.length} items...`);
-            for (const account of accounts)
+            for (const account of accounts) {
                 await liquidityProtectionStore.addProtectedLiquidity(provider, account, DUMMY_ADDRESS, 1, 2, 3, 4, 5, {
                     from: owner
                 });
+            }
             for (let items = accounts.slice(); items.length > 0; items.length--) {
                 const index = ((items.length - 1) * (1 - direction)) / 2;
                 const id = await liquidityProtectionStore.protectedLiquidityId(provider, index);
@@ -268,13 +269,16 @@ describe('LiquidityProtectionStore', () => {
     describe('locked balances advanced verification', () => {
         const removeAllOneByOne = async (direction) => {
             console.log(`adding ${accounts.length} items...`);
-            for (const account of accounts)
-                await liquidityProtectionStore.addLockedBalance(provider, new BN(account), 1);
+            for (const account of accounts) {
+                await liquidityProtectionStore.addLockedBalance(provider, new BN(account), 1, {
+                    from: owner
+                });
+            }
             for (let items = accounts.slice(); items.length > 0; items.length--) {
                 const bgnIndex = ((items.length - 1) * (1 - direction)) / 2;
                 const endIndex = ((items.length - 1) * (1 + direction)) / 2;
                 const item = (await liquidityProtectionStore.lockedBalance(provider, bgnIndex))[0];
-                await liquidityProtectionStore.removeLockedBalance(provider, bgnIndex);
+                await liquidityProtectionStore.removeLockedBalance(provider, bgnIndex, { from: owner });
                 expect(item).to.be.bignumber.equal(new BN(items[bgnIndex]));
                 items[bgnIndex] = items[endIndex];
                 console.log(`item ${bgnIndex} removed`);
