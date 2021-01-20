@@ -19,6 +19,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     uint256 private constant MAX_UINT32 = 2**32 - 1;
 
     bytes32 public constant ROLE_SUPERVISOR = keccak256("ROLE_SUPERVISOR");
+    bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     struct Position {
@@ -51,6 +52,12 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     // allows execution only by an owner
     modifier ownerOnly {
         _hasRole(ROLE_OWNER);
+        _;
+    }
+
+    // allows execution only by a seeder
+    modifier seederOnly {
+        _hasRole(ROLE_SEEDER);
         _;
     }
 
@@ -136,6 +143,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     constructor() public {
         // set up administrative roles
         _setRoleAdmin(ROLE_SUPERVISOR, ROLE_SUPERVISOR);
+        _setRoleAdmin(ROLE_SEEDER, ROLE_SUPERVISOR);
         _setRoleAdmin(ROLE_OWNER, ROLE_SUPERVISOR);
 
         // allow the deployer to initially govern the contract
@@ -482,5 +490,38 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     function decodeReserveRateT(uint256 reserveRateInfo) private pure returns (uint256) {
         return reserveRateInfo >> 224;
+    }
+
+    /**
+     * @dev seeds system balances
+     * can be executed only by a seeder
+     *
+     * @param providers         provider addresses
+     * @param amounts           network token amounts
+     * @param expirationTimes   lock expiration times
+     *
+     * In order to handle a provider whose locked balances have changed,
+     * we need to pass its address along with a "zero" locked balance before
+     * passing its address along with any of the other (valid) locked balances.
+     * The function will subsequently delete the entire locked balance array
+     * of the given provider, and then refill it with the new set of values.
+     */
+    function seedLockedBalances(
+        address[] calldata providers,
+        uint256[] calldata amounts,
+        uint256[] calldata expirationTimes    
+    ) external seederOnly {
+        uint256 length = providers.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (amounts[i] > 0 || expirationTimes[i] > 0) {
+                _lockedBalances[providers[i]].push(LockedBalance({
+                    amount: amounts[i],
+                    expirationTime: expirationTimes[i]
+                }));
+            }
+            else {
+                delete _lockedBalances[providers[i]];
+            }
+        }
     }
 }
