@@ -122,7 +122,10 @@ describe('LiquidityProtectionUserStore', () => {
         });
 
         it('should revert when a non seeder attempts to seed locked balances', async () => {
-            await expectRevert(liquidityProtectionUserStore.seedLockedBalances([provider], [1], [1]), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                liquidityProtectionUserStore.seedLockedBalances([provider], [1], [1]),
+                'ERR_ACCESS_DENIED'
+            );
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
         });
 

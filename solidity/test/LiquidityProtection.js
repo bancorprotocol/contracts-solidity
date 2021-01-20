@@ -343,17 +343,20 @@ describe('LiquidityProtection', () => {
                 liquidityProtectionUserStore = await LiquidityProtectionUserStore.new();
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
-                liquidityProtection = await LiquidityProtection.new([
-                    liquidityProtectionSettings.address,
-                    liquidityProtectionStore.address,
-                    liquidityProtectionStats.address,
-                    liquidityProtectionUserStore.address,
-                    liquidityProtectionSystemStore.address,
-                    liquidityProtectionTokenHolder.address,
-                    networkTokenGovernance.address,
-                    govTokenGovernance.address,
-                    checkpointStore.address
-                ], 0);
+                liquidityProtection = await LiquidityProtection.new(
+                    [
+                        liquidityProtectionSettings.address,
+                        liquidityProtectionStore.address,
+                        liquidityProtectionStats.address,
+                        liquidityProtectionUserStore.address,
+                        liquidityProtectionSystemStore.address,
+                        liquidityProtectionTokenHolder.address,
+                        networkTokenGovernance.address,
+                        govTokenGovernance.address,
+                        checkpointStore.address
+                    ],
+                    0
+                );
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
@@ -561,18 +564,14 @@ describe('LiquidityProtection', () => {
                                     );
 
                                     // verify protection details
-                                    const protectionIds = await liquidityProtectionUserStore.positionIds(
-                                        recipient
-                                    );
+                                    const protectionIds = await liquidityProtectionUserStore.positionIds(recipient);
                                     expect(protectionIds.length).to.eql(1);
 
                                     const expectedPoolAmount = reserveAmount.mul(rate.d).div(rate.n);
                                     const reserve1Balance = await converter.reserveBalance.call(baseTokenAddress);
                                     const reserve2Balance = await converter.reserveBalance.call(networkToken.address);
 
-                                    let protection = await liquidityProtectionUserStore.position.call(
-                                        protectionIds[0]
-                                    );
+                                    let protection = await liquidityProtectionUserStore.position.call(protectionIds[0]);
                                     protection = getProtection(protection);
                                     expect(protection.poolToken).to.eql(poolToken.address);
                                     expect(protection.reserveToken).to.eql(baseTokenAddress);
@@ -803,9 +802,7 @@ describe('LiquidityProtection', () => {
                                 const reserve1Balance = await converter.reserveBalance.call(networkToken.address);
                                 const reserve2Balance = await converter.reserveBalance.call(baseTokenAddress);
 
-                                let protection = await liquidityProtectionUserStore.position.call(
-                                    protectionIds[0]
-                                );
+                                let protection = await liquidityProtectionUserStore.position.call(protectionIds[0]);
                                 protection = getProtection(protection);
                                 expect(protection.poolToken).to.eql(poolToken.address);
                                 expect(protection.reserveToken).to.eql(networkToken.address);

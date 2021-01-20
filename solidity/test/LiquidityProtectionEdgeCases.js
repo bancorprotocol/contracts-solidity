@@ -205,17 +205,20 @@ describe('LiquidityProtectionEdgeCases', () => {
                 liquidityProtectionUserStore = await LiquidityProtectionUserStore.new();
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
-                liquidityProtection = await LiquidityProtection.new([
-                    liquidityProtectionSettings.address,
-                    liquidityProtectionStore.address,
-                    liquidityProtectionStats.address,
-                    liquidityProtectionUserStore.address,
-                    liquidityProtectionSystemStore.address,
-                    liquidityProtectionTokenHolder.address,
-                    networkTokenGovernance.address,
-                    govTokenGovernance.address,
-                    checkpointStore.address
-                ], 0);
+                liquidityProtection = await LiquidityProtection.new(
+                    [
+                        liquidityProtectionSettings.address,
+                        liquidityProtectionStore.address,
+                        liquidityProtectionStats.address,
+                        liquidityProtectionUserStore.address,
+                        liquidityProtectionSystemStore.address,
+                        liquidityProtectionTokenHolder.address,
+                        networkTokenGovernance.address,
+                        govTokenGovernance.address,
+                        checkpointStore.address
+                    ],
+                    0
+                );
 
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
                     from: owner

@@ -39,7 +39,7 @@ function setConfig(record) {
 }
 
 function allZeros(values) {
-    return values.every(value => Web3.utils.toBN(value).eqn(0));
+    return values.every((value) => Web3.utils.toBN(value).eqn(0));
 }
 
 function isEmpty(object) {
@@ -199,10 +199,12 @@ async function readState(contract, providers) {
     const state = {};
 
     for (let i = 0; i < providers.length; i += READ_BATCH_SIZE) {
-        const indexes = [...Array(Math.min(providers.length, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
-        const counts = await Promise.all(indexes.map(index => rpc(contract.methods.lockedBalanceCount(providers[index]))));
+        const indexes = [...Array(Math.min(providers.length, READ_BATCH_SIZE + i) - i).keys()].map((n) => n + i);
+        const counts = await Promise.all(
+            indexes.map((index) => rpc(contract.methods.lockedBalanceCount(providers[index])))
+        );
         for (let j = 0; j < indexes.length; j++) {
-            setState(state, providers[indexes[j]], [["0", "0"]]);
+            setState(state, providers[indexes[j]], [['0', '0']]);
             if (counts[j] > 0) {
                 const lbs = await rpc(contract.methods.lockedBalanceRange(providers[indexes[j]], 0, counts[j]));
                 for (let k = 0; k < counts[j]; k++) {
@@ -217,9 +219,9 @@ async function readState(contract, providers) {
 
 async function readSource(web3, source) {
     const block = await web3.eth.getBlockNumber();
-    const events = await getPastEvents(source, "BalanceLocked", 0, block);
-    const providers = [...new Set(events.map(event => event.returnValues._provider))];
-    return await readState(source,  providers);
+    const events = await getPastEvents(source, 'BalanceLocked', 0, block);
+    const providers = [...new Set(events.map((event) => event.returnValues._provider))];
+    return await readState(source, providers);
 }
 
 async function readTarget(state, target) {
@@ -228,12 +230,12 @@ async function readTarget(state, target) {
 }
 
 async function writeTarget(web3Func, target, state, firstTime) {
-    const table = Object.entries(state).reduce((acc, [key, arrs]) => [...acc, ...arrs.map(arr => [key, ...arr])], []);
-    const rows  = table.filter(row => !(firstTime && allZeros(row.slice(1))));
-    const cols  = rows[0].map((x, n) => rows.map(row => row[n]));
+    const table = Object.entries(state).reduce((acc, [key, arrs]) => [...acc, ...arrs.map((arr) => [key, ...arr])], []);
+    const rows = table.filter((row) => !(firstTime && allZeros(row.slice(1))));
+    const cols = rows[0].map((x, n) => rows.map((row) => row[n]));
     const count = Math.ceil(rows.length / WRITE_BATCH_SIZE);
     for (let i = 0; i < rows.length; i += WRITE_BATCH_SIZE) {
-        const params = cols.map(col => col.slice(i, i + WRITE_BATCH_SIZE));
+        const params = cols.map((col) => col.slice(i, i + WRITE_BATCH_SIZE));
         await web3Func(send, target.methods.seedLockedBalances(...params));
         console.log(`${i / WRITE_BATCH_SIZE + 1} out of ${count}`);
     }

@@ -509,17 +509,15 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     function seedLockedBalances(
         address[] calldata providers,
         uint256[] calldata amounts,
-        uint256[] calldata expirationTimes    
+        uint256[] calldata expirationTimes
     ) external seederOnly {
         uint256 length = providers.length;
         for (uint256 i = 0; i < length; i++) {
             if (amounts[i] > 0 || expirationTimes[i] > 0) {
-                _lockedBalances[providers[i]].push(LockedBalance({
-                    amount: amounts[i],
-                    expirationTime: expirationTimes[i]
-                }));
-            }
-            else {
+                _lockedBalances[providers[i]].push(
+                    LockedBalance({ amount: amounts[i], expirationTime: expirationTimes[i] })
+                );
+            } else {
                 delete _lockedBalances[providers[i]];
             }
         }
