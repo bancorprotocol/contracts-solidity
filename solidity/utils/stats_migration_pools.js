@@ -52,21 +52,21 @@ function toKeys(key) {
     return key.split(DELIMITER);
 }
 
-function encode(pools) {
-    const encodedPools = {};
-    for (const provider in pools) {
-        for (const poolToken of pools[provider]) {
-            encodedPools[toKey([provider, poolToken])] = true;
+function encode(object) {
+    const encodedObject = {};
+    for (const key in object) {
+        for (const value of object[key]) {
+            encodedObject[toKey([key, value])] = true;
         }
     }
-    return encodedPools;
+    return encodedObject;
 }
 
-function getDiff(prevPools, currPools) {
-    prevPools = encode(prevPools);
-    currPools = encode(currPools);
-    return Object.keys(prevPools)
-        .filter((key) => !currPools[key])
+function getDiff(prevObject, currObject) {
+    prevObject = encode(prevObject);
+    currObject = encode(currObject);
+    return Object.keys(prevObject)
+        .filter((key) => !currObject[key])
         .map(toKeys);
 }
 
