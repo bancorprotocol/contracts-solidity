@@ -224,12 +224,15 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // save local copies of storage variables
         address storeAddress = address(store);
         address tokenHolderAddress = address(tokenHolder);
+        IERC20Token networkTokenLocal = networkToken;
 
         address[] memory poolWhitelist = settings.poolWhitelist();
         for (uint256 i = 0; i < poolWhitelist.length; i++) {
             IERC20Token poolToken = IERC20Token(poolWhitelist[i]);
             store.withdrawTokens(poolToken, tokenHolderAddress, poolToken.balanceOf(storeAddress));
         }
+
+        store.withdrawTokens(networkTokenLocal, tokenHolderAddress, networkTokenLocal.balanceOf(storeAddress));
     }
 
     /**
