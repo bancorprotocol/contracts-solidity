@@ -121,6 +121,11 @@ describe('LiquidityProtectionUserStore', () => {
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('1');
         });
 
+        it('should revert when a non seeder attempts to seed locked balances', async () => {
+            await expectRevert(liquidityProtectionUserStore.seedLockedBalances([provider], [1], [1]), 'ERR_ACCESS_DENIED');
+            expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
+        });
+
         it('should succeed when the owner attempts to add a locked balance', async () => {
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
             const response = await liquidityProtectionUserStore.addLockedBalance(provider, 1, 2, { from: owner });
@@ -134,6 +139,22 @@ describe('LiquidityProtectionUserStore', () => {
             const response = await liquidityProtectionUserStore.removeLockedBalance(provider, 0, { from: owner });
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
             expectEvent(response, 'BalanceUnlocked', { provider: provider, amount: '1' });
+        });
+
+        it('should succeed when a seeder attempts to seed locked balances', async () => {
+            expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
+            await liquidityProtectionUserStore.seedLockedBalances([provider], [2], [3], { from: seeder });
+            expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('1');
+            expect((await liquidityProtectionUserStore.lockedBalance(provider, 0))[0]).to.be.bignumber.equal('2');
+            expect((await liquidityProtectionUserStore.lockedBalance(provider, 0))[1]).to.be.bignumber.equal('3');
+        });
+
+        it('should succeed when a seeder attempts to clear locked balances', async () => {
+            expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
+            await liquidityProtectionUserStore.seedLockedBalances([provider], [1], [1], { from: seeder });
+            expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('1');
+            await liquidityProtectionUserStore.seedLockedBalances([provider], [0], [0], { from: seeder });
+            expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
         });
     });
 
