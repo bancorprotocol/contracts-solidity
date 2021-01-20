@@ -101,7 +101,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     /**
      * @dev initializes a new LiquidityProtection contract
      *
-     * @param contractAddresses:
+     * @param _contractAddresses:
      * - [0] liquidity protection settings
      * - [1] liquidity protection store
      * - [2] liquidity protection stats
@@ -112,23 +112,23 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * - [7] governance token governance
      * - [8] last liquidity removal/unprotection checkpoints store
      */
-    constructor(address[9] memory contractAddresses) public {
-        for (uint256 i = 0; i < contractAddresses.length; i++) {
-            _validAddress(contractAddresses[i]);
+    constructor(address[9] memory _contractAddresses) public {
+        for (uint256 i = 0; i < _contractAddresses.length; i++) {
+            _validAddress(_contractAddresses[i]);
         }
 
-        settings = ILiquidityProtectionSettings(contractAddresses[0]);
-        store = ILiquidityProtectionStore(contractAddresses[1]);
-        stats = ILiquidityProtectionStats(contractAddresses[2]);
-        userStore = ILiquidityProtectionUserStore(contractAddresses[3]);
-        systemStore = ILiquidityProtectionSystemStore(contractAddresses[4]);
-        tokenHolder = ITokenHolder(contractAddresses[5]);
-        networkTokenGovernance = ITokenGovernance(contractAddresses[6]);
-        govTokenGovernance = ITokenGovernance(contractAddresses[7]);
-        lastRemoveCheckpointStore = ICheckpointStore(contractAddresses[8]);
+        settings = ILiquidityProtectionSettings(_contractAddresses[0]);
+        store = ILiquidityProtectionStore(_contractAddresses[1]);
+        stats = ILiquidityProtectionStats(_contractAddresses[2]);
+        userStore = ILiquidityProtectionUserStore(_contractAddresses[3]);
+        systemStore = ILiquidityProtectionSystemStore(_contractAddresses[4]);
+        tokenHolder = ITokenHolder(_contractAddresses[5]);
+        networkTokenGovernance = ITokenGovernance(_contractAddresses[6]);
+        govTokenGovernance = ITokenGovernance(_contractAddresses[7]);
+        lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[8]);
 
-        networkToken = IERC20Token(address(ITokenGovernance(contractAddresses[6]).token()));
-        govToken = IERC20Token(address(ITokenGovernance(contractAddresses[7]).token()));
+        networkToken = IERC20Token(address(ITokenGovernance(_contractAddresses[6]).token()));
+        govToken = IERC20Token(address(ITokenGovernance(_contractAddresses[7]).token()));
     }
 
     // ensures that the contract is currently removing liquidity from a converter

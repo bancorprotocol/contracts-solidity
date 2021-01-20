@@ -9,7 +9,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     uint256 private poolTokenRateN;
     uint256 private poolTokenRateD;
 
-    constructor(address[9] memory contractAddresses) public LiquidityProtection(contractAddresses) {}
+    constructor(address[9] memory _contractAddresses) public LiquidityProtection(_contractAddresses) {}
 
     function protectedAmountPlusFeeTest(
         uint256 _poolAmount,
