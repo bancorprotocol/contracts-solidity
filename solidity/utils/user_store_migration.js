@@ -20,8 +20,6 @@ const READ_TIMEOUT = 10000;
 const READ_BATCH_SIZE = 100;
 const WRITE_BATCH_SIZE = 50;
 
-const DELIMITER = '.';
-
 const STANDARD_ERRORS = ['nonce too low', 'replacement transaction underpriced'];
 
 if (!fs.existsSync(CFG_FILE_NAME)) {
