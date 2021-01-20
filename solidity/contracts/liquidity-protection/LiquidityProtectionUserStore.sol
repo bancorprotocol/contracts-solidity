@@ -42,7 +42,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     }
 
     // position by provider
-    uint256 private nextPositionId;
+    uint256 private _nextPositionId;
     mapping(address => uint256[]) private _positionIdsByProvider;
     mapping(uint256 => Position) private _positions;
 
@@ -265,8 +265,8 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
         // add the position
         uint256[] storage ids = _positionIdsByProvider[provider];
-        uint256 id = nextPositionId;
-        nextPositionId += 1;
+        uint256 id = _nextPositionId;
+        _nextPositionId += 1;
 
         _positions[id] = Position({
             provider: provider,
