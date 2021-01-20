@@ -88,6 +88,20 @@ describe('Converter', () => {
         return 'Unknown';
     };
 
+    const getConverterTargetAmountAndFeeError = (type) => {
+        switch (type) {
+            case 0:
+                return 'ERR_INVALID_TOKEN';
+            case 1:
+                return 'ERR_SAME_SOURCE_TARGET';
+            case 3:
+            case 4:
+                return 'ERR_INVALID_RESERVES';
+        }
+
+        return 'Unknown';
+    };
+
     const initConverter = async (type, activate, isETHReserve, maxConversionFee = 0) => {
         await createAnchor(type);
         const reserveAddresses = getConverterReserveAddresses(type, isETHReserve);
@@ -675,12 +689,7 @@ describe('Converter', () => {
                             getReserve1Address(isETHReserve),
                             500
                         ),
-                        [
-                            'ERR_INVALID_TOKEN',
-                            'ERR_SAME_SOURCE_TARGET',
-                            'ERR_SAME_SOURCE_TARGET',
-                            'ERR_INVALID_RESERVE'
-                        ][type]
+                        getConverterTargetAmountAndFeeError(type)
                     );
                 });
 
