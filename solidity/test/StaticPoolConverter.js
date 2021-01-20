@@ -14,7 +14,7 @@ const StaticPoolConverterFactory = contract.fromArtifact('StaticPoolConverterFac
 const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ERC20Token = contract.fromArtifact('ERC20Token');
-const TestNonStaticToken = contract.fromArtifact('TestNonStaticToken');
+const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 
@@ -125,7 +125,7 @@ describe('StaticPoolConverter', () => {
         tokenAddress = token.address;
 
         reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
-        reserveToken2 = await TestNonStaticToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
+        reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
     it('verifies the Activation event after converter activation', async () => {
