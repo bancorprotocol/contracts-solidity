@@ -367,7 +367,7 @@ const run = async () => {
         deploy,
         'liquidityProtectionUserStore',
         'LiquidityProtectionUserStore',
-        []
+        [0]
     );
     const liquidityProtectionSystemStore = await web3Func(
         deploy,
