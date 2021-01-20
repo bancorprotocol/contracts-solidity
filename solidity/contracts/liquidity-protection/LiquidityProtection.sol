@@ -688,8 +688,12 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                 );
             }
 
-            // remove the position from the provider
-            userStore.removePosition(_id);
+            // remove the position of the provider
+            if (_id < nextProtectedLiquidityId) {
+                store.removeProtectedLiquidity(_id);
+            } else {
+                userStore.removePosition(_id);
+            }
         } else {
             // remove a portion of the protected liquidity from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
@@ -709,11 +713,20 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                 );
             }
 
-            userStore.updatePositionAmounts(
-                _id,
-                fullPoolAmount - liquidity.poolAmount,
-                fullReserveAmount - liquidity.reserveAmount
-            );
+            // update the position amounts of the provider
+            if (_id < nextProtectedLiquidityId) {
+                store.updateProtectedLiquidityAmounts(
+                    _id,
+                    fullPoolAmount - liquidity.poolAmount,
+                    fullReserveAmount - liquidity.reserveAmount
+                );
+            } else {
+                userStore.updatePositionAmounts(
+                    _id,
+                    fullPoolAmount - liquidity.poolAmount,
+                    fullReserveAmount - liquidity.reserveAmount
+                );
+            }
         }
 
         // update the statistics
