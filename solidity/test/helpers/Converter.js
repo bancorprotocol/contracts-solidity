@@ -37,7 +37,7 @@ module.exports.new = async (
     const converterType = {
         0: LiquidTokenConverter,
         1: LiquidityPoolV1Converter,
-        3: StandardPoolConverter
+        3: StandardPoolConverter,
         4: StaticPoolConverter
     }[type];
     const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
