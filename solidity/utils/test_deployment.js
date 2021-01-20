@@ -388,7 +388,8 @@ const run = async () => {
             bntTokenGovernance._address,
             vbntTokenGovernance._address,
             checkpointStore._address
-        ]
+        ],
+        0
     ]);
 
     await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
