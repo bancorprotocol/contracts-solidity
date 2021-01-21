@@ -2057,7 +2057,7 @@ describe('LiquidityProtection', () => {
                 }
             });
 
-            describe.only('migrate positions', () => {
+            describe('migrate positions', () => {
                 const providers = accounts;
                 const amount = new BN(1000000);
 
