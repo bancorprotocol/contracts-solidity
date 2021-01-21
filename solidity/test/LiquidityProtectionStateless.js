@@ -36,19 +36,17 @@ describe('LiquidityProtectionStateless', () => {
         const govTokenGovernance = await TokenGovernance.new(defaultSender);
         const checkpointStore = await CheckpointStore.new();
 
-        liquidityProtection = await LiquidityProtection.new(
-            [
-                liquidityProtectionSettings.address,
-                liquidityProtectionStore.address,
-                liquidityProtectionStats.address,
-                liquidityProtectionUserStore.address,
-                liquidityProtectionSystemStore.address,
-                liquidityProtectionTokenHolder.address,
-                networkTokenGovernance.address,
-                govTokenGovernance.address,
-                checkpointStore.address
-            ]
-        );
+        liquidityProtection = await LiquidityProtection.new([
+            liquidityProtectionSettings.address,
+            liquidityProtectionStore.address,
+            liquidityProtectionStats.address,
+            liquidityProtectionUserStore.address,
+            liquidityProtectionSystemStore.address,
+            liquidityProtectionTokenHolder.address,
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
+            checkpointStore.address
+        ]);
     });
 
     describe('sanity part 1', () => {

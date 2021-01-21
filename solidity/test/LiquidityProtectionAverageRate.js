@@ -98,19 +98,17 @@ describe('LiquidityProtectionAverageRate', () => {
                 liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(0);
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
-                liquidityProtection = await LiquidityProtection.new(
-                    [
-                        liquidityProtectionSettings.address,
-                        liquidityProtectionStore.address,
-                        liquidityProtectionStats.address,
-                        liquidityProtectionUserStore.address,
-                        liquidityProtectionSystemStore.address,
-                        liquidityProtectionTokenHolder.address,
-                        networkTokenGovernance.address,
-                        govTokenGovernance.address,
-                        checkpointStore.address
-                    ]
-                );
+                liquidityProtection = await LiquidityProtection.new([
+                    liquidityProtectionSettings.address,
+                    liquidityProtectionStore.address,
+                    liquidityProtectionStats.address,
+                    liquidityProtectionUserStore.address,
+                    liquidityProtectionSystemStore.address,
+                    liquidityProtectionTokenHolder.address,
+                    networkTokenGovernance.address,
+                    govTokenGovernance.address,
+                    checkpointStore.address
+                ]);
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });

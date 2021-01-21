@@ -343,19 +343,17 @@ describe('LiquidityProtection', () => {
                 liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(0);
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
-                liquidityProtection = await LiquidityProtection.new(
-                    [
-                        liquidityProtectionSettings.address,
-                        liquidityProtectionStore.address,
-                        liquidityProtectionStats.address,
-                        liquidityProtectionUserStore.address,
-                        liquidityProtectionSystemStore.address,
-                        liquidityProtectionTokenHolder.address,
-                        networkTokenGovernance.address,
-                        govTokenGovernance.address,
-                        checkpointStore.address
-                    ]
-                );
+                liquidityProtection = await LiquidityProtection.new([
+                    liquidityProtectionSettings.address,
+                    liquidityProtectionStore.address,
+                    liquidityProtectionStats.address,
+                    liquidityProtectionUserStore.address,
+                    liquidityProtectionSystemStore.address,
+                    liquidityProtectionTokenHolder.address,
+                    networkTokenGovernance.address,
+                    govTokenGovernance.address,
+                    checkpointStore.address
+                ]);
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
@@ -2067,33 +2065,37 @@ describe('LiquidityProtection', () => {
                     liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(providers.length);
                     liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                     liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
-                    liquidityProtection = await LiquidityProtection.new(
-                        [
-                            liquidityProtectionSettings.address,
-                            liquidityProtectionStore.address,
-                            liquidityProtectionStats.address,
-                            liquidityProtectionUserStore.address,
-                            liquidityProtectionSystemStore.address,
-                            liquidityProtectionTokenHolder.address,
-                            networkTokenGovernance.address,
-                            govTokenGovernance.address,
-                            checkpointStore.address
-                        ]
-                    );
+                    liquidityProtection = await LiquidityProtection.new([
+                        liquidityProtectionSettings.address,
+                        liquidityProtectionStore.address,
+                        liquidityProtectionStats.address,
+                        liquidityProtectionUserStore.address,
+                        liquidityProtectionSystemStore.address,
+                        liquidityProtectionTokenHolder.address,
+                        networkTokenGovernance.address,
+                        govTokenGovernance.address,
+                        checkpointStore.address
+                    ]);
 
-                    await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+                    await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, {
+                        from: owner
+                    });
                     await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
                         from: owner
                     });
                     await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                    await liquidityProtectionUserStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+                    await liquidityProtectionUserStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
+                        from: owner
+                    });
                     await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
                         from: owner
                     });
                     await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                     await liquidityProtectionTokenHolder.transferOwnership(liquidityProtection.address);
                     await liquidityProtection.acceptTokenHolderOwnership();
-                    await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
+                    await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, {
+                        from: governor
+                    });
                     await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 
                     await setTime(await latest());
@@ -2103,11 +2105,31 @@ describe('LiquidityProtection', () => {
                     await liquidityProtectionStats.grantRole(ROLE_OWNER, owner, { from: owner });
 
                     for (const provider of providers) {
-                        await liquidityProtectionStore.addProtectedLiquidity(provider, poolToken.address, baseToken.address, amount, amount, 1, 1, 1);
-                        await liquidityProtectionStats.increaseTotalAmounts(provider, poolToken.address, baseToken.address, amount, amount);
+                        await liquidityProtectionStore.addProtectedLiquidity(
+                            provider,
+                            poolToken.address,
+                            baseToken.address,
+                            amount,
+                            amount,
+                            1,
+                            1,
+                            1
+                        );
+                        await liquidityProtectionStats.increaseTotalAmounts(
+                            provider,
+                            poolToken.address,
+                            baseToken.address,
+                            amount,
+                            amount
+                        );
                     }
 
-                    await addProtectedLiquidity(poolToken.address, baseToken, baseToken.address, amount.muln(providers.length * 10));
+                    await addProtectedLiquidity(
+                        poolToken.address,
+                        baseToken,
+                        baseToken.address,
+                        amount.muln(providers.length * 10)
+                    );
 
                     await liquidityProtectionStats.renounceRole(ROLE_OWNER, owner, { from: owner });
 
@@ -2117,21 +2139,37 @@ describe('LiquidityProtection', () => {
 
                 it('remove', async () => {
                     for (let i = 0; i < providers.length; i++) {
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal(`["${i}"]`);
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal(`["${i}"]`);
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal('[]');
                         await liquidityProtection.removeLiquidity(i, PPM_RESOLUTION, { from: providers[i] });
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal('[]');
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal('[]');
                     }
                 });
 
                 it('update', async () => {
                     for (let i = 0; i < providers.length; i++) {
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal(`["${i}"]`);
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal(`["${i}"]`);
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal('[]');
                         await liquidityProtection.removeLiquidity(i, PPM_RESOLUTION.divn(2), { from: providers[i] });
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal('[]');
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal(`["${i}"]`);
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal(`["${i}"]`);
                     }
                 });
             });
