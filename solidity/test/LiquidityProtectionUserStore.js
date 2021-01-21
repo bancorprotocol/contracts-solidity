@@ -15,7 +15,7 @@ describe('LiquidityProtectionUserStore', () => {
     const reserveToken = accounts[4];
 
     beforeEach(async () => {
-        liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(0);
+        liquidityProtectionUserStore = await LiquidityProtectionUserStore.new();
         await liquidityProtectionUserStore.grantRole(roles.ROLE_OWNER, owner);
         await liquidityProtectionUserStore.grantRole(roles.ROLE_SEEDER, seeder);
     });

@@ -140,9 +140,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
      */
     event BalanceUnlocked(address indexed provider, uint256 amount);
 
-    constructor(uint256 nextPositionId) public {
-        _nextPositionId = nextPositionId;
-
+    constructor() public {
         // set up administrative roles
         _setRoleAdmin(ROLE_SUPERVISOR, ROLE_SUPERVISOR);
         _setRoleAdmin(ROLE_SEEDER, ROLE_SUPERVISOR);

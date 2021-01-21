@@ -202,7 +202,7 @@ describe('LiquidityProtectionEdgeCases', () => {
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
-                liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(0);
+                liquidityProtectionUserStore = await LiquidityProtectionUserStore.new();
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
                 liquidityProtection = await LiquidityProtection.new(
