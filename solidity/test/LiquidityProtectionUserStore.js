@@ -23,9 +23,7 @@ describe('LiquidityProtectionUserStore', () => {
     describe('positions basic verification', () => {
         it('should revert when a non owner attempts to add a position item', async () => {
             await expectRevert(
-                liquidityProtectionUserStore.addPosition(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
-                    from: defaultSender
-                }),
+                liquidityProtectionUserStore.addPosition(provider, poolToken, reserveToken, 1, 2, 3, 4, 5),
                 'ERR_ACCESS_DENIED'
             );
         });
@@ -35,7 +33,7 @@ describe('LiquidityProtectionUserStore', () => {
                 from: owner
             });
             await expectRevert(
-                liquidityProtectionUserStore.updatePositionAmounts(0, 6, 7, { from: defaultSender }),
+                liquidityProtectionUserStore.updatePositionAmounts(0, 6, 7),
                 'ERR_ACCESS_DENIED'
             );
         });
@@ -45,21 +43,19 @@ describe('LiquidityProtectionUserStore', () => {
                 from: owner
             });
             await expectRevert(
-                liquidityProtectionUserStore.removePosition(0, { from: defaultSender }),
+                liquidityProtectionUserStore.removePosition(0),
                 'ERR_ACCESS_DENIED'
             );
         });
 
         it('should revert when a non owner attempts to seed a position item', async () => {
             await expectRevert(
-                liquidityProtectionUserStore.seedPosition(0, provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
-                    from: defaultSender
-                }),
+                liquidityProtectionUserStore.seedPosition(0, provider, poolToken, reserveToken, 1, 2, 3, 4, 5),
                 'ERR_ACCESS_DENIED'
             );
         });
 
-        it('should succeed when the owner attempts to add a position item', async () => {
+        it('should succeed when an owner attempts to add a position item', async () => {
             const response = await liquidityProtectionUserStore.addPosition(
                 provider,
                 poolToken,
@@ -81,7 +77,7 @@ describe('LiquidityProtectionUserStore', () => {
             expectEvent(response, 'PositionAdded', expectedEvent);
         });
 
-        it('should succeed when the owner attempts to update a position item', async () => {
+        it('should succeed when an owner attempts to update a position item', async () => {
             await liquidityProtectionUserStore.addPosition(provider, poolToken, reserveToken, 11, 22, 3, 4, 5, {
                 from: owner
             });
@@ -96,7 +92,7 @@ describe('LiquidityProtectionUserStore', () => {
             expectEvent(response, 'PositionUpdated', expectedEvent);
         });
 
-        it('should succeed when the owner attempts to remove a position item', async () => {
+        it('should succeed when an owner attempts to remove a position item', async () => {
             await liquidityProtectionUserStore.addPosition(provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
                 from: owner
             });
@@ -111,7 +107,7 @@ describe('LiquidityProtectionUserStore', () => {
             expectEvent(response, 'PositionRemoved', expectedEvent);
         });
 
-        it('should succeed when the owner attempts to seed a position item', async () => {
+        it('should succeed when an owner attempts to seed a position item', async () => {
             const itemBefore = await liquidityProtectionUserStore.position(0);
             expect(JSON.stringify(await liquidityProtectionUserStore.position(0))).to.be.equal(JSON.stringify({
                 0: constants.ZERO_ADDRESS,
@@ -142,7 +138,7 @@ describe('LiquidityProtectionUserStore', () => {
     describe('locked balances basic verification', () => {
         it('should revert when a non owner attempts to add a locked balance', async () => {
             await expectRevert(
-                liquidityProtectionUserStore.addLockedBalance(provider, 1, 2, { from: defaultSender }),
+                liquidityProtectionUserStore.addLockedBalance(provider, 1, 2),
                 'ERR_ACCESS_DENIED'
             );
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
@@ -151,7 +147,7 @@ describe('LiquidityProtectionUserStore', () => {
         it('should revert when a non owner attempts to remove a locked balance', async () => {
             await liquidityProtectionUserStore.addLockedBalance(provider, 1, 2, { from: owner });
             await expectRevert(
-                liquidityProtectionUserStore.removeLockedBalance(provider, 0, { from: defaultSender }),
+                liquidityProtectionUserStore.removeLockedBalance(provider, 0),
                 'ERR_ACCESS_DENIED'
             );
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('1');
@@ -165,14 +161,14 @@ describe('LiquidityProtectionUserStore', () => {
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
         });
 
-        it('should succeed when the owner attempts to add a locked balance', async () => {
+        it('should succeed when an owner attempts to add a locked balance', async () => {
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('0');
             const response = await liquidityProtectionUserStore.addLockedBalance(provider, 1, 2, { from: owner });
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('1');
             expectEvent(response, 'BalanceLocked', { provider: provider, amount: '1', expirationTime: '2' });
         });
 
-        it('should succeed when the owner attempts to remove a locked balance', async () => {
+        it('should succeed when an owner attempts to remove a locked balance', async () => {
             await liquidityProtectionUserStore.addLockedBalance(provider, 1, 2, { from: owner });
             expect(await liquidityProtectionUserStore.lockedBalanceCount(provider)).to.be.bignumber.equal('1');
             const response = await liquidityProtectionUserStore.removeLockedBalance(provider, 0, { from: owner });
