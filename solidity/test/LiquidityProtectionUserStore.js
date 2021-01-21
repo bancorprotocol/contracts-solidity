@@ -1,5 +1,5 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
 const { roles } = require('./helpers/Constants');
 const { expect } = require('../../chai-local');
 
@@ -46,6 +46,15 @@ describe('LiquidityProtectionUserStore', () => {
             });
             await expectRevert(
                 liquidityProtectionUserStore.removePosition(0, { from: defaultSender }),
+                'ERR_ACCESS_DENIED'
+            );
+        });
+
+        it('should revert when a non owner attempts to seed a position item', async () => {
+            await expectRevert(
+                liquidityProtectionUserStore.seedPosition(0, provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
+                    from: defaultSender
+                }),
                 'ERR_ACCESS_DENIED'
             );
         });
@@ -100,6 +109,33 @@ describe('LiquidityProtectionUserStore', () => {
                 reserveAmount: '2'
             };
             expectEvent(response, 'PositionRemoved', expectedEvent);
+        });
+
+        it('should succeed when the owner attempts to seed a position item', async () => {
+            const itemBefore = await liquidityProtectionUserStore.position(0);
+            expect(JSON.stringify(await liquidityProtectionUserStore.position(0))).to.be.equal(JSON.stringify({
+                0: constants.ZERO_ADDRESS,
+                1: constants.ZERO_ADDRESS,
+                2: constants.ZERO_ADDRESS,
+                3: '0',
+                4: '0',
+                5: '0',
+                6: '0',
+                7: '0'
+            }));
+            await liquidityProtectionUserStore.seedPosition(0, provider, poolToken, reserveToken, 1, 2, 3, 4, 5, {
+                from: owner
+            });
+            expect(JSON.stringify(await liquidityProtectionUserStore.position(0))).to.be.equal(JSON.stringify({
+                0: provider,
+                1: poolToken,
+                2: reserveToken,
+                3: '1',
+                4: '2',
+                5: '3',
+                6: '4',
+                7: '5'
+            }));
         });
     });
 
