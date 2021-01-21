@@ -354,8 +354,7 @@ describe('LiquidityProtection', () => {
                         networkTokenGovernance.address,
                         govTokenGovernance.address,
                         checkpointStore.address
-                    ],
-                    0
+                    ]
                 );
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });

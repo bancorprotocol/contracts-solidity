@@ -55,4 +55,16 @@ interface ILiquidityProtectionUserStore {
     ) external returns (uint256);
 
     function removeLockedBalance(address provider, uint256 index) external;
+
+    function seedPosition(
+        uint256 id,
+        address provider,
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        uint256 reserveRateN,
+        uint256 reserveRateD,
+        uint256 timestamp
+    ) external;
 }

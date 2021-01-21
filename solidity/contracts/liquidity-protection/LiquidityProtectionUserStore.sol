@@ -522,4 +522,44 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
             }
         }
     }
+
+    /**
+     * @dev seeds a position
+     * can be called only by the contract owner
+     *
+     * @param id              position ID
+     * @param provider        liquidity provider
+     * @param poolToken       pool token address
+     * @param reserveToken    reserve token address
+     * @param poolAmount      pool token amount
+     * @param reserveAmount   reserve token amount
+     * @param reserveRateN    rate of 1 protected reserve token in units of the other reserve token (numerator)
+     * @param reserveRateD    rate of 1 protected reserve token in units of the other reserve token (denominator)
+     * @param timestamp       timestamp
+     */
+    function seedPosition(
+        uint256 id,
+        address provider,
+        IDSToken poolToken,
+        IERC20Token reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        uint256 reserveRateN,
+        uint256 reserveRateD,
+        uint256 timestamp
+    ) external override ownerOnly {
+        uint256[] storage ids = _positionIdsByProvider[provider];
+
+        _positions[id] = Position({
+            provider: provider,
+            index: ids.length,
+            poolToken: poolToken,
+            reserveToken: reserveToken,
+            poolAmount: toUint128(poolAmount),
+            reserveAmount: toUint128(reserveAmount),
+            reserveRateInfo: encodeReserveRateInfo(reserveRateN, reserveRateD, timestamp)
+        });
+
+        ids.push(id);
+    }
 }
