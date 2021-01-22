@@ -2055,7 +2055,7 @@ describe('LiquidityProtection', () => {
                 }
             });
 
-            describe('migrate positions', () => {
+            describe('migration', () => {
                 const providers = accounts;
                 const amount = new BN(1000000);
 
@@ -2137,7 +2137,12 @@ describe('LiquidityProtection', () => {
                     await liquidityProtection.acceptStoreOwnership();
                 });
 
-                it('remove', async () => {
+                it('withdraw tokens', async () => {
+                    await poolToken.transfer(liquidityProtectionStore.address, amount);
+                    await liquidityProtection.withdrawTokens();
+                });
+
+                it('remove positions', async () => {
                     for (let i = 0; i < providers.length; i++) {
                         expect(
                             JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
@@ -2155,7 +2160,7 @@ describe('LiquidityProtection', () => {
                     }
                 });
 
-                it('update', async () => {
+                it('update positions', async () => {
                     for (let i = 0; i < providers.length; i++) {
                         expect(
                             JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
