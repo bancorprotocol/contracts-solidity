@@ -264,7 +264,7 @@ async function run() {
 
     const source = deployed(sourceWeb3, 'LiquidityProtectionStore', STORE_ADDRESS);
     const target = await web3Func(deploy, 'liquidityProtectionUserStore', 'LiquidityProtectionUserStore', [
-        await targetWeb3.eth.getStorageAt(source._address, 4)
+        await sourceWeb3.eth.getStorageAt(source._address, 4)
     ]);
     await execute(target.methods.grantRole(ROLE_SEEDER, account.address));
     await execute(target.methods.grantRole(ROLE_SUPERVISOR, ADMIN_ADDRESS));
