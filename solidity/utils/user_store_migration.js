@@ -20,6 +20,9 @@ const READ_TIMEOUT = 10000;
 const READ_BATCH_SIZE = 100;
 const WRITE_BATCH_SIZE = 50;
 
+const SOURCE_ID_SLOT = 4;
+const TARGET_ID_SLOT = 1;
+
 const STANDARD_ERRORS = ['nonce too low', 'replacement transaction underpriced'];
 
 if (!fs.existsSync(CFG_FILE_NAME)) {
@@ -195,6 +198,10 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
+async function readStorage(web3, contract, slot) {
+    return Web3.utils.toBN(await web3.eth.getStorageAt(contract._address, slot)).toString();
+}
+
 async function readState(contract, providers) {
     const state = {};
 
@@ -264,7 +271,7 @@ async function run() {
 
     const source = deployed(sourceWeb3, 'LiquidityProtectionStore', STORE_ADDRESS);
     const target = await web3Func(deploy, 'liquidityProtectionUserStore', 'LiquidityProtectionUserStore', [
-        await sourceWeb3.eth.getStorageAt(source._address, 4)
+        await readStorage(sourceWeb3, source, SOURCE_ID_SLOT)
     ]);
     await execute(target.methods.grantRole(ROLE_SEEDER, account.address));
     await execute(target.methods.grantRole(ROLE_SUPERVISOR, ADMIN_ADDRESS));
@@ -287,6 +294,8 @@ async function run() {
     targetState = await readTarget(sourceState, target);
     const diffState = getDiff(targetState, sourceState);
     console.log('Differences:', JSON.stringify(diffState, null, 4));
+    console.log('Source ID:', await readStorage(sourceWeb3, source, SOURCE_ID_SLOT));
+    console.log('Target ID:', await readStorage(targetWeb3, target, TARGET_ID_SLOT));
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
         if (web3.currentProvider.disconnect) {
