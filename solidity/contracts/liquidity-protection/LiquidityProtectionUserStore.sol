@@ -228,7 +228,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     /**
      * @dev adds a position
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
      * @param provider        liquidity provider
      * @param poolToken       pool token address
@@ -288,7 +288,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     /**
      * @dev updates an existing position pool/reserve amounts
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
      * @param id                  position id
      * @param newPoolAmount       new pool tokens amount
@@ -320,7 +320,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     /**
      * @dev removes a position
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
      * @param id  position id
      */
@@ -416,7 +416,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     /**
      * @dev adds a locked network token balance
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
      * @param provider        liquidity provider
      * @param amount          token amount
@@ -445,7 +445,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     /**
      * @dev removes a locked network token balance
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
      * @param provider    liquidity provider
      * @param index       index of the locked balance
@@ -527,7 +527,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
     /**
      * @dev seeds a position
-     * can be called only by the contract owner
+     * can be executed only by an owner
      *
      * @param id              position ID
      * @param provider        liquidity provider
