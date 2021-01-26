@@ -564,4 +564,64 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
         ids.push(id);
     }
+
+    /**
+     * @dev seeds a batch of positions
+     * can be executed only by a seeder
+     *
+     * @param ids              position IDs
+     * @param providers        liquidity providers
+     * @param poolTokens       pool token addresses
+     * @param reserveTokens    reserve token addresses
+     * @param poolAmounts      pool token amounts
+     * @param reserveAmounts   reserve token amounts
+     * @param reserveRateNs    rates of 1 protected reserve token in units of the other reserve token (numerator)
+     * @param reserveRateDs    rates of 1 protected reserve token in units of the other reserve token (denominator)
+     * @param timestamps       timestamps
+     */
+    function seedPositions(
+        uint256[] memory ids,
+        address[] memory providers,
+        address[] memory poolTokens,
+        address[] memory reserveTokens,
+        uint256[] memory poolAmounts,
+        uint256[] memory reserveAmounts,
+        uint256[] memory reserveRateNs,
+        uint256[] memory reserveRateDs,
+        uint256[] memory timestamps
+    ) external seederOnly {
+        uint256 length = ids.length;
+        for (uint256 i = 0; i < length; i++) {
+            Position storage pos = _positions[ids[i]];
+            if (providers[i] != address(0)) {
+                if (pos.provider == address(0)) {
+                    pos.index = _positionIdsByProvider[providers[i]].length;
+                    _positionIdsByProvider[providers[i]].push(ids[i]);
+                }
+                pos.provider = providers[i];
+                pos.poolToken = IDSToken(poolTokens[i]);
+                pos.reserveToken = IERC20Token(reserveTokens[i]);
+                pos.poolAmount = toUint128(poolAmounts[i]);
+                pos.reserveAmount = toUint128(reserveAmounts[i]);
+                pos.reserveRateInfo = encodeReserveRateInfo(
+                    reserveRateNs[i],
+                    reserveRateDs[i],
+                    timestamps[i]
+                );
+            }
+            else {
+                address provider = pos.provider;
+                uint256 index = pos.index;
+                delete _positions[ids[i]];
+                uint256[] storage providerIds = _positionIdsByProvider[provider];
+                uint256 lastIndex = providerIds.length - 1;
+                if (index < lastIndex) {
+                    uint256 lastId = providerIds[lastIndex];
+                    providerIds[index] = lastId;
+                    _positions[lastId].index = index;
+                }
+                providerIds.pop();
+            }
+        }
+    }
 }
