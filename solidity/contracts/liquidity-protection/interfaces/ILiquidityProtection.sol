@@ -30,4 +30,6 @@ interface ILiquidityProtection {
     ) external payable returns (uint256);
 
     function removeLiquidity(uint256 id, uint32 portion) external;
+
+    function moveLiquidity(uint256 id, uint32 portion, IConverterAnchor poolAnchor) external;
 }

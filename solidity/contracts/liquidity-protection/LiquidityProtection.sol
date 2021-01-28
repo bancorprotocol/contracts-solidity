@@ -612,7 +612,29 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _portion portion of liquidity to remove, in PPM
      */
     function removeLiquidity(uint256 _id, uint32 _portion) external override protected validPortion(_portion) {
-        removeLiquidity(msg.sender, _id, _portion);
+        removeLiquidity(msg.sender, _id, _portion, IConverterAnchor(0));
+    }
+
+    /**
+     * @dev moves protected liquidity from one pool to another pool
+     *
+     * @param _id           id in the caller's list of protected liquidity
+     * @param _portion      portion of liquidity to move, in PPM
+     * @param _poolAnchor   anchor of the pool to move liquidity into
+     */
+    function moveLiquidity(
+        uint256 _id,
+        uint32 _portion,
+        IConverterAnchor _poolAnchor
+    )
+        external
+        override
+        protected
+        validPortion(_portion)
+        poolSupported(_poolAnchor)
+        poolWhitelisted(_poolAnchor)
+    {
+        removeLiquidity(msg.sender, _id, _portion, _poolAnchor);
     }
 
     /**
@@ -622,11 +644,13 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _provider protected liquidity provider
      * @param _id id in the caller's list of protected liquidity
      * @param _portion portion of liquidity to remove, in PPM
+     * @param _poolAnchor anchor of a pool to move liquidity into
      */
     function removeLiquidity(
         address payable _provider,
         uint256 _id,
-        uint32 _portion
+        uint32 _portion,
+        IConverterAnchor _poolAnchor
     ) internal {
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id, _provider);
 
@@ -729,9 +753,17 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             // mint network tokens for the caller and lock them
             networkTokenGovernance.mint(address(store), targetAmount);
             settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
-            lockTokens(_provider, targetAmount);
+            if (_poolAnchor != IConverterAnchor(0)) {
+                store.withdrawTokens(networkTokenLocal, _provider, targetAmount);
+                addLiquidity(_provider, _poolAnchor, networkTokenLocal, targetAmount);
+            }
+            else {
+                lockTokens(_provider, targetAmount);
+            }
             return;
         }
+
+        require(_poolAnchor == IConverterAnchor(0), "ERR_CANNOT_RESTAKE_BASE_TOKEN");
 
         // remove base token liquidity
 

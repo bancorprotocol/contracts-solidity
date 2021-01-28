@@ -1509,6 +1509,110 @@ describe('LiquidityProtection', () => {
                         const protectionNetworkBalance = await networkToken.balanceOf(liquidityProtection.address);
                         expect(protectionNetworkBalance).to.be.bignumber.equal(new BN(0));
                     });
+
+                    it('verifies that the caller can move entire protection to another pool', async () => {
+                        let reserveAmount = new BN(5000);
+                        await baseToken.transfer(accounts[1], 5000);
+                        await addProtectedLiquidity(
+                            poolToken.address,
+                            baseToken,
+                            baseTokenAddress,
+                            reserveAmount,
+                            false,
+                            accounts[1]
+                        );
+
+                        reserveAmount = new BN(1000);
+                        await addProtectedLiquidity(
+                            poolToken.address,
+                            networkToken,
+                            networkToken.address,
+                            reserveAmount
+                        );
+                        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+                        const protectionId = protectionIds[0];
+                        let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
+                        protection = getProtection(protection);
+
+                        const prevSystemBalance = await liquidityProtectionStore.systemBalance(poolToken.address);
+                        const prevStoreBalance = await poolToken.balanceOf(liquidityProtectionStore.address);
+                        const prevBalance = await getBalance(networkToken, networkToken.address, owner);
+                        const prevGovBalance = await govToken.balanceOf(owner);
+
+                        await govToken.approve(liquidityProtection.address, protection.reserveAmount);
+                        await liquidityProtection.setTime(now.add(duration.seconds(1)));
+
+                        await initPool();
+                        await baseToken.transfer(accounts[1], 5000);
+                        await addProtectedLiquidity(
+                            poolToken.address,
+                            baseToken,
+                            baseTokenAddress,
+                            reserveAmount,
+                            false,
+                            accounts[1]
+                        );
+                        await setTime(now.add(duration.days(100)));
+
+                        await networkToken.approve(liquidityProtection.address, protection.reserveAmount);
+                        await liquidityProtection.moveLiquidity(protectionIds[0], PPM_RESOLUTION, poolToken.address);
+                        protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+                        expect(protectionIds.length).to.eql(1);
+                    });
+
+                    it('verifies that the caller can move a portion of a protection to another pool', async () => {
+                        let reserveAmount = new BN(5000);
+                        await baseToken.transfer(accounts[1], 5000);
+                        await addProtectedLiquidity(
+                            poolToken.address,
+                            baseToken,
+                            baseTokenAddress,
+                            reserveAmount,
+                            false,
+                            accounts[1]
+                        );
+
+                        reserveAmount = new BN(1000);
+                        await addProtectedLiquidity(
+                            poolToken.address,
+                            networkToken,
+                            networkToken.address,
+                            reserveAmount
+                        );
+                        let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+                        const protectionId = protectionIds[0];
+                        let prevProtection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
+                        prevProtection = getProtection(prevProtection);
+
+                        const prevSystemBalance = await liquidityProtectionStore.systemBalance(poolToken.address);
+                        const prevStoreBalance = await poolToken.balanceOf(liquidityProtectionStore.address);
+                        const prevBalance = await getBalance(networkToken, networkToken.address, owner);
+                        const prevGovBalance = await govToken.balanceOf(owner);
+
+                        const portion = new BN(800000);
+                        await govToken.approve(
+                            liquidityProtection.address,
+                            prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
+                        );
+                        await liquidityProtection.setTime(now.add(duration.seconds(1)));
+
+                        await initPool();
+                        await baseToken.transfer(accounts[1], 5000);
+                        await addProtectedLiquidity(
+                            poolToken.address,
+                            baseToken,
+                            baseTokenAddress,
+                            reserveAmount,
+                            false,
+                            accounts[1]
+                        );
+                        await setTime(now.add(duration.days(100)));
+
+                        await networkToken.approve(liquidityProtection.address, prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION));
+                        await liquidityProtection.moveLiquidity(protectionId, portion, poolToken.address);
+                        protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+                        expect(protectionIds.length).to.eql(2);
+                    });
                 });
 
                 const protectionText = {
