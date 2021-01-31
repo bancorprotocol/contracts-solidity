@@ -295,7 +295,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         if (_reserveToken == networkTokenLocal) {
             require(msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");
-            return addNetworkTokenLiquidity(_owner, _poolAnchor, networkTokenLocal, _amount);
+            return addNetworkTokenLiquidity(_owner, _poolAnchor, networkTokenLocal, _amount, false);
         }
 
         // verify that ETH was passed with the call if needed
@@ -312,13 +312,15 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _poolAnchor   anchor of the pool
      * @param _networkToken the network reserve token of the pool
      * @param _amount       amount of tokens to add to the pool
+     * @param _addedFromAnotherPool liquidity is added from another pool
      * @return new protected liquidity id
      */
     function addNetworkTokenLiquidity(
         address _owner,
         IConverterAnchor _poolAnchor,
         IERC20Token _networkToken,
-        uint256 _amount
+        uint256 _amount,
+        bool _addedFromAnotherPool
     ) internal returns (uint256) {
         IDSToken poolToken = IDSToken(address(_poolAnchor));
 
@@ -336,9 +338,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
-        networkTokenGovernance.burn(_amount);
-        settings.decNetworkTokensMinted(_poolAnchor, _amount);
+        if (!_addedFromAnotherPool) {
+            safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
+            networkTokenGovernance.burn(_amount);
+            settings.decNetworkTokensMinted(_poolAnchor, _amount);
+        }
 
         // mint governance tokens to the recipient
         govTokenGovernance.mint(_owner, _amount);
@@ -612,7 +616,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _portion portion of liquidity to remove, in PPM
      */
     function removeLiquidity(uint256 _id, uint32 _portion) external override protected validPortion(_portion) {
-        removeLiquidity(msg.sender, _id, _portion, IConverterAnchor(0));
+        removeLiquidity(msg.sender, _id, _portion, false);
     }
 
     /**
@@ -634,7 +638,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         poolSupported(_poolAnchor)
         poolWhitelisted(_poolAnchor)
     {
-        removeLiquidity(msg.sender, _id, _portion, _poolAnchor);
+        uint256 amount = removeLiquidity(msg.sender, _id, _portion, true);
+        addNetworkTokenLiquidity(msg.sender, _poolAnchor, networkToken, amount, true);
     }
 
     /**
@@ -644,14 +649,15 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _provider protected liquidity provider
      * @param _id id in the caller's list of protected liquidity
      * @param _portion portion of liquidity to remove, in PPM
-     * @param _poolAnchor anchor of a pool to move liquidity into
+     * @param _addToAnotherPool add the liquidity to another pool
+     * @return amount of liquidity removed
      */
     function removeLiquidity(
         address payable _provider,
         uint256 _id,
         uint32 _portion,
-        IConverterAnchor _poolAnchor
-    ) internal {
+        bool _addToAnotherPool
+    ) internal returns (uint256) {
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id, _provider);
 
         // save a local copy of `networkToken`
@@ -750,21 +756,14 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // remove network token liquidity
         if (liquidity.reserveToken == networkTokenLocal) {
-            settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
-            if (_poolAnchor != IConverterAnchor(0)) {
-                // mint network tokens for the provider and add them to the other pool
-                networkTokenGovernance.mint(_provider, targetAmount);
-                addLiquidity(_provider, _poolAnchor, networkTokenLocal, targetAmount);
-            }
-            else {
+            if (!_addToAnotherPool) {
                 // mint network tokens for the provider and lock them in the store
+                settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
                 networkTokenGovernance.mint(address(store), targetAmount);
                 lockTokens(_provider, targetAmount);
             }
-            return;
+            return targetAmount;
         }
-
-        require(_poolAnchor == IConverterAnchor(0), "ERR_CANNOT_RESTAKE_BASE_TOKEN");
 
         // remove base token liquidity
 
@@ -814,6 +813,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             networkTokenGovernance.burn(networkBalance);
             settings.decNetworkTokensMinted(liquidity.poolToken, networkBalance);
         }
+
+        return targetAmount;
     }
 
     /**
