@@ -757,9 +757,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // remove network token liquidity
         if (liquidity.reserveToken == networkTokenLocal) {
             if (!_addToAnotherPool) {
-                // mint network tokens for the provider and lock them in the store
-                settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
+                // mint network tokens for the caller and lock them
                 networkTokenGovernance.mint(address(store), targetAmount);
+                settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
                 lockTokens(_provider, targetAmount);
             }
             return targetAmount;
