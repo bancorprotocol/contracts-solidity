@@ -20,6 +20,7 @@ const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter')
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
+const LiquidityProtectionUserStore = contract.fromArtifact('LiquidityProtectionUserStore');
 const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
 const LiquidityProtectionTokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
@@ -54,6 +55,7 @@ describe('LiquidityProtectionAverageRate', () => {
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
             let liquidityProtectionStats;
+            let liquidityProtectionUserStore;
             let liquidityProtectionSystemStore;
             let liquidityProtectionTokenHolder;
             let liquidityProtection;
@@ -93,12 +95,14 @@ describe('LiquidityProtectionAverageRate', () => {
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
+                liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(0);
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
                 liquidityProtection = await LiquidityProtection.new([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
+                    liquidityProtectionUserStore.address,
                     liquidityProtectionSystemStore.address,
                     liquidityProtectionTokenHolder.address,
                     networkTokenGovernance.address,
@@ -109,6 +113,7 @@ describe('LiquidityProtectionAverageRate', () => {
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+                await liquidityProtectionUserStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
                     from: owner
                 });

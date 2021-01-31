@@ -363,6 +363,12 @@ const run = async () => {
     );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
     const liquidityProtectionStats = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
+    const liquidityProtectionUserStore = await web3Func(
+        deploy,
+        'liquidityProtectionUserStore',
+        'LiquidityProtectionUserStore',
+        [0]
+    );
     const liquidityProtectionSystemStore = await web3Func(
         deploy,
         'liquidityProtectionSystemStore',
@@ -376,6 +382,7 @@ const run = async () => {
             liquidityProtectionSettings._address,
             liquidityProtectionStore._address,
             liquidityProtectionStats._address,
+            liquidityProtectionUserStore._address,
             liquidityProtectionSystemStore._address,
             liquidityProtectionTokenHolder._address,
             bntTokenGovernance._address,
@@ -394,6 +401,7 @@ const run = async () => {
         liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address)
     );
     await execute(liquidityProtectionStats.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionUserStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
     await execute(liquidityProtectionSystemStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     await execute(

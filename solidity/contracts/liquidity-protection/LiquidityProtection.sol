@@ -74,6 +74,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ILiquidityProtectionSettings public immutable override settings;
     ILiquidityProtectionStore public immutable override store;
     ILiquidityProtectionStats public immutable override stats;
+    ILiquidityProtectionUserStore public immutable override userStore;
     ILiquidityProtectionSystemStore public immutable override systemStore;
     ITokenHolder public immutable override tokenHolder;
     IERC20Token public immutable networkToken;
@@ -104,13 +105,14 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * - [0] liquidity protection settings
      * - [1] liquidity protection store
      * - [2] liquidity protection stats
-     * - [3] liquidity protection system store
-     * - [4] liquidity protection token holder
-     * - [5] network token governance
-     * - [6] governance token governance
-     * - [7] last liquidity removal/unprotection checkpoints store
+     * - [3] liquidity protection user store
+     * - [4] liquidity protection system store
+     * - [5] liquidity protection token holder
+     * - [6] network token governance
+     * - [7] governance token governance
+     * - [8] last liquidity removal/unprotection checkpoints store
      */
-    constructor(address[8] memory _contractAddresses) public {
+    constructor(address[9] memory _contractAddresses) public {
         for (uint256 i = 0; i < _contractAddresses.length; i++) {
             _validAddress(_contractAddresses[i]);
         }
@@ -118,14 +120,15 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         settings = ILiquidityProtectionSettings(_contractAddresses[0]);
         store = ILiquidityProtectionStore(_contractAddresses[1]);
         stats = ILiquidityProtectionStats(_contractAddresses[2]);
-        systemStore = ILiquidityProtectionSystemStore(_contractAddresses[3]);
-        tokenHolder = ITokenHolder(_contractAddresses[4]);
-        networkTokenGovernance = ITokenGovernance(_contractAddresses[5]);
-        govTokenGovernance = ITokenGovernance(_contractAddresses[6]);
-        lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[7]);
+        userStore = ILiquidityProtectionUserStore(_contractAddresses[3]);
+        systemStore = ILiquidityProtectionSystemStore(_contractAddresses[4]);
+        tokenHolder = ITokenHolder(_contractAddresses[5]);
+        networkTokenGovernance = ITokenGovernance(_contractAddresses[6]);
+        govTokenGovernance = ITokenGovernance(_contractAddresses[7]);
+        lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[8]);
 
-        networkToken = IERC20Token(address(ITokenGovernance(_contractAddresses[5]).token()));
-        govToken = IERC20Token(address(ITokenGovernance(_contractAddresses[6]).token()));
+        networkToken = IERC20Token(address(ITokenGovernance(_contractAddresses[6]).token()));
+        govToken = IERC20Token(address(ITokenGovernance(_contractAddresses[7]).token()));
     }
 
     // ensures that the contract is currently removing liquidity from a converter
@@ -679,8 +682,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                 );
             }
 
-            // remove the protected liquidity from the provider
-            store.removeProtectedLiquidity(_id);
+            // migrate the position from `store` to `userStore` if needed
+            migratePosition(_id);
+
+            // remove the position of the provider
+            userStore.removePosition(_id);
         } else {
             // remove a portion of the protected liquidity from the provider
             uint256 fullPoolAmount = liquidity.poolAmount;
@@ -700,7 +706,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                 );
             }
 
-            store.updateProtectedLiquidityAmounts(
+            // migrate the position from `store` to `userStore` if needed
+            migratePosition(_id);
+
+            // update the position amounts of the provider
+            userStore.updatePositionAmounts(
                 _id,
                 fullPoolAmount - liquidity.poolAmount,
                 fullReserveAmount - liquidity.reserveAmount
@@ -865,7 +875,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function claimBalance(uint256 _startIndex, uint256 _endIndex) external protected {
         // get the locked balances from the store
         (uint256[] memory amounts, uint256[] memory expirationTimes) =
-            store.lockedBalanceRange(msg.sender, _startIndex, _endIndex);
+            userStore.lockedBalanceRange(msg.sender, _startIndex, _endIndex);
 
         uint256 totalAmount = 0;
         uint256 length = amounts.length;
@@ -879,7 +889,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             }
 
             // remove the locked balance item
-            store.removeLockedBalance(msg.sender, _startIndex + index);
+            userStore.removeLockedBalance(msg.sender, _startIndex + index);
             totalAmount = totalAmount.add(amounts[index]);
         }
 
@@ -960,7 +970,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         stats.addProviderPool(_provider, _poolToken);
         return
-            store.addProtectedLiquidity(
+            userStore.addPosition(
                 _provider,
                 _poolToken,
                 _reserveToken,
@@ -980,7 +990,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function lockTokens(address _provider, uint256 _amount) internal {
         uint256 expirationTime = time().add(settings.lockDuration());
-        store.addLockedBalance(_provider, _amount, expirationTime);
+        userStore.addLockedBalance(_provider, _amount, expirationTime);
     }
 
     /**
@@ -1198,17 +1208,20 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @return protected liquidity
      */
     function protectedLiquidity(uint256 _id) internal view returns (ProtectedLiquidity memory) {
-        ProtectedLiquidity memory liquidity;
-        (
-            liquidity.provider,
-            liquidity.poolToken,
-            liquidity.reserveToken,
-            liquidity.poolAmount,
-            liquidity.reserveAmount,
-            liquidity.reserveRateN,
-            liquidity.reserveRateD,
-            liquidity.timestamp
-        ) = store.protectedLiquidity(_id);
+        ProtectedLiquidity memory liquidity = oldProtectedLiquidity(_id);
+
+        if (liquidity.provider == address(0)) {
+            (
+                liquidity.provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount,
+                liquidity.reserveRateN,
+                liquidity.reserveRateD,
+                liquidity.timestamp
+            ) = userStore.position(_id);
+        }
 
         return liquidity;
     }
@@ -1388,5 +1401,39 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     // utility to get the owner
     function ownedBy(IOwned _owned) private view returns (address) {
         return _owned.owner();
+    }
+
+    function migratePosition(uint256 _id) private {
+        ProtectedLiquidity memory liquidity = oldProtectedLiquidity(_id);
+
+        if (liquidity.provider != address(0)) {
+            store.removeProtectedLiquidity(_id);
+            userStore.seedPosition(
+                _id,
+                liquidity.provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount,
+                liquidity.reserveRateN,
+                liquidity.reserveRateD,
+                liquidity.timestamp
+            );
+        }
+    }
+
+    function oldProtectedLiquidity(uint256 _id) internal view returns (ProtectedLiquidity memory) {
+        ProtectedLiquidity memory liquidity;
+        (
+            liquidity.provider,
+            liquidity.poolToken,
+            liquidity.reserveToken,
+            liquidity.poolAmount,
+            liquidity.reserveAmount,
+            liquidity.reserveRateN,
+            liquidity.reserveRateD,
+            liquidity.timestamp
+        ) = store.protectedLiquidity(_id);
+        return liquidity;
     }
 }
