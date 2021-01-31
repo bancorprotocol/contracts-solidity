@@ -238,7 +238,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @return pools whitelist
      */
-    function poolWhitelist() external view returns (address[] memory) {
+    function poolWhitelist() external view override returns (address[] memory) {
         uint256 length = _poolWhitelist.length();
         address[] memory list = new address[](length);
         for (uint256 i = 0; i < length; i++) {

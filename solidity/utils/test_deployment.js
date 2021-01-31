@@ -363,14 +363,25 @@ const run = async () => {
     );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
     const liquidityProtectionStats = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
+    const liquidityProtectionSystemStore = await web3Func(
+        deploy,
+        'liquidityProtectionSystemStore',
+        'LiquidityProtectionSystemStore',
+        []
+    );
+    const liquidityProtectionTokenHolder = await web3Func(deploy, 'liquidityProtectionTokenHolder', 'TokenHolder', []);
 
     const liquidityProtection = await web3Func(deploy, 'liquidityProtection', 'LiquidityProtection', [
-        liquidityProtectionSettings._address,
-        liquidityProtectionStore._address,
-        liquidityProtectionStats._address,
-        bntTokenGovernance._address,
-        vbntTokenGovernance._address,
-        checkpointStore._address
+        [
+            liquidityProtectionSettings._address,
+            liquidityProtectionStore._address,
+            liquidityProtectionStats._address,
+            liquidityProtectionSystemStore._address,
+            liquidityProtectionTokenHolder._address,
+            bntTokenGovernance._address,
+            vbntTokenGovernance._address,
+            checkpointStore._address
+        ]
     ]);
 
     await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
@@ -383,6 +394,7 @@ const run = async () => {
         liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address)
     );
     await execute(liquidityProtectionStats.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionSystemStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     await execute(
         contractRegistry.methods.registerAddress(
@@ -393,6 +405,9 @@ const run = async () => {
 
     await execute(liquidityProtectionStore.methods.transferOwnership(liquidityProtection._address));
     await execute(liquidityProtection.methods.acceptStoreOwnership());
+
+    await execute(liquidityProtectionTokenHolder.methods.transferOwnership(liquidityProtection._address));
+    await execute(liquidityProtection.methods.acceptTokenHolderOwnership());
 
     const params = getConfig().liquidityProtectionParams;
 
