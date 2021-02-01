@@ -382,8 +382,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(newNetworkTokensMinted <= mintingLimit, "ERR_MAX_AMOUNT_REACHED");
 
         // issue new network tokens to the system
-        networkTokenGovernance.mint(address(this), newNetworkLiquidityAmount);
-        settings.incNetworkTokensMinted(_poolAnchor, newNetworkLiquidityAmount);
+        mintNetworkTokens(address(this), _poolAnchor, newNetworkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
         ensureAllowance(_networkToken, address(converter), newNetworkLiquidityAmount);
@@ -721,8 +720,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // remove network token liquidity
         if (liquidity.reserveToken == networkTokenLocal) {
             // mint network tokens for the caller and lock them
-            networkTokenGovernance.mint(address(store), targetAmount);
-            settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
+            mintNetworkTokens(address(store), liquidity.poolToken, targetAmount);
             lockTokens(_provider, targetAmount);
             return;
         }
@@ -1333,6 +1331,16 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             if (allowance > 0) safeApprove(_token, _spender, 0);
             safeApprove(_token, _spender, _value);
         }
+    }
+
+    // utility to mint network tokens
+    function mintNetworkTokens(
+        address _owner,
+        IConverterAnchor _poolAnchor,
+        uint256 _amount
+    ) private {
+        networkTokenGovernance.mint(_owner, _amount);
+        settings.incNetworkTokensMinted(_poolAnchor, _amount);
     }
 
     // utility to get the reserve balances
