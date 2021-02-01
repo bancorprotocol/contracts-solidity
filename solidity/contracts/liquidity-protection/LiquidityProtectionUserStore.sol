@@ -603,13 +603,8 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
                 pos.reserveToken = IERC20Token(reserveTokens[i]);
                 pos.poolAmount = toUint128(poolAmounts[i]);
                 pos.reserveAmount = toUint128(reserveAmounts[i]);
-                pos.reserveRateInfo = encodeReserveRateInfo(
-                    reserveRateNs[i],
-                    reserveRateDs[i],
-                    timestamps[i]
-                );
-            }
-            else {
+                pos.reserveRateInfo = encodeReserveRateInfo(reserveRateNs[i], reserveRateDs[i], timestamps[i]);
+            } else {
                 address provider = pos.provider;
                 uint256 index = pos.index;
                 delete _positions[ids[i]];

@@ -192,10 +192,14 @@ async function readState(count, method) {
     const state = {};
 
     for (let i = 0; i < count; i += READ_BATCH_SIZE) {
-        const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map(n => n + i);
-        const pls = await Promise.all(ids.map(id => rpc(method(id))));
+        const ids = [...Array(Math.min(count, READ_BATCH_SIZE + i) - i).keys()].map((n) => n + i);
+        const pls = await Promise.all(ids.map((id) => rpc(method(id))));
         for (let j = 0; j < ids.length; j++) {
-            setState(state, ids[j], Object.keys(pls[j]).map(key => pls[j][key]));
+            setState(
+                state,
+                ids[j],
+                Object.keys(pls[j]).map((key) => pls[j][key])
+            );
         }
     }
 
@@ -213,7 +217,7 @@ async function readTarget(state, target) {
 }
 
 async function writeTarget(web3Func, target, state, firstTime) {
-    const table = Object.entries(state).map(entry => [entry[0], ...entry[1]]);
+    const table = Object.entries(state).map((entry) => [entry[0], ...entry[1]]);
     const rows = table.filter((row) => !(firstTime && allZeros(row.slice(1))));
     const cols = rows[0].map((x, n) => rows.map((row) => row[n]));
     const count = Math.ceil(rows.length / WRITE_BATCH_SIZE);
