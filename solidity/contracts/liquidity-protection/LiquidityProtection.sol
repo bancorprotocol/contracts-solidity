@@ -76,7 +76,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ILiquidityProtectionStats public immutable override stats;
     ILiquidityProtectionUserStore public immutable override userStore;
     ILiquidityProtectionSystemStore public immutable override systemStore;
-    ITokenHolder public immutable override tokenHolder;
+    ITokenHolder public immutable override wallet;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -107,7 +107,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * - [2] liquidity protection stats
      * - [3] liquidity protection user store
      * - [4] liquidity protection system store
-     * - [5] liquidity protection token holder
+     * - [5] liquidity protection wallet
      * - [6] network token governance
      * - [7] governance token governance
      * - [8] last liquidity removal/unprotection checkpoints store
@@ -122,7 +122,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         stats = ILiquidityProtectionStats(_contractAddresses[2]);
         userStore = ILiquidityProtectionUserStore(_contractAddresses[3]);
         systemStore = ILiquidityProtectionSystemStore(_contractAddresses[4]);
-        tokenHolder = ITokenHolder(_contractAddresses[5]);
+        wallet = ITokenHolder(_contractAddresses[5]);
         networkTokenGovernance = ITokenGovernance(_contractAddresses[6]);
         govTokenGovernance = ITokenGovernance(_contractAddresses[7]);
         lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[8]);
@@ -200,39 +200,21 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     /**
-     * @dev transfers the ownership of the token holder
+     * @dev transfers the ownership of the wallet
      * can only be called by the contract owner
      *
-     * @param _newOwner    the new owner of the token holder
+     * @param _newOwner    the new owner of the wallet
      */
-    function transferTokenHolderOwnership(address _newOwner) external ownerOnly {
-        tokenHolder.transferOwnership(_newOwner);
+    function transferWalletOwnership(address _newOwner) external ownerOnly {
+        wallet.transferOwnership(_newOwner);
     }
 
     /**
-     * @dev accepts the ownership of the token holder
+     * @dev accepts the ownership of the wallet
      * can only be called by the contract owner
      */
-    function acceptTokenHolderOwnership() external ownerOnly {
-        tokenHolder.acceptOwnership();
-    }
-
-    /**
-     * @dev transfer all equity from the store to the token holder
-     */
-    function withdrawTokens() external {
-        // save local copies of storage variables
-        address storeAddress = address(store);
-        address tokenHolderAddress = address(tokenHolder);
-        IERC20Token networkTokenLocal = networkToken;
-
-        address[] memory poolWhitelist = settings.poolWhitelist();
-        for (uint256 i = 0; i < poolWhitelist.length; i++) {
-            IERC20Token poolToken = IERC20Token(poolWhitelist[i]);
-            store.withdrawTokens(poolToken, tokenHolderAddress, poolToken.balanceOf(storeAddress));
-        }
-
-        store.withdrawTokens(networkTokenLocal, tokenHolderAddress, networkTokenLocal.balanceOf(storeAddress));
+    function acceptWalletOwnership() external ownerOnly {
+        wallet.acceptOwnership();
     }
 
     /**
@@ -428,9 +410,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // add liquidity
         addLiquidity(converter, _baseToken, _networkToken, _amount, newNetworkLiquidityAmount, msg.value);
 
-        // transfer the new pool tokens to the token holder
+        // transfer the new pool tokens to the wallet
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
-        safeTransfer(poolToken, address(tokenHolder), poolTokenAmount);
+        safeTransfer(poolToken, address(wallet), poolTokenAmount);
 
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
@@ -764,7 +746,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // remove network token liquidity
         if (liquidity.reserveToken == networkTokenLocal) {
             // mint network tokens for the caller and lock them
-            networkTokenGovernance.mint(address(tokenHolder), targetAmount);
+            networkTokenGovernance.mint(address(wallet), targetAmount);
             systemStore.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
             lockTokens(_provider, targetAmount);
             return;
@@ -781,9 +763,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 systemBalance = systemStore.systemBalance(liquidity.poolToken);
         poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
 
-        // withdraw the pool tokens from the token holder
+        // withdraw the pool tokens from the wallet
         systemStore.decSystemBalance(liquidity.poolToken, poolAmount);
-        tokenHolder.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
+        wallet.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
         removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, networkTokenLocal);
@@ -808,7 +790,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             }
 
             // lock network tokens for the caller
-            safeTransfer(networkTokenLocal, address(tokenHolder), delta);
+            safeTransfer(networkTokenLocal, address(wallet), delta);
             lockTokens(_provider, delta);
         }
 
@@ -895,7 +877,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         if (totalAmount > 0) {
             // transfer the tokens to the caller in a single call
-            tokenHolder.withdrawTokens(networkToken, msg.sender, totalAmount);
+            wallet.withdrawTokens(networkToken, msg.sender, totalAmount);
         }
     }
 

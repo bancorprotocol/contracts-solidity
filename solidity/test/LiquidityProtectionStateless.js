@@ -8,7 +8,7 @@ const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
 const LiquidityProtectionUserStore = contract.fromArtifact('LiquidityProtectionUserStore');
 const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
-const LiquidityProtectionTokenHolder = contract.fromArtifact('TokenHolder');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -31,7 +31,7 @@ describe('LiquidityProtectionStateless', () => {
         const liquidityProtectionStats = await LiquidityProtectionStats.new();
         const liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(0);
         const liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-        const liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
+        const liquidityProtectionWallet = await TokenHolder.new();
         const networkTokenGovernance = await TokenGovernance.new(defaultSender);
         const govTokenGovernance = await TokenGovernance.new(defaultSender);
         const checkpointStore = await CheckpointStore.new();
@@ -42,7 +42,7 @@ describe('LiquidityProtectionStateless', () => {
             liquidityProtectionStats.address,
             liquidityProtectionUserStore.address,
             liquidityProtectionSystemStore.address,
-            liquidityProtectionTokenHolder.address,
+            liquidityProtectionWallet.address,
             networkTokenGovernance.address,
             govTokenGovernance.address,
             checkpointStore.address

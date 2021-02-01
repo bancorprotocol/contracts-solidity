@@ -23,7 +23,7 @@ const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
 const LiquidityProtectionUserStore = contract.fromArtifact('LiquidityProtectionUserStore');
 const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
-const LiquidityProtectionTokenHolder = contract.fromArtifact('TokenHolder');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -123,7 +123,7 @@ describe('LiquidityProtectionEdgeCases', () => {
             let liquidityProtectionStats;
             let liquidityProtectionUserStore;
             let liquidityProtectionSystemStore;
-            let liquidityProtectionTokenHolder;
+            let liquidityProtectionWallet;
             let liquidityProtection;
 
             const owner = defaultSender;
@@ -204,14 +204,14 @@ describe('LiquidityProtectionEdgeCases', () => {
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtectionUserStore = await LiquidityProtectionUserStore.new(0);
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-                liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
+                liquidityProtectionWallet = await TokenHolder.new();
                 liquidityProtection = await LiquidityProtection.new([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
                     liquidityProtectionUserStore.address,
                     liquidityProtectionSystemStore.address,
-                    liquidityProtectionTokenHolder.address,
+                    liquidityProtectionWallet.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
@@ -228,8 +228,8 @@ describe('LiquidityProtectionEdgeCases', () => {
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
-                await liquidityProtectionTokenHolder.transferOwnership(liquidityProtection.address);
-                await liquidityProtection.acceptTokenHolderOwnership();
+                await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
+                await liquidityProtection.acceptWalletOwnership();
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 

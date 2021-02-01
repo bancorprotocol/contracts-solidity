@@ -2137,17 +2137,6 @@ describe('LiquidityProtection', () => {
                     await liquidityProtection.acceptStoreOwnership();
                 });
 
-                it('withdraw tokens', async () => {
-                    await poolToken.transfer(liquidityProtectionStore.address, amount);
-                    const storeBalanceBefore = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const holderBalanceBefore = await poolToken.balanceOf(liquidityProtectionTokenHolder.address);
-                    await liquidityProtection.withdrawTokens();
-                    const storeBalanceAfter = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const holderBalanceAfter = await poolToken.balanceOf(liquidityProtectionTokenHolder.address);
-                    expect(storeBalanceAfter).to.be.bignumber.equal('0');
-                    expect(holderBalanceAfter).to.be.bignumber.equal(holderBalanceBefore.add(storeBalanceBefore));
-                });
-
                 it('remove positions', async () => {
                     for (let i = 0; i < providers.length; i++) {
                         expect(
