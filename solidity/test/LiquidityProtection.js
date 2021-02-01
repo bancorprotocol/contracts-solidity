@@ -2115,8 +2115,11 @@ describe('LiquidityProtection', () => {
 
                 it('migrateData', async () => {
                     await poolToken.transfer(liquidityProtectionStore.address, amount);
-                    const storeBalanceBefore = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const walletBalanceBefore = await poolToken.balanceOf(liquidityProtectionWallet.address);
+                    await networkToken.transfer(liquidityProtectionStore.address, amount);
+                    const storePoolBalanceBefore = await poolToken.balanceOf(liquidityProtectionStore.address);
+                    const walletPoolBalanceBefore = await poolToken.balanceOf(liquidityProtectionWallet.address);
+                    const storeNetworkBalanceBefore = await networkToken.balanceOf(liquidityProtectionStore.address);
+                    const walletNetworkBalanceBefore = await networkToken.balanceOf(liquidityProtectionWallet.address);
                     const storeSystemBalanceBefore = await liquidityProtectionStore.systemBalance(poolToken.address);
                     const settingsMintedTokensBefore = await liquidityProtectionSettings.networkTokensMinted(
                         poolToken.address
@@ -2127,15 +2130,19 @@ describe('LiquidityProtection', () => {
                     const systemStoreMintedTokensBefore = await liquidityProtectionSystemStore.networkTokensMinted(
                         poolToken.address
                     );
-                    expect(storeBalanceBefore).to.be.bignumber.greaterThan('0');
-                    expect(walletBalanceBefore).to.be.bignumber.equal('0');
+                    expect(storePoolBalanceBefore).to.be.bignumber.greaterThan('0');
+                    expect(walletPoolBalanceBefore).to.be.bignumber.equal('0');
+                    expect(storeNetworkBalanceBefore).to.be.bignumber.greaterThan('0');
+                    expect(walletNetworkBalanceBefore).to.be.bignumber.equal('0');
                     expect(storeSystemBalanceBefore).to.be.bignumber.greaterThan('0');
                     expect(settingsMintedTokensBefore).to.be.bignumber.greaterThan('0');
                     expect(systemStoreSystemBalanceBefore).to.be.bignumber.equal('0');
                     expect(systemStoreMintedTokensBefore).to.be.bignumber.equal('0');
                     await liquidityProtection.migrateData();
-                    const storeBalanceAfter = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const walletBalanceAfter = await poolToken.balanceOf(liquidityProtectionWallet.address);
+                    const storePoolBalanceAfter = await poolToken.balanceOf(liquidityProtectionStore.address);
+                    const walletPoolBalanceAfter = await poolToken.balanceOf(liquidityProtectionWallet.address);
+                    const storeNetworkBalanceAfter = await networkToken.balanceOf(liquidityProtectionStore.address);
+                    const walletNetworkBalanceAfter = await networkToken.balanceOf(liquidityProtectionWallet.address);
                     const storeSystemBalanceAfter = await liquidityProtectionStore.systemBalance(poolToken.address);
                     const settingsMintedTokensAfter = await liquidityProtectionSettings.networkTokensMinted(
                         poolToken.address
@@ -2146,8 +2153,10 @@ describe('LiquidityProtection', () => {
                     const systemStoreMintedTokensAfter = await liquidityProtectionSystemStore.networkTokensMinted(
                         poolToken.address
                     );
-                    expect(storeBalanceAfter).to.be.bignumber.equal('0');
-                    expect(walletBalanceAfter).to.be.bignumber.equal(storeBalanceBefore);
+                    expect(storePoolBalanceAfter).to.be.bignumber.equal('0');
+                    expect(walletPoolBalanceAfter).to.be.bignumber.equal(storePoolBalanceBefore);
+                    expect(storeNetworkBalanceAfter).to.be.bignumber.equal('0');
+                    expect(walletNetworkBalanceAfter).to.be.bignumber.equal(storeNetworkBalanceBefore);
                     expect(storeSystemBalanceAfter).to.be.bignumber.equal('0');
                     expect(settingsMintedTokensAfter).to.be.bignumber.equal('0');
                     expect(systemStoreSystemBalanceAfter).to.be.bignumber.equal(storeSystemBalanceBefore);
