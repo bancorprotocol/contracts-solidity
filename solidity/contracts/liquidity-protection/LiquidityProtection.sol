@@ -210,9 +210,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     /**
-     * @dev migrates all funds from the store contract to the wallet
-     * @dev migrates system balances from the store contract to the system-store contract
-     * @dev migrates minted amounts from the settings contract to the system-store contract
+     * @dev migrates all funds from the store to the wallet
+     * @dev migrates system balances from the store to the system-store
+     * @dev migrates minted amounts from the settings to the system-store
      */
     function migrateData() external {
         // save local copies of storage variables
@@ -362,7 +362,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 id = addProtectedLiquidity(_owner, poolToken, _networkToken, poolTokenAmount, _amount);
 
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
-        // wallets can burn their tokens
+        // token holders can burn their tokens
         safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
         burnNetworkTokens(_poolAnchor, _amount);
 
@@ -718,7 +718,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         systemStore.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
 
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
-        // tokens to the contract itself, since only wallets can burn their tokens
+        // tokens to the contract itself, since only token holders can burn their tokens
         if (liquidity.reserveToken == networkTokenLocal) {
             safeTransferFrom(govToken, _provider, address(this), liquidity.reserveAmount);
             govTokenGovernance.burn(liquidity.reserveAmount);
