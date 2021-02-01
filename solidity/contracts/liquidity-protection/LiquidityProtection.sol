@@ -222,6 +222,12 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         for (uint256 i = 0; i < poolWhitelist.length; i++) {
             IERC20Token poolToken = IERC20Token(poolWhitelist[i]);
             store.withdrawTokens(poolToken, tokenHolderAddress, poolToken.balanceOf(storeAddress));
+            uint256 systemBalance = store.systemBalance(poolToken);
+            systemStore.incSystemBalance(poolToken, systemBalance);
+            store.decSystemBalance(poolToken, systemBalance);
+            uint256 networkTokensMinted = settings.networkTokensMinted(IConverterAnchor(address(poolToken)));
+            systemStore.incNetworkTokensMinted(IConverterAnchor(address(poolToken)), networkTokensMinted);
+            settings.decNetworkTokensMinted(IConverterAnchor(address(poolToken)), networkTokensMinted);
         }
 
         store.withdrawTokens(networkTokenLocal, tokenHolderAddress, networkTokenLocal.balanceOf(storeAddress));

@@ -15,7 +15,6 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     using SafeMath for uint256;
 
     bytes32 public constant ROLE_SUPERVISOR = keccak256("ROLE_SUPERVISOR");
-    bytes32 public constant ROLE_SEEDER = keccak256("ROLE_SEEDER");
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     // system balances
@@ -27,12 +26,6 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     // allows execution only by an owner
     modifier ownerOnly {
         _hasRole(ROLE_OWNER);
-        _;
-    }
-
-    // allows execution only by a seeder
-    modifier seederOnly {
-        _hasRole(ROLE_SEEDER);
         _;
     }
 
@@ -62,7 +55,6 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     constructor() public {
         // set up administrative roles
         _setRoleAdmin(ROLE_SUPERVISOR, ROLE_SUPERVISOR);
-        _setRoleAdmin(ROLE_SEEDER, ROLE_SUPERVISOR);
         _setRoleAdmin(ROLE_OWNER, ROLE_SUPERVISOR);
 
         // allow the deployer to initially govern the contract
@@ -167,36 +159,5 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
         _networkTokensMinted[poolAnchor] = newAmount;
 
         emit NetworkTokensMintedUpdated(poolAnchor, prevAmount, newAmount);
-    }
-
-    /**
-     * @dev seeds system balances
-     * can be executed only by a seeder
-     *
-     * @param tokens    token addresses
-     * @param amounts   token amounts
-     */
-    function seedSystemBalances(IERC20Token[] calldata tokens, uint256[] calldata amounts) external seederOnly {
-        uint256 length = tokens.length;
-        for (uint256 i = 0; i < length; i++) {
-            _systemBalances[tokens[i]] = amounts[i];
-        }
-    }
-
-    /**
-     * @dev seeds network tokens minted
-     * can be executed only by a seeder
-     *
-     * @param anchors   pool anchor addresses
-     * @param amounts   network token amounts
-     */
-    function seedNetworkTokensMinted(IConverterAnchor[] calldata anchors, uint256[] calldata amounts)
-        external
-        seederOnly
-    {
-        uint256 length = anchors.length;
-        for (uint256 i = 0; i < length; i++) {
-            _networkTokensMinted[anchors[i]] = amounts[i];
-        }
     }
 }
