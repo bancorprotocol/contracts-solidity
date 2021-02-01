@@ -1090,9 +1090,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _averageRateD,
         uint32 _maxDeviation
     ) internal pure returns (bool) {
-        uint256 min =
-            _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
-        uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
+        uint256 ppmDelta = PPM_RESOLUTION - _maxDeviation;
+        uint256 min = _spotRateN.mul(_averageRateD).mul(ppmDelta).mul(ppmDelta);
+        uint256 mid = _spotRateD.mul(_averageRateN).mul(ppmDelta).mul(PPM_RESOLUTION);
         uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
         return min <= mid && mid <= max;
     }
