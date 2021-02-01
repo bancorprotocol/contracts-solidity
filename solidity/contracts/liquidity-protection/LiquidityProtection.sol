@@ -176,11 +176,6 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(msg.value == _value, "ERR_ETH_AMOUNT_MISMATCH");
     }
 
-    // error message binary size optimization
-    function verifyRate(bool _ok) internal pure {
-        require(_ok, "ERR_INVALID_RATE");
-    }
-
     /**
      * @dev accept ETH
      * used when removing liquidity from ETH converters
@@ -1013,7 +1008,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
 
-        verifyRate(
+        require(
             !_validateAverageRate ||
                 averageRateInRange(
                     spotRateN,
@@ -1021,7 +1016,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                     averageRateN,
                     averageRateD,
                     settings.averageRateMaxDeviation()
-                )
+                ),
+            "ERR_INVALID_RATE"
         );
 
         return (spotRateN, spotRateD, averageRateN, averageRateD);
@@ -1047,10 +1043,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) =
             reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
 
-        verifyRate(
+        require(
             (_addSpotRateN <= MAX_UINT128 && _addSpotRateD <= MAX_UINT128) &&
                 (removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128) &&
-                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128)
+                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128),
+            "ERR_INVALID_RATE"
         );
 
         return
