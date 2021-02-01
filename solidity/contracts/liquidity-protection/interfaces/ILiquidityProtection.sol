@@ -20,7 +20,7 @@ interface ILiquidityProtection {
 
     function systemStore() external view returns (ILiquidityProtectionSystemStore);
 
-    function tokenHolder() external view returns (ITokenHolder);
+    function wallet() external view returns (ITokenHolder);
 
     function addLiquidityFor(
         address owner,
