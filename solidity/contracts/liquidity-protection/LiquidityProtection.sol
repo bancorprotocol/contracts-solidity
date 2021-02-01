@@ -1374,10 +1374,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     // utility to burn network tokens
-    function burnNetworkTokens(
-        IConverterAnchor _poolAnchor,
-        uint256 _amount
-    ) private {
+    function burnNetworkTokens(IConverterAnchor _poolAnchor, uint256 _amount) private {
         networkTokenGovernance.burn(_amount);
         systemStore.decNetworkTokensMinted(_poolAnchor, _amount);
     }
