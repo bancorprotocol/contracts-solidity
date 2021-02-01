@@ -2133,7 +2133,7 @@ describe('LiquidityProtection', () => {
                     expect(settingsMintedTokensBefore).to.be.bignumber.greaterThan('0');
                     expect(systemStoreSystemBalanceBefore).to.be.bignumber.equal('0');
                     expect(systemStoreMintedTokensBefore).to.be.bignumber.equal('0');
-                    await liquidityProtection.withdrawTokens();
+                    await liquidityProtection.migrateData();
                     const storeBalanceAfter = await poolToken.balanceOf(liquidityProtectionStore.address);
                     const walletBalanceAfter = await poolToken.balanceOf(liquidityProtectionWallet.address);
                     const storeSystemBalanceAfter = await liquidityProtectionStore.systemBalance(poolToken.address);
