@@ -334,8 +334,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
         safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
-        networkTokenGovernance.burn(_amount);
-        settings.decNetworkTokensMinted(_poolAnchor, _amount);
+        burnNetworkTokens(_poolAnchor, _amount);
 
         // mint governance tokens to the recipient
         govTokenGovernance.mint(_owner, _amount);
@@ -770,8 +769,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // if the contract still holds network tokens, burn them
         uint256 networkBalance = networkTokenLocal.balanceOf(address(this));
         if (networkBalance > 0) {
-            networkTokenGovernance.burn(networkBalance);
-            settings.decNetworkTokensMinted(liquidity.poolToken, networkBalance);
+            burnNetworkTokens(liquidity.poolToken, networkBalance);
         }
     }
 
@@ -1341,6 +1339,15 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ) private {
         networkTokenGovernance.mint(_owner, _amount);
         settings.incNetworkTokensMinted(_poolAnchor, _amount);
+    }
+
+    // utility to burn network tokens
+    function burnNetworkTokens(
+        IConverterAnchor _poolAnchor,
+        uint256 _amount
+    ) private {
+        networkTokenGovernance.burn(_amount);
+        settings.decNetworkTokensMinted(_poolAnchor, _amount);
     }
 
     // utility to get the reserve balances
