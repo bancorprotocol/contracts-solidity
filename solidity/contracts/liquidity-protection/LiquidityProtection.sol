@@ -139,13 +139,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
     // ensures that the contract is currently removing liquidity from a converter
     modifier updatingLiquidityOnly() {
-        _updatingLiquidityOnly();
-        _;
-    }
-
-    // error message binary size optimization
-    function _updatingLiquidityOnly() internal view {
         require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
+        _;
     }
 
     // ensures that the portion is valid
