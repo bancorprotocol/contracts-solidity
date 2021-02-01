@@ -159,9 +159,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
     }
 
-    // ensures that the pool is supported
-    modifier poolSupported(IConverterAnchor _poolAnchor) {
+    // ensures that the pool is supported and whitelisted
+    modifier poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) {
         _poolSupported(_poolAnchor);
+        _poolWhitelisted(_poolAnchor);
         _;
     }
 
@@ -170,15 +171,14 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(settings.isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
     }
 
-    // ensures that the pool is whitelisted
-    modifier poolWhitelisted(IConverterAnchor _poolAnchor) {
-        _poolWhitelisted(_poolAnchor);
-        _;
-    }
-
     // error message binary size optimization
     function _poolWhitelisted(IConverterAnchor _poolAnchor) internal view {
         require(settings.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
+    }
+
+    // error message binary size optimization
+    function verifyEthAmount(uint256 _value) internal view {
+        require(msg.value == _value, "ERR_ETH_AMOUNT_MISMATCH");
     }
 
     /**
@@ -240,8 +240,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         override
         protected
         validAddress(_owner)
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
         returns (uint256)
     {
@@ -266,8 +265,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         payable
         override
         protected
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
         returns (uint256)
     {
@@ -294,13 +292,12 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         IERC20Token networkTokenLocal = networkToken;
 
         if (_reserveToken == networkTokenLocal) {
-            require(msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");
+            verifyEthAmount(0);
             return addNetworkTokenLiquidity(_owner, _poolAnchor, networkTokenLocal, _amount);
         }
 
         // verify that ETH was passed with the call if needed
-        uint256 val = _reserveToken == ETH_RESERVE_ADDRESS ? _amount : 0;
-        require(msg.value == val, "ERR_ETH_AMOUNT_MISMATCH");
+        verifyEthAmount(_reserveToken == ETH_RESERVE_ADDRESS ? _amount : 0);
         return addBaseTokenLiquidity(_owner, _poolAnchor, _reserveToken, networkTokenLocal, _amount);
     }
 
@@ -418,8 +415,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function poolAvailableSpace(IConverterAnchor _poolAnchor)
         external
         view
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         returns (uint256, uint256)
     {
         IERC20Token networkTokenLocal = networkToken;
@@ -438,8 +434,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function baseTokenAvailableSpace(IConverterAnchor _poolAnchor)
         external
         view
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         returns (uint256)
     {
         return baseTokenAvailableSpace(_poolAnchor, networkToken);
@@ -454,8 +449,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function networkTokenAvailableSpace(IConverterAnchor _poolAnchor)
         external
         view
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         returns (uint256)
     {
         return networkTokenAvailableSpace(_poolAnchor, networkToken);
