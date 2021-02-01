@@ -369,7 +369,7 @@ const run = async () => {
         'LiquidityProtectionSystemStore',
         []
     );
-    const liquidityProtectionTokenHolder = await web3Func(deploy, 'liquidityProtectionTokenHolder', 'TokenHolder', []);
+    const liquidityProtectionWallet = await web3Func(deploy, 'liquidityProtectionWallet', 'TokenHolder', []);
 
     const liquidityProtection = await web3Func(deploy, 'liquidityProtection', 'LiquidityProtection', [
         [
@@ -377,7 +377,7 @@ const run = async () => {
             liquidityProtectionStore._address,
             liquidityProtectionStats._address,
             liquidityProtectionSystemStore._address,
-            liquidityProtectionTokenHolder._address,
+            liquidityProtectionWallet._address,
             bntTokenGovernance._address,
             vbntTokenGovernance._address,
             checkpointStore._address
@@ -406,8 +406,8 @@ const run = async () => {
     await execute(liquidityProtectionStore.methods.transferOwnership(liquidityProtection._address));
     await execute(liquidityProtection.methods.acceptStoreOwnership());
 
-    await execute(liquidityProtectionTokenHolder.methods.transferOwnership(liquidityProtection._address));
-    await execute(liquidityProtection.methods.acceptTokenHolderOwnership());
+    await execute(liquidityProtectionWallet.methods.transferOwnership(liquidityProtection._address));
+    await execute(liquidityProtection.methods.acceptWalletOwnership());
 
     const params = getConfig().liquidityProtectionParams;
 

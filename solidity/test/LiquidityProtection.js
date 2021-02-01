@@ -23,7 +23,7 @@ const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSe
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
 const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
-const LiquidityProtectionTokenHolder = contract.fromArtifact('TokenHolder');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const LiquidityProtectionEventsSubscriber = contract.fromArtifact('TestLiquidityProtectionEventsSubscriber');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
@@ -281,7 +281,7 @@ describe('LiquidityProtection', () => {
             let liquidityProtectionStore;
             let liquidityProtectionStats;
             let liquidityProtectionSystemStore;
-            let liquidityProtectionTokenHolder;
+            let liquidityProtectionWallet;
             let liquidityProtection;
             let baseToken;
             let baseTokenAddress;
@@ -339,13 +339,13 @@ describe('LiquidityProtection', () => {
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-                liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
+                liquidityProtectionWallet = await TokenHolder.new();
                 liquidityProtection = await LiquidityProtection.new([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
                     liquidityProtectionSystemStore.address,
-                    liquidityProtectionTokenHolder.address,
+                    liquidityProtectionWallet.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
@@ -362,8 +362,8 @@ describe('LiquidityProtection', () => {
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
-                await liquidityProtectionTokenHolder.transferOwnership(liquidityProtection.address);
-                await liquidityProtection.acceptTokenHolderOwnership();
+                await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
+                await liquidityProtection.acceptWalletOwnership();
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 
@@ -386,8 +386,8 @@ describe('LiquidityProtection', () => {
                 const systemStore = await liquidityProtection.systemStore.call();
                 expect(systemStore).to.eql(liquidityProtectionSystemStore.address);
 
-                const tokenHolder = await liquidityProtection.tokenHolder.call();
-                expect(tokenHolder).to.eql(liquidityProtectionTokenHolder.address);
+                const wallet = await liquidityProtection.wallet.call();
+                expect(wallet).to.eql(liquidityProtectionWallet.address);
 
                 const networkTknGovernance = await liquidityProtection.networkTokenGovernance.call();
                 expect(networkTknGovernance).to.eql(networkTokenGovernance.address);
@@ -419,14 +419,14 @@ describe('LiquidityProtection', () => {
                 );
             });
 
-            it('verifies that the owner can transfer the token holder ownership', async () => {
-                await liquidityProtection.transferTokenHolderOwnership(accounts[1]);
-                liquidityProtectionTokenHolder.acceptOwnership({ from: accounts[1] });
+            it('verifies that the owner can transfer the wallet ownership', async () => {
+                await liquidityProtection.transferWalletOwnership(accounts[1]);
+                liquidityProtectionWallet.acceptOwnership({ from: accounts[1] });
             });
 
-            it('should revert when a non owner attempts to transfer the token holder ownership', async () => {
+            it('should revert when a non owner attempts to transfer the wallet ownership', async () => {
                 await expectRevert(
-                    liquidityProtection.transferTokenHolderOwnership(accounts[2], {
+                    liquidityProtection.transferWalletOwnership(accounts[2], {
                         from: accounts[1]
                     }),
                     'ERR_ACCESS_DENIED'
@@ -576,10 +576,10 @@ describe('LiquidityProtection', () => {
                                     );
                                     expect(systemBalance).to.be.bignumber.equal(expectedPoolAmount);
 
-                                    const tokenHolderBalance = await poolToken.balanceOf.call(
-                                        liquidityProtectionTokenHolder.address
+                                    const walletBalance = await poolToken.balanceOf.call(
+                                        liquidityProtectionWallet.address
                                     );
-                                    expect(tokenHolderBalance).to.be.bignumber.equal(expectedPoolAmount.mul(new BN(2)));
+                                    expect(walletBalance).to.be.bignumber.equal(expectedPoolAmount.mul(new BN(2)));
 
                                     const govBalance = await govToken.balanceOf.call(recipient);
                                     expect(govBalance).to.be.bignumber.equal(new BN(0));
@@ -768,8 +768,8 @@ describe('LiquidityProtection', () => {
                                 const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
                                     poolToken.address
                                 );
-                                const prevTokenHolderBalance = await poolToken.balanceOf.call(
-                                    liquidityProtectionTokenHolder.address
+                                const prevWalletBalance = await poolToken.balanceOf.call(
+                                    liquidityProtectionWallet.address
                                 );
 
                                 reserveAmount = new BN(1000);
@@ -810,10 +810,10 @@ describe('LiquidityProtection', () => {
                                 );
                                 expect(systemBalance).to.be.bignumber.equal(prevSystemBalance.sub(expectedPoolAmount));
 
-                                const tokenHolderBalance = await poolToken.balanceOf.call(
-                                    liquidityProtectionTokenHolder.address
+                                const walletBalance = await poolToken.balanceOf.call(
+                                    liquidityProtectionWallet.address
                                 );
-                                expect(tokenHolderBalance).to.be.bignumber.equal(prevTokenHolderBalance);
+                                expect(walletBalance).to.be.bignumber.equal(prevWalletBalance);
 
                                 const govBalance = await govToken.balanceOf.call(recipient);
                                 expect(govBalance).to.be.bignumber.equal(reserveAmount);
@@ -1108,8 +1108,8 @@ describe('LiquidityProtection', () => {
                             const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
                                 poolToken.address
                             );
-                            const prevTokenHolderBalance = await poolToken.balanceOf(
-                                liquidityProtectionTokenHolder.address
+                            const prevWalletBalance = await poolToken.balanceOf(
+                                liquidityProtectionWallet.address
                             );
                             const prevBalance = await getBalance(baseToken, baseTokenAddress, owner);
                             const prevGovBalance = await govToken.balanceOf(owner);
@@ -1138,12 +1138,12 @@ describe('LiquidityProtection', () => {
                             const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
                             expect(systemBalance).to.be.bignumber.equal(prevSystemBalance.sub(protection.poolAmount));
 
-                            const tokenHolderBalance = await poolToken.balanceOf(
-                                liquidityProtectionTokenHolder.address
+                            const walletBalance = await poolToken.balanceOf(
+                                liquidityProtectionWallet.address
                             );
                             // double since system balance was also liquidated
                             const delta = protection.poolAmount.mul(new BN(2));
-                            expect(tokenHolderBalance).to.be.bignumber.equal(prevTokenHolderBalance.sub(delta));
+                            expect(walletBalance).to.be.bignumber.equal(prevWalletBalance.sub(delta));
 
                             const balance = await getBalance(baseToken, baseTokenAddress, owner);
                             expect(balance).to.be.bignumber.equal(prevBalance.add(reserveAmount).sub(transactionCost));
@@ -1182,8 +1182,8 @@ describe('LiquidityProtection', () => {
                             const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
                                 poolToken.address
                             );
-                            const prevTokenHolderBalance = await poolToken.balanceOf(
-                                liquidityProtectionTokenHolder.address
+                            const prevWalletBalance = await poolToken.balanceOf(
+                                liquidityProtectionWallet.address
                             );
                             const prevBalance = await getBalance(baseToken, baseTokenAddress, owner);
                             const prevGovBalance = await govToken.balanceOf(owner);
@@ -1226,12 +1226,12 @@ describe('LiquidityProtection', () => {
                                 prevSystemBalance.sub(prevProtection.poolAmount.sub(protection.poolAmount))
                             );
 
-                            const tokenHolderBalance = await poolToken.balanceOf(
-                                liquidityProtectionTokenHolder.address
+                            const walletBalance = await poolToken.balanceOf(
+                                liquidityProtectionWallet.address
                             );
                             // double since system balance was also liquidated
                             const delta = prevProtection.poolAmount.sub(protection.poolAmount).mul(new BN(2));
-                            expect(tokenHolderBalance).to.be.bignumber.equal(prevTokenHolderBalance.sub(delta));
+                            expect(walletBalance).to.be.bignumber.equal(prevWalletBalance.sub(delta));
 
                             const balance = await getBalance(baseToken, baseTokenAddress, owner);
                             expect(balance).to.be.bignumber.equal(prevBalance.add(new BN(800)).sub(transactionCost));
@@ -1440,8 +1440,8 @@ describe('LiquidityProtection', () => {
                         protection = getProtection(protection);
 
                         const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                        const prevTokenHolderBalance = await poolToken.balanceOf(
-                            liquidityProtectionTokenHolder.address
+                        const prevWalletBalance = await poolToken.balanceOf(
+                            liquidityProtectionWallet.address
                         );
                         const prevBalance = await getBalance(networkToken, networkToken.address, owner);
                         const prevGovBalance = await govToken.balanceOf(owner);
@@ -1456,8 +1456,8 @@ describe('LiquidityProtection', () => {
                         const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
                         expect(systemBalance).to.be.bignumber.equal(prevSystemBalance.add(protection.poolAmount));
 
-                        const tokenHolderBalance = await poolToken.balanceOf(liquidityProtectionTokenHolder.address);
-                        expect(tokenHolderBalance).to.be.bignumber.equal(prevTokenHolderBalance);
+                        const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
+                        expect(walletBalance).to.be.bignumber.equal(prevWalletBalance);
 
                         const balance = await getBalance(networkToken, networkToken.address, owner);
                         expectAlmostEqual(balance, prevBalance.add(reserveAmount));
@@ -1504,8 +1504,8 @@ describe('LiquidityProtection', () => {
                         prevProtection = getProtection(prevProtection);
 
                         const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                        const prevTokenHolderBalance = await poolToken.balanceOf(
-                            liquidityProtectionTokenHolder.address
+                        const prevWalletBalance = await poolToken.balanceOf(
+                            liquidityProtectionWallet.address
                         );
                         const prevBalance = await getBalance(networkToken, networkToken.address, owner);
                         const prevGovBalance = await govToken.balanceOf(owner);
@@ -1534,8 +1534,8 @@ describe('LiquidityProtection', () => {
                             prevSystemBalance.add(prevProtection.poolAmount.sub(protection.poolAmount))
                         );
 
-                        const tokenHolderBalance = await poolToken.balanceOf(liquidityProtectionTokenHolder.address);
-                        expect(tokenHolderBalance).to.be.bignumber.equal(prevTokenHolderBalance);
+                        const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
+                        expect(walletBalance).to.be.bignumber.equal(prevWalletBalance);
 
                         const balance = await getBalance(networkToken, networkToken.address, owner);
                         expectAlmostEqual(balance, prevBalance.add(new BN(800)));
@@ -2055,13 +2055,13 @@ describe('LiquidityProtection', () => {
                     liquidityProtectionStore = await LiquidityProtectionStore.new();
                     liquidityProtectionStats = await LiquidityProtectionStats.new();
                     liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-                    liquidityProtectionTokenHolder = await LiquidityProtectionTokenHolder.new();
+                    liquidityProtectionWallet = await TokenHolder.new();
                     liquidityProtection = await LiquidityProtection.new([
                         liquidityProtectionSettings.address,
                         liquidityProtectionStore.address,
                         liquidityProtectionStats.address,
                         liquidityProtectionSystemStore.address,
-                        liquidityProtectionTokenHolder.address,
+                        liquidityProtectionWallet.address,
                         networkTokenGovernance.address,
                         govTokenGovernance.address,
                         checkpointStore.address
@@ -2078,8 +2078,8 @@ describe('LiquidityProtection', () => {
                         from: owner
                     });
                     await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                    await liquidityProtectionTokenHolder.transferOwnership(liquidityProtection.address);
-                    await liquidityProtection.acceptTokenHolderOwnership();
+                    await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
+                    await liquidityProtection.acceptWalletOwnership();
                     await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, {
                         from: governor
                     });
@@ -2127,10 +2127,10 @@ describe('LiquidityProtection', () => {
                     await liquidityProtection.acceptStoreOwnership();
                 });
 
-                it('withdraw tokens', async () => {
+                it('migrateData', async () => {
                     await poolToken.transfer(liquidityProtectionStore.address, amount);
                     const storeBalanceBefore             = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const walletBalanceBefore            = await poolToken.balanceOf(liquidityProtectionTokenHolder.address);
+                    const walletBalanceBefore            = await poolToken.balanceOf(liquidityProtectionWallet.address);
                     const storeSystemBalanceBefore       = await liquidityProtectionStore.systemBalance(poolToken.address);
                     const settingsMintedTokensBefore     = await liquidityProtectionSettings.networkTokensMinted(poolToken.address);
                     const systemStoreSystemBalanceBefore = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
@@ -2143,7 +2143,7 @@ describe('LiquidityProtection', () => {
                     expect(systemStoreMintedTokensBefore ).to.be.bignumber.equal('0');
                     await liquidityProtection.withdrawTokens();
                     const storeBalanceAfter             = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const walletBalanceAfter            = await poolToken.balanceOf(liquidityProtectionTokenHolder.address);
+                    const walletBalanceAfter            = await poolToken.balanceOf(liquidityProtectionWallet.address);
                     const storeSystemBalanceAfter       = await liquidityProtectionStore.systemBalance(poolToken.address);
                     const settingsMintedTokensAfter     = await liquidityProtectionSettings.networkTokensMinted(poolToken.address);
                     const systemStoreSystemBalanceAfter = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
