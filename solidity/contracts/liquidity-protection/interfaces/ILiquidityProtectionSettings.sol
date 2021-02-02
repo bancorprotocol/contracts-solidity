@@ -23,12 +23,6 @@ interface ILiquidityProtectionSettings {
 
     function networkTokenMintingLimits(IConverterAnchor _poolAnchor) external view returns (uint256);
 
-    function networkTokensMinted(IConverterAnchor _poolAnchor) external view returns (uint256);
-
-    function incNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount) external;
-
-    function decNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount) external;
-
     function minProtectionDelay() external view returns (uint256);
 
     function maxProtectionDelay() external view returns (uint256);

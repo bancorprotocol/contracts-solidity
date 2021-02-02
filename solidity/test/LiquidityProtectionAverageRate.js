@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const { ROLE_OWNER, ROLE_MINTED_TOKENS_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -107,7 +107,6 @@ describe('LiquidityProtectionAverageRate', () => {
                 ]);
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
                     from: owner

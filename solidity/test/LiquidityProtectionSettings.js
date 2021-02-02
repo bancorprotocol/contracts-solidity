@@ -3,7 +3,7 @@ const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 
-const { ROLE_OWNER, ROLE_MINTED_TOKENS_ADMIN } = roles;
+const { ROLE_OWNER } = roles;
 
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
@@ -74,13 +74,10 @@ describe('LiquidityProtectionSettings', () => {
 
     it('should properly initialize roles', async () => {
         expect(await settings.getRoleMemberCount.call(ROLE_OWNER)).to.be.bignumber.equal(new BN(1));
-        expect(await settings.getRoleMemberCount.call(ROLE_MINTED_TOKENS_ADMIN)).to.be.bignumber.equal(new BN(0));
 
         expect(await settings.getRoleAdmin.call(ROLE_OWNER)).to.eql(ROLE_OWNER);
-        expect(await settings.getRoleAdmin.call(ROLE_MINTED_TOKENS_ADMIN)).to.eql(ROLE_OWNER);
 
         expect(await settings.hasRole.call(ROLE_OWNER, owner)).to.be.true();
-        expect(await settings.hasRole.call(ROLE_MINTED_TOKENS_ADMIN, owner)).to.be.false();
     });
 
     describe('whitelisted pools', () => {
@@ -206,10 +203,6 @@ describe('LiquidityProtectionSettings', () => {
     describe('pool limits', () => {
         const admin = accounts[2];
 
-        beforeEach(async () => {
-            await settings.grantRole(ROLE_MINTED_TOKENS_ADMIN, admin, { from: owner });
-        });
-
         it('verifies that the owner can set the minimum network token liquidity for minting', async () => {
             const prevMin = await settings.minNetworkTokenLiquidityForMinting.call();
             const newMin = new BN(100);
@@ -271,69 +264,6 @@ describe('LiquidityProtectionSettings', () => {
 
         it('should revert when a non owner attempts to set the network token minting limit for a pool', async () => {
             await expectRevert(settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-        });
-
-        it('verifies that the minted tokens admin can increase the minted tokens balance for a pool', async () => {
-            const prevBalance = await settings.networkTokensMinted.call(poolToken.address);
-            const delta = new BN(100);
-
-            const res = await settings.incNetworkTokensMinted(poolToken.address, delta, { from: admin });
-
-            expectEvent(res, 'NetworkTokensMintedUpdated', {
-                _prevAmount: prevBalance,
-                _newAmount: prevBalance.add(delta)
-            });
-
-            const mintedBalance = await settings.networkTokensMinted.call(poolToken.address);
-
-            expect(mintedBalance).not.to.be.bignumber.equal(prevBalance);
-            expect(mintedBalance).to.be.bignumber.equal(prevBalance.add(delta));
-        });
-
-        it('should revert when a non minted tokens admin attempts to increase the minted tokens balance for a pool', async () => {
-            await expectRevert(settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-        });
-
-        it('verifies that the minted tokens admin can decrease the minted tokens balance for a pool', async () => {
-            await settings.incNetworkTokensMinted(poolToken.address, 1000, { from: admin });
-
-            const prevBalance = await settings.networkTokensMinted.call(poolToken.address);
-            const delta = new BN(100);
-
-            const res = await settings.decNetworkTokensMinted(poolToken.address, delta, { from: admin });
-
-            expectEvent(res, 'NetworkTokensMintedUpdated', {
-                _prevAmount: prevBalance,
-                _newAmount: prevBalance.sub(delta)
-            });
-
-            const mintedBalance = await settings.networkTokensMinted.call(poolToken.address);
-
-            expect(mintedBalance).not.to.be.bignumber.equal(prevBalance);
-            expect(mintedBalance).to.be.bignumber.equal(prevBalance.sub(delta));
-        });
-
-        it('should revert when a non minted tokens admin attempts to decrease the minted tokens balance for a pool', async () => {
-            await expectRevert(settings.incNetworkTokensMinted(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-        });
-
-        it('verifies that the minted tokens admin can decrease the minted tokens balance for a pool by a number larger than the current balance', async () => {
-            await settings.incNetworkTokensMinted(poolToken.address, 100, { from: admin });
-
-            const prevBalance = await settings.networkTokensMinted.call(poolToken.address);
-            const delta = new BN(300);
-
-            const res = await settings.decNetworkTokensMinted(poolToken.address, delta, { from: admin });
-
-            expectEvent(res, 'NetworkTokensMintedUpdated', {
-                _prevAmount: prevBalance,
-                _newAmount: new BN(0)
-            });
-
-            const mintedBalance = await settings.networkTokensMinted.call(poolToken.address);
-
-            expect(mintedBalance).not.to.be.bignumber.equal(prevBalance);
-            expect(mintedBalance).to.be.bignumber.equal(new BN(0));
         });
     });
 
