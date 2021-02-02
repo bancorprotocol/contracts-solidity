@@ -1,5 +1,4 @@
 ### 0.6.30
-
 LiquidityProtection
 * Added `LiquidityProtectionSystemStore` contract that holds the system balance/minted amounts
 * Added a dedicated wallet contract for liquidity protection
