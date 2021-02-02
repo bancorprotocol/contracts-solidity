@@ -210,32 +210,6 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     /**
-     * @dev migrates all funds from the store to the wallet
-     * @dev migrates system balances from the store to the system-store
-     * @dev migrates minted amounts from the settings to the system-store
-     */
-    function migrateData() external {
-        // save local copies of storage variables
-        address storeAddress = address(store);
-        address walletAddress = address(wallet);
-        IERC20Token networkTokenLocal = networkToken;
-
-        address[] memory poolWhitelist = settings.poolWhitelist();
-        for (uint256 i = 0; i < poolWhitelist.length; i++) {
-            IERC20Token poolToken = IERC20Token(poolWhitelist[i]);
-            store.withdrawTokens(poolToken, walletAddress, poolToken.balanceOf(storeAddress));
-            uint256 systemBalance = store.systemBalance(poolToken);
-            systemStore.incSystemBalance(poolToken, systemBalance);
-            store.decSystemBalance(poolToken, systemBalance);
-            uint256 networkTokensMinted = settings.networkTokensMinted(IConverterAnchor(address(poolToken)));
-            systemStore.incNetworkTokensMinted(IConverterAnchor(address(poolToken)), networkTokensMinted);
-            settings.decNetworkTokensMinted(IConverterAnchor(address(poolToken)), networkTokensMinted);
-        }
-
-        store.withdrawTokens(networkTokenLocal, walletAddress, networkTokenLocal.balanceOf(storeAddress));
-    }
-
-    /**
      * @dev sets the events subscriber
      */
     function setEventsSubscriber(ILiquidityProtectionEventsSubscriber _eventsSubscriber)

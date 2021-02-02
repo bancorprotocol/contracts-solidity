@@ -6,7 +6,7 @@ const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
 const { duration, latest } = time;
-const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER, ROLE_MINTED_TOKENS_ADMIN } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -352,9 +352,6 @@ describe('LiquidityProtection', () => {
                 ]);
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
-                    from: owner
-                });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
                     from: owner
@@ -2037,131 +2034,6 @@ describe('LiquidityProtection', () => {
                         }
                     });
                 }
-            });
-
-            describe('migration', () => {
-                const providers = accounts;
-                const amount = new BN(1000000);
-
-                beforeEach(async () => {
-                    liquidityProtectionStore = await LiquidityProtectionStore.new();
-                    liquidityProtectionStats = await LiquidityProtectionStats.new();
-                    liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-                    liquidityProtectionWallet = await TokenHolder.new();
-                    liquidityProtection = await LiquidityProtection.new([
-                        liquidityProtectionSettings.address,
-                        liquidityProtectionStore.address,
-                        liquidityProtectionStats.address,
-                        liquidityProtectionSystemStore.address,
-                        liquidityProtectionWallet.address,
-                        networkTokenGovernance.address,
-                        govTokenGovernance.address,
-                        checkpointStore.address
-                    ]);
-
-                    await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, {
-                        from: owner
-                    });
-                    await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
-                        from: owner
-                    });
-                    await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                    await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
-                        from: owner
-                    });
-                    await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                    await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
-                    await liquidityProtection.acceptWalletOwnership();
-                    await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, {
-                        from: governor
-                    });
-                    await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
-
-                    await setTime(await latest());
-
-                    await initPool();
-
-                    await liquidityProtectionStats.grantRole(ROLE_OWNER, owner, { from: owner });
-                    await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
-
-                    for (const provider of providers) {
-                        await liquidityProtectionStore.addProtectedLiquidity(
-                            provider,
-                            poolToken.address,
-                            baseToken.address,
-                            amount,
-                            amount,
-                            1,
-                            1,
-                            1
-                        );
-                        await liquidityProtectionStats.increaseTotalAmounts(
-                            provider,
-                            poolToken.address,
-                            baseToken.address,
-                            amount,
-                            amount
-                        );
-                        await liquidityProtectionStore.incSystemBalance(poolToken.address, amount);
-                        await liquidityProtectionSettings.incNetworkTokensMinted(poolToken.address, amount);
-                    }
-
-                    await liquidityProtectionStats.renounceRole(ROLE_OWNER, owner, { from: owner });
-                    await liquidityProtectionSettings.renounceRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
-
-                    await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
-                    await liquidityProtection.acceptStoreOwnership();
-                });
-
-                it('migrateData', async () => {
-                    await poolToken.transfer(liquidityProtectionStore.address, amount);
-                    await networkToken.transfer(liquidityProtectionStore.address, amount);
-                    const storePoolBalanceBefore = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const walletPoolBalanceBefore = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                    const storeNetworkBalanceBefore = await networkToken.balanceOf(liquidityProtectionStore.address);
-                    const walletNetworkBalanceBefore = await networkToken.balanceOf(liquidityProtectionWallet.address);
-                    const storeSystemBalanceBefore = await liquidityProtectionStore.systemBalance(poolToken.address);
-                    const settingsMintedTokensBefore = await liquidityProtectionSettings.networkTokensMinted(
-                        poolToken.address
-                    );
-                    const systemStoreSystemBalanceBefore = await liquidityProtectionSystemStore.systemBalance(
-                        poolToken.address
-                    );
-                    const systemStoreMintedTokensBefore = await liquidityProtectionSystemStore.networkTokensMinted(
-                        poolToken.address
-                    );
-                    expect(storePoolBalanceBefore).to.be.bignumber.greaterThan('0');
-                    expect(walletPoolBalanceBefore).to.be.bignumber.equal('0');
-                    expect(storeNetworkBalanceBefore).to.be.bignumber.greaterThan('0');
-                    expect(walletNetworkBalanceBefore).to.be.bignumber.equal('0');
-                    expect(storeSystemBalanceBefore).to.be.bignumber.greaterThan('0');
-                    expect(settingsMintedTokensBefore).to.be.bignumber.greaterThan('0');
-                    expect(systemStoreSystemBalanceBefore).to.be.bignumber.equal('0');
-                    expect(systemStoreMintedTokensBefore).to.be.bignumber.equal('0');
-                    await liquidityProtection.migrateData();
-                    const storePoolBalanceAfter = await poolToken.balanceOf(liquidityProtectionStore.address);
-                    const walletPoolBalanceAfter = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                    const storeNetworkBalanceAfter = await networkToken.balanceOf(liquidityProtectionStore.address);
-                    const walletNetworkBalanceAfter = await networkToken.balanceOf(liquidityProtectionWallet.address);
-                    const storeSystemBalanceAfter = await liquidityProtectionStore.systemBalance(poolToken.address);
-                    const settingsMintedTokensAfter = await liquidityProtectionSettings.networkTokensMinted(
-                        poolToken.address
-                    );
-                    const systemStoreSystemBalanceAfter = await liquidityProtectionSystemStore.systemBalance(
-                        poolToken.address
-                    );
-                    const systemStoreMintedTokensAfter = await liquidityProtectionSystemStore.networkTokensMinted(
-                        poolToken.address
-                    );
-                    expect(storePoolBalanceAfter).to.be.bignumber.equal('0');
-                    expect(walletPoolBalanceAfter).to.be.bignumber.equal(storePoolBalanceBefore);
-                    expect(storeNetworkBalanceAfter).to.be.bignumber.equal('0');
-                    expect(walletNetworkBalanceAfter).to.be.bignumber.equal(storeNetworkBalanceBefore);
-                    expect(storeSystemBalanceAfter).to.be.bignumber.equal('0');
-                    expect(settingsMintedTokensAfter).to.be.bignumber.equal('0');
-                    expect(systemStoreSystemBalanceAfter).to.be.bignumber.equal(storeSystemBalanceBefore);
-                    expect(systemStoreMintedTokensAfter).to.be.bignumber.equal(settingsMintedTokensBefore);
-                });
             });
         });
     }

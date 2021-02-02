@@ -19,7 +19,6 @@ module.exports = {
         ROLE_OWNER: web3.utils.keccak256('ROLE_OWNER'),
         ROLE_GOVERNOR: web3.utils.keccak256('ROLE_GOVERNOR'),
         ROLE_MINTER: web3.utils.keccak256('ROLE_MINTER'),
-        ROLE_MINTED_TOKENS_ADMIN: web3.utils.keccak256('ROLE_MINTED_TOKENS_ADMIN'),
         ROLE_SEEDER: web3.utils.keccak256('ROLE_SEEDER')
     },
 

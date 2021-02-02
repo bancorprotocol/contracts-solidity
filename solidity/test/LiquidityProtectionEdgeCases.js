@@ -5,7 +5,7 @@ const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
-const { ROLE_OWNER, ROLE_MINTED_TOKENS_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -213,9 +213,6 @@ describe('LiquidityProtectionEdgeCases', () => {
                     checkpointStore.address
                 ]);
 
-                await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
-                    from: owner
-                });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
                     from: owner
