@@ -6,6 +6,8 @@ const Decimal = require('decimal.js');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
+const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -26,18 +28,22 @@ describe('LiquidityProtectionStateless', () => {
         const liquidityProtectionSettings = await LiquidityProtectionSettings.new(defaultSender, defaultSender);
         const liquidityProtectionStore = await LiquidityProtectionStore.new();
         const liquidityProtectionStats = await LiquidityProtectionStats.new();
+        const liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
+        const liquidityProtectionWallet = await TokenHolder.new();
         const networkTokenGovernance = await TokenGovernance.new(defaultSender);
         const govTokenGovernance = await TokenGovernance.new(defaultSender);
         const checkpointStore = await CheckpointStore.new();
 
-        liquidityProtection = await LiquidityProtection.new(
+        liquidityProtection = await LiquidityProtection.new([
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             liquidityProtectionStats.address,
+            liquidityProtectionSystemStore.address,
+            liquidityProtectionWallet.address,
             networkTokenGovernance.address,
             govTokenGovernance.address,
             checkpointStore.address
-        );
+        ]);
     });
 
     describe('sanity part 1', () => {
