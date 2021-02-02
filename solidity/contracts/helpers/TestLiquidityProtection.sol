@@ -9,24 +9,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     uint256 private poolTokenRateN;
     uint256 private poolTokenRateD;
 
-    constructor(
-        ILiquidityProtectionSettings _settings,
-        ILiquidityProtectionStore _store,
-        ILiquidityProtectionStats _stats,
-        ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance,
-        ICheckpointStore _lastRemoveCheckpointStore
-    )
-        public
-        LiquidityProtection(
-            _settings,
-            _store,
-            _stats,
-            _networkTokenGovernance,
-            _govTokenGovernance,
-            _lastRemoveCheckpointStore
-        )
-    {}
+    constructor(address[8] memory _contractAddresses) public LiquidityProtection(_contractAddresses) {}
 
     function protectedAmountPlusFeeTest(
         uint256 _poolAmount,

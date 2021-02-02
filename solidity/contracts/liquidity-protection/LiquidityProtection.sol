@@ -74,6 +74,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ILiquidityProtectionSettings public immutable override settings;
     ILiquidityProtectionStore public immutable override store;
     ILiquidityProtectionStats public immutable override stats;
+    ILiquidityProtectionSystemStore public immutable override systemStore;
+    ITokenHolder public immutable override wallet;
     IERC20Token public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
     IERC20Token public immutable govToken;
@@ -98,54 +100,38 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     /**
      * @dev initializes a new LiquidityProtection contract
      *
-     * @param _settings liquidity protection settings
-     * @param _store liquidity protection store
-     * @param _stats liquidity protection stats
-     * @param _networkTokenGovernance network token governance
-     * @param _govTokenGovernance governance token governance
-     * @param _lastRemoveCheckpointStore last liquidity removal/unprotection checkpoints store
+     * @param _contractAddresses:
+     * - [0] liquidity protection settings
+     * - [1] liquidity protection store
+     * - [2] liquidity protection stats
+     * - [3] liquidity protection system store
+     * - [4] liquidity protection wallet
+     * - [5] network token governance
+     * - [6] governance token governance
+     * - [7] last liquidity removal/unprotection checkpoints store
      */
-    constructor(
-        ILiquidityProtectionSettings _settings,
-        ILiquidityProtectionStore _store,
-        ILiquidityProtectionStats _stats,
-        ITokenGovernance _networkTokenGovernance,
-        ITokenGovernance _govTokenGovernance,
-        ICheckpointStore _lastRemoveCheckpointStore
-    )
-        public
-        validAddress(address(_settings))
-        validAddress(address(_store))
-        validAddress(address(_stats))
-        validAddress(address(_networkTokenGovernance))
-        validAddress(address(_govTokenGovernance))
-        notThis(address(_settings))
-        notThis(address(_store))
-        notThis(address(_stats))
-        notThis(address(_networkTokenGovernance))
-        notThis(address(_govTokenGovernance))
-    {
-        settings = _settings;
-        store = _store;
-        stats = _stats;
+    constructor(address[8] memory _contractAddresses) public {
+        for (uint256 i = 0; i < _contractAddresses.length; i++) {
+            _validAddress(_contractAddresses[i]);
+        }
 
-        networkTokenGovernance = _networkTokenGovernance;
-        networkToken = IERC20Token(address(_networkTokenGovernance.token()));
-        govTokenGovernance = _govTokenGovernance;
-        govToken = IERC20Token(address(_govTokenGovernance.token()));
+        settings = ILiquidityProtectionSettings(_contractAddresses[0]);
+        store = ILiquidityProtectionStore(_contractAddresses[1]);
+        stats = ILiquidityProtectionStats(_contractAddresses[2]);
+        systemStore = ILiquidityProtectionSystemStore(_contractAddresses[3]);
+        wallet = ITokenHolder(_contractAddresses[4]);
+        networkTokenGovernance = ITokenGovernance(_contractAddresses[5]);
+        govTokenGovernance = ITokenGovernance(_contractAddresses[6]);
+        lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[7]);
 
-        lastRemoveCheckpointStore = _lastRemoveCheckpointStore;
+        networkToken = IERC20Token(address(ITokenGovernance(_contractAddresses[5]).token()));
+        govToken = IERC20Token(address(ITokenGovernance(_contractAddresses[6]).token()));
     }
 
     // ensures that the contract is currently removing liquidity from a converter
     modifier updatingLiquidityOnly() {
-        _updatingLiquidityOnly();
-        _;
-    }
-
-    // error message binary size optimization
-    function _updatingLiquidityOnly() internal view {
         require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
+        _;
     }
 
     // ensures that the portion is valid
@@ -159,9 +145,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
     }
 
-    // ensures that the pool is supported
-    modifier poolSupported(IConverterAnchor _poolAnchor) {
+    // ensures that the pool is supported and whitelisted
+    modifier poolSupportedAndWhitelisted(IConverterAnchor _poolAnchor) {
         _poolSupported(_poolAnchor);
+        _poolWhitelisted(_poolAnchor);
         _;
     }
 
@@ -170,15 +157,14 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         require(settings.isPoolSupported(_poolAnchor), "ERR_POOL_NOT_SUPPORTED");
     }
 
-    // ensures that the pool is whitelisted
-    modifier poolWhitelisted(IConverterAnchor _poolAnchor) {
-        _poolWhitelisted(_poolAnchor);
-        _;
-    }
-
     // error message binary size optimization
     function _poolWhitelisted(IConverterAnchor _poolAnchor) internal view {
         require(settings.isPoolWhitelisted(_poolAnchor), "ERR_POOL_NOT_WHITELISTED");
+    }
+
+    // error message binary size optimization
+    function verifyEthAmount(uint256 _value) internal view {
+        require(msg.value == _value, "ERR_ETH_AMOUNT_MISMATCH");
     }
 
     /**
@@ -203,6 +189,50 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function acceptStoreOwnership() external ownerOnly {
         store.acceptOwnership();
+    }
+
+    /**
+     * @dev transfers the ownership of the wallet
+     * can only be called by the contract owner
+     *
+     * @param _newOwner    the new owner of the wallet
+     */
+    function transferWalletOwnership(address _newOwner) external ownerOnly {
+        wallet.transferOwnership(_newOwner);
+    }
+
+    /**
+     * @dev accepts the ownership of the wallet
+     * can only be called by the contract owner
+     */
+    function acceptWalletOwnership() external ownerOnly {
+        wallet.acceptOwnership();
+    }
+
+    /**
+     * @dev migrates all funds from the store to the wallet
+     * @dev migrates system balances from the store to the system-store
+     * @dev migrates minted amounts from the settings to the system-store
+     */
+    function migrateData() external {
+        // save local copies of storage variables
+        address storeAddress = address(store);
+        address walletAddress = address(wallet);
+        IERC20Token networkTokenLocal = networkToken;
+
+        address[] memory poolWhitelist = settings.poolWhitelist();
+        for (uint256 i = 0; i < poolWhitelist.length; i++) {
+            IERC20Token poolToken = IERC20Token(poolWhitelist[i]);
+            store.withdrawTokens(poolToken, walletAddress, poolToken.balanceOf(storeAddress));
+            uint256 systemBalance = store.systemBalance(poolToken);
+            systemStore.incSystemBalance(poolToken, systemBalance);
+            store.decSystemBalance(poolToken, systemBalance);
+            uint256 networkTokensMinted = settings.networkTokensMinted(IConverterAnchor(address(poolToken)));
+            systemStore.incNetworkTokensMinted(IConverterAnchor(address(poolToken)), networkTokensMinted);
+            settings.decNetworkTokensMinted(IConverterAnchor(address(poolToken)), networkTokensMinted);
+        }
+
+        store.withdrawTokens(networkTokenLocal, walletAddress, networkTokenLocal.balanceOf(storeAddress));
     }
 
     /**
@@ -240,8 +270,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         override
         protected
         validAddress(_owner)
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
         returns (uint256)
     {
@@ -266,8 +295,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         payable
         override
         protected
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         greaterThanZero(_amount)
         returns (uint256)
     {
@@ -294,13 +322,12 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         IERC20Token networkTokenLocal = networkToken;
 
         if (_reserveToken == networkTokenLocal) {
-            require(msg.value == 0, "ERR_ETH_AMOUNT_MISMATCH");
+            verifyEthAmount(0);
             return addNetworkTokenLiquidity(_owner, _poolAnchor, networkTokenLocal, _amount);
         }
 
         // verify that ETH was passed with the call if needed
-        uint256 val = _reserveToken == ETH_RESERVE_ADDRESS ? _amount : 0;
-        require(msg.value == val, "ERR_ETH_AMOUNT_MISMATCH");
+        verifyEthAmount(_reserveToken == ETH_RESERVE_ADDRESS ? _amount : 0);
         return addBaseTokenLiquidity(_owner, _poolAnchor, _reserveToken, networkTokenLocal, _amount);
     }
 
@@ -329,7 +356,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 poolTokenAmount = _amount.mul(poolRate.d).div(poolRate.n);
 
         // remove the pool tokens from the system's ownership (will revert if not enough tokens are available)
-        store.decSystemBalance(poolToken, poolTokenAmount);
+        systemStore.decSystemBalance(poolToken, poolTokenAmount);
 
         // add protected liquidity for the recipient
         uint256 id = addProtectedLiquidity(_owner, poolToken, _networkToken, poolTokenAmount, _amount);
@@ -337,8 +364,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
         safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
-        networkTokenGovernance.burn(_amount);
-        settings.decNetworkTokensMinted(_poolAnchor, _amount);
+        burnNetworkTokens(_poolAnchor, _amount);
 
         // mint governance tokens to the recipient
         govTokenGovernance.mint(_owner, _amount);
@@ -381,12 +407,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             mintingLimit = settings.defaultNetworkTokenMintingLimit();
         }
 
-        uint256 newNetworkTokensMinted = settings.networkTokensMinted(_poolAnchor).add(newNetworkLiquidityAmount);
+        uint256 newNetworkTokensMinted = systemStore.networkTokensMinted(_poolAnchor).add(newNetworkLiquidityAmount);
         require(newNetworkTokensMinted <= mintingLimit, "ERR_MAX_AMOUNT_REACHED");
 
         // issue new network tokens to the system
-        networkTokenGovernance.mint(address(this), newNetworkLiquidityAmount);
-        settings.incNetworkTokensMinted(_poolAnchor, newNetworkLiquidityAmount);
+        mintNetworkTokens(address(this), _poolAnchor, newNetworkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
         ensureAllowance(_networkToken, address(converter), newNetworkLiquidityAmount);
@@ -398,13 +423,13 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // add liquidity
         addLiquidity(converter, _baseToken, _networkToken, _amount, newNetworkLiquidityAmount, msg.value);
 
-        // transfer the new pool tokens to the store
+        // transfer the new pool tokens to the wallet
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
-        safeTransfer(poolToken, address(store), poolTokenAmount);
+        safeTransfer(poolToken, address(wallet), poolTokenAmount);
 
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
-        store.incSystemBalance(poolToken, poolTokenAmount - poolTokenAmount / 2); // account for rounding errors
+        systemStore.incSystemBalance(poolToken, poolTokenAmount - poolTokenAmount / 2); // account for rounding errors
         return addProtectedLiquidity(_owner, poolToken, _baseToken, poolTokenAmount / 2, _amount);
     }
 
@@ -418,8 +443,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function poolAvailableSpace(IConverterAnchor _poolAnchor)
         external
         view
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         returns (uint256, uint256)
     {
         IERC20Token networkTokenLocal = networkToken;
@@ -438,8 +462,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function baseTokenAvailableSpace(IConverterAnchor _poolAnchor)
         external
         view
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         returns (uint256)
     {
         return baseTokenAvailableSpace(_poolAnchor, networkToken);
@@ -454,8 +477,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function networkTokenAvailableSpace(IConverterAnchor _poolAnchor)
         external
         view
-        poolSupported(_poolAnchor)
-        poolWhitelisted(_poolAnchor)
+        poolSupportedAndWhitelisted(_poolAnchor)
         returns (uint256)
     {
         return networkTokenAvailableSpace(_poolAnchor, networkToken);
@@ -490,7 +512,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         }
 
         // get the amount of network tokens already minted for the pool
-        uint256 networkTokensMinted = settings.networkTokensMinted(_poolAnchor);
+        uint256 networkTokensMinted = systemStore.networkTokensMinted(_poolAnchor);
 
         // get the amount of network tokens which can minted for the pool
         uint256 networkTokensCanBeMinted = MathEx.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
@@ -518,7 +540,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         Fraction memory poolRate = poolTokenRate(poolToken, _networkToken);
 
         // return the maximum amount of network token liquidity that can be single-sided staked in the pool
-        return store.systemBalance(poolToken).mul(poolRate.n).add(poolRate.n).sub(1).div(poolRate.d);
+        return systemStore.systemBalance(poolToken).mul(poolRate.n).add(poolRate.n).sub(1).div(poolRate.d);
     }
 
     /**
@@ -593,7 +615,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
 
         // limit the amount of pool tokens by the amount the system/caller holds
-        uint256 availableBalance = store.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
+        uint256 availableBalance = systemStore.systemBalance(liquidity.poolToken).add(liquidity.poolAmount);
         poolAmount = poolAmount > availableBalance ? availableBalance : poolAmount;
 
         // calculate the base token amount received by liquidating the pool tokens
@@ -693,7 +715,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         lastRemoveCheckpointStore.addCheckpoint(_provider);
 
         // add the pool tokens to the system
-        store.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
+        systemStore.incSystemBalance(liquidity.poolToken, liquidity.poolAmount);
 
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
         // tokens to the contract itself, since only token holders can burn their tokens
@@ -727,8 +749,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // remove network token liquidity
         if (liquidity.reserveToken == networkTokenLocal) {
             // mint network tokens for the caller and lock them
-            networkTokenGovernance.mint(address(store), targetAmount);
-            settings.incNetworkTokensMinted(liquidity.poolToken, targetAmount);
+            mintNetworkTokens(address(wallet), liquidity.poolToken, targetAmount);
             lockTokens(_provider, targetAmount);
             return;
         }
@@ -741,12 +762,12 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 poolAmount = targetAmount.mul(poolRate.d).div(poolRate.n / 2);
 
         // limit the amount of pool tokens by the amount the system holds
-        uint256 systemBalance = store.systemBalance(liquidity.poolToken);
+        uint256 systemBalance = systemStore.systemBalance(liquidity.poolToken);
         poolAmount = poolAmount > systemBalance ? systemBalance : poolAmount;
 
-        // withdraw the pool tokens from the store
-        store.decSystemBalance(liquidity.poolToken, poolAmount);
-        store.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
+        // withdraw the pool tokens from the wallet
+        systemStore.decSystemBalance(liquidity.poolToken, poolAmount);
+        wallet.withdrawTokens(liquidity.poolToken, address(this), poolAmount);
 
         // remove liquidity
         removeLiquidity(liquidity.poolToken, poolAmount, liquidity.reserveToken, networkTokenLocal);
@@ -771,15 +792,14 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             }
 
             // lock network tokens for the caller
-            safeTransfer(networkTokenLocal, address(store), delta);
+            safeTransfer(networkTokenLocal, address(wallet), delta);
             lockTokens(_provider, delta);
         }
 
         // if the contract still holds network tokens, burn them
         uint256 networkBalance = networkTokenLocal.balanceOf(address(this));
         if (networkBalance > 0) {
-            networkTokenGovernance.burn(networkBalance);
-            settings.decNetworkTokensMinted(liquidity.poolToken, networkBalance);
+            burnNetworkTokens(liquidity.poolToken, networkBalance);
         }
     }
 
@@ -858,7 +878,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         if (totalAmount > 0) {
             // transfer the tokens to the caller in a single call
-            store.withdrawTokens(networkToken, msg.sender, totalAmount);
+            wallet.withdrawTokens(networkToken, msg.sender, totalAmount);
         }
     }
 
@@ -1093,9 +1113,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _averageRateD,
         uint32 _maxDeviation
     ) internal pure returns (bool) {
-        uint256 min =
-            _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION - _maxDeviation);
-        uint256 mid = _spotRateD.mul(_averageRateN).mul(PPM_RESOLUTION - _maxDeviation).mul(PPM_RESOLUTION);
+        uint256 ppmDelta = PPM_RESOLUTION - _maxDeviation;
+        uint256 min = _spotRateN.mul(_averageRateD).mul(ppmDelta).mul(ppmDelta);
+        uint256 mid = _spotRateD.mul(_averageRateN).mul(ppmDelta).mul(PPM_RESOLUTION);
         uint256 max = _spotRateN.mul(_averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
         return min <= mid && mid <= max;
     }
@@ -1341,6 +1361,22 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             if (allowance > 0) safeApprove(_token, _spender, 0);
             safeApprove(_token, _spender, _value);
         }
+    }
+
+    // utility to mint network tokens
+    function mintNetworkTokens(
+        address _owner,
+        IConverterAnchor _poolAnchor,
+        uint256 _amount
+    ) private {
+        networkTokenGovernance.mint(_owner, _amount);
+        systemStore.incNetworkTokensMinted(_poolAnchor, _amount);
+    }
+
+    // utility to burn network tokens
+    function burnNetworkTokens(IConverterAnchor _poolAnchor, uint256 _amount) private {
+        networkTokenGovernance.burn(_amount);
+        systemStore.decNetworkTokensMinted(_poolAnchor, _amount);
     }
 
     // utility to get the reserve balances

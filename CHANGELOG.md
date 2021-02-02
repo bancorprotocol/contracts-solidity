@@ -1,3 +1,9 @@
+### 0.6.30
+LiquidityProtection
+* Added `LiquidityProtectionSystemStore` contract that holds the system balance/minted amounts
+* Added a dedicated wallet contract for liquidity protection
+
+
 ### 0.6.29
 General
 * Replaced the local SafeMath contract with OpenZepplin's version

@@ -55,7 +55,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev increases the total amounts
-     * can only be executed only by an owner
+     * can be executed only by an owner
      *
      * @param provider          liquidity provider address
      * @param poolToken         pool token address
@@ -82,7 +82,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev decreases the total amounts
-     * can only be executed only by an owner
+     * can be executed only by an owner
      *
      * @param provider          liquidity provider address
      * @param poolToken         pool token address
@@ -109,7 +109,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev adds a pool to the list of pools of a liquidity provider
-     * can only be executed only by an owner
+     * can be executed only by an owner
      *
      * @param provider  liquidity provider address
      * @param poolToken pool token address
@@ -120,7 +120,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev removes a pool from the list of pools of a liquidity provider
-     * can only be executed only by an owner
+     * can be executed only by an owner
      *
      * @param provider  liquidity provider address
      * @param poolToken pool token address
@@ -184,7 +184,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the total amount of protected pool tokens
-     * can only be executed only by a seeder
+     * can be executed only by a seeder
      *
      * @param poolTokens    pool token addresses
      * @param poolAmounts   pool token amounts
@@ -198,7 +198,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the total amount of protected reserve tokens
-     * can only be executed only by a seeder
+     * can be executed only by a seeder
      *
      * @param poolTokens        pool token addresses
      * @param reserveTokens     reserve token addresses
@@ -217,7 +217,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the total amount of protected reserve tokens per liquidity provider
-     * can only be executed only by a seeder
+     * can be executed only by a seeder
      *
      * @param providers         liquidity provider addresses
      * @param poolTokens        pool token addresses
@@ -238,7 +238,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the list of pools per liquidity provider
-     * can only be executed only by a seeder
+     * can be executed only by a seeder
      *
      * @param providers     liquidity provider addresses
      * @param poolTokens    pool token addresses
