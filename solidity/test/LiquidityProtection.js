@@ -6,7 +6,7 @@ const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
 const { duration, latest } = time;
-const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER, ROLE_MINTED_TOKENS_ADMIN } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -356,9 +356,6 @@ describe('LiquidityProtection', () => {
                 ]);
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
-                    from: owner
-                });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionUserStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
@@ -2078,9 +2075,6 @@ describe('LiquidityProtection', () => {
                     ]);
 
                     await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, {
-                        from: owner
-                    });
-                    await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
                         from: owner
                     });
                     await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
