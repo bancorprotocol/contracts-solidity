@@ -1115,7 +1115,7 @@ contract StandardPoolConverter is
         uint256 _supply,
         uint256 _reserveBalance,
         uint256 _amount
-    ) private pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -1132,7 +1132,7 @@ contract StandardPoolConverter is
         uint256 _supply,
         uint256 _reserveBalance,
         uint256 _amount
-    ) private pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -1149,7 +1149,7 @@ contract StandardPoolConverter is
         uint256 _supply,
         uint256 _reserveBalance,
         uint256 _amount
-    ) private pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");

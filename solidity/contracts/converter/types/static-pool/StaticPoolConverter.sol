@@ -40,4 +40,46 @@ contract StaticPoolConverter is StandardPoolConverter {
 
         return _amount;
     }
+
+    function fundCost(
+        uint256 _supply,
+        uint256 _reserveBalance,
+        uint256 _amount
+    ) internal pure override returns (uint256) {
+        // validate input
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+
+        return _amount;
+    }
+
+    function fundSupplyAmount(
+        uint256 _supply,
+        uint256 _reserveBalance,
+        uint256 _amount
+    ) internal pure override returns (uint256) {
+        // validate input
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+
+        return _amount;
+    }
+
+    function liquidateReserveAmount(
+        uint256 _supply,
+        uint256 _reserveBalance,
+        uint256 _amount
+    ) internal pure override returns (uint256) {
+        // validate input
+        require(_supply > 0, "ERR_INVALID_SUPPLY");
+        require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_amount <= _supply, "ERR_INVALID_AMOUNT");
+
+        // special case for 0 amount
+        if (_amount == 0) {
+            return 0;
+        }
+
+        return _amount;
+    }
 }
