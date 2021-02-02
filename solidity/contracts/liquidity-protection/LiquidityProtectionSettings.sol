@@ -22,9 +22,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // the owner role is used to update the settings
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
-    // the minted tokens admin role is used to update the amount of minted tokens per pool
-    bytes32 public constant ROLE_MINTED_TOKENS_ADMIN = keccak256("ROLE_MINTED_TOKENS_ADMIN");
-
     uint32 private constant PPM_RESOLUTION = 1000000;
 
     IERC20Token public immutable networkToken;
@@ -36,7 +33,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     uint256 public override minNetworkTokenLiquidityForMinting = 1000e18;
     uint256 public override defaultNetworkTokenMintingLimit = 20000e18;
     mapping(IConverterAnchor => uint256) public override networkTokenMintingLimits;
-    mapping(IConverterAnchor => uint256) public override networkTokensMinted;
 
     // number of seconds until any protection is in effect
     uint256 public override minProtectionDelay = 30 days;
@@ -85,15 +81,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _newLimit     new limit
      */
     event NetworkTokenMintingLimitUpdated(IConverterAnchor indexed _poolAnchor, uint256 _prevLimit, uint256 _newLimit);
-
-    /**
-     * @dev triggered when the amount of network tokens minted into a specific pool is updated
-     *
-     * @param _poolAnchor  pool anchor
-     * @param _prevAmount  previous amount
-     * @param _newAmount   new amount
-     */
-    event NetworkTokensMintedUpdated(IConverterAnchor indexed _poolAnchor, uint256 _prevAmount, uint256 _newAmount);
 
     /**
      * @dev triggered when the protection delays are updated
@@ -148,7 +135,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
-        _setRoleAdmin(ROLE_MINTED_TOKENS_ADMIN, ROLE_OWNER);
 
         // allow the deployer to initially govern the contract.
         _setupRole(ROLE_OWNER, msg.sender);
@@ -164,16 +150,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // error message binary size optimization
     function _onlyOwner() internal view {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
-    }
-
-    modifier onlyMintedTokensAdmin() {
-        _onlyMintedTokensAdmin();
-        _;
-    }
-
-    // error message binary size optimization
-    function _onlyMintedTokensAdmin() internal view {
-        require(hasRole(ROLE_MINTED_TOKENS_ADMIN, msg.sender), "ERR_ACCESS_DENIED");
     }
 
     // ensures that the portion is valid
@@ -286,52 +262,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         emit NetworkTokenMintingLimitUpdated(_poolAnchor, networkTokenMintingLimits[_poolAnchor], _limit);
 
         networkTokenMintingLimits[_poolAnchor] = _limit;
-    }
-
-    /**
-     * @dev increases the amount of network tokens minted into a specific pool
-     * can only be called by the minted tokens admin
-     *
-     * @param _poolAnchor   pool anchor
-     * @param _amount       amount to increase the minted tokens by
-     */
-    function incNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount)
-        external
-        override
-        onlyMintedTokensAdmin
-        validAddress(address(_poolAnchor))
-    {
-        uint256 prevAmount = networkTokensMinted[_poolAnchor];
-        uint256 newAmount = prevAmount.add(_amount);
-        networkTokensMinted[_poolAnchor] = newAmount;
-
-        emit NetworkTokensMintedUpdated(_poolAnchor, prevAmount, newAmount);
-    }
-
-    /**
-     * @dev decreases the amount of network tokens minted into a specific pool
-     * can only be called by the minted tokens admin
-     *
-     * @param _poolAnchor   pool anchor
-     * @param _amount       amount to decrease the minted tokens by
-     */
-    function decNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount)
-        external
-        override
-        onlyMintedTokensAdmin
-        validAddress(address(_poolAnchor))
-    {
-        uint256 prevAmount = networkTokensMinted[_poolAnchor];
-
-        // allow the amount to reset to 0 if the provided amount is higher than the previous amount
-        uint256 newAmount = 0;
-        if (_amount < prevAmount) {
-            newAmount = prevAmount.sub(_amount);
-        }
-
-        networkTokensMinted[_poolAnchor] = newAmount;
-
-        emit NetworkTokensMintedUpdated(_poolAnchor, prevAmount, newAmount);
     }
 
     /**
