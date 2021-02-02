@@ -20,6 +20,8 @@ const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter')
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
+const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -52,6 +54,8 @@ describe('LiquidityProtectionAverageRate', () => {
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
             let liquidityProtectionStats;
+            let liquidityProtectionSystemStore;
+            let liquidityProtectionWallet;
             let liquidityProtection;
             let reserveToken1;
             let reserveToken2;
@@ -89,20 +93,29 @@ describe('LiquidityProtectionAverageRate', () => {
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
-                liquidityProtection = await LiquidityProtection.new(
+                liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
+                liquidityProtectionWallet = await TokenHolder.new();
+                liquidityProtection = await LiquidityProtection.new([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
+                    liquidityProtectionSystemStore.address,
+                    liquidityProtectionWallet.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                );
+                ]);
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, owner, { from: owner });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+                await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
+                    from: owner
+                });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
+                await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
+                await liquidityProtection.acceptWalletOwnership();
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });

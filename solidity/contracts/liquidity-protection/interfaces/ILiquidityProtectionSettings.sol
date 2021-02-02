@@ -13,6 +13,8 @@ interface ILiquidityProtectionSettings {
 
     function isPoolWhitelisted(IConverterAnchor _poolAnchor) external view returns (bool);
 
+    function poolWhitelist() external view returns (address[] memory);
+
     function isPoolSupported(IConverterAnchor _poolAnchor) external view returns (bool);
 
     function minNetworkTokenLiquidityForMinting() external view returns (uint256);
