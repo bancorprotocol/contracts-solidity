@@ -15,7 +15,6 @@ import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtection.sol";
-import "./interfaces/ILiquidityProtectionEventsSubscriber.sol";
 import "../token/interfaces/IDSToken.sol";
 import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
@@ -81,21 +80,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     IERC20Token public immutable govToken;
     ITokenGovernance public immutable govTokenGovernance;
     ICheckpointStore public immutable lastRemoveCheckpointStore;
-    ILiquidityProtectionEventsSubscriber public eventsSubscriber;
 
     // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
     bool private updatingLiquidity = false;
-
-    /**
-     * @dev updates the event subscriber
-     *
-     * @param _prevEventsSubscriber the previous events subscriber
-     * @param _newEventsSubscriber the new events subscriber
-     */
-    event EventSubscriberUpdated(
-        ILiquidityProtectionEventsSubscriber indexed _prevEventsSubscriber,
-        ILiquidityProtectionEventsSubscriber indexed _newEventsSubscriber
-    );
 
     /**
      * @dev initializes a new LiquidityProtection contract
@@ -218,20 +205,6 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function acceptWalletOwnership() external ownerOnly {
         wallet.acceptOwnership();
-    }
-
-    /**
-     * @dev sets the events subscriber
-     */
-    function setEventsSubscriber(ILiquidityProtectionEventsSubscriber _eventsSubscriber)
-        external
-        ownerOnly
-        validAddress(address(_eventsSubscriber))
-        notThis(address(_eventsSubscriber))
-    {
-        emit EventSubscriberUpdated(eventsSubscriber, _eventsSubscriber);
-
-        eventsSubscriber = _eventsSubscriber;
     }
 
     /**
@@ -650,16 +623,14 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         if (_portion == PPM_RESOLUTION) {
             // notify event subscribers
-            if (address(eventsSubscriber) != address(0)) {
-                eventsSubscriber.onRemovingLiquidity(
-                    _id,
-                    _provider,
-                    liquidity.poolToken,
-                    liquidity.reserveToken,
-                    liquidity.poolAmount,
-                    liquidity.reserveAmount
-                );
-            }
+            notifyEventSubscribersOnRemovingLiquidity(
+                _id,
+                _provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount
+            );
 
             // remove the protected liquidity from the provider
             store.removeProtectedLiquidity(_id);
@@ -671,16 +642,14 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             liquidity.reserveAmount = liquidity.reserveAmount.mul(_portion) / PPM_RESOLUTION;
 
             // notify event subscribers
-            if (address(eventsSubscriber) != address(0)) {
-                eventsSubscriber.onRemovingLiquidity(
-                    _id,
-                    _provider,
-                    liquidity.poolToken,
-                    liquidity.reserveToken,
-                    liquidity.poolAmount,
-                    liquidity.reserveAmount
-                );
-            }
+            notifyEventSubscribersOnRemovingLiquidity(
+                _id,
+                _provider,
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.poolAmount,
+                liquidity.reserveAmount
+            );
 
             store.updateProtectedLiquidityAmounts(
                 _id,
@@ -932,8 +901,16 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _reserveAmount
     ) internal returns (uint256) {
         // notify event subscribers
-        if (address(eventsSubscriber) != address(0)) {
-            eventsSubscriber.onAddingLiquidity(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
+        address[] memory subscriberList = settings.subscriberList();
+        uint256 length = subscriberList.length;
+        for (uint256 i = 0; i < length; i++) {
+            ILiquidityProtectionEventsSubscriber(subscriberList[i]).onAddingLiquidity(
+                _provider,
+                _poolToken,
+                _reserveToken,
+                _poolAmount,
+                _reserveAmount
+            );
         }
 
         Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
@@ -1364,6 +1341,29 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function burnNetworkTokens(IConverterAnchor _poolAnchor, uint256 _amount) private {
         networkTokenGovernance.burn(_amount);
         systemStore.decNetworkTokensMinted(_poolAnchor, _amount);
+    }
+
+    // utility to notify event subscribers on removing liquidity
+    function notifyEventSubscribersOnRemovingLiquidity(
+        uint256 _id,
+        address _provider,
+        IDSToken _poolToken,
+        IERC20Token _reserveToken,
+        uint256 _poolAmount,
+        uint256 _reserveAmount
+    ) private {
+        address[] memory subscriberList = settings.subscriberList();
+        uint256 length = subscriberList.length;
+        for (uint256 i = 0; i < length; i++) {
+            ILiquidityProtectionEventsSubscriber(subscriberList[i]).onRemovingLiquidity(
+                _id,
+                _provider,
+                _poolToken,
+                _reserveToken,
+                _poolAmount,
+                _reserveAmount
+            );
+        }
     }
 
     // utility to get the reserve balances

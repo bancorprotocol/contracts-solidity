@@ -28,6 +28,9 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // list of whitelisted pools
     EnumerableSet.AddressSet private _poolWhitelist;
 
+    // list of subscribers
+    EnumerableSet.AddressSet private _subscriberList;
+
     // network token minting limits
     uint256 public override minNetworkTokenLiquidityForMinting = 1000e18;
     uint256 public override defaultNetworkTokenMintingLimit = 20000e18;
@@ -58,6 +61,14 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _added       true if the pool was added to the whitelist, false if it was removed
      */
     event PoolWhitelistUpdated(IConverterAnchor indexed _poolAnchor, bool _added);
+
+    /**
+     * @dev triggered when the subscriber list is updated
+     *
+     * @param _subscriber  subscriber
+     * @param _added       true if the subscriber was added to the list, false if it was removed
+     */
+    event SubscriberListUpdated(ILiquidityProtectionEventsSubscriber indexed _subscriber, bool _added);
 
     /**
      * @dev triggered when the minimum amount of network token liquidity to allow minting is updated
@@ -230,6 +241,56 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         address[] memory list = new address[](length);
         for (uint256 i = 0; i < length; i++) {
             list[i] = _poolWhitelist.at(i);
+        }
+        return list;
+    }
+
+    /**
+     * @dev adds a subscriber to the list
+     * can only be called by the contract owner
+     *
+     * @param _subscriber subscriber
+     */
+    function addSubscriberToList(ILiquidityProtectionEventsSubscriber _subscriber)
+        external
+        override
+        onlyOwner
+        validAddress(address(_subscriber))
+        notThis(address(_subscriber))
+    {
+        require(_subscriberList.add(address(_subscriber)), "ERR_SUBSCRIBER_ALREADY_LISTED");
+
+        emit SubscriberListUpdated(_subscriber, true);
+    }
+
+    /**
+     * @dev removes a subscriber from the list
+     * can only be called by the contract owner
+     *
+     * @param _subscriber subscriber
+     */
+    function removeSubscriberFromList(ILiquidityProtectionEventsSubscriber _subscriber)
+        external
+        override
+        onlyOwner
+        validAddress(address(_subscriber))
+        notThis(address(_subscriber))
+    {
+        require(_subscriberList.remove(address(_subscriber)), "ERR_SUBSCRIBER_NOT_LISTED");
+
+        emit SubscriberListUpdated(_subscriber, false);
+    }
+
+    /**
+     * @dev returns subscribers list
+     *
+     * @return subscribers list
+     */
+    function subscriberList() external view override returns (address[] memory) {
+        uint256 length = _subscriberList.length();
+        address[] memory list = new address[](length);
+        for (uint256 i = 0; i < length; i++) {
+            list[i] = _subscriberList.at(i);
         }
         return list;
     }

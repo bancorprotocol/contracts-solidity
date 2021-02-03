@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "./ILiquidityProtectionEventsSubscriber.sol";
 import "../../converter/interfaces/IConverterAnchor.sol";
 import "../../token/interfaces/IERC20Token.sol";
 
@@ -15,6 +16,12 @@ interface ILiquidityProtectionSettings {
     function isPoolWhitelisted(IConverterAnchor _poolAnchor) external view returns (bool);
 
     function poolWhitelist() external view returns (address[] memory);
+
+    function addSubscriberToList(ILiquidityProtectionEventsSubscriber _subscriber) external;
+
+    function removeSubscriberFromList(ILiquidityProtectionEventsSubscriber _subscriber) external;
+
+    function subscriberList() external view returns (address[] memory);
 
     function isPoolSupported(IConverterAnchor _poolAnchor) external view returns (bool);
 

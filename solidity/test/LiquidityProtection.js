@@ -1875,34 +1875,6 @@ describe('LiquidityProtection', () => {
                     eventsSubscriber = await LiquidityProtectionEventsSubscriber.new();
                 });
 
-                it('should revert when a non-owner attempts to set the events subscriber', async () => {
-                    const nonOwner = accounts[2];
-
-                    await expectRevert(
-                        liquidityProtection.setEventsSubscriber(eventsSubscriber.address, { from: nonOwner }),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
-
-                it('should allow the owner to set the events subscriber', async () => {
-                    expect(await liquidityProtection.eventsSubscriber.call()).to.eql(ZERO_ADDRESS);
-
-                    const tx = await liquidityProtection.setEventsSubscriber(eventsSubscriber.address, { from: owner });
-                    expectEvent(tx, 'EventSubscriberUpdated', {
-                        _prevEventsSubscriber: ZERO_ADDRESS,
-                        _newEventsSubscriber: eventsSubscriber.address
-                    });
-
-                    const eventsSubscriber2 = await LiquidityProtectionEventsSubscriber.new();
-                    const tx2 = await liquidityProtection.setEventsSubscriber(eventsSubscriber2.address, {
-                        from: owner
-                    });
-                    expectEvent(tx2, 'EventSubscriberUpdated', {
-                        _prevEventsSubscriber: eventsSubscriber.address,
-                        _newEventsSubscriber: eventsSubscriber2.address
-                    });
-                });
-
                 // test both addLiquidity and addLiquidityFor
                 for (const recipient of [owner, accounts[3]]) {
                     context(recipient === owner ? 'for self' : 'for another account', async () => {
@@ -1975,7 +1947,7 @@ describe('LiquidityProtection', () => {
 
                                 context('with an events notifier', () => {
                                     beforeEach(async () => {
-                                        await liquidityProtection.setEventsSubscriber(eventsSubscriber.address, {
+                                        await liquidityProtectionSettings.addSubscriberToList(eventsSubscriber.address, {
                                             from: owner
                                         });
                                     });
