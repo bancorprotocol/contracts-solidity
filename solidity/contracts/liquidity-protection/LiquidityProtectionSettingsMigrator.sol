@@ -12,14 +12,14 @@ interface ISettings {
 }
 
 contract LiquidityProtectionSettingsMigrator is Owned {
-    function migrate(ISettings prevSettings, ISettings currSettings) external ownerOnly {
-        address[] memory poolWhitelist = prevSettings.poolWhitelist();
+    function migrate(ISettings sourceSettings, ISettings targetSettings) external ownerOnly {
+        address[] memory poolWhitelist = sourceSettings.poolWhitelist();
         for (uint256 i = 0; i < poolWhitelist.length; i++) {
             address pool = address(poolWhitelist[i]);
-            currSettings.addPoolToWhitelist(pool);
-            currSettings.setNetworkTokenMintingLimit(pool, prevSettings.networkTokenMintingLimits(pool));
+            targetSettings.addPoolToWhitelist(pool);
+            targetSettings.setNetworkTokenMintingLimit(pool, sourceSettings.networkTokenMintingLimits(pool));
         }
-        currSettings.renounceRole(keccak256("ROLE_OWNER"), address(this));
+        targetSettings.renounceRole(keccak256("ROLE_OWNER"), address(this));
         selfdestruct(payable(owner));
     }
 }
