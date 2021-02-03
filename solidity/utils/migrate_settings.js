@@ -136,6 +136,12 @@ function deployed(web3, contractName, contractAddr) {
     return new web3.eth.Contract(JSON.parse(abi), contractAddr);
 }
 
+async function readState(settings) {
+    const pools = await rpc(settings.methods.poolWhitelist());
+    const limits = await Promise.all(pools.map(pool => rpc(settings.methods.networkTokenMintingLimits(pool))));
+    return {pools, limits};
+}
+
 async function run() {
     const sourceWeb3 = new Web3(SOURCE_NODE);
     const targetWeb3 = new Web3(TARGET_NODE);
@@ -158,31 +164,31 @@ async function run() {
     };
 
     const migrator = await web3Func(deploy, 'liquidityProtectionSettingsMigrator', 'LiquidityProtectionSettingsMigrator', []);
-    const sourceSettings = deployed(sourceWeb3, 'LiquidityProtectionSettings', SETTINGS_ADDRESS);
-    const targetSettings = await web3Func(deploy, 'liquidityProtectionSettings', 'LiquidityProtectionSettings', [
-        await rpc(sourceSettings.methods.networkToken()),
-        await rpc(sourceSettings.methods.registry())
+    const source = deployed(sourceWeb3, 'LiquidityProtectionSettings', SETTINGS_ADDRESS);
+    const target = await web3Func(deploy, 'liquidityProtectionSettings', 'LiquidityProtectionSettings', [
+        await rpc(source.methods.networkToken()),
+        await rpc(source.methods.registry())
     ]);
 
-    await execute(targetSettings.methods.grantRole(ROLE_OWNER, ADMIN_ADDRESS));
-    await execute(targetSettings.methods.grantRole(ROLE_OWNER, migrator._address));
-    await execute(migrator.methods.migrate(sourceSettings._address, targetSettings._address));
+    await execute(target.methods.grantRole(ROLE_OWNER, ADMIN_ADDRESS));
+    await execute(target.methods.grantRole(ROLE_OWNER, migrator._address));
 
-    const sourcePools = await rpc(sourceSettings.methods.poolWhitelist());
-    const targetPools = await rpc(targetSettings.methods.poolWhitelist());
-    const sourceLimits = await Promise.all(sourcePools.map(pool => rpc(sourceSettings.methods.networkTokenMintingLimits(pool))));
-    const targetLimits = await Promise.all(targetPools.map(pool => rpc(targetSettings.methods.networkTokenMintingLimits(pool))));
 
-    if (sourcePools.join(',') === targetPools.join(',') && sourceLimits.join(',') === targetLimits.join(',')) {
-        await execute(targetSettings.methods.renounceRole(ROLE_OWNER, account.address));
+    const sourceState = await readState(source);
+    await execute(migrator.methods.migrate(target._address, sourceState.pools, sourceState.limits));
+    const targetState = await readState(target);
+
+    const sourceStateString = JSON.stringify(sourceState, null, 4);
+    const targetStateString = JSON.stringify(targetState, null, 4);
+
+    if (sourceStateString === targetStateString) {
+        await execute(target.methods.renounceRole(ROLE_OWNER, account.address));
         console.log('migration completed successfully');
     }
     else {
         console.log('migration completed unsuccessfully:');
-        console.log(`sourcePools = ${sourcePools}`);
-        console.log(`targetPools = ${targetPools}`);
-        console.log(`sourceLimits = ${sourceLimits}`);
-        console.log(`targetLimits = ${targetLimits}`);
+        console.log('source =', sourceStateString);
+        console.log('target =', targetStateString);
     }
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
