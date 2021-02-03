@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "./interfaces/ILiquidityProtectionSettings.sol";
 import "../converter/interfaces/IConverter.sol";
 import "../converter/interfaces/IConverterRegistry.sol";
-import "../token/interfaces/IERC20Token.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/Utils.sol";
 
@@ -33,6 +32,8 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     uint256 public override minNetworkTokenLiquidityForMinting = 1000e18;
     uint256 public override defaultNetworkTokenMintingLimit = 20000e18;
     mapping(IConverterAnchor => uint256) public override networkTokenMintingLimits;
+
+    mapping(IConverterAnchor => mapping(IERC20Token => bool)) public override singleTokenStakingDisabled;
 
     // number of seconds until any protection is in effect
     uint256 public override minProtectionDelay = 30 days;
@@ -120,6 +121,15 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the spot rate
      */
     event AverageRateMaxDeviationUpdated(uint32 _prevAverageRateMaxDeviation, uint32 _newAverageRateMaxDeviation);
+
+    /**
+     * @dev triggered when single token staking is disabled or enabled
+     *
+     * @param _poolAnchor   pool anchor
+     * @param _reserveToken reserve token
+     * @param _state        true if disabled, false otherwise
+     */
+    event SingleTokenStakingDisabled(IConverterAnchor indexed _poolAnchor, IERC20Token indexed _reserveToken, bool _state);
 
     /**
      * @dev initializes a new LiquidityProtectionSettings contract
@@ -323,6 +333,28 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
 
         averageRateMaxDeviation = _averageRateMaxDeviation;
+    }
+
+    /**
+     * @dev sets single token staking disabled or enabled
+     * can only be called by the contract owner
+     *
+     * @param _poolAnchor   pool anchor
+     * @param _reserveToken reserve token
+     * @param _state        true if disabled, false otherwise
+     */
+    function disableSingleTokenStaking(
+        IConverterAnchor _poolAnchor,
+        IERC20Token _reserveToken,
+        bool _state
+    )
+        external
+        override
+        onlyOwner()
+    {
+        emit SingleTokenStakingDisabled(_poolAnchor, _reserveToken, _state);
+
+        singleTokenStakingDisabled[_poolAnchor][_reserveToken] = _state;
     }
 
     /**

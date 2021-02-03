@@ -657,6 +657,24 @@ describe('LiquidityProtection', () => {
                                     );
                                 });
 
+                                it('should revert when attempting to add liquidity when single token staking is disabled', async () => {
+                                    await liquidityProtectionSettings.disableSingleTokenStaking(poolToken.address, baseTokenAddress, true);
+
+                                    const reserveAmount = new BN(1000);
+                                    await expectRevert(
+                                        addProtectedLiquidity(
+                                            poolToken.address,
+                                            baseToken,
+                                            baseTokenAddress,
+                                            reserveAmount,
+                                            isETHReserve,
+                                            owner,
+                                            recipient
+                                        ),
+                                        'ERR_STAKING_DISABLED'
+                                    );
+                                });
+
                                 it('should revert when attempting to add liquidity with the wrong ETH value', async () => {
                                     const reserveAmount = new BN(1000);
                                     let value = 0;

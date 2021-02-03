@@ -367,4 +367,37 @@ describe('LiquidityProtectionSettings', () => {
             );
         });
     });
+
+    describe('single token staking', () => {
+        it('verifies that the owner can disable single token staking', async () => {
+            expect(await settings.singleTokenStakingDisabled.call(poolToken.address, networkToken.address)).to.be.false();
+            const res = await settings.disableSingleTokenStaking(poolToken.address, networkToken.address, true);
+            expect(await settings.singleTokenStakingDisabled.call(poolToken.address, networkToken.address)).to.be.true();
+            expectEvent(res, 'SingleTokenStakingDisabled', {
+                _poolAnchor: poolToken.address,
+                _reserveToken: networkToken.address,
+                _state: true
+            });
+        });
+
+        it('verifies that the owner can enable single token staking', async () => {
+            await settings.disableSingleTokenStaking(poolToken.address, networkToken.address, true);
+            expect(await settings.singleTokenStakingDisabled.call(poolToken.address, networkToken.address)).to.be.true();
+            const res = await settings.disableSingleTokenStaking(poolToken.address, networkToken.address, false);
+            expect(await settings.singleTokenStakingDisabled.call(poolToken.address, networkToken.address)).to.be.false();
+            expectEvent(res, 'SingleTokenStakingDisabled', {
+                _poolAnchor: poolToken.address,
+                _reserveToken: networkToken.address,
+                _state: false
+            });
+        });
+
+        it('should revert when a non owner attempts to disable single token staking', async () => {
+            await expectRevert(settings.disableSingleTokenStaking(poolToken.address, networkToken.address, true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        });
+
+        it('should revert when a non owner attempts to enable single token staking', async () => {
+            await expectRevert(settings.disableSingleTokenStaking(poolToken.address, networkToken.address, false, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        });
+    });
 });

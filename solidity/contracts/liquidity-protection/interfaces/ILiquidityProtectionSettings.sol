@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "../../converter/interfaces/IConverterAnchor.sol";
+import "../../token/interfaces/IERC20Token.sol";
 
 /*
     Liquidity Protection Store Settings interface
@@ -23,6 +24,8 @@ interface ILiquidityProtectionSettings {
 
     function networkTokenMintingLimits(IConverterAnchor _poolAnchor) external view returns (uint256);
 
+    function singleTokenStakingDisabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) external view returns (bool);
+
     function minProtectionDelay() external view returns (uint256);
 
     function maxProtectionDelay() external view returns (uint256);
@@ -40,4 +43,6 @@ interface ILiquidityProtectionSettings {
     function averageRateMaxDeviation() external view returns (uint32);
 
     function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external;
+
+    function disableSingleTokenStaking(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _state) external;
 }
