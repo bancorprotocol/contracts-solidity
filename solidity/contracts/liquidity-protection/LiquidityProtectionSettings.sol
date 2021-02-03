@@ -33,7 +33,8 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     uint256 public override defaultNetworkTokenMintingLimit = 20000e18;
     mapping(IConverterAnchor => uint256) public override networkTokenMintingLimits;
 
-    mapping(IConverterAnchor => mapping(IERC20Token => bool)) public override singleTokenStakingDisabled;
+    // permission of adding liquidity for a given reserve on a given pool
+    mapping(IConverterAnchor => mapping(IERC20Token => bool)) public override addLiquidityDisabled;
 
     // number of seconds until any protection is in effect
     uint256 public override minProtectionDelay = 30 days;
@@ -123,13 +124,13 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     event AverageRateMaxDeviationUpdated(uint32 _prevAverageRateMaxDeviation, uint32 _newAverageRateMaxDeviation);
 
     /**
-     * @dev triggered when single token staking is disabled or enabled
+     * @dev triggered when adding liquidity is disabled or enabled for a given reserve on a given pool
      *
      * @param _poolAnchor   pool anchor
      * @param _reserveToken reserve token
      * @param _state        true if disabled, false otherwise
      */
-    event SingleTokenStakingDisabled(IConverterAnchor indexed _poolAnchor, IERC20Token indexed _reserveToken, bool _state);
+    event AddLiquidityDisabled(IConverterAnchor indexed _poolAnchor, IERC20Token indexed _reserveToken, bool _state);
 
     /**
      * @dev initializes a new LiquidityProtectionSettings contract
@@ -336,14 +337,14 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     }
 
     /**
-     * @dev sets single token staking disabled or enabled
+     * @dev disables or enables adding liquidity for a given reserve on a given pool
      * can only be called by the contract owner
      *
      * @param _poolAnchor   pool anchor
      * @param _reserveToken reserve token
      * @param _state        true if disabled, false otherwise
      */
-    function disableSingleTokenStaking(
+    function disableAddLiquidity(
         IConverterAnchor _poolAnchor,
         IERC20Token _reserveToken,
         bool _state
@@ -352,9 +353,9 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         override
         onlyOwner()
     {
-        emit SingleTokenStakingDisabled(_poolAnchor, _reserveToken, _state);
+        emit AddLiquidityDisabled(_poolAnchor, _reserveToken, _state);
 
-        singleTokenStakingDisabled[_poolAnchor][_reserveToken] = _state;
+        addLiquidityDisabled[_poolAnchor][_reserveToken] = _state;
     }
 
     /**

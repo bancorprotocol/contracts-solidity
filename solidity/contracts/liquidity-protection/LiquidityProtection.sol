@@ -152,9 +152,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         _;
     }
 
-    // ensures that single token staking is enabled
-    modifier singleTokenStakingEnabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) {
-        _singleTokenStakingEnabled(_poolAnchor, _reserveToken);
+    // ensures that add liquidity is enabled
+    modifier addLiquidityEnabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) {
+        _addLiquidityEnabled(_poolAnchor, _reserveToken);
         _;
     }
 
@@ -169,8 +169,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     // error message binary size optimization
-    function _singleTokenStakingEnabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) internal view {
-        require(!settings.singleTokenStakingDisabled(_poolAnchor, _reserveToken), "ERR_STAKING_DISABLED");
+    function _addLiquidityEnabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) internal view {
+        require(!settings.addLiquidityDisabled(_poolAnchor, _reserveToken), "ERR_ADD_LIQUIDITY_DISABLED");
     }
 
     // error message binary size optimization
@@ -256,7 +256,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         protected
         validAddress(_owner)
         poolSupportedAndWhitelisted(_poolAnchor)
-        singleTokenStakingEnabled(_poolAnchor, _reserveToken)
+        addLiquidityEnabled(_poolAnchor, _reserveToken)
         greaterThanZero(_amount)
         returns (uint256)
     {
@@ -282,7 +282,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         override
         protected
         poolSupportedAndWhitelisted(_poolAnchor)
-        singleTokenStakingEnabled(_poolAnchor, _reserveToken)
+        addLiquidityEnabled(_poolAnchor, _reserveToken)
         greaterThanZero(_amount)
         returns (uint256)
     {

@@ -657,8 +657,8 @@ describe('LiquidityProtection', () => {
                                     );
                                 });
 
-                                it('should revert when attempting to add liquidity when single token staking is disabled', async () => {
-                                    await liquidityProtectionSettings.disableSingleTokenStaking(poolToken.address, baseTokenAddress, true);
+                                it('should revert when attempting to add liquidity when add liquidity is disabled', async () => {
+                                    await liquidityProtectionSettings.disableAddLiquidity(poolToken.address, baseTokenAddress, true);
 
                                     const reserveAmount = new BN(1000);
                                     await expectRevert(
@@ -671,7 +671,7 @@ describe('LiquidityProtection', () => {
                                             owner,
                                             recipient
                                         ),
-                                        'ERR_STAKING_DISABLED'
+                                        'ERR_ADD_LIQUIDITY_DISABLED'
                                     );
                                 });
 

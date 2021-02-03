@@ -24,7 +24,7 @@ interface ILiquidityProtectionSettings {
 
     function networkTokenMintingLimits(IConverterAnchor _poolAnchor) external view returns (uint256);
 
-    function singleTokenStakingDisabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) external view returns (bool);
+    function addLiquidityDisabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) external view returns (bool);
 
     function minProtectionDelay() external view returns (uint256);
 
@@ -44,5 +44,5 @@ interface ILiquidityProtectionSettings {
 
     function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external;
 
-    function disableSingleTokenStaking(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _state) external;
+    function disableAddLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _state) external;
 }
