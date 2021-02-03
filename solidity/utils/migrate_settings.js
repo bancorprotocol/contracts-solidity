@@ -173,7 +173,6 @@ async function run() {
     await execute(target.methods.grantRole(ROLE_OWNER, ADMIN_ADDRESS));
     await execute(target.methods.grantRole(ROLE_OWNER, migrator._address));
 
-
     const sourceState = await readState(source);
     await execute(migrator.methods.migrate(target._address, sourceState.pools, sourceState.limits));
     const targetState = await readState(target);
