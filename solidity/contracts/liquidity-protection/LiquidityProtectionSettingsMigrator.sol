@@ -15,8 +15,11 @@ contract LiquidityProtectionSettingsMigrator is Owned {
         require(length == limits.length, "ERR_INVALID_INPUT");
         for (uint256 i = 0; i < length; i++) {
             address pool = pools[i];
+            uint256 limit = limits[i];
             settings.addPoolToWhitelist(pool);
-            settings.setNetworkTokenMintingLimit(pool, limits[i]);
+            if (limit > 0) {
+                settings.setNetworkTokenMintingLimit(pool, limit);
+            }
         }
         settings.renounceRole(keccak256("ROLE_OWNER"), address(this));
         selfdestruct(payable(owner));
