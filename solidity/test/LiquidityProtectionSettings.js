@@ -144,61 +144,61 @@ describe('LiquidityProtectionSettings', () => {
         });
     });
 
-    describe('listed subscribers', () => {
-        it('should revert when a non owner attempts to add a listed subscriber', async () => {
+    describe('subscribers', () => {
+        it('should revert when a non owner attempts to add a subscriber', async () => {
             await expectRevert(
-                settings.addSubscriberToList(subscriber.address, { from: nonOwner }),
+                settings.addSubscriber(subscriber.address, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
-            expect(await settings.subscriberList.call()).to.be.equalTo([]);
+            expect(await settings.subscribers.call()).to.be.equalTo([]);
         });
 
-        it('should revert when a non owner attempts to remove a listed subscriber', async () => {
-            await settings.addSubscriberToList(subscriber.address, { from: owner });
+        it('should revert when a non owner attempts to remove a subscriber', async () => {
+            await settings.addSubscriber(subscriber.address, { from: owner });
             await expectRevert(
-                settings.removeSubscriberFromList(subscriber.address, { from: nonOwner }),
+                settings.removeSubscriber(subscriber.address, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
-            expect(await settings.subscriberList.call()).to.be.equalTo([subscriber.address]);
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
         });
 
-        it('should revert when an owner attempts to add a listed subscriber which is already listed', async () => {
-            await settings.addSubscriberToList(subscriber.address, { from: owner });
+        it('should revert when an owner attempts to add a subscriber which is already added', async () => {
+            await settings.addSubscriber(subscriber.address, { from: owner });
             await expectRevert(
-                settings.addSubscriberToList(subscriber.address, { from: owner }),
+                settings.addSubscriber(subscriber.address, { from: owner }),
                 'ERR_SUBSCRIBER_ALREADY_LISTED'
             );
         });
 
-        it('should revert when an owner attempts to remove a listed subscriber which is not yet listed', async () => {
+        it('should revert when an owner attempts to remove a subscriber which is already removed', async () => {
             await expectRevert(
-                settings.removeSubscriberFromList(subscriber.address, { from: owner }),
+                settings.removeSubscriber(subscriber.address, { from: owner }),
                 'ERR_SUBSCRIBER_NOT_LISTED'
             );
         });
 
-        it('should succeed when an owner attempts to add a listed subscriber', async () => {
-            expect(await settings.subscriberList.call()).to.be.equalTo([]);
+        it('should succeed when an owner attempts to add a subscriber', async () => {
+            expect(await settings.subscribers.call()).to.be.equalTo([]);
 
-            await settings.addSubscriberToList(subscriber.address, { from: owner });
+            await settings.addSubscriber(subscriber.address, { from: owner });
 
-            expect(await settings.subscriberList.call()).to.be.equalTo([subscriber.address]);
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
 
             const subscriber2 = accounts[3];
 
-            await settings.addSubscriberToList(subscriber2, { from: owner });
+            await settings.addSubscriber(subscriber2, { from: owner });
 
-            expect(await settings.subscriberList.call()).to.be.equalTo([subscriber.address, subscriber2]);
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address, subscriber2]);
         });
 
-        it('should succeed when the owner attempts to remove a listed subscriber', async () => {
-            await settings.addSubscriberToList(subscriber.address, { from: owner });
+        it('should succeed when the owner attempts to remove a subscriber', async () => {
+            await settings.addSubscriber(subscriber.address, { from: owner });
 
-            expect(await settings.subscriberList.call()).to.be.equalTo([subscriber.address]);
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
 
-            await settings.removeSubscriberFromList(subscriber.address, { from: owner });
+            await settings.removeSubscriber(subscriber.address, { from: owner });
 
-            expect(await settings.subscriberList.call()).to.be.equalTo([]);
+            expect(await settings.subscribers.call()).to.be.equalTo([]);
         });
     });
 

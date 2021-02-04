@@ -17,11 +17,11 @@ interface ILiquidityProtectionSettings {
 
     function poolWhitelist() external view returns (address[] memory);
 
-    function addSubscriberToList(ILiquidityProtectionEventsSubscriber _subscriber) external;
+    function addSubscriber(ILiquidityProtectionEventsSubscriber _subscriber) external;
 
-    function removeSubscriberFromList(ILiquidityProtectionEventsSubscriber _subscriber) external;
+    function removeSubscriber(ILiquidityProtectionEventsSubscriber _subscriber) external;
 
-    function subscriberList() external view returns (address[] memory);
+    function subscribers() external view returns (address[] memory);
 
     function isPoolSupported(IConverterAnchor _poolAnchor) external view returns (bool);
 

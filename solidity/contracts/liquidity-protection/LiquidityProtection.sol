@@ -901,10 +901,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _reserveAmount
     ) internal returns (uint256) {
         // notify event subscribers
-        address[] memory subscriberList = settings.subscriberList();
-        uint256 length = subscriberList.length;
+        address[] memory subscribers = settings.subscribers();
+        uint256 length = subscribers.length;
         for (uint256 i = 0; i < length; i++) {
-            ILiquidityProtectionEventsSubscriber(subscriberList[i]).onAddingLiquidity(
+            ILiquidityProtectionEventsSubscriber(subscribers[i]).onAddingLiquidity(
                 _provider,
                 _poolToken,
                 _reserveToken,
@@ -1352,10 +1352,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _poolAmount,
         uint256 _reserveAmount
     ) private {
-        address[] memory subscriberList = settings.subscriberList();
-        uint256 length = subscriberList.length;
+        address[] memory subscribers = settings.subscribers();
+        uint256 length = subscribers.length;
         for (uint256 i = 0; i < length; i++) {
-            ILiquidityProtectionEventsSubscriber(subscriberList[i]).onRemovingLiquidity(
+            ILiquidityProtectionEventsSubscriber(subscribers[i]).onRemovingLiquidity(
                 _id,
                 _provider,
                 _poolToken,

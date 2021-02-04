@@ -1951,7 +1951,7 @@ describe('LiquidityProtection', () => {
 
                                 context('with an events notifier', () => {
                                     beforeEach(async () => {
-                                        await liquidityProtectionSettings.addSubscriberToList(
+                                        await liquidityProtectionSettings.addSubscriber(
                                             eventsSubscriber.address,
                                             {
                                                 from: owner
