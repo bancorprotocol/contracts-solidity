@@ -162,18 +162,18 @@ describe('LiquidityProtectionSettings', () => {
             expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
         });
 
-        it('should revert when an owner attempts to add a subscriber which is already added', async () => {
+        it('should revert when an owner attempts to add a subscriber which is already set', async () => {
             await settings.addSubscriber(subscriber.address, { from: owner });
             await expectRevert(
                 settings.addSubscriber(subscriber.address, { from: owner }),
-                'ERR_SUBSCRIBER_ALREADY_LISTED'
+                'ERR_SUBSCRIBER_ALREADY_SET'
             );
         });
 
-        it('should revert when an owner attempts to remove a subscriber which is already removed', async () => {
+        it('should revert when an owner attempts to remove an invalid subscriber', async () => {
             await expectRevert(
                 settings.removeSubscriber(subscriber.address, { from: owner }),
-                'ERR_SUBSCRIBER_NOT_LISTED'
+                'ERR_INVALID_SUBSCRIBER'
             );
         });
 

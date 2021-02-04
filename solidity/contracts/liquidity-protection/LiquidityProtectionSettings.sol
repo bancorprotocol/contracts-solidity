@@ -258,7 +258,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         validAddress(address(_subscriber))
         notThis(address(_subscriber))
     {
-        require(_subscribers.add(address(_subscriber)), "ERR_SUBSCRIBER_ALREADY_LISTED");
+        require(_subscribers.add(address(_subscriber)), "ERR_SUBSCRIBER_ALREADY_SET");
 
         emit SubscriberUpdated(_subscriber, true);
     }
@@ -276,7 +276,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         validAddress(address(_subscriber))
         notThis(address(_subscriber))
     {
-        require(_subscribers.remove(address(_subscriber)), "ERR_SUBSCRIBER_NOT_LISTED");
+        require(_subscribers.remove(address(_subscriber)), "ERR_INVALID_SUBSCRIBER");
 
         emit SubscriberUpdated(_subscriber, false);
     }
