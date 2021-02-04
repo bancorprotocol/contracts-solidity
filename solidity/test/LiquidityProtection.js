@@ -658,7 +658,11 @@ describe('LiquidityProtection', () => {
                                 });
 
                                 it('should revert when attempting to add liquidity when add liquidity is disabled', async () => {
-                                    await liquidityProtectionSettings.disableAddLiquidity(poolToken.address, baseTokenAddress, true);
+                                    await liquidityProtectionSettings.disableAddLiquidity(
+                                        poolToken.address,
+                                        baseTokenAddress,
+                                        true
+                                    );
 
                                     const reserveAmount = new BN(1000);
                                     await expectRevert(
@@ -1947,9 +1951,12 @@ describe('LiquidityProtection', () => {
 
                                 context('with an events notifier', () => {
                                     beforeEach(async () => {
-                                        await liquidityProtectionSettings.addSubscriberToList(eventsSubscriber.address, {
-                                            from: owner
-                                        });
+                                        await liquidityProtectionSettings.addSubscriberToList(
+                                            eventsSubscriber.address,
+                                            {
+                                                from: owner
+                                            }
+                                        );
                                     });
 
                                     it('should publish adding liquidity events', async () => {

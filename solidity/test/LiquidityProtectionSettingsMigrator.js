@@ -43,7 +43,7 @@ describe('LiquidityProtectionSettingsMigrator', () => {
         const networkToken = await settings.networkToken.call();
         const registry = await settings.registry.call();
         const pools = await settings.poolWhitelist.call();
-        const limits = await Promise.all(pools.map(pool => settings.networkTokenMintingLimits.call(pool)));
-        return {networkToken, registry, pools, limits};
+        const limits = await Promise.all(pools.map((pool) => settings.networkTokenMintingLimits.call(pool)));
+        return { networkToken, registry, pools, limits };
     }
 });

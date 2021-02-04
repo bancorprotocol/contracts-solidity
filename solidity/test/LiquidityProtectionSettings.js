@@ -146,7 +146,10 @@ describe('LiquidityProtectionSettings', () => {
 
     describe('listed subscribers', () => {
         it('should revert when a non owner attempts to add a listed subscriber', async () => {
-            await expectRevert(settings.addSubscriberToList(subscriber.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.addSubscriberToList(subscriber.address, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
             expect(await settings.subscriberList.call()).to.be.equalTo([]);
         });
 
@@ -280,7 +283,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the minimum network token liquidity for minting', async () => {
-            await expectRevert(settings.setMinNetworkTokenLiquidityForMinting(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setMinNetworkTokenLiquidityForMinting(100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the owner can set the default network token minting limit', async () => {
@@ -301,7 +307,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the default network token minting limit', async () => {
-            await expectRevert(settings.setDefaultNetworkTokenMintingLimit(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setDefaultNetworkTokenMintingLimit(100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the owner can set the network token minting limit for a pool', async () => {
@@ -322,7 +331,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the network token minting limit for a pool', async () => {
-            await expectRevert(settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
     });
 
@@ -452,11 +464,17 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to disable add liquidity', async () => {
-            await expectRevert(settings.disableAddLiquidity(poolToken.address, networkToken.address, true, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.disableAddLiquidity(poolToken.address, networkToken.address, true, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('should revert when a non owner attempts to enable add liquidity', async () => {
-            await expectRevert(settings.disableAddLiquidity(poolToken.address, networkToken.address, false, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.disableAddLiquidity(poolToken.address, networkToken.address, false, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
     });
 });

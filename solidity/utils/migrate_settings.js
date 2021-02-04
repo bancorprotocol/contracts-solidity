@@ -145,8 +145,8 @@ async function readState(settings) {
     const networkToken = await rpc(settings.methods.networkToken());
     const registry = await rpc(settings.methods.registry());
     const pools = await rpc(settings.methods.poolWhitelist());
-    const limits = await Promise.all(pools.map(pool => rpc(settings.methods.networkTokenMintingLimits(pool))));
-    return {networkToken, registry, pools, limits};
+    const limits = await Promise.all(pools.map((pool) => rpc(settings.methods.networkTokenMintingLimits(pool))));
+    return { networkToken, registry, pools, limits };
 }
 
 async function run() {
@@ -159,14 +159,13 @@ async function run() {
     const source = deployed(sourceWeb3, 'LiquidityProtectionSettings', SOURCE_ADDRESS);
     const sourceState = await readState(source);
 
-    const migrator = await deploy(
-        targetWeb3,
-        account,
-        gasPrice,
-        'migrator',
-        'LiquidityProtectionSettingsMigrator',
-        [sourceState.networkToken, sourceState.registry, sourceState.pools, sourceState.limits, ADMIN_ADDRESS]
-    );
+    const migrator = await deploy(targetWeb3, account, gasPrice, 'migrator', 'LiquidityProtectionSettingsMigrator', [
+        sourceState.networkToken,
+        sourceState.registry,
+        sourceState.pools,
+        sourceState.limits,
+        ADMIN_ADDRESS
+    ]);
 
     const targetAddress = '0x' + Web3.utils.sha3(rlp.encode([migrator._address, 1])).slice(26);
     const target = deployed(targetWeb3, 'LiquidityProtectionSettings', targetAddress);

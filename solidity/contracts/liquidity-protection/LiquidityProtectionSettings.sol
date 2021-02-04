@@ -409,11 +409,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         IConverterAnchor _poolAnchor,
         IERC20Token _reserveToken,
         bool _state
-    )
-        external
-        override
-        onlyOwner()
-    {
+    ) external override onlyOwner() {
         emit AddLiquidityDisabled(_poolAnchor, _reserveToken, _state);
 
         addLiquidityDisabled[_poolAnchor][_reserveToken] = _state;

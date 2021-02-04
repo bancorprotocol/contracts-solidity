@@ -51,5 +51,9 @@ interface ILiquidityProtectionSettings {
 
     function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external;
 
-    function disableAddLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _state) external;
+    function disableAddLiquidity(
+        IConverterAnchor _poolAnchor,
+        IERC20Token _reserveToken,
+        bool _state
+    ) external;
 }
