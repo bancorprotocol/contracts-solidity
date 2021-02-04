@@ -33,6 +33,8 @@ interface ILiquidityProtectionSettings {
 
     function addLiquidityDisabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) external view returns (bool);
 
+    function disableAddLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _state) external;
+
     function minProtectionDelay() external view returns (uint256);
 
     function maxProtectionDelay() external view returns (uint256);
@@ -50,10 +52,4 @@ interface ILiquidityProtectionSettings {
     function averageRateMaxDeviation() external view returns (uint32);
 
     function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation) external;
-
-    function disableAddLiquidity(
-        IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
-        bool _state
-    ) external;
 }
