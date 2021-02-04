@@ -172,6 +172,12 @@ async function run() {
     const target = deployed(targetWeb3, 'LiquidityProtectionSettings', targetAddress);
     const targetState = await readState(target);
 
+    const settings = {
+        name: 'LiquidityProtectionSettings',
+        addr: target._address,
+        args: encode(targetState.networkToken) + encode(targetState.registry)
+    };
+
     const sourceStateString = JSON.stringify(sourceState, null, 4);
     const targetStateString = JSON.stringify(targetState, null, 4);
 
@@ -192,13 +198,9 @@ async function run() {
         console.error('migrator is still the owner');
     }
 
-    console.log('settings deployed at', target._address);
+    console.log('settings deployed at', settings.addr);
 
-    setConfig({
-        name: 'LiquidityProtectionSettings',
-        addr: target._address,
-        args: encode(targetState.networkToken) + encode(targetState.registry)
-    });
+    setConfig({ settings });
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
         if (web3.currentProvider.disconnect) {
