@@ -34,6 +34,10 @@ function setConfig(record) {
     fs.writeFileSync(CFG_FILE_NAME, JSON.stringify({ ...getConfig(), ...record }, null, 4));
 }
 
+function encode(address) {
+    return address.slice(2).padStart(64, '0').toLowerCase();
+}
+
 async function rpc(func) {
     while (true) {
         try {
@@ -193,7 +197,7 @@ async function run() {
     setConfig({
         name: 'LiquidityProtectionSettings',
         addr: target._address,
-        args: networkToken.slice(2).padStart(64, '0') + registry.slice(2).padStart(64, '0')
+        args: encode(targetState.networkToken) + encode(targetState.registry)
     });
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
