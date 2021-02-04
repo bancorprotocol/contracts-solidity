@@ -1,27 +1,24 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "../utility/Owned.sol";
+import "./LiquidityProtectionSettings.sol";
 
-interface ISettings {
-    function addPoolToWhitelist(address pool) external;
-    function setNetworkTokenMintingLimit(address pool, uint256 limit) external;
-    function renounceRole(bytes32 role, address account) external;
-}
+contract LiquidityProtectionSettingsMigrator {
+    bytes32 private constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
-contract LiquidityProtectionSettingsMigrator is Owned {
-    function migrate(ISettings settings, address[] calldata pools, uint256[] calldata limits) external ownerOnly {
+    constructor(IERC20Token networkToken, IContractRegistry registry, IConverterAnchor[] memory pools, uint256[] memory limits, address admin) public {
+        LiquidityProtectionSettings settings = new LiquidityProtectionSettings(networkToken, registry);
         uint256 length = pools.length;
-        require(length == limits.length, "ERR_INVALID_INPUT");
+        require(length == limits.length);
         for (uint256 i = 0; i < length; i++) {
-            address pool = pools[i];
+            IConverterAnchor pool = pools[i];
             uint256 limit = limits[i];
             settings.addPoolToWhitelist(pool);
             if (limit > 0) {
                 settings.setNetworkTokenMintingLimit(pool, limit);
             }
         }
-        settings.renounceRole(keccak256("ROLE_OWNER"), address(this));
-        selfdestruct(payable(owner));
+        settings.grantRole(ROLE_OWNER, admin);
+        settings.renounceRole(ROLE_OWNER, address(this));
     }
 }

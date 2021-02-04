@@ -1,11 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
+const rlp = require('rlp');
 
 const SOURCE_NODE = process.argv[2];
 const TARGET_NODE = process.argv[3];
 const ADMIN_ADDRESS = process.argv[4];
-const SETTINGS_ADDRESS = process.argv[5];
+const SOURCE_ADDRESS = process.argv[5];
 const PRIVATE_KEY = process.argv[6];
 
 const MIN_GAS_LIMIT = 100000;
@@ -137,9 +138,11 @@ function deployed(web3, contractName, contractAddr) {
 }
 
 async function readState(settings) {
+    const networkToken = await rpc(settings.methods.networkToken());
+    const registry = await rpc(settings.methods.registry());
     const pools = await rpc(settings.methods.poolWhitelist());
     const limits = await Promise.all(pools.map(pool => rpc(settings.methods.networkTokenMintingLimits(pool))));
-    return {pools, limits};
+    return {networkToken, registry, pools, limits};
 }
 
 async function run() {
@@ -148,47 +151,50 @@ async function run() {
 
     const gasPrice = await getGasPrice(targetWeb3);
     const account = targetWeb3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
-    const web3Func = (func, ...args) => func(targetWeb3, account, gasPrice, ...args);
 
-    let phase = 0;
-    if (getConfig().phase === undefined) {
-        setConfig({ phase });
-    }
-
-    const execute = async (transaction, ...args) => {
-        if (getConfig().phase === phase++) {
-            await web3Func(send, transaction, ...args);
-            console.log(`phase ${phase} executed`);
-            setConfig({ phase });
-        }
-    };
-
-    const migrator = await web3Func(deploy, 'liquidityProtectionSettingsMigrator', 'LiquidityProtectionSettingsMigrator', []);
-    const source = deployed(sourceWeb3, 'LiquidityProtectionSettings', SETTINGS_ADDRESS);
-    const target = await web3Func(deploy, 'liquidityProtectionSettings', 'LiquidityProtectionSettings', [
-        await rpc(source.methods.networkToken()),
-        await rpc(source.methods.registry())
-    ]);
-
-    await execute(target.methods.grantRole(ROLE_OWNER, ADMIN_ADDRESS));
-    await execute(target.methods.grantRole(ROLE_OWNER, migrator._address));
-
+    const source = deployed(sourceWeb3, 'LiquidityProtectionSettings', SOURCE_ADDRESS);
     const sourceState = await readState(source);
-    await execute(migrator.methods.migrate(target._address, sourceState.pools, sourceState.limits));
+
+    const migrator = await deploy(
+        targetWeb3,
+        account,
+        gasPrice,
+        'migrator',
+        'LiquidityProtectionSettingsMigrator',
+        [sourceState.networkToken, sourceState.registry, sourceState.pools, sourceState.limits, ADMIN_ADDRESS]
+    );
+
+    const targetAddress = '0x' + Web3.utils.sha3(rlp.encode([migrator._address, 1])).slice(26);
+    const target = deployed(targetWeb3, 'LiquidityProtectionSettings', targetAddress);
     const targetState = await readState(target);
 
     const sourceStateString = JSON.stringify(sourceState, null, 4);
     const targetStateString = JSON.stringify(targetState, null, 4);
 
-    if (sourceStateString === targetStateString) {
-        await execute(target.methods.renounceRole(ROLE_OWNER, account.address));
-        console.log('migration completed successfully');
+    const adminIsOwner = await rpc(target.methods.hasRole(ROLE_OWNER, ADMIN_ADDRESS));
+    const migratorIsOwner = await rpc(target.methods.hasRole(ROLE_OWNER, migrator._address));
+
+    if (sourceStateString !== targetStateString) {
+        console.error('data migration failed:');
+        console.error('source =', sourceStateString);
+        console.error('target =', targetStateString);
     }
-    else {
-        console.log('migration completed unsuccessfully:');
-        console.log('source =', sourceStateString);
-        console.log('target =', targetStateString);
+
+    if (!adminIsOwner) {
+        console.error('admin is not the owner');
     }
+
+    if (migratorIsOwner) {
+        console.error('migrator is still the owner');
+    }
+
+    console.log('settings deployed at', target._address);
+
+    setConfig({
+        name: 'LiquidityProtectionSettings',
+        addr: target._address,
+        args: networkToken.slice(2).padStart(64, '0') + registry.slice(2).padStart(64, '0')
+    });
 
     for (const web3 of [sourceWeb3, targetWeb3]) {
         if (web3.currentProvider.disconnect) {

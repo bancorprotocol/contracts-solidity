@@ -1,7 +1,7 @@
 const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
-const { expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { roles } = require('./helpers/Constants');
+const rlp = require('rlp');
 
 const { ROLE_OWNER } = roles;
 
@@ -9,46 +9,42 @@ const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSe
 const LiquidityProtectionSettingsMigrator = contract.fromArtifact('LiquidityProtectionSettingsMigrator');
 
 describe('LiquidityProtectionSettingsMigrator', () => {
-    const migratorOwner = accounts[1];
+    it('deploy', async () => {
+        const networkToken = accounts[1];
+        const registry = accounts[2];
+        const admin = accounts[3];
 
-    let sourceSettings;
-    let targetSettings;
-    let migrator;
+        const sourceSettings = await LiquidityProtectionSettings.new(networkToken, registry);
 
-    before(async () => {
-        sourceSettings = await LiquidityProtectionSettings.new(accounts[0], accounts[0]);
-        targetSettings = await LiquidityProtectionSettings.new(accounts[0], accounts[0]);
-        migrator = await LiquidityProtectionSettingsMigrator.new({ from: migratorOwner });
         for (let i = 1; i <= 9; i++) {
             const pool = '0x'.padEnd(42, `${i}`);
             await sourceSettings.addPoolToWhitelist(pool);
             await sourceSettings.setNetworkTokenMintingLimit(pool, i);
         }
-    });
 
-    it('should revert when attempting to migrate without migrator ownership', async () => {
-        await expectRevert(migrator.migrate(targetSettings.address, [accounts[0]], [0], { from: defaultSender }), 'ERR_ACCESS_DENIED');
-        expect(await targetSettings.poolWhitelist.call()).to.be.deep.equal([]);
-    });
-
-    it('should revert when attempting to migrate with migrator ownership but without targetent settings ownership', async () => {
-        await expectRevert(migrator.migrate(targetSettings.address, [accounts[0]], [0], { from: migratorOwner }), 'ERR_ACCESS_DENIED');
-        expect(await targetSettings.poolWhitelist.call()).to.be.deep.equal([]);
-    });
-
-    it('should succeed when attempting to migrate with migrator ownership and with targetent settings ownership', async () => {
-        await targetSettings.grantRole(ROLE_OWNER, migrator.address);
         const sourceState = await readState(sourceSettings);
-        await migrator.migrate(targetSettings.address, sourceState.pools, sourceState.limits, { from: migratorOwner });
+
+        const migrator = await LiquidityProtectionSettingsMigrator.new(
+            sourceState.networkToken,
+            sourceState.registry,
+            sourceState.pools,
+            sourceState.limits,
+            admin
+        );
+
+        const targetAddress = '0x' + web3.utils.sha3(rlp.encode([migrator.address, 1])).slice(26);
+        const targetSettings = await LiquidityProtectionSettings.at(targetAddress);
         const targetState = await readState(targetSettings);
         expect(targetState).to.be.deep.equal(sourceState);
+        expect(await targetSettings.hasRole.call(ROLE_OWNER, admin)).to.be.true();
         expect(await targetSettings.hasRole.call(ROLE_OWNER, migrator.address)).to.be.false();
-        expect(await web3.eth.getCode(migrator.address)).to.be.equal('0x');
     });
 
     async function readState(settings) {
+        const networkToken = await settings.networkToken.call();
+        const registry = await settings.registry.call();
         const pools = await settings.poolWhitelist.call();
         const limits = await Promise.all(pools.map(pool => settings.networkTokenMintingLimits.call(pool)));
-        return {pools, limits};
+        return {networkToken, registry, pools, limits};
     }
 });
