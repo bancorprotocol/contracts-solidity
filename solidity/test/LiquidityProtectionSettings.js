@@ -447,7 +447,7 @@ describe('LiquidityProtectionSettings', () => {
             expectEvent(res, 'AddLiquidityDisabled', {
                 _poolAnchor: poolToken.address,
                 _reserveToken: networkToken.address,
-                _state: true
+                _disabled: true
             });
         });
 
@@ -459,7 +459,7 @@ describe('LiquidityProtectionSettings', () => {
             expectEvent(res, 'AddLiquidityDisabled', {
                 _poolAnchor: poolToken.address,
                 _reserveToken: networkToken.address,
-                _state: false
+                _disabled: false
             });
         });
 

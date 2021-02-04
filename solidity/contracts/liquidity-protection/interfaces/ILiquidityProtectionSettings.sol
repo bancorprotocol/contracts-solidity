@@ -33,7 +33,7 @@ interface ILiquidityProtectionSettings {
 
     function addLiquidityDisabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) external view returns (bool);
 
-    function disableAddLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _state) external;
+    function disableAddLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _disable) external;
 
     function minProtectionDelay() external view returns (uint256);
 

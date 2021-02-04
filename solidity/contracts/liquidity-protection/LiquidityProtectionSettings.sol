@@ -139,9 +139,9 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param _poolAnchor   pool anchor
      * @param _reserveToken reserve token
-     * @param _state        true if disabled, false otherwise
+     * @param _disabled     true if disabled, false otherwise
      */
-    event AddLiquidityDisabled(IConverterAnchor indexed _poolAnchor, IERC20Token indexed _reserveToken, bool _state);
+    event AddLiquidityDisabled(IConverterAnchor indexed _poolAnchor, IERC20Token indexed _reserveToken, bool _disabled);
 
     /**
      * @dev initializes a new LiquidityProtectionSettings contract
@@ -403,16 +403,16 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param _poolAnchor   pool anchor
      * @param _reserveToken reserve token
-     * @param _state        true if disabled, false otherwise
+     * @param _disable      true to disable, false otherwise
      */
     function disableAddLiquidity(
         IConverterAnchor _poolAnchor,
         IERC20Token _reserveToken,
-        bool _state
+        bool _disable
     ) external override onlyOwner() {
-        emit AddLiquidityDisabled(_poolAnchor, _reserveToken, _state);
+        emit AddLiquidityDisabled(_poolAnchor, _reserveToken, _disable);
 
-        addLiquidityDisabled[_poolAnchor][_reserveToken] = _state;
+        addLiquidityDisabled[_poolAnchor][_reserveToken] = _disable;
     }
 
     /**
