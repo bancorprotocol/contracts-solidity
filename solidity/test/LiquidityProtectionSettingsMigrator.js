@@ -1,6 +1,7 @@
 const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expect } = require('../../chai-local');
 const { roles } = require('./helpers/Constants');
+
 const rlp = require('rlp');
 
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
@@ -14,10 +15,9 @@ describe('LiquidityProtectionSettingsMigrator', () => {
 
         const sourceSettings = await LiquidityProtectionSettings.new(networkToken, registry);
 
-        for (let i = 1; i <= 9; i++) {
-            const pool = '0x'.padEnd(42, `${i}`);
-            await sourceSettings.addPoolToWhitelist(pool);
-            await sourceSettings.setNetworkTokenMintingLimit(pool, i);
+        for (let i = 0; i < accounts.length; i++) {
+            await sourceSettings.addPoolToWhitelist(accounts[i]);
+            await sourceSettings.setNetworkTokenMintingLimit(accounts[i], i);
         }
 
         const sourceState = await readState(sourceSettings);
