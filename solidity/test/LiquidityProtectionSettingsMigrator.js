@@ -3,8 +3,6 @@ const { expect } = require('../../chai-local');
 const { roles } = require('./helpers/Constants');
 const rlp = require('rlp');
 
-const { ROLE_OWNER } = roles;
-
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionSettingsMigrator = contract.fromArtifact('LiquidityProtectionSettingsMigrator');
 
@@ -35,9 +33,10 @@ describe('LiquidityProtectionSettingsMigrator', () => {
         const targetAddress = '0x' + web3.utils.sha3(rlp.encode([migrator.address, 1])).slice(26);
         const targetSettings = await LiquidityProtectionSettings.at(targetAddress);
         const targetState = await readState(targetSettings);
+
         expect(targetState).to.be.deep.equal(sourceState);
-        expect(await targetSettings.hasRole.call(ROLE_OWNER, admin)).to.be.true();
-        expect(await targetSettings.hasRole.call(ROLE_OWNER, migrator.address)).to.be.false();
+        expect(await targetSettings.hasRole.call(roles.ROLE_OWNER, admin)).to.be.true();
+        expect(await targetSettings.hasRole.call(roles.ROLE_OWNER, migrator.address)).to.be.false();
     });
 
     async function readState(settings) {
