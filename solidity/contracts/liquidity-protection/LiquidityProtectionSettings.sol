@@ -291,7 +291,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     function addPoolToWhitelist(IConverterAnchor poolAnchor)
         external
-        override
         onlyOwner
         validAddress(address(poolAnchor))
         notThis(address(poolAnchor))
@@ -309,7 +308,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     function removePoolFromWhitelist(IConverterAnchor poolAnchor)
         external
-        override
         onlyOwner
         validAddress(address(poolAnchor))
         notThis(address(poolAnchor))
@@ -351,7 +349,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     function addSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
         external
-        override
         onlyOwner
         validAddress(address(subscriber))
         notThis(address(subscriber))
@@ -369,7 +366,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     function removeSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
         external
-        override
         onlyOwner
         validAddress(address(subscriber))
         notThis(address(subscriber))
@@ -441,7 +437,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param minDelay   seconds until the protection starts
      * @param maxDelay   seconds until full protection
      */
-    function setProtectionDelays(uint256 minDelay, uint256 maxDelay) external override onlyOwner() {
+    function setProtectionDelays(uint256 minDelay, uint256 maxDelay) external onlyOwner() {
         require(minDelay < maxDelay, "ERR_INVALID_PROTECTION_DELAY");
 
         emit ProtectionDelaysUpdated(_minProtectionDelay, minDelay, _maxProtectionDelay, maxDelay);
@@ -456,7 +452,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param amount    the minimum amount of network token compensation
      */
-    function setMinNetworkCompensation(uint256 amount) external override onlyOwner() {
+    function setMinNetworkCompensation(uint256 amount) external onlyOwner() {
         emit MinNetworkCompensationUpdated(_minNetworkCompensation, amount);
 
         _minNetworkCompensation = amount;
@@ -468,7 +464,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param duration  network token lock duration, in seconds
      */
-    function setLockDuration(uint256 duration) external override onlyOwner() {
+    function setLockDuration(uint256 duration) external onlyOwner() {
         emit LockDurationUpdated(_lockDuration, duration);
 
         _lockDuration = duration;
@@ -480,7 +476,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param deviation maximum deviation of the average rate from the spot rate
      */
-    function setAverageRateMaxDeviation(uint32 deviation) external override onlyOwner() validPortion(deviation) {
+    function setAverageRateMaxDeviation(uint32 deviation) external onlyOwner() validPortion(deviation) {
         emit AverageRateMaxDeviationUpdated(_averageRateMaxDeviation, deviation);
 
         _averageRateMaxDeviation = deviation;
@@ -498,7 +494,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         IConverterAnchor poolAnchor,
         IERC20Token reserveToken,
         bool disable
-    ) external override onlyOwner() {
+    ) external onlyOwner() {
         emit AddLiquidityDisabled(poolAnchor, reserveToken, disable);
 
         _addLiquidityDisabled[poolAnchor][reserveToken] = disable;
