@@ -1967,12 +1967,9 @@ describe('LiquidityProtection', () => {
 
                                 context('with an events notifier', () => {
                                     beforeEach(async () => {
-                                        await liquidityProtectionSettings.addSubscriber(
-                                            eventsSubscriber.address,
-                                            {
-                                                from: owner
-                                            }
-                                        );
+                                        await liquidityProtectionSettings.addSubscriber(eventsSubscriber.address, {
+                                            from: owner
+                                        });
                                     });
 
                                     it('should publish adding liquidity events', async () => {
