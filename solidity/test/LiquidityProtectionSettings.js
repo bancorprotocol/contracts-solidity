@@ -14,6 +14,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
+const LiquidityProtectionEventsSubscriber = contract.fromArtifact('TestLiquidityProtectionEventsSubscriber');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 
 const PPM_RESOLUTION = new BN(1000000);
@@ -26,6 +27,7 @@ describe('LiquidityProtectionSettings', () => {
     let converterRegistry;
     let networkToken;
     let poolToken;
+    let subscriber;
     let settings;
 
     before(async () => {
@@ -66,6 +68,8 @@ describe('LiquidityProtectionSettings', () => {
         const anchorCount = await converterRegistry.getAnchorCount.call();
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
         poolToken = await DSToken.at(poolTokenAddress);
+
+        subscriber = await LiquidityProtectionEventsSubscriber.new();
     });
 
     beforeEach(async () => {
@@ -112,7 +116,7 @@ describe('LiquidityProtectionSettings', () => {
 
         it('should succeed when an owner attempts to add a whitelisted pool', async () => {
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
-            expect(await settings.poolWhitelist.call()).to.be.ofSize(0);
+            expect(await settings.poolWhitelist.call()).to.be.equalTo([]);
 
             await settings.addPoolToWhitelist(poolToken.address, { from: owner });
 
@@ -136,7 +140,65 @@ describe('LiquidityProtectionSettings', () => {
             await settings.removePoolFromWhitelist(poolToken.address, { from: owner });
 
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
-            expect(await settings.poolWhitelist.call()).to.be.ofSize(0);
+            expect(await settings.poolWhitelist.call()).to.be.equalTo([]);
+        });
+    });
+
+    describe('subscribers', () => {
+        it('should revert when a non owner attempts to add a subscriber', async () => {
+            await expectRevert(
+                settings.addSubscriber(subscriber.address, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
+            expect(await settings.subscribers.call()).to.be.equalTo([]);
+        });
+
+        it('should revert when a non owner attempts to remove a subscriber', async () => {
+            await settings.addSubscriber(subscriber.address, { from: owner });
+            await expectRevert(
+                settings.removeSubscriber(subscriber.address, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
+        });
+
+        it('should revert when an owner attempts to add a subscriber which is already set', async () => {
+            await settings.addSubscriber(subscriber.address, { from: owner });
+            await expectRevert(
+                settings.addSubscriber(subscriber.address, { from: owner }),
+                'ERR_SUBSCRIBER_ALREADY_SET'
+            );
+        });
+
+        it('should revert when an owner attempts to remove an invalid subscriber', async () => {
+            await expectRevert(
+                settings.removeSubscriber(subscriber.address, { from: owner }),
+                'ERR_INVALID_SUBSCRIBER'
+            );
+        });
+
+        it('should succeed when an owner attempts to add a subscriber', async () => {
+            expect(await settings.subscribers.call()).to.be.equalTo([]);
+
+            await settings.addSubscriber(subscriber.address, { from: owner });
+
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
+
+            const subscriber2 = accounts[3];
+
+            await settings.addSubscriber(subscriber2, { from: owner });
+
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address, subscriber2]);
+        });
+
+        it('should succeed when the owner attempts to remove a subscriber', async () => {
+            await settings.addSubscriber(subscriber.address, { from: owner });
+
+            expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
+
+            await settings.removeSubscriber(subscriber.address, { from: owner });
+
+            expect(await settings.subscribers.call()).to.be.equalTo([]);
         });
     });
 
@@ -221,7 +283,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the minimum network token liquidity for minting', async () => {
-            await expectRevert(settings.setMinNetworkTokenLiquidityForMinting(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setMinNetworkTokenLiquidityForMinting(100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the owner can set the default network token minting limit', async () => {
@@ -242,7 +307,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the default network token minting limit', async () => {
-            await expectRevert(settings.setDefaultNetworkTokenMintingLimit(100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setDefaultNetworkTokenMintingLimit(100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('verifies that the owner can set the network token minting limit for a pool', async () => {
@@ -263,7 +331,10 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when a non owner attempts to set the network token minting limit for a pool', async () => {
-            await expectRevert(settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expectRevert(
+                settings.setNetworkTokenMintingLimit(poolToken.address, 100, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
         });
     });
 
@@ -363,6 +434,45 @@ describe('LiquidityProtectionSettings', () => {
         it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {
             await expectRevert(
                 settings.setAverageRateMaxDeviation(new BN(30000), { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
+        });
+    });
+
+    describe('add liquidity', () => {
+        it('verifies that the owner can disable add liquidity', async () => {
+            expect(await settings.addLiquidityDisabled.call(poolToken.address, networkToken.address)).to.be.false();
+            const res = await settings.disableAddLiquidity(poolToken.address, networkToken.address, true);
+            expect(await settings.addLiquidityDisabled.call(poolToken.address, networkToken.address)).to.be.true();
+            expectEvent(res, 'AddLiquidityDisabled', {
+                _poolAnchor: poolToken.address,
+                _reserveToken: networkToken.address,
+                _disabled: true
+            });
+        });
+
+        it('verifies that the owner can enable add liquidity', async () => {
+            await settings.disableAddLiquidity(poolToken.address, networkToken.address, true);
+            expect(await settings.addLiquidityDisabled.call(poolToken.address, networkToken.address)).to.be.true();
+            const res = await settings.disableAddLiquidity(poolToken.address, networkToken.address, false);
+            expect(await settings.addLiquidityDisabled.call(poolToken.address, networkToken.address)).to.be.false();
+            expectEvent(res, 'AddLiquidityDisabled', {
+                _poolAnchor: poolToken.address,
+                _reserveToken: networkToken.address,
+                _disabled: false
+            });
+        });
+
+        it('should revert when a non owner attempts to disable add liquidity', async () => {
+            await expectRevert(
+                settings.disableAddLiquidity(poolToken.address, networkToken.address, true, { from: nonOwner }),
+                'ERR_ACCESS_DENIED'
+            );
+        });
+
+        it('should revert when a non owner attempts to enable add liquidity', async () => {
+            await expectRevert(
+                settings.disableAddLiquidity(poolToken.address, networkToken.address, false, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
         });
