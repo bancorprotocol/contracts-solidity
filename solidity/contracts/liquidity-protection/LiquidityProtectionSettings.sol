@@ -229,7 +229,12 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param reserveToken  reserve token
      * @return true if adding liquidity is disabled, false otherwise
      */
-    function addLiquidityDisabled(IConverterAnchor poolAnchor, IERC20Token reserveToken) external view override returns (bool) {
+    function addLiquidityDisabled(IConverterAnchor poolAnchor, IERC20Token reserveToken)
+        external
+        view
+        override
+        returns (bool)
+    {
         return _addLiquidityDisabled[poolAnchor][reserveToken];
     }
 
@@ -274,7 +279,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @return the maximum deviation of the average rate from the spot rate
      */
-    function averageRateMaxDeviation() external override view returns (uint32) {
+    function averageRateMaxDeviation() external view override returns (uint32) {
         return _averageRateMaxDeviation;
     }
 
@@ -436,11 +441,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param minDelay   seconds until the protection starts
      * @param maxDelay   seconds until full protection
      */
-    function setProtectionDelays(uint256 minDelay, uint256 maxDelay)
-        external
-        override
-        onlyOwner()
-    {
+    function setProtectionDelays(uint256 minDelay, uint256 maxDelay) external override onlyOwner() {
         require(minDelay < maxDelay, "ERR_INVALID_PROTECTION_DELAY");
 
         emit ProtectionDelaysUpdated(_minProtectionDelay, minDelay, _maxProtectionDelay, maxDelay);
@@ -479,12 +480,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param deviation maximum deviation of the average rate from the spot rate
      */
-    function setAverageRateMaxDeviation(uint32 deviation)
-        external
-        override
-        onlyOwner()
-        validPortion(deviation)
-    {
+    function setAverageRateMaxDeviation(uint32 deviation) external override onlyOwner() validPortion(deviation) {
         emit AverageRateMaxDeviationUpdated(_averageRateMaxDeviation, deviation);
 
         _averageRateMaxDeviation = deviation;
