@@ -146,19 +146,13 @@ describe('LiquidityProtectionSettings', () => {
 
     describe('subscribers', () => {
         it('should revert when a non owner attempts to add a subscriber', async () => {
-            await expectRevert(
-                settings.addSubscriber(subscriber.address, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
+            await expectRevert(settings.addSubscriber(subscriber.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
             expect(await settings.subscribers.call()).to.be.equalTo([]);
         });
 
         it('should revert when a non owner attempts to remove a subscriber', async () => {
             await settings.addSubscriber(subscriber.address, { from: owner });
-            await expectRevert(
-                settings.removeSubscriber(subscriber.address, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
+            await expectRevert(settings.removeSubscriber(subscriber.address, { from: nonOwner }), 'ERR_ACCESS_DENIED');
             expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
         });
 
