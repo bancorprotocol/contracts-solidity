@@ -657,6 +657,28 @@ describe('LiquidityProtection', () => {
                                     );
                                 });
 
+                                it('should revert when attempting to add liquidity when add liquidity is disabled', async () => {
+                                    await liquidityProtectionSettings.disableAddLiquidity(
+                                        poolToken.address,
+                                        baseTokenAddress,
+                                        true
+                                    );
+
+                                    const reserveAmount = new BN(1000);
+                                    await expectRevert(
+                                        addProtectedLiquidity(
+                                            poolToken.address,
+                                            baseToken,
+                                            baseTokenAddress,
+                                            reserveAmount,
+                                            isETHReserve,
+                                            owner,
+                                            recipient
+                                        ),
+                                        'ERR_ADD_LIQUIDITY_DISABLED'
+                                    );
+                                });
+
                                 it('should revert when attempting to add liquidity with the wrong ETH value', async () => {
                                     const reserveAmount = new BN(1000);
                                     let value = 0;
@@ -1857,34 +1879,6 @@ describe('LiquidityProtection', () => {
                     eventsSubscriber = await LiquidityProtectionEventsSubscriber.new();
                 });
 
-                it('should revert when a non-owner attempts to set the events subscriber', async () => {
-                    const nonOwner = accounts[2];
-
-                    await expectRevert(
-                        liquidityProtection.setEventsSubscriber(eventsSubscriber.address, { from: nonOwner }),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
-
-                it('should allow the owner to set the events subscriber', async () => {
-                    expect(await liquidityProtection.eventsSubscriber.call()).to.eql(ZERO_ADDRESS);
-
-                    const tx = await liquidityProtection.setEventsSubscriber(eventsSubscriber.address, { from: owner });
-                    expectEvent(tx, 'EventSubscriberUpdated', {
-                        _prevEventsSubscriber: ZERO_ADDRESS,
-                        _newEventsSubscriber: eventsSubscriber.address
-                    });
-
-                    const eventsSubscriber2 = await LiquidityProtectionEventsSubscriber.new();
-                    const tx2 = await liquidityProtection.setEventsSubscriber(eventsSubscriber2.address, {
-                        from: owner
-                    });
-                    expectEvent(tx2, 'EventSubscriberUpdated', {
-                        _prevEventsSubscriber: eventsSubscriber.address,
-                        _newEventsSubscriber: eventsSubscriber2.address
-                    });
-                });
-
                 // test both addLiquidity and addLiquidityFor
                 for (const recipient of [owner, accounts[3]]) {
                     context(recipient === owner ? 'for self' : 'for another account', async () => {
@@ -1957,9 +1951,12 @@ describe('LiquidityProtection', () => {
 
                                 context('with an events notifier', () => {
                                     beforeEach(async () => {
-                                        await liquidityProtection.setEventsSubscriber(eventsSubscriber.address, {
-                                            from: owner
-                                        });
+                                        await liquidityProtectionSettings.addSubscriber(
+                                            eventsSubscriber.address,
+                                            {
+                                                from: owner
+                                            }
+                                        );
                                     });
 
                                     it('should publish adding liquidity events', async () => {
