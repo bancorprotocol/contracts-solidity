@@ -266,8 +266,8 @@ describe('LiquidityProtectionSettings', () => {
             const res = await settings.setMinNetworkTokenLiquidityForMinting(newMin);
 
             expectEvent(res, 'MinNetworkTokenLiquidityForMintingUpdated', {
-                _prevMin: prevMin,
-                _newMin: newMin
+                prevMin: prevMin,
+                newMin: newMin
             });
 
             const minimum = await settings.minNetworkTokenLiquidityForMinting.call();
@@ -290,8 +290,8 @@ describe('LiquidityProtectionSettings', () => {
             const res = await settings.setDefaultNetworkTokenMintingLimit(newDefault);
 
             expectEvent(res, 'DefaultNetworkTokenMintingLimitUpdated', {
-                _prevDefault: prevDefault,
-                _newDefault: newDefault
+                prevDefault: prevDefault,
+                newDefault: newDefault
             });
 
             const defaultLimit = await settings.defaultNetworkTokenMintingLimit.call();
@@ -308,20 +308,20 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('verifies that the owner can set the network token minting limit for a pool', async () => {
-            const prevPoolLimit = await settings.networkTokenMintingLimits.call(poolToken.address);
-            const newPoolLimit = new BN(100);
+            const prevLimit = await settings.networkTokenMintingLimits.call(poolToken.address);
+            const newLimit = new BN(100);
 
-            const res = await settings.setNetworkTokenMintingLimit(poolToken.address, newPoolLimit);
+            const res = await settings.setNetworkTokenMintingLimit(poolToken.address, newLimit);
 
             expectEvent(res, 'NetworkTokenMintingLimitUpdated', {
-                _prevLimit: prevPoolLimit,
-                _newLimit: newPoolLimit
+                prevLimit: prevLimit,
+                newLimit: newLimit
             });
 
-            const poolLimit = await settings.networkTokenMintingLimits.call(poolToken.address);
+            const limit = await settings.networkTokenMintingLimits.call(poolToken.address);
 
-            expect(poolLimit).not.to.be.bignumber.equal(prevPoolLimit);
-            expect(poolLimit).to.be.bignumber.equal(newPoolLimit);
+            expect(limit).not.to.be.bignumber.equal(prevLimit);
+            expect(limit).to.be.bignumber.equal(newLimit);
         });
 
         it('should revert when a non owner attempts to set the network token minting limit for a pool', async () => {
@@ -342,10 +342,10 @@ describe('LiquidityProtectionSettings', () => {
             const res = await settings.setProtectionDelays(newMinProtectionDelay, 200);
 
             expectEvent(res, 'ProtectionDelaysUpdated', {
-                _prevMinProtectionDelay: prevMinProtectionDelay,
-                _newMinProtectionDelay: newMinProtectionDelay,
-                _prevMaxProtectionDelay: prevMaxProtectionDelay,
-                _newMaxProtectionDelay: newMaxProtectionDelay
+                prevMinProtectionDelay: prevMinProtectionDelay,
+                newMinProtectionDelay: newMinProtectionDelay,
+                prevMaxProtectionDelay: prevMaxProtectionDelay,
+                newMaxProtectionDelay: newMaxProtectionDelay
             });
 
             const minProtectionDelay = await settings.minProtectionDelay.call();
@@ -375,8 +375,8 @@ describe('LiquidityProtectionSettings', () => {
             const res = await settings.setMinNetworkCompensation(newMinNetworkCompensation);
 
             expectEvent(res, 'MinNetworkCompensationUpdated', {
-                _prevMinNetworkCompensation: prevMinNetworkCompensation,
-                _newMinNetworkCompensation: newMinNetworkCompensation
+                prevMinNetworkCompensation: prevMinNetworkCompensation,
+                newMinNetworkCompensation: newMinNetworkCompensation
             });
 
             const minNetworkCompensation = await settings.minNetworkCompensation.call();
@@ -397,8 +397,8 @@ describe('LiquidityProtectionSettings', () => {
 
             const res = await settings.setLockDuration(newLockDuration);
             expectEvent(res, 'LockDurationUpdated', {
-                _prevLockDuration: prevLockDuration,
-                _newLockDuration: newLockDuration
+                prevLockDuration: prevLockDuration,
+                newLockDuration: newLockDuration
             });
 
             const lockDuration = await settings.lockDuration.call();
@@ -418,8 +418,8 @@ describe('LiquidityProtectionSettings', () => {
 
             const res = await settings.setAverageRateMaxDeviation(new BN(30000));
             expectEvent(res, 'AverageRateMaxDeviationUpdated', {
-                _prevAverageRateMaxDeviation: new BN(5000),
-                _newAverageRateMaxDeviation: new BN(30000)
+                prevAverageRateMaxDeviation: new BN(5000),
+                newAverageRateMaxDeviation: new BN(30000)
             });
 
             expect(await settings.averageRateMaxDeviation.call()).to.be.bignumber.equal(new BN(30000));
@@ -439,9 +439,9 @@ describe('LiquidityProtectionSettings', () => {
             const res = await settings.disableAddLiquidity(poolToken.address, networkToken.address, true);
             expect(await settings.addLiquidityDisabled.call(poolToken.address, networkToken.address)).to.be.true();
             expectEvent(res, 'AddLiquidityDisabled', {
-                _poolAnchor: poolToken.address,
-                _reserveToken: networkToken.address,
-                _disabled: true
+                poolAnchor: poolToken.address,
+                reserveToken: networkToken.address,
+                disabled: true
             });
         });
 
@@ -451,9 +451,9 @@ describe('LiquidityProtectionSettings', () => {
             const res = await settings.disableAddLiquidity(poolToken.address, networkToken.address, false);
             expect(await settings.addLiquidityDisabled.call(poolToken.address, networkToken.address)).to.be.false();
             expectEvent(res, 'AddLiquidityDisabled', {
-                _poolAnchor: poolToken.address,
-                _reserveToken: networkToken.address,
-                _disabled: false
+                poolAnchor: poolToken.address,
+                reserveToken: networkToken.address,
+                disabled: false
             });
         });
 

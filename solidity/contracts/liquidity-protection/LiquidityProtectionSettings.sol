@@ -23,7 +23,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
 
     uint32 private constant PPM_RESOLUTION = 1000000;
 
-    IERC20Token public immutable networkToken;
+    IERC20Token private immutable _networkToken;
 
     // list of whitelisted pools
     EnumerableSet.AddressSet private _poolWhitelist;
@@ -32,128 +32,128 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     EnumerableSet.AddressSet private _subscribers;
 
     // network token minting limits
-    uint256 public override minNetworkTokenLiquidityForMinting = 1000e18;
-    uint256 public override defaultNetworkTokenMintingLimit = 20000e18;
-    mapping(IConverterAnchor => uint256) public override networkTokenMintingLimits;
+    uint256 private _minNetworkTokenLiquidityForMinting = 1000e18;
+    uint256 private _defaultNetworkTokenMintingLimit = 20000e18;
+    mapping(IConverterAnchor => uint256) private _networkTokenMintingLimits;
 
     // permission of adding liquidity for a given reserve on a given pool
-    mapping(IConverterAnchor => mapping(IERC20Token => bool)) public override addLiquidityDisabled;
+    mapping(IConverterAnchor => mapping(IERC20Token => bool)) private _addLiquidityDisabled;
 
     // number of seconds until any protection is in effect
-    uint256 public override minProtectionDelay = 30 days;
+    uint256 private _minProtectionDelay = 30 days;
 
     // number of seconds until full protection is in effect
-    uint256 public override maxProtectionDelay = 100 days;
+    uint256 private _maxProtectionDelay = 100 days;
 
-    // minimum amount of network tokens the system can mint as compensation for base token losses, default = 0.01 network tokens
-    uint256 public override minNetworkCompensation = 1e16;
+    // minimum amount of network tokens that the system can mint as compensation for base token losses
+    uint256 private _minNetworkCompensation = 1e16; // = 0.01 network tokens
 
     // number of seconds from liquidation to full network token release
-    uint256 public override lockDuration = 24 hours;
+    uint256 private _lockDuration = 24 hours;
 
     // maximum deviation of the average rate from the spot rate
-    uint32 public override averageRateMaxDeviation = 5000; // PPM units
+    uint32 private _averageRateMaxDeviation = 5000; // PPM units
 
     /**
      * @dev triggered when the pool whitelist is updated
      *
-     * @param _poolAnchor  pool anchor
-     * @param _added       true if the pool was added to the whitelist, false if it was removed
+     * @param poolAnchor    pool anchor
+     * @param added         true if the pool was added to the whitelist, false if it was removed
      */
-    event PoolWhitelistUpdated(IConverterAnchor indexed _poolAnchor, bool _added);
+    event PoolWhitelistUpdated(IConverterAnchor indexed poolAnchor, bool added);
 
     /**
      * @dev triggered when a subscriber is added or removed
      *
-     * @param _subscriber  subscriber
-     * @param _added       true if the subscriber was added, false if it was removed
+     * @param subscriber    subscriber
+     * @param added         true if the subscriber was added, false if it was removed
      */
-    event SubscriberUpdated(ILiquidityProtectionEventsSubscriber indexed _subscriber, bool _added);
+    event SubscriberUpdated(ILiquidityProtectionEventsSubscriber indexed subscriber, bool added);
 
     /**
      * @dev triggered when the minimum amount of network token liquidity to allow minting is updated
      *
-     * @param _prevMin  previous minimum amount of network token liquidity for minting
-     * @param _newMin   new minimum amount of network token liquidity for minting
+     * @param prevMin   previous minimum amount of network token liquidity for minting
+     * @param newMin    new minimum amount of network token liquidity for minting
      */
-    event MinNetworkTokenLiquidityForMintingUpdated(uint256 _prevMin, uint256 _newMin);
+    event MinNetworkTokenLiquidityForMintingUpdated(uint256 prevMin, uint256 newMin);
 
     /**
      * @dev triggered when the default network token minting limit is updated
      *
-     * @param _prevDefault  previous default network token minting limit
-     * @param _newDefault   new default network token minting limit
+     * @param prevDefault   previous default network token minting limit
+     * @param newDefault    new default network token minting limit
      */
-    event DefaultNetworkTokenMintingLimitUpdated(uint256 _prevDefault, uint256 _newDefault);
+    event DefaultNetworkTokenMintingLimitUpdated(uint256 prevDefault, uint256 newDefault);
 
     /**
      * @dev triggered when a pool network token minting limit is updated
      *
-     * @param _poolAnchor   pool anchor
-     * @param _prevLimit    previous limit
-     * @param _newLimit     new limit
+     * @param poolAnchor    pool anchor
+     * @param prevLimit     previous limit
+     * @param newLimit      new limit
      */
-    event NetworkTokenMintingLimitUpdated(IConverterAnchor indexed _poolAnchor, uint256 _prevLimit, uint256 _newLimit);
+    event NetworkTokenMintingLimitUpdated(IConverterAnchor indexed poolAnchor, uint256 prevLimit, uint256 newLimit);
 
     /**
      * @dev triggered when the protection delays are updated
      *
-     * @param _prevMinProtectionDelay  previous seconds until the protection starts
-     * @param _newMinProtectionDelay   new seconds until the protection starts
-     * @param _prevMaxProtectionDelay  previous seconds until full protection
-     * @param _newMaxProtectionDelay   new seconds until full protection
+     * @param prevMinProtectionDelay    previous seconds until the protection starts
+     * @param newMinProtectionDelay     new seconds until the protection starts
+     * @param prevMaxProtectionDelay    previous seconds until full protection
+     * @param newMaxProtectionDelay     new seconds until full protection
      */
     event ProtectionDelaysUpdated(
-        uint256 _prevMinProtectionDelay,
-        uint256 _newMinProtectionDelay,
-        uint256 _prevMaxProtectionDelay,
-        uint256 _newMaxProtectionDelay
+        uint256 prevMinProtectionDelay,
+        uint256 newMinProtectionDelay,
+        uint256 prevMaxProtectionDelay,
+        uint256 newMaxProtectionDelay
     );
 
     /**
      * @dev triggered when the minimum network token compensation is updated
      *
-     * @param _prevMinNetworkCompensation  previous minimum network token compensation
-     * @param _newMinNetworkCompensation   new minimum network token compensation
+     * @param prevMinNetworkCompensation    previous minimum network token compensation
+     * @param newMinNetworkCompensation     new minimum network token compensation
      */
-    event MinNetworkCompensationUpdated(uint256 _prevMinNetworkCompensation, uint256 _newMinNetworkCompensation);
+    event MinNetworkCompensationUpdated(uint256 prevMinNetworkCompensation, uint256 newMinNetworkCompensation);
 
     /**
      * @dev triggered when the network token lock duration is updated
      *
-     * @param _prevLockDuration  previous network token lock duration, in seconds
-     * @param _newLockDuration   new network token lock duration, in seconds
+     * @param prevLockDuration  previous network token lock duration, in seconds
+     * @param newLockDuration   new network token lock duration, in seconds
      */
-    event LockDurationUpdated(uint256 _prevLockDuration, uint256 _newLockDuration);
+    event LockDurationUpdated(uint256 prevLockDuration, uint256 newLockDuration);
 
     /**
      * @dev triggered when the maximum deviation of the average rate from the spot rate is updated
      *
-     * @param _prevAverageRateMaxDeviation previous maximum deviation of the average rate from the spot rate
-     * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the spot rate
+     * @param prevAverageRateMaxDeviation   previous maximum deviation of the average rate from the spot rate
+     * @param newAverageRateMaxDeviation    new maximum deviation of the average rate from the spot rate
      */
-    event AverageRateMaxDeviationUpdated(uint32 _prevAverageRateMaxDeviation, uint32 _newAverageRateMaxDeviation);
+    event AverageRateMaxDeviationUpdated(uint32 prevAverageRateMaxDeviation, uint32 newAverageRateMaxDeviation);
 
     /**
      * @dev triggered when adding liquidity is disabled or enabled for a given reserve on a given pool
      *
-     * @param _poolAnchor   pool anchor
-     * @param _reserveToken reserve token
-     * @param _disabled     true if disabled, false otherwise
+     * @param poolAnchor    pool anchor
+     * @param reserveToken  reserve token
+     * @param disabled      true if disabled, false otherwise
      */
-    event AddLiquidityDisabled(IConverterAnchor indexed _poolAnchor, IERC20Token indexed _reserveToken, bool _disabled);
+    event AddLiquidityDisabled(IConverterAnchor indexed poolAnchor, IERC20Token indexed reserveToken, bool disabled);
 
     /**
      * @dev initializes a new LiquidityProtectionSettings contract
      *
-     * @param _registry contract registry
-     * @param _networkToken the network token
+     * @param registry  contract registry
+     * @param token     the network token
      */
-    constructor(IERC20Token _networkToken, IContractRegistry _registry)
+    constructor(IERC20Token token, IContractRegistry registry)
         public
-        ContractRegistryClient(_registry)
-        validAddress(address(_networkToken))
-        notThis(address(_networkToken))
+        ContractRegistryClient(registry)
+        validAddress(address(token))
+        notThis(address(token))
     {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
@@ -161,7 +161,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         // allow the deployer to initially govern the contract.
         _setupRole(ROLE_OWNER, msg.sender);
 
-        networkToken = _networkToken;
+        _networkToken = token;
     }
 
     modifier onlyOwner() {
@@ -175,60 +175,153 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     }
 
     // ensures that the portion is valid
-    modifier validPortion(uint32 _portion) {
-        _validPortion(_portion);
+    modifier validPortion(uint32 portion) {
+        _validPortion(portion);
         _;
     }
 
     // error message binary size optimization
-    function _validPortion(uint32 _portion) internal pure {
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
+    function _validPortion(uint32 portion) internal pure {
+        require(portion > 0 && portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
+    }
+
+    /**
+     * @dev returns the network token
+     *
+     * @return the network token
+     */
+    function networkToken() external view returns (IERC20Token) {
+        return _networkToken;
+    }
+
+    /**
+     * @dev returns the minimum network token liquidity for minting
+     *
+     * @return the minimum network token liquidity for minting
+     */
+    function minNetworkTokenLiquidityForMinting() external view override returns (uint256) {
+        return _minNetworkTokenLiquidityForMinting;
+    }
+
+    /**
+     * @dev returns the default network token minting limit
+     *
+     * @return the default network token minting limit
+     */
+    function defaultNetworkTokenMintingLimit() external view override returns (uint256) {
+        return _defaultNetworkTokenMintingLimit;
+    }
+
+    /**
+     * @dev returns the network token minting limit for a given pool
+     *
+     * @param poolAnchor    pool anchor
+     * @return the network token minting limit for a given pool
+     */
+    function networkTokenMintingLimits(IConverterAnchor poolAnchor) external view override returns (uint256) {
+        return _networkTokenMintingLimits[poolAnchor];
+    }
+
+    /**
+     * @dev returns the permission of adding liquidity for a given reserve on a given pool
+     *
+     * @param poolAnchor    pool anchor
+     * @param reserveToken  reserve token
+     * @return true if adding liquidity is disabled, false otherwise
+     */
+    function addLiquidityDisabled(IConverterAnchor poolAnchor, IERC20Token reserveToken) external view override returns (bool) {
+        return _addLiquidityDisabled[poolAnchor][reserveToken];
+    }
+
+    /**
+     * @dev returns the minimum number of seconds until any protection is in effect
+     *
+     * @return the minimum number of seconds until any protection is in effect
+     */
+    function minProtectionDelay() external view override returns (uint256) {
+        return _minProtectionDelay;
+    }
+
+    /**
+     * @dev returns the maximum number of seconds until full protection is in effect
+     *
+     * @return the maximum number of seconds until full protection is in effect
+     */
+    function maxProtectionDelay() external view override returns (uint256) {
+        return _maxProtectionDelay;
+    }
+
+    /**
+     * @dev returns the minimum amount of network tokens that the system can mint as compensation for base token losses
+     *
+     * @return the minimum amount of network tokens that the system can mint as compensation for base token losses
+     */
+    function minNetworkCompensation() external view override returns (uint256) {
+        return _minNetworkCompensation;
+    }
+
+    /**
+     * @dev returns the number of seconds from liquidation to full network token release
+     *
+     * @return the number of seconds from liquidation to full network token release
+     */
+    function lockDuration() external view override returns (uint256) {
+        return _lockDuration;
+    }
+
+    /**
+     * @dev returns the maximum deviation of the average rate from the spot rate
+     *
+     * @return the maximum deviation of the average rate from the spot rate
+     */
+    function averageRateMaxDeviation() external override view returns (uint32) {
+        return _averageRateMaxDeviation;
     }
 
     /**
      * @dev adds a pool to the whitelist
      * can only be called by the contract owner
      *
-     * @param _poolAnchor pool anchor
+     * @param poolAnchor    pool anchor
      */
-    function addPoolToWhitelist(IConverterAnchor _poolAnchor)
+    function addPoolToWhitelist(IConverterAnchor poolAnchor)
         external
         override
         onlyOwner
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
+        validAddress(address(poolAnchor))
+        notThis(address(poolAnchor))
     {
-        require(_poolWhitelist.add(address(_poolAnchor)), "ERR_POOL_ALREADY_WHITELISTED");
+        require(_poolWhitelist.add(address(poolAnchor)), "ERR_POOL_ALREADY_WHITELISTED");
 
-        emit PoolWhitelistUpdated(_poolAnchor, true);
+        emit PoolWhitelistUpdated(poolAnchor, true);
     }
 
     /**
      * @dev removes a pool from the whitelist
      * can only be called by the contract owner
      *
-     * @param _poolAnchor pool anchor
+     * @param poolAnchor    pool anchor
      */
-    function removePoolFromWhitelist(IConverterAnchor _poolAnchor)
+    function removePoolFromWhitelist(IConverterAnchor poolAnchor)
         external
         override
         onlyOwner
-        validAddress(address(_poolAnchor))
-        notThis(address(_poolAnchor))
+        validAddress(address(poolAnchor))
+        notThis(address(poolAnchor))
     {
-        require(_poolWhitelist.remove(address(_poolAnchor)), "ERR_POOL_NOT_WHITELISTED");
+        require(_poolWhitelist.remove(address(poolAnchor)), "ERR_POOL_NOT_WHITELISTED");
 
-        emit PoolWhitelistUpdated(_poolAnchor, false);
+        emit PoolWhitelistUpdated(poolAnchor, false);
     }
 
     /**
      * @dev checks whether a given pool is whitelisted
      *
-     * @param _poolAnchor pool anchor
+     * @param poolAnchor    pool anchor
      * @return true if the given pool is whitelisted, false otherwise
      */
-    function isPoolWhitelisted(IConverterAnchor _poolAnchor) external view override returns (bool) {
-        return _poolWhitelist.contains(address(_poolAnchor));
+    function isPoolWhitelisted(IConverterAnchor poolAnchor) external view override returns (bool) {
+        return _poolWhitelist.contains(address(poolAnchor));
     }
 
     /**
@@ -249,36 +342,36 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev adds a subscriber
      * can only be called by the contract owner
      *
-     * @param _subscriber subscriber
+     * @param subscriber    subscriber address
      */
-    function addSubscriber(ILiquidityProtectionEventsSubscriber _subscriber)
+    function addSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
         external
         override
         onlyOwner
-        validAddress(address(_subscriber))
-        notThis(address(_subscriber))
+        validAddress(address(subscriber))
+        notThis(address(subscriber))
     {
-        require(_subscribers.add(address(_subscriber)), "ERR_SUBSCRIBER_ALREADY_SET");
+        require(_subscribers.add(address(subscriber)), "ERR_SUBSCRIBER_ALREADY_SET");
 
-        emit SubscriberUpdated(_subscriber, true);
+        emit SubscriberUpdated(subscriber, true);
     }
 
     /**
      * @dev removes a subscriber
      * can only be called by the contract owner
      *
-     * @param _subscriber subscriber
+     * @param subscriber    subscriber address
      */
-    function removeSubscriber(ILiquidityProtectionEventsSubscriber _subscriber)
+    function removeSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
         external
         override
         onlyOwner
-        validAddress(address(_subscriber))
-        notThis(address(_subscriber))
+        validAddress(address(subscriber))
+        notThis(address(subscriber))
     {
-        require(_subscribers.remove(address(_subscriber)), "ERR_INVALID_SUBSCRIBER");
+        require(_subscribers.remove(address(subscriber)), "ERR_INVALID_SUBSCRIBER");
 
-        emit SubscriberUpdated(_subscriber, false);
+        emit SubscriberUpdated(subscriber, false);
     }
 
     /**
@@ -299,120 +392,120 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev updates the minimum amount of network token liquidity to allow minting
      * can only be called by the contract owner
      *
-     * @param _minimum    new minimum
+     * @param amount   the minimum amount of network token liquidity to allow minting
      */
-    function setMinNetworkTokenLiquidityForMinting(uint256 _minimum) external onlyOwner() {
-        emit MinNetworkTokenLiquidityForMintingUpdated(minNetworkTokenLiquidityForMinting, _minimum);
+    function setMinNetworkTokenLiquidityForMinting(uint256 amount) external onlyOwner() {
+        emit MinNetworkTokenLiquidityForMintingUpdated(_minNetworkTokenLiquidityForMinting, amount);
 
-        minNetworkTokenLiquidityForMinting = _minimum;
+        _minNetworkTokenLiquidityForMinting = amount;
     }
 
     /**
-     * @dev updates the default network token amount the system can mint into each pool
+     * @dev updates the default amount of network token that the system can mint into each pool
      * can only be called by the contract owner
      *
-     * @param _limit    new limit
+     * @param amount    the default amount of network token that the system can mint into each pool
      */
-    function setDefaultNetworkTokenMintingLimit(uint256 _limit) external onlyOwner() {
-        emit DefaultNetworkTokenMintingLimitUpdated(defaultNetworkTokenMintingLimit, _limit);
+    function setDefaultNetworkTokenMintingLimit(uint256 amount) external onlyOwner() {
+        emit DefaultNetworkTokenMintingLimitUpdated(_defaultNetworkTokenMintingLimit, amount);
 
-        defaultNetworkTokenMintingLimit = _limit;
+        _defaultNetworkTokenMintingLimit = amount;
     }
 
     /**
      * @dev updates the amount of network tokens that the system can mint into a specific pool
      * can only be called by the contract owner
      *
-     * @param _poolAnchor   pool anchor
-     * @param _limit        new limit
+     * @param poolAnchor    pool anchor
+     * @param amount        the amount of network tokens that the system can mint into a specific pool
      */
-    function setNetworkTokenMintingLimit(IConverterAnchor _poolAnchor, uint256 _limit)
+    function setNetworkTokenMintingLimit(IConverterAnchor poolAnchor, uint256 amount)
         external
         onlyOwner()
-        validAddress(address(_poolAnchor))
+        validAddress(address(poolAnchor))
     {
-        emit NetworkTokenMintingLimitUpdated(_poolAnchor, networkTokenMintingLimits[_poolAnchor], _limit);
+        emit NetworkTokenMintingLimitUpdated(poolAnchor, _networkTokenMintingLimits[poolAnchor], amount);
 
-        networkTokenMintingLimits[_poolAnchor] = _limit;
+        _networkTokenMintingLimits[poolAnchor] = amount;
     }
 
     /**
      * @dev updates the protection delays
      * can only be called by the contract owner
      *
-     * @param _minProtectionDelay  seconds until the protection starts
-     * @param _maxProtectionDelay  seconds until full protection
+     * @param minDelay   seconds until the protection starts
+     * @param maxDelay   seconds until full protection
      */
-    function setProtectionDelays(uint256 _minProtectionDelay, uint256 _maxProtectionDelay)
+    function setProtectionDelays(uint256 minDelay, uint256 maxDelay)
         external
         override
         onlyOwner()
     {
-        require(_minProtectionDelay < _maxProtectionDelay, "ERR_INVALID_PROTECTION_DELAY");
+        require(minDelay < maxDelay, "ERR_INVALID_PROTECTION_DELAY");
 
-        emit ProtectionDelaysUpdated(minProtectionDelay, _minProtectionDelay, maxProtectionDelay, _maxProtectionDelay);
+        emit ProtectionDelaysUpdated(_minProtectionDelay, minDelay, _maxProtectionDelay, maxDelay);
 
-        minProtectionDelay = _minProtectionDelay;
-        maxProtectionDelay = _maxProtectionDelay;
+        _minProtectionDelay = minDelay;
+        _maxProtectionDelay = maxDelay;
     }
 
     /**
-     * @dev updates the minimum network token compensation
+     * @dev updates the minimum amount of network token compensation
      * can only be called by the contract owner
      *
-     * @param _minCompensation new minimum compensation
+     * @param amount    the minimum amount of network token compensation
      */
-    function setMinNetworkCompensation(uint256 _minCompensation) external override onlyOwner() {
-        emit MinNetworkCompensationUpdated(minNetworkCompensation, _minCompensation);
+    function setMinNetworkCompensation(uint256 amount) external override onlyOwner() {
+        emit MinNetworkCompensationUpdated(_minNetworkCompensation, amount);
 
-        minNetworkCompensation = _minCompensation;
+        _minNetworkCompensation = amount;
     }
 
     /**
      * @dev updates the network token lock duration
      * can only be called by the contract owner
      *
-     * @param _lockDuration    network token lock duration, in seconds
+     * @param duration  network token lock duration, in seconds
      */
-    function setLockDuration(uint256 _lockDuration) external override onlyOwner() {
-        emit LockDurationUpdated(lockDuration, _lockDuration);
+    function setLockDuration(uint256 duration) external override onlyOwner() {
+        emit LockDurationUpdated(_lockDuration, duration);
 
-        lockDuration = _lockDuration;
+        _lockDuration = duration;
     }
 
     /**
      * @dev sets the maximum deviation of the average rate from the spot rate
      * can only be called by the contract owner
      *
-     * @param _averageRateMaxDeviation maximum deviation of the average rate from the spot rate
+     * @param deviation maximum deviation of the average rate from the spot rate
      */
-    function setAverageRateMaxDeviation(uint32 _averageRateMaxDeviation)
+    function setAverageRateMaxDeviation(uint32 deviation)
         external
         override
         onlyOwner()
-        validPortion(_averageRateMaxDeviation)
+        validPortion(deviation)
     {
-        emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
+        emit AverageRateMaxDeviationUpdated(_averageRateMaxDeviation, deviation);
 
-        averageRateMaxDeviation = _averageRateMaxDeviation;
+        _averageRateMaxDeviation = deviation;
     }
 
     /**
      * @dev disables or enables adding liquidity for a given reserve on a given pool
      * can only be called by the contract owner
      *
-     * @param _poolAnchor   pool anchor
-     * @param _reserveToken reserve token
-     * @param _disable      true to disable, false otherwise
+     * @param poolAnchor    pool anchor
+     * @param reserveToken  reserve token
+     * @param disable       true to disable, false otherwise
      */
     function disableAddLiquidity(
-        IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
-        bool _disable
+        IConverterAnchor poolAnchor,
+        IERC20Token reserveToken,
+        bool disable
     ) external override onlyOwner() {
-        emit AddLiquidityDisabled(_poolAnchor, _reserveToken, _disable);
+        emit AddLiquidityDisabled(poolAnchor, reserveToken, disable);
 
-        addLiquidityDisabled[_poolAnchor][_reserveToken] = _disable;
+        _addLiquidityDisabled[poolAnchor][reserveToken] = disable;
     }
 
     /**
@@ -420,18 +513,18 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * only standard pools are supported (2 reserves, 50%/50% weights)
      * note that the pool should still be whitelisted
      *
-     * @param _poolAnchor  anchor of the pool
+     * @param poolAnchor    anchor of the pool
      * @return true if the pool is supported, false otherwise
      */
-    function isPoolSupported(IConverterAnchor _poolAnchor) external view override returns (bool) {
-        IERC20Token tmpNetworkToken = networkToken;
+    function isPoolSupported(IConverterAnchor poolAnchor) external view override returns (bool) {
+        IERC20Token tmpNetworkToken = _networkToken;
 
         // verify that the pool exists in the registry
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
-        require(converterRegistry.isAnchor(address(_poolAnchor)), "ERR_INVALID_ANCHOR");
+        require(converterRegistry.isAnchor(address(poolAnchor)), "ERR_INVALID_ANCHOR");
 
         // get the converter
-        IConverter converter = IConverter(payable(ownedBy(_poolAnchor)));
+        IConverter converter = IConverter(payable(poolAnchor.owner()));
 
         // verify that the converter has 2 reserves
         if (converter.connectorTokenCount() != 2) {
@@ -457,13 +550,8 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     }
 
     // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
-    function converterReserveWeight(IConverter _converter, IERC20Token _reserveToken) private view returns (uint32) {
-        (, uint32 weight, , , ) = _converter.connectors(_reserveToken);
+    function converterReserveWeight(IConverter converter, IERC20Token reserveToken) private view returns (uint32) {
+        (, uint32 weight, , , ) = converter.connectors(reserveToken);
         return weight;
-    }
-
-    // utility to get the owner
-    function ownedBy(IOwned _owned) private view returns (address) {
-        return _owned.owner();
     }
 }
