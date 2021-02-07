@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "./interfaces/ILiquidityProtectionSettings.sol";
 import "../converter/interfaces/IConverter.sol";
 import "../converter/interfaces/IConverterRegistry.sol";
-import "../token/interfaces/IERC20Token.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/Utils.sol";
 
@@ -29,10 +28,16 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // list of whitelisted pools
     EnumerableSet.AddressSet private _poolWhitelist;
 
+    // list of subscribers
+    EnumerableSet.AddressSet private _subscribers;
+
     // network token minting limits
     uint256 public override minNetworkTokenLiquidityForMinting = 1000e18;
     uint256 public override defaultNetworkTokenMintingLimit = 20000e18;
     mapping(IConverterAnchor => uint256) public override networkTokenMintingLimits;
+
+    // permission of adding liquidity for a given reserve on a given pool
+    mapping(IConverterAnchor => mapping(IERC20Token => bool)) public override addLiquidityDisabled;
 
     // number of seconds until any protection is in effect
     uint256 public override minProtectionDelay = 30 days;
@@ -56,6 +61,14 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _added       true if the pool was added to the whitelist, false if it was removed
      */
     event PoolWhitelistUpdated(IConverterAnchor indexed _poolAnchor, bool _added);
+
+    /**
+     * @dev triggered when a subscriber is added or removed
+     *
+     * @param _subscriber  subscriber
+     * @param _added       true if the subscriber was added, false if it was removed
+     */
+    event SubscriberUpdated(ILiquidityProtectionEventsSubscriber indexed _subscriber, bool _added);
 
     /**
      * @dev triggered when the minimum amount of network token liquidity to allow minting is updated
@@ -120,6 +133,15 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param _newAverageRateMaxDeviation  new maximum deviation of the average rate from the spot rate
      */
     event AverageRateMaxDeviationUpdated(uint32 _prevAverageRateMaxDeviation, uint32 _newAverageRateMaxDeviation);
+
+    /**
+     * @dev triggered when adding liquidity is disabled or enabled for a given reserve on a given pool
+     *
+     * @param _poolAnchor   pool anchor
+     * @param _reserveToken reserve token
+     * @param _disabled     true if disabled, false otherwise
+     */
+    event AddLiquidityDisabled(IConverterAnchor indexed _poolAnchor, IERC20Token indexed _reserveToken, bool _disabled);
 
     /**
      * @dev initializes a new LiquidityProtectionSettings contract
@@ -224,6 +246,56 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     }
 
     /**
+     * @dev adds a subscriber
+     * can only be called by the contract owner
+     *
+     * @param _subscriber subscriber
+     */
+    function addSubscriber(ILiquidityProtectionEventsSubscriber _subscriber)
+        external
+        override
+        onlyOwner
+        validAddress(address(_subscriber))
+        notThis(address(_subscriber))
+    {
+        require(_subscribers.add(address(_subscriber)), "ERR_SUBSCRIBER_ALREADY_SET");
+
+        emit SubscriberUpdated(_subscriber, true);
+    }
+
+    /**
+     * @dev removes a subscriber
+     * can only be called by the contract owner
+     *
+     * @param _subscriber subscriber
+     */
+    function removeSubscriber(ILiquidityProtectionEventsSubscriber _subscriber)
+        external
+        override
+        onlyOwner
+        validAddress(address(_subscriber))
+        notThis(address(_subscriber))
+    {
+        require(_subscribers.remove(address(_subscriber)), "ERR_INVALID_SUBSCRIBER");
+
+        emit SubscriberUpdated(_subscriber, false);
+    }
+
+    /**
+     * @dev returns subscribers list
+     *
+     * @return subscribers list
+     */
+    function subscribers() external view override returns (address[] memory) {
+        uint256 length = _subscribers.length();
+        address[] memory list = new address[](length);
+        for (uint256 i = 0; i < length; i++) {
+            list[i] = _subscribers.at(i);
+        }
+        return list;
+    }
+
+    /**
      * @dev updates the minimum amount of network token liquidity to allow minting
      * can only be called by the contract owner
      *
@@ -323,6 +395,24 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         emit AverageRateMaxDeviationUpdated(averageRateMaxDeviation, _averageRateMaxDeviation);
 
         averageRateMaxDeviation = _averageRateMaxDeviation;
+    }
+
+    /**
+     * @dev disables or enables adding liquidity for a given reserve on a given pool
+     * can only be called by the contract owner
+     *
+     * @param _poolAnchor   pool anchor
+     * @param _reserveToken reserve token
+     * @param _disable      true to disable, false otherwise
+     */
+    function disableAddLiquidity(
+        IConverterAnchor _poolAnchor,
+        IERC20Token _reserveToken,
+        bool _disable
+    ) external override onlyOwner() {
+        emit AddLiquidityDisabled(_poolAnchor, _reserveToken, _disable);
+
+        addLiquidityDisabled[_poolAnchor][_reserveToken] = _disable;
     }
 
     /**
