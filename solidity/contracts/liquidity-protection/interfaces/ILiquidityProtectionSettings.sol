@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "./ILiquidityProtectionEventsSubscriber.sol";
 import "../../converter/interfaces/IConverterAnchor.sol";
+import "../../token/interfaces/IERC20Token.sol";
 
 /*
     Liquidity Protection Store Settings interface
@@ -15,6 +17,12 @@ interface ILiquidityProtectionSettings {
 
     function poolWhitelist() external view returns (address[] memory);
 
+    function addSubscriber(ILiquidityProtectionEventsSubscriber _subscriber) external;
+
+    function removeSubscriber(ILiquidityProtectionEventsSubscriber _subscriber) external;
+
+    function subscribers() external view returns (address[] memory);
+
     function isPoolSupported(IConverterAnchor _poolAnchor) external view returns (bool);
 
     function minNetworkTokenLiquidityForMinting() external view returns (uint256);
@@ -23,11 +31,9 @@ interface ILiquidityProtectionSettings {
 
     function networkTokenMintingLimits(IConverterAnchor _poolAnchor) external view returns (uint256);
 
-    function networkTokensMinted(IConverterAnchor _poolAnchor) external view returns (uint256);
+    function addLiquidityDisabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) external view returns (bool);
 
-    function incNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount) external;
-
-    function decNetworkTokensMinted(IConverterAnchor _poolAnchor, uint256 _amount) external;
+    function disableAddLiquidity(IConverterAnchor _poolAnchor, IERC20Token _reserveToken, bool _disable) external;
 
     function minProtectionDelay() external view returns (uint256);
 
