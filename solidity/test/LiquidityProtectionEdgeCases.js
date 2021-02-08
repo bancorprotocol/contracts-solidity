@@ -5,7 +5,7 @@ const { registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS, MAX_UINT256 } = constants;
-const { ROLE_OWNER, ROLE_MINTED_TOKENS_ADMIN, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -21,6 +21,8 @@ const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter')
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
 const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
+const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
+const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -92,7 +94,7 @@ describe('LiquidityProtectionEdgeCases', () => {
             const getNetworkTokenMaxAmount = async () => {
                 const totalSupply = await poolToken.totalSupply();
                 const reserveBalance = await converter.reserveBalance(networkToken.address);
-                const systemBalance = await liquidityProtectionStore.systemBalance(poolToken.address);
+                const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
                 return systemBalance.mul(reserveBalance).div(totalSupply);
             };
 
@@ -118,6 +120,8 @@ describe('LiquidityProtectionEdgeCases', () => {
             let liquidityProtectionSettings;
             let liquidityProtectionStore;
             let liquidityProtectionStats;
+            let liquidityProtectionSystemStore;
+            let liquidityProtectionWallet;
             let liquidityProtection;
 
             const owner = defaultSender;
@@ -196,22 +200,28 @@ describe('LiquidityProtectionEdgeCases', () => {
 
                 liquidityProtectionStore = await LiquidityProtectionStore.new();
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
-                liquidityProtection = await LiquidityProtection.new(
+                liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
+                liquidityProtectionWallet = await TokenHolder.new();
+                liquidityProtection = await LiquidityProtection.new([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
+                    liquidityProtectionSystemStore.address,
+                    liquidityProtectionWallet.address,
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                );
+                ]);
 
-                await liquidityProtectionSettings.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection.address, {
+                await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+                await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
                     from: owner
                 });
-                await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
+                await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
+                await liquidityProtection.acceptWalletOwnership();
                 await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
                 await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
 

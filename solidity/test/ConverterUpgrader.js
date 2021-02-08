@@ -212,7 +212,6 @@ describe('ConverterUpgrader', () => {
             };
         }
 
-
         return state;
     };
 

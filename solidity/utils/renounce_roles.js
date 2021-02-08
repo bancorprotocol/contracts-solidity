@@ -3,7 +3,7 @@ const path = require('path');
 const Web3 = require('web3');
 
 const NODE_ADDRESS = process.argv[2];
-const STATS_ADDRESS = process.argv[3];
+const CONTRACT_ADDRESS = process.argv[3];
 const PRIVATE_KEY = process.argv[4];
 
 const MIN_GAS_LIMIT = 100000;
@@ -97,10 +97,10 @@ async function run() {
 
     const gasPrice = await getGasPrice(web3);
     const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
-    const stats = deployed(web3, 'LiquidityProtectionStats', STATS_ADDRESS);
+    const contract = deployed(web3, 'AccessControl', CONTRACT_ADDRESS);
 
-    await send(web3, account, gasPrice, stats.methods.renounceRole(ROLE_SEEDER, account.address));
-    await send(web3, account, gasPrice, stats.methods.renounceRole(ROLE_SUPERVISOR, account.address));
+    await send(web3, account, gasPrice, contract.methods.renounceRole(ROLE_SEEDER, account.address));
+    await send(web3, account, gasPrice, contract.methods.renounceRole(ROLE_SUPERVISOR, account.address));
 
     if (web3.currentProvider.disconnect) {
         web3.currentProvider.disconnect();

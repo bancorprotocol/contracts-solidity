@@ -13,7 +13,6 @@ const MIN_GAS_LIMIT = 100000;
 const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
-const ROLE_MINTED_TOKENS_ADMIN = Web3.utils.keccak256('ROLE_MINTED_TOKENS_ADMIN');
 
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
@@ -363,14 +362,25 @@ const run = async () => {
     );
     const liquidityProtectionStore = await web3Func(deploy, 'liquidityProtectionStore', 'LiquidityProtectionStore', []);
     const liquidityProtectionStats = await web3Func(deploy, 'liquidityProtectionStats', 'LiquidityProtectionStats', []);
+    const liquidityProtectionSystemStore = await web3Func(
+        deploy,
+        'liquidityProtectionSystemStore',
+        'LiquidityProtectionSystemStore',
+        []
+    );
+    const liquidityProtectionWallet = await web3Func(deploy, 'liquidityProtectionWallet', 'TokenHolder', []);
 
     const liquidityProtection = await web3Func(deploy, 'liquidityProtection', 'LiquidityProtection', [
-        liquidityProtectionSettings._address,
-        liquidityProtectionStore._address,
-        liquidityProtectionStats._address,
-        bntTokenGovernance._address,
-        vbntTokenGovernance._address,
-        checkpointStore._address
+        [
+            liquidityProtectionSettings._address,
+            liquidityProtectionStore._address,
+            liquidityProtectionStats._address,
+            liquidityProtectionSystemStore._address,
+            liquidityProtectionWallet._address,
+            bntTokenGovernance._address,
+            vbntTokenGovernance._address,
+            checkpointStore._address
+        ]
     ]);
 
     await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
@@ -379,10 +389,8 @@ const run = async () => {
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
 
-    await execute(
-        liquidityProtectionSettings.methods.grantRole(ROLE_MINTED_TOKENS_ADMIN, liquidityProtection._address)
-    );
     await execute(liquidityProtectionStats.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+    await execute(liquidityProtectionSystemStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     await execute(
         contractRegistry.methods.registerAddress(
@@ -393,6 +401,9 @@ const run = async () => {
 
     await execute(liquidityProtectionStore.methods.transferOwnership(liquidityProtection._address));
     await execute(liquidityProtection.methods.acceptStoreOwnership());
+
+    await execute(liquidityProtectionWallet.methods.transferOwnership(liquidityProtection._address));
+    await execute(liquidityProtection.methods.acceptWalletOwnership());
 
     const params = getConfig().liquidityProtectionParams;
 

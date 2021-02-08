@@ -1,3 +1,20 @@
+### 0.6.32
+LiquidityProtection
+* Updated settings contract conventions
+
+
+### 0.6.31
+LiquidityProtection
+* Added support for disabling adding liquidity with a specific reserve
+* Added support for multipler event subscribers
+
+
+### 0.6.30
+LiquidityProtection
+* Added `LiquidityProtectionSystemStore` contract that holds the system balance/minted amounts
+* Added a dedicated wallet contract for liquidity protection
+
+
 ### 0.6.29
 General
 * Replaced the local SafeMath contract with OpenZepplin's version

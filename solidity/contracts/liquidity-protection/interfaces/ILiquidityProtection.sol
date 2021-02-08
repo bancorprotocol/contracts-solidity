@@ -3,6 +3,8 @@ pragma solidity 0.6.12;
 import "./ILiquidityProtectionStore.sol";
 import "./ILiquidityProtectionStats.sol";
 import "./ILiquidityProtectionSettings.sol";
+import "./ILiquidityProtectionSystemStore.sol";
+import "../../utility/interfaces/ITokenHolder.sol";
 import "../../token/interfaces/IERC20Token.sol";
 import "../../converter/interfaces/IConverterAnchor.sol";
 
@@ -15,6 +17,10 @@ interface ILiquidityProtection {
     function stats() external view returns (ILiquidityProtectionStats);
 
     function settings() external view returns (ILiquidityProtectionSettings);
+
+    function systemStore() external view returns (ILiquidityProtectionSystemStore);
+
+    function wallet() external view returns (ITokenHolder);
 
     function addLiquidityFor(
         address owner,
