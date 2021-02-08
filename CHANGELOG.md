@@ -1,3 +1,8 @@
+### 0.6.32
+LiquidityProtection
+* Updated settings contract conventions
+
+
 ### 0.6.31
 LiquidityProtection
 * Added support for disabling adding liquidity with a specific reserve
