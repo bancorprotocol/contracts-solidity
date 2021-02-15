@@ -229,9 +229,9 @@ describe('StandardPoolConverter', () => {
         await removeLiquidityTest(100, [reserveToken2, reserveToken]);
     });
 
-    for (const amount of [0, 123, 1234, 5678, 9999, 12345, 98765]) {
+    for (const amount of [0, 500, 1234, 5678, 9999, 12345, 98765]) {
         for (const fee of [0, 1000, 2000, 3000, 6000, 9999, 12345]) {
-            it.only(`verifies function sourceAmountAndFee(${amount}) when fee = ${fee}`, async () => {
+            it(`verifies function sourceAmountAndFee(${amount}) when fee = ${fee}`, async () => {
                 const converter = await initConverter(true, true, 1000000);
                 await converter.setConversionFee(fee);
 
@@ -258,6 +258,32 @@ describe('StandardPoolConverter', () => {
                 expect(sourceAmountAndFee[1]).to.be.bignumber.lte(targetAmountAndFee[1].addn(1));
                 expect(targetAmountAndFee2[0]).to.be.bignumber.equal(targetAmountAndFee[0]);
                 expect(targetAmountAndFee2[1]).to.be.bignumber.equal(sourceAmountAndFee[1]);
+            });
+        }
+    }
+
+    for (const amount of [0, 500, 1234, 5678, 7890]) {
+        for (const fee of [0, 1000, 2000, 3456, 6789]) {
+            it(`verifies function sourceAmountAndFee(${amount}) when fee = ${fee}`, async () => {
+                const converter = await initConverter(true, true, 1000000);
+                await converter.setConversionFee(fee);
+
+                const sourceAmountAndFee = await converter.sourceAmountAndFee.call(
+                    getReserve1Address(true),
+                    reserveToken2.address,
+                    amount
+                );
+
+                const targetAmountAndFee = await converter.targetAmountAndFee.call(
+                    getReserve1Address(true),
+                    reserveToken2.address,
+                    sourceAmountAndFee[0]
+                );
+
+                expectAlmostEqual(targetAmountAndFee[0], new BN(amount), '0.002');
+                expect(targetAmountAndFee[0]).to.be.bignumber.gte(new BN(amount));
+                expect(targetAmountAndFee[1]).to.be.bignumber.gte(sourceAmountAndFee[1]);
+                expect(targetAmountAndFee[1]).to.be.bignumber.lte(sourceAmountAndFee[1].addn(1));
             });
         }
     }
