@@ -408,6 +408,17 @@ contract StandardPoolConverter is
     }
 
     /**
+     * @dev returns the conversion fee taken from a given target amount
+     *
+     * @param _targetAmount  target amount
+     *
+     * @return conversion fee
+     */
+    function calculateFeeInv(uint256 _targetAmount) internal view returns (uint256) {
+        return _targetAmount.mul(conversionFee).div(PPM_RESOLUTION - conversionFee);
+    }
+
+    /**
      * @dev loads the stored reserve balance for a given reserve id
      *
      * @param _reserveId   reserve id
@@ -522,14 +533,14 @@ contract StandardPoolConverter is
     }
 
     /**
-     * @dev returns the expected target amount of converting one reserve to another along with the fee
+     * @dev returns the expected amount and expected fee for converting one reserve to another
      *
-     * @param _sourceToken contract address of the source reserve token
-     * @param _targetToken contract address of the target reserve token
-     * @param _amount      amount of tokens received from the user
+     * @param _sourceToken address of the source reserve token contract
+     * @param _targetToken address of the target reserve token contract
+     * @param _amount      amount of source reserve tokens converted by the user
      *
-     * @return expected target amount
-     * @return expected fee
+     * @return expected amount in units of the target reserve token
+     * @return expected fee in units of the target reserve token
      */
     function targetAmountAndFee(
         IERC20Token _sourceToken,
@@ -540,11 +551,39 @@ contract StandardPoolConverter is
         uint256 targetId = __reserveIds[_targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
+
         uint256 amount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
 
-        // return the amount minus the conversion fee and the conversion fee
         uint256 fee = calculateFee(amount);
+
         return (amount - fee, fee);
+    }
+
+    /**
+     * @dev returns the required amount and expected fee for converting one reserve to another
+     *
+     * @param _sourceToken address of the source reserve token contract
+     * @param _targetToken address of the target reserve token contract
+     * @param _amount      amount of target reserve tokens desired by the user
+     *
+     * @return required amount in units of the source reserve token
+     * @return expected fee in units of the target reserve token
+     */
+    function sourceAmountAndFee(
+        IERC20Token _sourceToken,
+        IERC20Token _targetToken,
+        uint256 _amount
+    ) public view active returns (uint256, uint256) {
+        uint256 sourceId = __reserveIds[_sourceToken];
+        uint256 targetId = __reserveIds[_targetToken];
+
+        (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
+
+        uint256 fee = calculateFeeInv(_amount);
+
+        uint256 amount = crossReserveSourceAmount(sourceBalance, targetBalance, _amount.add(fee));
+
+        return (amount, fee);
     }
 
     /**
@@ -925,7 +964,9 @@ contract StandardPoolConverter is
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         uint256 amount = fundSupplyAmount(totalSupply, _reserveBalances[_reserveTokenIndex], _reserveAmount);
 
-        for (uint256 i = 0; i < 2; i++) _reserveAmounts[i] = fundCost(totalSupply, _reserveBalances[i], amount);
+        for (uint256 i = 0; i < 2; i++) {
+            _reserveAmounts[i] = fundCost(totalSupply, _reserveBalances[i], amount);
+        }
 
         return _reserveAmounts;
     }
@@ -1019,8 +1060,9 @@ contract StandardPoolConverter is
         uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
         (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
 
-        for (uint256 i = 0; i < 2; i++)
+        for (uint256 i = 0; i < 2; i++) {
             _reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
+        }
         return _reserveAmounts;
     }
 
@@ -1109,6 +1151,22 @@ contract StandardPoolConverter is
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
         return _targetReserveBalance.mul(_amount) / _sourceReserveBalance.add(_amount);
+    }
+
+    function crossReserveSourceAmount(
+        uint256 _sourceReserveBalance,
+        uint256 _targetReserveBalance,
+        uint256 _amount
+    ) private pure returns (uint256) {
+        // validate input
+        require(_sourceReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
+        require(_amount < _targetReserveBalance, "ERR_INVALID_AMOUNT");
+
+        if (_amount == 0) {
+            return 0;
+        }
+
+        return (_sourceReserveBalance.mul(_amount) - 1) / (_targetReserveBalance - _amount) + 1;
     }
 
     function fundCost(
