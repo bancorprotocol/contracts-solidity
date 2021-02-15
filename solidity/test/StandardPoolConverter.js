@@ -254,7 +254,8 @@ describe('StandardPoolConverter', () => {
                 );
 
                 expectAlmostEqual(sourceAmountAndFee[0], new BN(amount), '0.0014');
-                expect(sourceAmountAndFee[1]).to.be.bignumber.gte(targetAmountAndFee[1]).and.to.be.bignumber.lte(targetAmountAndFee[1].addn(1));
+                expect(sourceAmountAndFee[1]).to.be.bignumber.gte(targetAmountAndFee[1]);
+                expect(sourceAmountAndFee[1]).to.be.bignumber.lte(targetAmountAndFee[1].addn(1));
                 expect(targetAmountAndFee2[0]).to.be.bignumber.equal(targetAmountAndFee[0]);
                 expect(targetAmountAndFee2[1]).to.be.bignumber.equal(sourceAmountAndFee[1]);
             });
