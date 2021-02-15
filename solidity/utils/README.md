@@ -4,7 +4,7 @@
 
 ### [Installation](../../README.md#installation)
 
-Following installation, `npm run build` should be executed once.
+Following installation, `yarn build` should be executed once.
 
 ### Test Deployment
 
