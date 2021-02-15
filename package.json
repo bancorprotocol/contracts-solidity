@@ -12,9 +12,6 @@
     },
     "author": "Yudi Levi",
     "license": "SEE LICENSE IN LICENSE",
-    "engines": {
-        "npm": "^3.0.0"
-    },
     "files": [
         "/solidity/contracts/**/*.sol",
         "/solidity/build/contracts/*.json",
@@ -22,20 +19,20 @@
     ],
     "scripts": {
         "build": "truffle compile",
-        "test": "npm run build && npm run qtest",
+        "test": "yarn build && yarn qtest",
         "qtest": "mocha",
         "coverage": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js run coverage",
         "export": "node scripts/export.js",
-        "lint": "npm run lint:js && npm run lint:sol",
+        "lint": "yarn lint:js && yarn lint:sol",
         "lint:js": "eslint .",
         "lint:sol": "solhint --max-warnings 0 \"solidity/contracts/**/*.sol\"",
         "format": "prettier --check --write solidity/**/*.sol solidity/**/*.js scripts/**/*.js *.js --config .prettierrc",
-        "size": "npm run build && truffle run contract-size",
+        "size": "yarn build && truffle run contract-size",
         "deploy": "node scripts/deploy-one.js",
         "verify": "node scripts/verify-all.js",
         "flatten": "node scripts/flatten.js",
         "snyk-protect": "snyk protect",
-        "prepare": "npm run build && npm run snyk-protect"
+        "prepare": "yarn build && yarn snyk-protect"
     },
     "devDependencies": {
         "@bancor/token-governance": "bancorprotocol/token-governance",
