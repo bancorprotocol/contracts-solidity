@@ -537,7 +537,7 @@ contract StandardPoolConverter is
      *
      * @param _sourceToken address of the source reserve token contract
      * @param _targetToken address of the target reserve token contract
-     * @param _amount      amount of source reserve tokens converted by the user
+     * @param _amount      amount of source reserve tokens converted
      *
      * @return expected amount in units of the target reserve token
      * @return expected fee in units of the target reserve token
@@ -564,7 +564,7 @@ contract StandardPoolConverter is
      *
      * @param _sourceToken address of the source reserve token contract
      * @param _targetToken address of the target reserve token contract
-     * @param _amount      amount of target reserve tokens desired by the user
+     * @param _amount      amount of target reserve tokens desired
      *
      * @return required amount in units of the source reserve token
      * @return expected fee in units of the target reserve token
