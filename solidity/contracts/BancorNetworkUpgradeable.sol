@@ -63,7 +63,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         bool processAffiliateFee;
     }
 
-    uint256 public maxAffiliateFee = 30000; // maximum affiliate-fee
+    uint256 public maxAffiliateFee; // maximum affiliate-fee
 
     mapping(IERC20Token => bool) public etherTokens; // list of all supported ether tokens
 
@@ -101,6 +101,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         __ReentrancyGuard_init();
 
         etherTokens[ETH_RESERVE_ADDRESS] = true;
+        maxAffiliateFee = 30000;
     }
 
     /**
