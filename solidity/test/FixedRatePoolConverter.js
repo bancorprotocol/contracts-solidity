@@ -134,7 +134,7 @@ describe('FixedRatePoolConverter', () => {
         const res = await converter.acceptTokenOwnership();
 
         expectEvent(res, 'Activation', {
-            _type: new BN(3),
+            _type: new BN(4),
             _anchor: tokenAddress,
             _activated: true
         });
