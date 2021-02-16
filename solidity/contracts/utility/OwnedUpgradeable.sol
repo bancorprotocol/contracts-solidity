@@ -23,7 +23,7 @@ contract OwnedUpgradeable is Initializable, IOwned {
     /**
      * @dev initializes a new OwnedUpgradeable instance
      */
-    function __OwnedUpgradeable_init() public initializer {
+    function __OwnedUpgradeable_init() internal initializer {
         __OwnedUpgradeable_init_unchained();
     }
 

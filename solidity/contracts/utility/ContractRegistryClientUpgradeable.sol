@@ -49,7 +49,7 @@ contract ContractRegistryClientUpgradeable is Initializable, OwnedUpgradeable, U
      *
      * @param  _registry   address of a contract-registry contract
      */
-    function __ContractRegistryClientUpgradeable_init(IContractRegistry _registry) public initializer {
+    function __ContractRegistryClientUpgradeable_init(IContractRegistry _registry) internal initializer {
         __OwnedUpgradeable_init();
         __ContractRegistryClientUpgradeable_init_unchained(_registry);
     }

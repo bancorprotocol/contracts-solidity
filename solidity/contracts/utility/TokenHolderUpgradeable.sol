@@ -25,12 +25,12 @@ contract TokenHolderUpgradeable is Initializable, ITokenHolder, TokenHandler, Ow
     /**
      * @dev initializes a new TokenHolderUpgradeable instance
      */
-    function __TokenHolderUpgradeable_init() public initializer {
+    function __TokenHolderUpgradeable_init() internal initializer {
         __OwnedUpgradeable_init();
         __TokenHolderUpgradeable_init_unchained();
     }
 
-    function __TokenHolderUpgradeable_init_unchained() public initializer {}
+    function __TokenHolderUpgradeable_init_unchained() internal initializer {}
 
     /**
      * @dev withdraws tokens held by the contract and sends them to an account
