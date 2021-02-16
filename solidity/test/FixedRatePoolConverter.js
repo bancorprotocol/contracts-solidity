@@ -402,7 +402,7 @@ describe('FixedRatePoolConverter', () => {
                 await reserveToken.transfer(sender2, 100);
                 await reserveToken2.transfer(sender2, 100);
 
-                const amount = new BN(100000);
+                const amount = new BN(50);
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
