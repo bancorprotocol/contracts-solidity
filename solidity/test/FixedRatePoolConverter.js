@@ -922,7 +922,7 @@ describe('FixedRatePoolConverter', () => {
     });
 
     describe('add/remove liquidity', () => {
-        const initLiquidityPool = async (hasETH) => {
+        const initLiquidityPool = async (hasETH, rateN, rateD) => {
             const poolToken = await DSToken.new('name', 'symbol', 0);
             const converter = await FixedRatePoolConverter.new(poolToken.address, contractRegistry.address, 0);
 
@@ -937,6 +937,8 @@ describe('FixedRatePoolConverter', () => {
 
             await poolToken.transferOwnership(converter.address);
             await converter.acceptAnchorOwnership();
+
+            await converter.setRate(rateN, rateD);
 
             return [converter, poolToken, reserveTokens];
         };
@@ -993,8 +995,8 @@ describe('FixedRatePoolConverter', () => {
             );
         };
 
-        const test = async (hasETH) => {
-            const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
+        const test = async (hasETH, rateN, rateD) => {
+            const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH, rateN, rateD);
 
             const state = [];
             let expected = [];
@@ -1099,9 +1101,13 @@ describe('FixedRatePoolConverter', () => {
         };
 
         for (const hasETH of [false, true]) {
-            it(`hasETH = ${hasETH}`, async () => {
-                await test(hasETH);
-            });
+            for (const rateN of [1, 2, 4, 8]) {
+                for (const rateD of [1, 3, 5, 7]) {
+                    it(`hasETH = ${hasETH}, rateN = ${rateN}, rateD = ${rateD}`, async () => {
+                        await test(hasETH, rateN, rateD);
+                    });
+                }
+            }
         }
     });
 });
