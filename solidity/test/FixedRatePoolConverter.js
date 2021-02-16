@@ -331,7 +331,7 @@ describe('FixedRatePoolConverter', () => {
                 const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
                 const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
 
-                const amount = new BN(100000);
+                const amount = new BN(1000);
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
@@ -370,7 +370,7 @@ describe('FixedRatePoolConverter', () => {
                 const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
                 const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
 
-                const amount = new BN(100000);
+                const amount = new BN(1000);
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
@@ -402,7 +402,7 @@ describe('FixedRatePoolConverter', () => {
                 await reserveToken.transfer(sender2, 100);
                 await reserveToken2.transfer(sender2, 100);
 
-                const amount = new BN(100000);
+                const amount = new BN(1000);
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
@@ -442,7 +442,7 @@ describe('FixedRatePoolConverter', () => {
                 const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
                 const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
 
-                const amount = new BN(100000);
+                const amount = new BN(1000);
                 let value = 0;
                 if (isETHReserve) {
                     value = amount;
