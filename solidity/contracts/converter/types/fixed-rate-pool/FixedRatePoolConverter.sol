@@ -155,14 +155,14 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256[2] memory newReserveBalances;
         (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
 
-        // calculate the amount of pool tokens to mint
         uint256 amount;
         uint256[] memory reserveAmounts = new uint256[](2);
+        for (uint256 i = 0; i < 2; i++) {
+            reserveAmounts[i] = _reserveAmounts[i];
+        }
 
+        // calculate the amount of pool tokens to mint
         if (totalSupply == 0) {
-            for (uint256 i = 0; i < 2; i++) {
-                reserveAmounts[i] = _reserveAmounts[i];
-            }
             amount = MathEx.geometricMean(reserveAmounts);
         } else {
             uint256 n = reserveAmounts[0].mul(_rateN).add(reserveAmounts[1]).mul(_rateD);
