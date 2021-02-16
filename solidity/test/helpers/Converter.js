@@ -12,7 +12,7 @@ const Converter = contract.fromArtifact('ConverterBase');
 const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
-const StaticPoolConverter = contract.fromArtifact('StaticPoolConverter');
+const FixedRatePoolConverter = contract.fromArtifact('FixedRatePoolConverter');
 
 module.exports.new = async (
     type,
@@ -38,7 +38,7 @@ module.exports.new = async (
         0: LiquidTokenConverter,
         1: LiquidityPoolV1Converter,
         3: StandardPoolConverter,
-        4: StaticPoolConverter
+        4: FixedRatePoolConverter
     }[type];
     const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
     if (reserveTokenAddress !== ZERO_ADDRESS) {

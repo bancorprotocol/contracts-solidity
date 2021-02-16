@@ -19,11 +19,11 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
-const StaticPoolConverter = contract.fromArtifact('StaticPoolConverter');
+const FixedRatePoolConverter = contract.fromArtifact('FixedRatePoolConverter');
 const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
-const StaticPoolConverterFactory = contract.fromArtifact('StaticPoolConverterFactory');
+const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 
 describe('Converter', () => {
@@ -41,7 +41,7 @@ describe('Converter', () => {
             case 3:
                 return StandardPoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
             case 4:
-                return StaticPoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
+                return FixedRatePoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
         }
     };
 
@@ -54,7 +54,7 @@ describe('Converter', () => {
             case 3:
                 return 'StandardPoolConverter';
             case 4:
-                return 'StaticPoolConverter';
+                return 'FixedRatePoolConverter';
         }
 
         return 'Unknown';
@@ -202,7 +202,7 @@ describe('Converter', () => {
         await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
-        await factory.registerTypedConverterFactory((await StaticPoolConverterFactory.new()).address);
+        await factory.registerTypedConverterFactory((await FixedRatePoolConverterFactory.new()).address);
     });
 
     beforeEach(async () => {

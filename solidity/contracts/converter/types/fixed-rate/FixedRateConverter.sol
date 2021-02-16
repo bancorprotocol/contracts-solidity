@@ -7,12 +7,12 @@ import "../standard-pool/StandardPoolConverter.sol";
  * @dev This contract is a specialized version of the converter, which is optimized for a
  * liquidity pool that has 2 reserves with 50%/50% weights, and a conversion-rate of 1:1.
  */
-contract StaticPoolConverter is StandardPoolConverter {
+contract FixedRatePoolConverter is StandardPoolConverter {
     uint128 private _rateN;
     uint128 private _rateD;
 
     /**
-     * @dev initializes a new StaticPoolConverter instance
+     * @dev initializes a new FixedRatePoolConverter instance
      *
      * @param  _anchor             anchor governed by the converter
      * @param  _registry           address of a contract registry contract

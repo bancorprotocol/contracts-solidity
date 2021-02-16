@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "./StaticPoolConverter.sol";
+import "./FixedRatePoolConverter.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/ITypedConverterFactory.sol";
 import "../../../token/interfaces/IDSToken.sol";
 
 /*
-    StaticPoolConverter Factory
+    FixedRatePoolConverter Factory
 */
-contract StaticPoolConverterFactory is ITypedConverterFactory {
+contract FixedRatePoolConverterFactory is ITypedConverterFactory {
     /**
      * @dev returns the converter type the factory is associated with
      *
@@ -33,7 +33,7 @@ contract StaticPoolConverterFactory is ITypedConverterFactory {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     ) external virtual override returns (IConverter) {
-        IConverter converter = new StaticPoolConverter(IDSToken(address(_anchor)), _registry, _maxConversionFee);
+        IConverter converter = new FixedRatePoolConverter(IDSToken(address(_anchor)), _registry, _maxConversionFee);
         converter.transferOwnership(msg.sender);
         return converter;
     }

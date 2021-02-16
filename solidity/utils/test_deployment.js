@@ -187,10 +187,10 @@ const run = async () => {
         'StandardPoolConverterFactory',
         []
     );
-    const staticPoolConverterFactory = await web3Func(
+    const fixedRatePoolConverterFactory = await web3Func(
         deploy,
-        'staticPoolConverterFactory',
-        'StaticPoolConverterFactory',
+        'fixedRatePoolConverterFactory',
+        'FixedRatePoolConverterFactory',
         []
     );
 
@@ -212,7 +212,7 @@ const run = async () => {
         contractRegistry._address,
         1000
     ]);
-    await web3Func(deploy, 'staticPoolConverter', 'StaticPoolConverter', [
+    await web3Func(deploy, 'fixedRatePoolConverter', 'FixedRatePoolConverter', [
         poolToken2._address,
         contractRegistry._address,
         1000
@@ -260,7 +260,7 @@ const run = async () => {
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(standardPoolConverterFactory._address));
-    await execute(converterFactory.methods.registerTypedConverterFactory(staticPoolConverterFactory._address));
+    await execute(converterFactory.methods.registerTypedConverterFactory(fixedRatePoolConverterFactory._address));
 
     for (const reserve of getConfig().reserves) {
         if (reserve.type === undefined) {
@@ -347,7 +347,7 @@ const run = async () => {
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
                 break;
             case 4:
-                const deployedConverter = deployed(web3, 'StaticPoolConverter', converterBase._address);
+                const deployedConverter = deployed(web3, 'FixedRatePoolConverter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
                 break;
             }

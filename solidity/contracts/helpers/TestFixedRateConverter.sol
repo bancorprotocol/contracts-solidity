@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 
 import "./TestStandardPoolConverter.sol";
 
-contract TestStaticPoolConverter is TestStandardPoolConverter {
+contract TestFixedRatePoolConverter is TestStandardPoolConverter {
     constructor(
         IDSToken _token,
         IContractRegistry _registry,

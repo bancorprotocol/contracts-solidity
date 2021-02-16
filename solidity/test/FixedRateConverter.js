@@ -9,8 +9,8 @@ const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { duration, latest } = time;
 
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
-const StaticPoolConverter = contract.fromArtifact('TestStaticPoolConverter');
-const StaticPoolConverterFactory = contract.fromArtifact('StaticPoolConverterFactory');
+const FixedRatePoolConverter = contract.fromArtifact('TestFixedRatePoolConverter');
+const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ERC20Token = contract.fromArtifact('ERC20Token');
@@ -18,9 +18,9 @@ const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 
-describe('StaticPoolConverter', () => {
+describe('FixedRatePoolConverter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
-        return StaticPoolConverter.new(tokenAddress, registryAddress, maxConversionFee);
+        return FixedRatePoolConverter.new(tokenAddress, registryAddress, maxConversionFee);
     };
 
     const initConverter = async (activate, isETHReserve, maxConversionFee = 0) => {
@@ -111,7 +111,7 @@ describe('StaticPoolConverter', () => {
         const factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
-        await factory.registerTypedConverterFactory((await StaticPoolConverterFactory.new()).address);
+        await factory.registerTypedConverterFactory((await FixedRatePoolConverterFactory.new()).address);
     });
 
     beforeEach(async () => {
@@ -641,7 +641,7 @@ describe('StaticPoolConverter', () => {
 
         beforeEach(async () => {
             const token = await DSToken.new('Token', 'TKN', 0);
-            converter = await StaticPoolConverter.new(token.address, contractRegistry.address, 0);
+            converter = await FixedRatePoolConverter.new(token.address, contractRegistry.address, 0);
             reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
             reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
             await converter.addReserve(reserveToken1.address, 500000);
@@ -682,7 +682,7 @@ describe('StaticPoolConverter', () => {
             for (const percents of removePercents) {
                 it(`(amounts = ${amounts}, percents = ${percents})`, async () => {
                     const token = await DSToken.new('Token', 'TKN', 0);
-                    const converter = await StaticPoolConverter.new(token.address, contractRegistry.address, 0);
+                    const converter = await FixedRatePoolConverter.new(token.address, contractRegistry.address, 0);
                     const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
                     const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
                     await converter.addReserve(reserveToken1.address, 500000);
@@ -927,7 +927,7 @@ describe('StaticPoolConverter', () => {
     describe('add/remove liquidity', () => {
         const initLiquidityPool = async (hasETH) => {
             const poolToken = await DSToken.new('name', 'symbol', 0);
-            const converter = await StaticPoolConverter.new(poolToken.address, contractRegistry.address, 0);
+            const converter = await FixedRatePoolConverter.new(poolToken.address, contractRegistry.address, 0);
 
             const reserveTokens = [
                 (await ERC20Token.new('name', 'symbol', 0, MAX_UINT256)).address,
