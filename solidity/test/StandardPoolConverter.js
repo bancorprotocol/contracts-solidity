@@ -103,6 +103,13 @@ describe('StandardPoolConverter', () => {
         return dm.div.negative !== 0 ? dm.div.isubn(1) : dm.div.iaddn(1);
     };
 
+    const expectAlmostEqual = (amount1, amount2, maxError) => {
+        if (!amount1.eq(amount2)) {
+            const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
+            expect(error.lte(maxError)).to.be.true(`error = ${error.toFixed(maxError.length)}`);
+        }
+    };
+
     let now;
     let bancorNetwork;
     let token;
@@ -221,6 +228,65 @@ describe('StandardPoolConverter', () => {
     it('verifies function removeLiquidity when the reserves tokens are passed in the opposite order', async () => {
         await removeLiquidityTest(100, [reserveToken2, reserveToken]);
     });
+
+    for (const amount of [0, 500, 1234, 5678, 9999, 12345, 98765]) {
+        for (const fee of [0, 1000, 2000, 3000, 6000, 9999, 12345]) {
+            it(`verifies function sourceAmountAndFee(${amount}) when fee = ${fee}`, async () => {
+                const converter = await initConverter(true, true, 1000000);
+                await converter.setConversionFee(fee);
+
+                const targetAmountAndFee = await converter.targetAmountAndFee.call(
+                    getReserve1Address(true),
+                    reserveToken2.address,
+                    amount
+                );
+
+                const sourceAmountAndFee = await converter.sourceAmountAndFee.call(
+                    getReserve1Address(true),
+                    reserveToken2.address,
+                    targetAmountAndFee[0]
+                );
+
+                const targetAmountAndFee2 = await converter.targetAmountAndFee.call(
+                    getReserve1Address(true),
+                    reserveToken2.address,
+                    sourceAmountAndFee[0]
+                );
+
+                expectAlmostEqual(sourceAmountAndFee[0], new BN(amount), '0.0014');
+                expect(sourceAmountAndFee[1]).to.be.bignumber.gte(targetAmountAndFee[1]);
+                expect(sourceAmountAndFee[1]).to.be.bignumber.lte(targetAmountAndFee[1].addn(1));
+                expect(targetAmountAndFee2[0]).to.be.bignumber.equal(targetAmountAndFee[0]);
+                expect(targetAmountAndFee2[1]).to.be.bignumber.equal(sourceAmountAndFee[1]);
+            });
+        }
+    }
+
+    for (const amount of [0, 500, 1234, 5678, 7890]) {
+        for (const fee of [0, 1000, 2000, 3456, 6789]) {
+            it(`verifies function sourceAmountAndFee(${amount}) when fee = ${fee}`, async () => {
+                const converter = await initConverter(true, true, 1000000);
+                await converter.setConversionFee(fee);
+
+                const sourceAmountAndFee = await converter.sourceAmountAndFee.call(
+                    getReserve1Address(true),
+                    reserveToken2.address,
+                    amount
+                );
+
+                const targetAmountAndFee = await converter.targetAmountAndFee.call(
+                    getReserve1Address(true),
+                    reserveToken2.address,
+                    sourceAmountAndFee[0]
+                );
+
+                expectAlmostEqual(targetAmountAndFee[0], new BN(amount), '0.002');
+                expect(targetAmountAndFee[0]).to.be.bignumber.gte(new BN(amount));
+                expect(targetAmountAndFee[1]).to.be.bignumber.gte(sourceAmountAndFee[1]);
+                expect(targetAmountAndFee[1]).to.be.bignumber.lte(sourceAmountAndFee[1].addn(1));
+            });
+        }
+    }
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
         describe(`${isETHReserve === 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
