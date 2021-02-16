@@ -31,16 +31,16 @@ contract StandardPoolConverter is
     using SafeMath for uint256;
     using MathEx for *;
 
-    IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-    uint256 private constant MAX_UINT128 = 2**128 - 1;
-    uint256 private constant MAX_UINT112 = 2**112 - 1;
-    uint256 private constant MAX_UINT32 = 2**32 - 1;
-    uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
-    uint32 private constant PPM_RESOLUTION = 1000000;
+    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    uint256 internal constant MAX_UINT128 = 2**128 - 1;
+    uint256 internal constant MAX_UINT112 = 2**112 - 1;
+    uint256 internal constant MAX_UINT32 = 2**32 - 1;
+    uint256 internal constant AVERAGE_RATE_PERIOD = 10 minutes;
+    uint32 internal constant PPM_RESOLUTION = 1000000;
 
-    uint256 private __reserveBalances;
-    IERC20Token[] private __reserveTokens;
-    mapping(IERC20Token => uint256) private __reserveIds;
+    uint256 internal __reserveBalances;
+    IERC20Token[] internal __reserveTokens;
+    mapping(IERC20Token => uint256) internal __reserveIds;
 
     IConverterAnchor public override anchor; // converter anchor contract
     uint32 public override maxConversionFee; // maximum conversion fee, represented in ppm, 0...1000000
@@ -546,7 +546,7 @@ contract StandardPoolConverter is
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
         uint256 _amount
-    ) public view override active returns (uint256, uint256) {
+    ) public view virtual override active returns (uint256, uint256) {
         uint256 sourceId = __reserveIds[_sourceToken];
         uint256 targetId = __reserveIds[_targetToken];
 
@@ -573,7 +573,7 @@ contract StandardPoolConverter is
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
         uint256 _amount
-    ) public view active returns (uint256, uint256) {
+    ) public view virtual active returns (uint256, uint256) {
         uint256 sourceId = __reserveIds[_sourceToken];
         uint256 targetId = __reserveIds[_targetToken];
 
@@ -759,7 +759,7 @@ contract StandardPoolConverter is
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _minReturn
-    ) public payable protected active returns (uint256) {
+    ) public payable virtual protected active returns (uint256) {
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
@@ -1019,7 +1019,7 @@ contract StandardPoolConverter is
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _amount
-    ) private view returns (bool) {
+    ) internal view virtual returns (bool) {
         require(_reserveAmounts[0] > 0 && _reserveAmounts[1] > 0 && _amount > 0, "ERR_ZERO_AMOUNT");
 
         uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
@@ -1146,7 +1146,7 @@ contract StandardPoolConverter is
         uint256 _sourceReserveBalance,
         uint256 _targetReserveBalance,
         uint256 _amount
-    ) internal pure virtual returns (uint256) {
+    ) private pure returns (uint256) {
         // validate input
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
@@ -1173,7 +1173,7 @@ contract StandardPoolConverter is
         uint256 _supply,
         uint256 _reserveBalance,
         uint256 _amount
-    ) internal pure virtual returns (uint256) {
+    ) private pure returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -1190,7 +1190,7 @@ contract StandardPoolConverter is
         uint256 _supply,
         uint256 _reserveBalance,
         uint256 _amount
-    ) internal pure virtual returns (uint256) {
+    ) private pure returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -1207,7 +1207,7 @@ contract StandardPoolConverter is
         uint256 _supply,
         uint256 _reserveBalance,
         uint256 _amount
-    ) internal pure virtual returns (uint256) {
+    ) private pure returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
