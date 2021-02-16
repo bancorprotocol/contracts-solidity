@@ -328,7 +328,6 @@ describe('FixedRatePoolConverter', () => {
                 const percentage = new BN(19);
                 const prevReserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
                 const prevReserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
                 const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
 
                 const amount = new BN(100000);
@@ -350,7 +349,7 @@ describe('FixedRatePoolConverter', () => {
                 const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
 
-                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(token1Amount));
+                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(amount));
                 expect(reserve2Balance).to.be.bignumber.equal(prevReserve2Balance.add(token2Amount));
             });
 
@@ -367,7 +366,6 @@ describe('FixedRatePoolConverter', () => {
                 const percentage = new BN(140854);
                 const prevReserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
                 const prevReserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
                 const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
 
                 const amount = new BN(100000);
@@ -389,7 +387,7 @@ describe('FixedRatePoolConverter', () => {
                 const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
 
-                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(token1Amount));
+                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(amount));
                 expect(reserve2Balance).to.be.bignumber.equal(prevReserve2Balance.add(token2Amount));
             });
 
@@ -439,7 +437,6 @@ describe('FixedRatePoolConverter', () => {
                 const percentage = new BN(19);
                 const prevReserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
                 const prevReserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
                 const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
 
                 const amount = new BN(100000);
@@ -456,7 +453,7 @@ describe('FixedRatePoolConverter', () => {
                 const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
 
-                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(token1Amount));
+                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(amount));
                 expect(reserve2Balance).to.be.bignumber.equal(prevReserve2Balance.add(token2Amount));
             });
 
