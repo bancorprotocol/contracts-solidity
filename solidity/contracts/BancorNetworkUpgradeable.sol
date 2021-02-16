@@ -94,8 +94,10 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
      * @param _registry    address of a contract registry contract
      */
     function initialize(IContractRegistry _registry) public initializer {
-        __ContractRegistryClientUpgradeable_init(_registry);
+        __ContractRegistryClientUpgradeable_init_unchained(_registry);
         __TokenHolderUpgradeable_init_unchained();
+        __OwnedUpgradeable_init_unchained();
+        
         __ReentrancyGuard_init();
 
         etherTokens[ETH_RESERVE_ADDRESS] = true;
