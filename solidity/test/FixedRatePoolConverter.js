@@ -212,39 +212,44 @@ describe('FixedRatePoolConverter', () => {
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
         describe(`${isETHReserve === 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
-            it('verifies that convert returns valid amount and fee after converting', async () => {
-                const converter = await initConverter(true, isETHReserve, 5000);
-                await converter.setConversionFee(3000);
+            for (const rateN of [1, 2, 4, 8]) {
+                for (const rateD of [1, 3, 5, 7]) {
+                    it(`verifies that convert returns valid amount and fee after converting with rate = ${rateN}/${rateD}`, async () => {
+                        const converter = await initConverter(true, isETHReserve, 5000);
+                        await converter.setConversionFee(3000);
+                        await converter.setRate(rateN, rateD);
 
-                const amount = new BN(500);
-                let value = 0;
-                if (isETHReserve) {
-                    value = amount;
-                } else {
-                    await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                        const amount = new BN(500);
+                        let value = 0;
+                        if (isETHReserve) {
+                            value = amount;
+                        } else {
+                            await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                        }
+
+                        const purchaseAmount = (
+                            await converter.targetAmountAndFee.call(
+                                getReserve1Address(isETHReserve),
+                                reserveToken2.address,
+                                amount
+                            )
+                        )[0];
+                        const res = await convert(
+                            [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
+                            amount,
+                            MIN_RETURN,
+                            { value }
+                        );
+                        expectEvent(res, 'Conversion', {
+                            _smartToken: token.address,
+                            _fromToken: getReserve1Address(isETHReserve),
+                            _toToken: reserveToken2.address,
+                            _fromAmount: amount,
+                            _toAmount: purchaseAmount
+                        });
+                    });
                 }
-
-                const purchaseAmount = (
-                    await converter.targetAmountAndFee.call(
-                        getReserve1Address(isETHReserve),
-                        reserveToken2.address,
-                        amount
-                    )
-                )[0];
-                const res = await convert(
-                    [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
-                    amount,
-                    MIN_RETURN,
-                    { value }
-                );
-                expectEvent(res, 'Conversion', {
-                    _smartToken: token.address,
-                    _fromToken: getReserve1Address(isETHReserve),
-                    _toToken: reserveToken2.address,
-                    _fromAmount: amount,
-                    _toAmount: purchaseAmount
-                });
-            });
+            }
 
             it('verifies the TokenRateUpdate event after conversion', async () => {
                 const converter = await initConverter(true, isETHReserve, 10000);
