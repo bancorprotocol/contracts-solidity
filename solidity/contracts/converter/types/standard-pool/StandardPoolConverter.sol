@@ -603,7 +603,7 @@ contract StandardPoolConverter is
         uint256 _amount,
         address _trader,
         address payable _beneficiary
-    ) internal returns (uint256) {
+    ) internal virtual returns (uint256) {
         // update the recent average rate
         updateRecentAverageRate();
 
@@ -1079,7 +1079,7 @@ contract StandardPoolConverter is
         IERC20Token _targetToken,
         uint256 _sourceBalance,
         uint256 _targetBalance
-    ) private {
+    ) internal {
         // save a local copy of the pool token
         IDSToken poolToken = IDSToken(address(anchor));
 
