@@ -82,6 +82,19 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         IERC20Token _targetToken,
         uint256 _amount
     ) public view override active returns (uint256, uint256) {
+        return targetAmountAndFee(_sourceToken, _targetToken, 0, 0, _amount);
+    }
+
+    function targetAmountAndFee(
+        IERC20Token _sourceToken,
+        IERC20Token _targetToken,
+        uint256 _sourceBalance,
+        uint256 _targetBalance,
+        uint256 _amount
+    ) internal view override returns (uint256, uint256) {
+        _sourceBalance;
+        _targetBalance;
+
         uint256 rateN = _rate[_sourceToken];
         uint256 rateD = _rate[_targetToken];
     
@@ -115,70 +128,6 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256 amount = _amount.add(fee).mul(rateD).div(rateN);
 
         return (amount, fee);
-    }
-
-    /**
-     * @dev converts a specific amount of source tokens to target tokens
-     *
-     * @param _sourceToken source ERC20 token
-     * @param _targetToken target ERC20 token
-     * @param _amount      amount of tokens to convert (in units of the source token)
-     * @param _trader      address of the caller who executed the conversion
-     * @param _beneficiary wallet to receive the conversion result
-     *
-     * @return amount of tokens received (in units of the target token)
-     */
-    function doConvert(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
-        uint256 _amount,
-        address _trader,
-        address payable _beneficiary
-    ) internal override returns (uint256) {
-        // update the recent average rate
-        updateRecentAverageRate();
-
-        uint256 sourceId = __reserveIds[_sourceToken];
-        uint256 targetId = __reserveIds[_targetToken];
-
-        (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
-
-        // get the target amount minus the conversion fee and the conversion fee
-        (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, _amount);
-
-        // ensure that the trade gives something in return
-        require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
-
-        // ensure that the trade won't deplete the reserve balance
-        assert(amount < targetBalance);
-
-        // ensure that the input amount was already deposited
-        uint256 actualSourceBalance;
-        if (_sourceToken == ETH_RESERVE_ADDRESS) {
-            actualSourceBalance = address(this).balance;
-            require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-        } else {
-            actualSourceBalance = _sourceToken.balanceOf(address(this));
-            require(msg.value == 0 && actualSourceBalance.sub(sourceBalance) >= _amount, "ERR_INVALID_AMOUNT");
-        }
-
-        // sync the reserve balances
-        setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
-
-        // transfer funds to the beneficiary in the to reserve token
-        if (_targetToken == ETH_RESERVE_ADDRESS) {
-            _beneficiary.transfer(amount);
-        } else {
-            safeTransfer(_targetToken, _beneficiary, amount);
-        }
-
-        // dispatch the conversion event
-        dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
-
-        // dispatch rate updates
-        dispatchTokenRateUpdateEvents(_sourceToken, _targetToken, actualSourceBalance, targetBalance - amount);
-
-        return amount;
     }
 
     /**
@@ -233,6 +182,9 @@ contract FixedRatePoolConverter is StandardPoolConverter {
             }
             amount = MathEx.geometricMean(reserveAmounts);
         } else {
+            for (uint256 i = 0; i < 2; i++) {
+                reserveAmounts[i] = _reserveAmounts[i];
+            }
             uint256 rateN = _rate[_reserveTokens[0]];
             uint256 rateD = _rate[_reserveTokens[1]];
             uint256 n = reserveAmounts[0].mul(rateN).add(reserveAmounts[1]).mul(rateD);

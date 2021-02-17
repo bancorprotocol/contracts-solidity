@@ -552,7 +552,20 @@ contract StandardPoolConverter is
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
 
-        uint256 amount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
+        return targetAmountAndFee(_sourceToken, _targetToken, sourceBalance, targetBalance, _amount);
+    }
+
+    function targetAmountAndFee(
+        IERC20Token _sourceToken,
+        IERC20Token _targetToken,
+        uint256 _sourceBalance,
+        uint256 _targetBalance,
+        uint256 _amount
+    ) internal view virtual returns (uint256, uint256) {
+        _sourceToken;
+        _targetToken;
+
+        uint256 amount = crossReserveTargetAmount(_sourceBalance, _targetBalance, _amount);
 
         uint256 fee = calculateFee(amount);
 
@@ -611,11 +624,9 @@ contract StandardPoolConverter is
         uint256 targetId = __reserveIds[_targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
-        uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
 
         // get the target amount minus the conversion fee and the conversion fee
-        uint256 fee = calculateFee(targetAmount);
-        uint256 amount = targetAmount - fee;
+        (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, sourceBalance, targetBalance, _amount);
 
         // ensure that the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
