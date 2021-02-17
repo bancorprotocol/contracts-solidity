@@ -801,20 +801,15 @@ contract StandardPoolConverter is
 
         // calculate the amount of pool tokens to mint
         uint256 amount;
-        uint256[] memory reserveAmounts = new uint256[](2);
+        uint256[2] memory reserveAmounts;
 
         if (totalSupply == 0) {
+            amount = MathEx.geometricMean(_reserveAmounts);
             for (uint256 i = 0; i < 2; i++) {
                 reserveAmounts[i] = _reserveAmounts[i];
             }
-            amount = MathEx.geometricMean(reserveAmounts);
         } else {
-            uint256 index =
-                (_reserveAmounts[0].mul(oldReserveBalances[1]) < _reserveAmounts[1].mul(oldReserveBalances[0])) ? 0 : 1;
-            amount = fundSupplyAmount(totalSupply, oldReserveBalances[index], _reserveAmounts[index]);
-            for (uint256 i = 0; i < 2; i++) {
-                reserveAmounts[i] = fundCost(totalSupply, oldReserveBalances[i], amount);
-            }
+            (amount, reserveAmounts) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, oldReserveBalances, totalSupply);
         }
 
         uint256 newPoolTokenSupply = totalSupply.add(amount);
@@ -853,6 +848,25 @@ contract StandardPoolConverter is
 
         // return the amount of pool tokens issued
         return amount;
+    }
+
+    function addLiquidityAmounts(
+        IERC20Token[] memory _reserveTokens,
+        uint256[] memory _reserveAmounts,
+        uint256[2] memory _reserveBalances,
+        uint256 totalSupply
+    ) internal virtual returns (uint256, uint256[2] memory) {
+        _reserveTokens;
+
+        uint256 index = _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
+        uint256 amount = fundSupplyAmount(totalSupply, _reserveBalances[index], _reserveAmounts[index]);
+
+        uint256[2] memory reserveAmounts;
+        for (uint256 i = 0; i < 2; i++) {
+            reserveAmounts[i] = fundCost(totalSupply, _reserveBalances[i], amount);
+        }
+
+        return (amount, reserveAmounts);
     }
 
     /**
