@@ -31,14 +31,14 @@ contract StandardPoolConverter is
     using SafeMath for uint256;
     using MathEx for *;
 
-    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-    uint256 internal constant MAX_UINT128 = 2**128 - 1;
-    uint256 internal constant MAX_UINT112 = 2**112 - 1;
-    uint256 internal constant MAX_UINT32 = 2**32 - 1;
-    uint256 internal constant AVERAGE_RATE_PERIOD = 10 minutes;
-    uint32 internal constant PPM_RESOLUTION = 1000000;
+    IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    uint256 private constant MAX_UINT128 = 2**128 - 1;
+    uint256 private constant MAX_UINT112 = 2**112 - 1;
+    uint256 private constant MAX_UINT32 = 2**32 - 1;
+    uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
+    uint32 private constant PPM_RESOLUTION = 1000000;
 
-    uint256 internal __reserveBalances;
+    uint256 private __reserveBalances;
     IERC20Token[] internal __reserveTokens;
     mapping(IERC20Token => uint256) internal __reserveIds;
 
