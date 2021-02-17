@@ -30,7 +30,6 @@ describe('FixedRatePoolConverter', () => {
         const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
         await converter.addReserve(getReserve1Address(isETHReserve), 500000);
         await converter.addReserve(reserveToken2.address, 500000);
-        await converter.setRate(1, 1);
         await reserveToken2.transfer(converter.address, 8000);
         await token.issue(sender, 20000);
 
@@ -649,7 +648,6 @@ describe('FixedRatePoolConverter', () => {
             reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
             await converter.addReserve(reserveToken1.address, 500000);
             await converter.addReserve(reserveToken2.address, 500000);
-            await converter.setRate(1, 1);
             await token.transferOwnership(converter.address);
             await converter.acceptTokenOwnership();
         });
@@ -691,7 +689,6 @@ describe('FixedRatePoolConverter', () => {
                     const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
                     await converter.addReserve(reserveToken1.address, 500000);
                     await converter.addReserve(reserveToken2.address, 500000);
-                    await converter.setRate(1, 1);
                     await token.transferOwnership(converter.address);
                     await converter.acceptTokenOwnership();
                     let lastAmount = new BN(0);
