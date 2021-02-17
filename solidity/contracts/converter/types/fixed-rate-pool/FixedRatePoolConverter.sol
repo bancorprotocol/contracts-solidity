@@ -8,7 +8,7 @@ import "../standard-pool/StandardPoolConverter.sol";
  * liquidity pool that has 2 reserves with 50%/50% weights, and a conversion-rate of 1:1.
  */
 contract FixedRatePoolConverter is StandardPoolConverter {
-    mapping(IERC20Token => uint128) private _rate;
+    mapping(IERC20Token => uint256) private _rate;
 
     /**
      * @dev initializes a new FixedRatePoolConverter instance
@@ -50,7 +50,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return the numerator of the rate between the 1st reserve token and the 2nd reserve token
      * @return the denominator of the rate between the 1st reserve token and the 2nd reserve token
      */
-    function rate() public view returns (uint128, uint128) {
+    function rate() public view returns (uint256, uint256) {
         return (_rate[__reserveTokens[0]], _rate[__reserveTokens[1]]);
     }
 
@@ -61,7 +61,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @param rateN the numerator of the rate between the 1st reserve token and the 2nd reserve token
      * @param rateD the denominator of the rate between the 1st reserve token and the 2nd reserve token
      */
-    function setRate(uint128 rateN, uint128 rateD) public ownerOnly {
+    function setRate(uint256 rateN, uint256 rateD) public ownerOnly {
         require(rateN > 0 && rateD > 0, "ERR_INVALID_RATE");
         _rate[__reserveTokens[0]] = rateN;
         _rate[__reserveTokens[1]] = rateD;
