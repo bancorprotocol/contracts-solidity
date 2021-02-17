@@ -158,13 +158,13 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
-        uint256 totalSupply
+        uint256 _totalSupply
     ) internal override returns (uint256, uint256[2] memory) {
         uint256 rateN = _rate[_reserveTokens[0]];
         uint256 rateD = _rate[_reserveTokens[1]];
         uint256 n = _reserveAmounts[0].mul(rateN).add(_reserveAmounts[1]).mul(rateD);
         uint256 d = _reserveBalances[0].mul(rateN).add(_reserveBalances[1]).mul(rateD);
-        uint256 amount = totalSupply.mul(n).div(d);
+        uint256 amount = _totalSupply.mul(n).div(d);
 
         uint256[2] memory reserveAmounts;
         for (uint256 i = 0; i < 2; i++) {
