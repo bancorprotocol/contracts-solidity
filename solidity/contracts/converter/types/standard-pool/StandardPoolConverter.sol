@@ -555,6 +555,18 @@ contract StandardPoolConverter is
         return targetAmountAndFee(_sourceToken, _targetToken, sourceBalance, targetBalance, _amount);
     }
 
+    /**
+     * @dev returns the expected amount and expected fee for converting one reserve to another
+     *
+     * @param _sourceToken      address of the source reserve token contract
+     * @param _targetToken      address of the target reserve token contract
+     * @param _sourceBalance    balance in the source reserve token contract
+     * @param _targetBalance    balance in the target reserve token contract
+     * @param _amount           amount of source reserve tokens converted
+     *
+     * @return expected amount in units of the target reserve token
+     * @return expected fee in units of the target reserve token
+     */
     function targetAmountAndFee(
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
@@ -799,10 +811,11 @@ contract StandardPoolConverter is
         uint256[2] memory newReserveBalances;
         (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
 
-        // calculate the amount of pool tokens to mint
         uint256 amount;
         uint256[2] memory reserveAmounts;
 
+        // calculate the amount of pool tokens to mint for the caller
+        // and the amount of reserve tokens to transfer from the caller
         if (totalSupply == 0) {
             amount = MathEx.geometricMean(_reserveAmounts);
             for (uint256 i = 0; i < 2; i++) {
@@ -850,20 +863,32 @@ contract StandardPoolConverter is
         return amount;
     }
 
+    /**
+     * @dev get the amount of pool tokens to mint for the caller
+     * and the amount of reserve tokens to transfer from the caller
+     *
+     * @param _reserveTokens    address of each reserve token
+     * @param _reserveAmounts   amount of each reserve token
+     * @param _reserveBalances  balance of each reserve token
+     * @param _totalSupply      total supply of pool tokens
+     *
+     * @return amount of pool tokens to mint for the caller
+     * @return amount of reserve tokens to transfer from the caller
+     */
     function addLiquidityAmounts(
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
-        uint256 totalSupply
+        uint256 _totalSupply
     ) internal virtual returns (uint256, uint256[2] memory) {
         _reserveTokens;
 
         uint256 index = _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
-        uint256 amount = fundSupplyAmount(totalSupply, _reserveBalances[index], _reserveAmounts[index]);
+        uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
 
         uint256[2] memory reserveAmounts;
         for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = fundCost(totalSupply, _reserveBalances[i], amount);
+            reserveAmounts[i] = fundCost(_totalSupply, _reserveBalances[i], amount);
         }
 
         return (amount, reserveAmounts);

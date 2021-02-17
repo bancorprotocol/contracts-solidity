@@ -85,6 +85,18 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         return targetAmountAndFee(_sourceToken, _targetToken, 0, 0, _amount);
     }
 
+    /**
+     * @dev returns the expected amount and expected fee for converting one reserve to another
+     *
+     * @param _sourceToken      address of the source reserve token contract
+     * @param _targetToken      address of the target reserve token contract
+     * @param _sourceBalance    balance in the source reserve token contract
+     * @param _targetBalance    balance in the target reserve token contract
+     * @param _amount           amount of source reserve tokens converted
+     *
+     * @return expected amount in units of the target reserve token
+     * @return expected fee in units of the target reserve token
+     */
     function targetAmountAndFee(
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
@@ -130,6 +142,18 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         return (amount, fee);
     }
 
+    /**
+     * @dev get the amount of pool tokens to mint for the caller
+     * and the amount of reserve tokens to transfer from the caller
+     *
+     * @param _reserveTokens    address of each reserve token
+     * @param _reserveAmounts   amount of each reserve token
+     * @param _reserveBalances  balance of each reserve token
+     * @param _totalSupply      total supply of pool tokens
+     *
+     * @return amount of pool tokens to mint for the caller
+     * @return amount of reserve tokens to transfer from the caller
+     */
     function addLiquidityAmounts(
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
