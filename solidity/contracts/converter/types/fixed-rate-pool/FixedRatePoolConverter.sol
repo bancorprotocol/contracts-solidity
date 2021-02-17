@@ -8,8 +8,7 @@ import "../standard-pool/StandardPoolConverter.sol";
  * liquidity pool that has 2 reserves with 50%/50% weights, and a conversion-rate of 1:1.
  */
 contract FixedRatePoolConverter is StandardPoolConverter {
-    uint128 private _rateN;
-    uint128 private _rateD;
+    mapping(IERC20Token => uint128) private _rate;
 
     /**
      * @dev initializes a new FixedRatePoolConverter instance
@@ -22,10 +21,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         IConverterAnchor _anchor,
         IContractRegistry _registry,
         uint32 _maxConversionFee
-    ) public StandardPoolConverter(_anchor, _registry, _maxConversionFee) {
-        _rateN = 1;
-        _rateD = 1;
-    }
+    ) public StandardPoolConverter(_anchor, _registry, _maxConversionFee) {}
 
     /**
      * @dev returns the converter type
@@ -37,26 +33,26 @@ contract FixedRatePoolConverter is StandardPoolConverter {
     }
 
     /**
-     * @dev returns the rate
+     * @dev returns the worth of the 1st reserve token in units of the 2nd reserve token
      *
-     * @return rate numerator
-     * @return rate denominator
+     * @return the numerator of the rate between the 1st reserve token and the 2nd reserve token
+     * @return the denominator of the rate between the 1st reserve token and the 2nd reserve token
      */
     function rate() public view returns (uint128, uint128) {
-        return (_rateN, _rateD);
+        return (_rate[__reserveTokens[0]], _rate[__reserveTokens[1]]);
     }
 
     /**
-     * @dev sets the rate
+     * @dev sets the worth of the 1st reserve token in units of the 2nd reserve token
      * can be executed only by the owner of the converter
      *
-     * @param rateN rate numerator
-     * @param rateD rate denominator
+     * @param rateN the numerator of the rate between the 1st reserve token and the 2nd reserve token
+     * @param rateD the denominator of the rate between the 1st reserve token and the 2nd reserve token
      */
     function setRate(uint128 rateN, uint128 rateD) public ownerOnly {
         require(rateN > 0 && rateD > 0, "ERR_INVALID_RATE");
-        _rateN = rateN;
-        _rateD = rateD;
+        _rate[__reserveTokens[0]] = rateN;
+        _rate[__reserveTokens[1]] = rateD;
     }
 
     /**
@@ -74,12 +70,10 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         IERC20Token _targetToken,
         uint256 _amount
     ) public view override active returns (uint256, uint256) {
-        uint128[2] memory factors = [_rateN, _rateD];
-
-        uint256 sourceId = __reserveIds[_sourceToken] - 1;
-        uint256 targetId = __reserveIds[_targetToken] - 1;
+        uint256 rateN = _rate[_sourceToken];
+        uint256 rateD = _rate[_targetToken];
     
-        uint256 amount = _amount.mul(factors[sourceId]).div(factors[targetId]);
+        uint256 amount = _amount.mul(rateN).div(rateD);
 
         uint256 fee = calculateFee(amount);
 
@@ -101,14 +95,12 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         IERC20Token _targetToken,
         uint256 _amount
     ) public view override active returns (uint256, uint256) {
-        uint128[2] memory factors = [_rateN, _rateD];
-
-        uint256 sourceId = __reserveIds[_sourceToken] - 1;
-        uint256 targetId = __reserveIds[_targetToken] - 1;
+        uint256 rateN = _rate[_sourceToken];
+        uint256 rateD = _rate[_targetToken];
     
         uint256 fee = calculateFeeInv(_amount);
 
-        uint256 amount = _amount.add(fee).mul(factors[targetId]).div(factors[sourceId]);
+        uint256 amount = _amount.add(fee).mul(rateD).div(rateN);
 
         return (amount, fee);
     }
@@ -138,15 +130,9 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256 targetId = __reserveIds[_targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
-        uint256 targetAmount;
-        {
-            uint128[2] memory factors = [_rateN, _rateD];
-            targetAmount = _amount.mul(factors[sourceId - 1]).div(factors[targetId - 1]);
-        }
 
         // get the target amount minus the conversion fee and the conversion fee
-        uint256 fee = calculateFee(targetAmount);
-        uint256 amount = targetAmount - fee;
+        (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, _amount);
 
         // ensure that the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
@@ -235,8 +221,10 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         if (totalSupply == 0) {
             amount = MathEx.geometricMean(reserveAmounts);
         } else {
-            uint256 n = reserveAmounts[0].mul(_rateN).add(reserveAmounts[1]).mul(_rateD);
-            uint256 d = oldReserveBalances[0].mul(_rateN).add(oldReserveBalances[1]).mul(_rateD);
+            uint256 rateN = _rate[_reserveTokens[0]];
+            uint256 rateD = _rate[_reserveTokens[1]];
+            uint256 n = reserveAmounts[0].mul(rateN).add(reserveAmounts[1]).mul(rateD);
+            uint256 d = oldReserveBalances[0].mul(rateN).add(oldReserveBalances[1]).mul(rateD);
             amount = totalSupply.mul(n).div(d);
         }
 
