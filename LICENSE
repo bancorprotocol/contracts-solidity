@@ -1,0 +1,45 @@
+                        Bprotocol Foundation (Bancor) LICENSE
+
+1. SUBJECT TO THE PROVISIONS SET FORTH HEREIN, INCLUDING “EFFECTIVE DATE”, YOU CAN
+   USE THIS CODE, FILE AND/OR SOFTWARE (“SOFTWARE”) ONLY IN CONNECTION WITH THE
+   BANCOR LIQUIDITY NETWORK AND/OR THE USE OF BNT ("PERMITTED USE"). ANY OTHER USE IS
+   PROHIBITED UNLESS THE USER SHALL RECEIVE AN EXPLICIT PRIOR WRITTEN APPROVAL FROM
+   BPROTOCOL FOUNDATION (BANCOR) TO DO SO (PLEASE CONTACT license@bancor.network IN
+   THIS REGARD), WHICH APPROVAL, IF GIVEN, MAY REQUIRE THE OBTAINMENT OF SEPARATE
+   LICENSE UNDER A DIFFERENT LICENSING MODEL. USING THIS SOFTWARE NOT IN THE FRAME OF
+   SUCH PERMITTED USE MAY, AMONG OTHERS, ALSO BREACH PATENT RIGHTS CONCERNING PATENTS
+   WHICH ARE EMBODIED/INCORPORATED/USED IN THIS SOFTWARE.
+
+2. ANY SUCH PERMITTED USE SHOULD ALSO COMPLY WITH THE TERMS BELOW.
+
+3. Redistribution and use in source and binary forms, with or without modification,
+   are permitted provided that the following conditions are met:
+A. Redistributions of source code must retain the above copyright notice, this list
+   of conditions and the following disclaimer.
+B. Redistributions in binary form must reproduce the above copyright notice, this
+   list of conditions and the following disclaimer in the documentation and/or other
+   materials provided with the distribution.
+C. Neither the name of the copyright holder nor the names of its contributors may be
+   used to endorse or promote products derived from this software without specific prior
+   written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+EFFECTIVE DATE: THIS LICENSE SHALL APPLY ONLY TO SOFTWARE (OR ANY VERSION THEREOF),
+THAT HAS BEEN PUBLISHED AFTER THE DATE AND TIME THIS LICENSE HAS BEEN FIRST PUBLISHED
+(“EFFECTIVE DATE”); Any previous versions published prior to the effective date (“Older Versions”)
+shall remain licensed under the Apache License, Version 2.0 (the "Older Versions License");
+You may obtain a copy of the Older Version License at http://www.apache.org/licenses/LICENSE-2.0
+you may not use this file except in compliance with the Older Version License. Unless
+required by applicable law or agreed to in writing, Older Versions distributed under the
+Older Version License are distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+OF ANY KIND, either express or implied. See the Older Version License for the specific
+language governing permissions and limitations under the Older Version License.
