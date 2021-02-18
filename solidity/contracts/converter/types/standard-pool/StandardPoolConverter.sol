@@ -552,7 +552,7 @@ contract StandardPoolConverter is
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
 
-        return targetAmountAndFee(_sourceToken, _targetToken, sourceBalance, targetBalance, _amount);
+        return targetAmountAndFee(IERC20Token(0), IERC20Token(0), sourceBalance, targetBalance, _amount);
     }
 
     /**
@@ -623,7 +623,7 @@ contract StandardPoolConverter is
         uint256 _amount,
         address _trader,
         address payable _beneficiary
-    ) internal virtual returns (uint256) {
+    ) internal returns (uint256) {
         // update the recent average rate
         updateRecentAverageRate();
 
@@ -777,7 +777,7 @@ contract StandardPoolConverter is
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _minReturn
-    ) public payable virtual protected active returns (uint256) {
+    ) public payable protected active returns (uint256) {
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
