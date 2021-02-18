@@ -552,7 +552,7 @@ contract StandardPoolConverter is
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
 
-        return targetAmountAndFee(IERC20Token(0), IERC20Token(0), sourceBalance, targetBalance, _amount);
+        return targetAmountAndFee(_sourceToken, _targetToken, sourceBalance, targetBalance, _amount);
     }
 
     /**
