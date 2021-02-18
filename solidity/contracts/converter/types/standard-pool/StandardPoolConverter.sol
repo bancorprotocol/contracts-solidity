@@ -40,7 +40,7 @@ contract StandardPoolConverter is
 
     uint256 private __reserveBalances;
     IERC20Token[] internal __reserveTokens;
-    mapping(IERC20Token => uint256) internal __reserveIds;
+    mapping(IERC20Token => uint256) private __reserveIds;
 
     IConverterAnchor public override anchor; // converter anchor contract
     uint32 public override maxConversionFee; // maximum conversion fee, represented in ppm, 0...1000000
@@ -1063,8 +1063,8 @@ contract StandardPoolConverter is
         IERC20Token[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _amount
-    ) internal view virtual returns (bool) {
-        require(_reserveAmounts[0] > 0 && _reserveAmounts[1] > 0 && _amount > 0, "ERR_ZERO_AMOUNT");
+    ) private view returns (bool) {
+        require(validReserveAmounts(_reserveAmounts) && _amount > 0, "ERR_ZERO_AMOUNT");
 
         uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
         uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
@@ -1081,6 +1081,17 @@ contract StandardPoolConverter is
 
         require(reserve0Id == 1 && reserve1Id == 2, "ERR_INVALID_RESERVE");
         return false;
+    }
+
+    /**
+     * @dev checks whether or not both reserve amounts are larger than zero
+     *
+     * @param _reserveAmounts  array of reserve amounts
+     *
+     * @return true if both reserve amounts are larger than zero; false otherwise
+     */
+    function validReserveAmounts(uint256[] memory _reserveAmounts) internal pure virtual returns (bool) {
+        return _reserveAmounts[0] > 0 && _reserveAmounts[1] > 0;
     }
 
     /**
