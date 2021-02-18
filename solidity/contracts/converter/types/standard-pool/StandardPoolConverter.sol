@@ -1134,7 +1134,7 @@ contract StandardPoolConverter is
         IERC20Token _targetToken,
         uint256 _sourceBalance,
         uint256 _targetBalance
-    ) internal {
+    ) private {
         // save a local copy of the pool token
         IDSToken poolToken = IDSToken(address(anchor));
 
