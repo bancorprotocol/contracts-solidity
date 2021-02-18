@@ -51,7 +51,8 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return the denominator of the rate between the 1st reserve token and the 2nd reserve token
      */
     function rate() public view returns (uint256, uint256) {
-        return (_rate[__reserveTokens[0]], _rate[__reserveTokens[1]]);
+        IERC20Token[] memory _reserveTokens = reserveTokens();
+        return (_rate[_reserveTokens[0]], _rate[_reserveTokens[1]]);
     }
 
     /**
@@ -63,8 +64,9 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      */
     function setRate(uint256 rateN, uint256 rateD) public ownerOnly {
         require(rateN > 0 && rateD > 0, "ERR_INVALID_RATE");
-        _rate[__reserveTokens[0]] = rateN;
-        _rate[__reserveTokens[1]] = rateD;
+        IERC20Token[] memory _reserveTokens = reserveTokens();
+        _rate[_reserveTokens[0]] = rateN;
+        _rate[_reserveTokens[1]] = rateD;
     }
 
     /**

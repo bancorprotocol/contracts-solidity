@@ -39,7 +39,7 @@ contract StandardPoolConverter is
     uint32 private constant PPM_RESOLUTION = 1000000;
 
     uint256 private __reserveBalances;
-    IERC20Token[] internal __reserveTokens;
+    IERC20Token[] private __reserveTokens;
     mapping(IERC20Token => uint256) private __reserveIds;
 
     IConverterAnchor public override anchor; // converter anchor contract
