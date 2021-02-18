@@ -881,6 +881,7 @@ contract StandardPoolConverter is
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
     ) internal view virtual returns (uint256, uint256[2] memory) {
+        this;
         _reserveTokens;
 
         uint256 index = _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
