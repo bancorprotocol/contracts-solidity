@@ -170,37 +170,13 @@ contract FixedRatePoolConverter is StandardPoolConverter {
     }
 
     /**
-     * @dev verifies that a given array of tokens is identical to the converter's array of reserve tokens
-     * we take this input in order to allow specifying the corresponding reserve amounts in any order
-     * this function rearranges the input arrays according to the converter's array of reserve tokens
+     * @dev checks whether or not at least one reserve amount is larger than zero
      *
-     * @param _reserveTokens   array of reserve tokens
      * @param _reserveAmounts  array of reserve amounts
-     * @param _amount          token amount
      *
-     * @return true if the function has rearranged the input arrays; false otherwise
+     * @return true if at least one of the reserve amounts is larger than zero; false otherwise
      */
-    function verifyLiquidityInput(
-        IERC20Token[] memory _reserveTokens,
-        uint256[] memory _reserveAmounts,
-        uint256 _amount
-    ) internal view override returns (bool) {
-        require(_amount > 0, "ERR_ZERO_AMOUNT");
-
-        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
-        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
-
-        if (reserve0Id == 2 && reserve1Id == 1) {
-            IERC20Token tempReserveToken = _reserveTokens[0];
-            _reserveTokens[0] = _reserveTokens[1];
-            _reserveTokens[1] = tempReserveToken;
-            uint256 tempReserveAmount = _reserveAmounts[0];
-            _reserveAmounts[0] = _reserveAmounts[1];
-            _reserveAmounts[1] = tempReserveAmount;
-            return true;
-        }
-
-        require(reserve0Id == 1 && reserve1Id == 2, "ERR_INVALID_RESERVE");
-        return false;
+    function validReserveAmounts(uint256[] memory _reserveAmounts) internal pure override returns (bool) {
+        return _reserveAmounts[0] > 0 || _reserveAmounts[1] > 0;
     }
 }
