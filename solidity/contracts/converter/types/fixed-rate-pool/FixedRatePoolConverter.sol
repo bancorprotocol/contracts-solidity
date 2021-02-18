@@ -88,11 +88,9 @@ contract FixedRatePoolConverter is StandardPoolConverter {
     /**
      * @dev returns the expected amount and expected fee for converting one reserve to another
      *
-     * @param _sourceToken      address of the source reserve token contract
-     * @param _targetToken      address of the target reserve token contract
-     * @param _sourceBalance    balance in the source reserve token contract
-     * @param _targetBalance    balance in the target reserve token contract
-     * @param _amount           amount of source reserve tokens converted
+     * @param _sourceToken  address of the source reserve token contract
+     * @param _targetToken  address of the target reserve token contract
+     * @param _amount       amount of source reserve tokens converted
      *
      * @return expected amount in units of the target reserve token
      * @return expected fee in units of the target reserve token
@@ -100,13 +98,10 @@ contract FixedRatePoolConverter is StandardPoolConverter {
     function targetAmountAndFee(
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
-        uint256 _sourceBalance,
-        uint256 _targetBalance,
+        uint256 /* _sourceBalance */,
+        uint256 /* _targetBalance */,
         uint256 _amount
     ) internal view override returns (uint256, uint256) {
-        _sourceBalance;
-        _targetBalance;
-
         uint256 rateN = _rate[_sourceToken];
         uint256 rateD = _rate[_targetToken];
     
