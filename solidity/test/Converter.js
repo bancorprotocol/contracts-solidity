@@ -113,6 +113,10 @@ describe('Converter', () => {
             await converter.addReserve(reserveAddresses[i], reserveWeights[i]);
         }
 
+        if (type == 4) {
+            await converter.setRate(1, 1);
+        }
+
         switch (type) {
             case 0:
                 await anchor.issue(owner, 20000);

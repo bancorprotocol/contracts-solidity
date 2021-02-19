@@ -94,6 +94,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
     ) internal view override returns (uint256, uint256) {
         uint256 rateN = _rate[_sourceToken];
         uint256 rateD = _rate[_targetToken];
+        require(rateN > 0 && rateD > 0 && _sourceToken != _targetToken, "ERR_INVALID_RESERVES");
     
         uint256 amount = _amount.mul(rateN).div(rateD);
 
