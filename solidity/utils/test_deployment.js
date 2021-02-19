@@ -325,14 +325,15 @@ const run = async () => {
                     await execute(deployedToken.methods.approve(converterBase._address, amounts[i]));
                 }
             }
-            if (type === 1) {
+            switch (type) {
+            case 1:
                 const deployedConverter = deployed(web3, 'LiquidityPoolV1Converter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
-            }
-            if (type === 3) {
+                break;
+            case 3:
                 const deployedConverter = deployed(web3, 'StandardPoolConverter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
-            }
+                break;
         }
 
         reserves[converter.symbol] = {
