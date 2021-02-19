@@ -92,9 +92,15 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256 /* _targetBalance */,
         uint256 _amount
     ) internal view override returns (uint256, uint256) {
+        IERC20Token[] memory _reserveTokens = reserveTokens();
+        require(
+            (_sourceToken == _reserveTokens[0] && _targetToken == _reserveTokens[1]) ||
+            (_sourceToken == _reserveTokens[1] && _targetToken == _reserveTokens[0]),
+            "ERR_INVALID_RESERVES"
+        );
+
         uint256 rateN = _rate[_sourceToken];
         uint256 rateD = _rate[_targetToken];
-        require(rateN > 0 && rateD > 0 && _sourceToken != _targetToken, "ERR_INVALID_RESERVES");
     
         uint256 amount = _amount.mul(rateN).div(rateD);
 
