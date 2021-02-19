@@ -33,18 +33,6 @@ contract FixedRatePoolConverter is StandardPoolConverter {
     }
 
     /**
-     * @dev defines a new reserve token for the converter
-     * can only be called by the owner while the converter is inactive
-     *
-     * @param _token   address of the reserve token
-     * @param _weight  reserve weight, represented in ppm, 1-1000000
-     */
-    function addReserve(IERC20Token _token, uint32 _weight) public override {
-        super.addReserve(_token, _weight);
-        _rate[_token] = 1;
-    }
-
-    /**
      * @dev returns the worth of the 1st reserve token in units of the 2nd reserve token
      *
      * @return the numerator of the rate between the 1st reserve token and the 2nd reserve token
