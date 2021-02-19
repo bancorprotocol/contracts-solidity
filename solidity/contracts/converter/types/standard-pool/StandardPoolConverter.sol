@@ -163,7 +163,7 @@ contract StandardPoolConverter is
      *
      * @return see the converter types in the the main contract doc
      */
-    function converterType() public pure override returns (uint16) {
+    function converterType() public pure virtual override returns (uint16) {
         return 3;
     }
 
@@ -546,13 +546,33 @@ contract StandardPoolConverter is
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
         uint256 _amount
-    ) public view override active returns (uint256, uint256) {
+    ) public view virtual override active returns (uint256, uint256) {
         uint256 sourceId = __reserveIds[_sourceToken];
         uint256 targetId = __reserveIds[_targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
 
-        uint256 amount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
+        return targetAmountAndFee(_sourceToken, _targetToken, sourceBalance, targetBalance, _amount);
+    }
+
+    /**
+     * @dev returns the expected amount and expected fee for converting one reserve to another
+     *
+     * @param _sourceBalance    balance in the source reserve token contract
+     * @param _targetBalance    balance in the target reserve token contract
+     * @param _amount           amount of source reserve tokens converted
+     *
+     * @return expected amount in units of the target reserve token
+     * @return expected fee in units of the target reserve token
+     */
+    function targetAmountAndFee(
+        IERC20Token /* _sourceToken */,
+        IERC20Token /* _targetToken */,
+        uint256 _sourceBalance,
+        uint256 _targetBalance,
+        uint256 _amount
+    ) internal view virtual returns (uint256, uint256) {
+        uint256 amount = crossReserveTargetAmount(_sourceBalance, _targetBalance, _amount);
 
         uint256 fee = calculateFee(amount);
 
@@ -573,7 +593,7 @@ contract StandardPoolConverter is
         IERC20Token _sourceToken,
         IERC20Token _targetToken,
         uint256 _amount
-    ) public view active returns (uint256, uint256) {
+    ) public view virtual active returns (uint256, uint256) {
         uint256 sourceId = __reserveIds[_sourceToken];
         uint256 targetId = __reserveIds[_targetToken];
 
@@ -611,11 +631,9 @@ contract StandardPoolConverter is
         uint256 targetId = __reserveIds[_targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
-        uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, _amount);
 
         // get the target amount minus the conversion fee and the conversion fee
-        uint256 fee = calculateFee(targetAmount);
-        uint256 amount = targetAmount - fee;
+        (uint256 amount, uint256 fee) = targetAmountAndFee(_sourceToken, _targetToken, sourceBalance, targetBalance, _amount);
 
         // ensure that the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
@@ -788,22 +806,18 @@ contract StandardPoolConverter is
         uint256[2] memory newReserveBalances;
         (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
 
-        // calculate the amount of pool tokens to mint
         uint256 amount;
-        uint256[] memory reserveAmounts = new uint256[](2);
+        uint256[2] memory reserveAmounts;
 
+        // calculate the amount of pool tokens to mint for the caller
+        // and the amount of reserve tokens to transfer from the caller
         if (totalSupply == 0) {
+            amount = MathEx.geometricMean(_reserveAmounts);
             for (uint256 i = 0; i < 2; i++) {
                 reserveAmounts[i] = _reserveAmounts[i];
             }
-            amount = MathEx.geometricMean(reserveAmounts);
         } else {
-            uint256 index =
-                (_reserveAmounts[0].mul(oldReserveBalances[1]) < _reserveAmounts[1].mul(oldReserveBalances[0])) ? 0 : 1;
-            amount = fundSupplyAmount(totalSupply, oldReserveBalances[index], _reserveAmounts[index]);
-            for (uint256 i = 0; i < 2; i++) {
-                reserveAmounts[i] = fundCost(totalSupply, oldReserveBalances[i], amount);
-            }
+            (amount, reserveAmounts) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, oldReserveBalances, totalSupply);
         }
 
         uint256 newPoolTokenSupply = totalSupply.add(amount);
@@ -842,6 +856,36 @@ contract StandardPoolConverter is
 
         // return the amount of pool tokens issued
         return amount;
+    }
+
+    /**
+     * @dev get the amount of pool tokens to mint for the caller
+     * and the amount of reserve tokens to transfer from the caller
+     *
+     * @param _reserveAmounts   amount of each reserve token
+     * @param _reserveBalances  balance of each reserve token
+     * @param _totalSupply      total supply of pool tokens
+     *
+     * @return amount of pool tokens to mint for the caller
+     * @return amount of reserve tokens to transfer from the caller
+     */
+    function addLiquidityAmounts(
+        IERC20Token[] memory /* _reserveTokens */,
+        uint256[] memory _reserveAmounts,
+        uint256[2] memory _reserveBalances,
+        uint256 _totalSupply
+    ) internal view virtual returns (uint256, uint256[2] memory) {
+        this;
+
+        uint256 index = _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
+        uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
+
+        uint256[2] memory reserveAmounts;
+        for (uint256 i = 0; i < 2; i++) {
+            reserveAmounts[i] = fundCost(_totalSupply, _reserveBalances[i], amount);
+        }
+
+        return (amount, reserveAmounts);
     }
 
     /**
@@ -1020,7 +1064,7 @@ contract StandardPoolConverter is
         uint256[] memory _reserveAmounts,
         uint256 _amount
     ) private view returns (bool) {
-        require(_reserveAmounts[0] > 0 && _reserveAmounts[1] > 0 && _amount > 0, "ERR_ZERO_AMOUNT");
+        require(validReserveAmounts(_reserveAmounts) && _amount > 0, "ERR_ZERO_AMOUNT");
 
         uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
         uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
@@ -1037,6 +1081,17 @@ contract StandardPoolConverter is
 
         require(reserve0Id == 1 && reserve1Id == 2, "ERR_INVALID_RESERVE");
         return false;
+    }
+
+    /**
+     * @dev checks whether or not both reserve amounts are larger than zero
+     *
+     * @param _reserveAmounts  array of reserve amounts
+     *
+     * @return true if both reserve amounts are larger than zero; false otherwise
+     */
+    function validReserveAmounts(uint256[] memory _reserveAmounts) internal pure virtual returns (bool) {
+        return _reserveAmounts[0] > 0 && _reserveAmounts[1] > 0;
     }
 
     /**
