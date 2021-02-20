@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
@@ -10,7 +11,6 @@ import "../utility/interfaces/ICheckpointStore.sol";
 import "../utility/MathEx.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/Owned.sol";
-import "../utility/TokenHandler.sol";
 import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
@@ -40,8 +40,10 @@ interface ILiquidityPoolConverter is IConverter {
 /**
  * @dev This contract implements the liquidity protection mechanism.
  */
-contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned, ReentrancyGuard, Time {
+contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGuard, Time {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+    using SafeERC20 for IDSToken;
     using MathEx for *;
 
     struct ProtectedLiquidity {
@@ -323,7 +325,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
+        _networkToken.safeTransferFrom(msg.sender, address(this), _amount);
         burnNetworkTokens(_poolAnchor, _amount);
 
         // mint governance tokens to the recipient
@@ -376,7 +378,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // transfer the base tokens from the caller and approve the converter
         ensureAllowance(_networkToken, address(converter), newNetworkLiquidityAmount);
         if (_baseToken != ETH_RESERVE_ADDRESS) {
-            safeTransferFrom(_baseToken, msg.sender, address(this), _amount);
+            _baseToken.safeTransferFrom(msg.sender, address(this), _amount);
             ensureAllowance(_baseToken, address(converter), _amount);
         }
 
@@ -385,7 +387,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // transfer the new pool tokens to the wallet
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
-        safeTransfer(poolToken, address(wallet), poolTokenAmount);
+        poolToken.safeTransfer(address(wallet), poolTokenAmount);
 
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
@@ -676,7 +678,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
         // tokens to the contract itself, since only token holders can burn their tokens
         if (liquidity.reserveToken == networkTokenLocal) {
-            safeTransferFrom(govToken, _provider, address(this), liquidity.reserveAmount);
+            govToken.safeTransferFrom(_provider, address(this), liquidity.reserveAmount);
             govTokenGovernance.burn(liquidity.reserveAmount);
         }
 
@@ -735,7 +737,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             _provider.transfer(baseBalance);
         } else {
             baseBalance = liquidity.reserveToken.balanceOf(address(this));
-            safeTransfer(liquidity.reserveToken, _provider, baseBalance);
+            liquidity.reserveToken.safeTransfer(_provider, baseBalance);
         }
 
         // compensate the caller with network tokens if still needed
@@ -748,7 +750,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             }
 
             // lock network tokens for the caller
-            safeTransfer(networkTokenLocal, address(wallet), delta);
+            networkTokenLocal.safeTransfer(address(wallet), delta);
             lockTokens(_provider, delta);
         }
 
@@ -1317,8 +1319,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ) private {
         uint256 allowance = _token.allowance(address(this), _spender);
         if (allowance < _value) {
-            if (allowance > 0) safeApprove(_token, _spender, 0);
-            safeApprove(_token, _spender, _value);
+            if (allowance > 0) {
+                _token.safeApprove(_spender, 0);
+            }
+            _token.safeApprove(_spender, _value);
         }
     }
 

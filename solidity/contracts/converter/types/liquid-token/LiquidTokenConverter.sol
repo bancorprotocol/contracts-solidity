@@ -11,6 +11,8 @@ import "../../../token/interfaces/IDSToken.sol";
  * Liquid tokens usually have fractional reserve (reserve ratio smaller than 100%).
  */
 contract LiquidTokenConverter is ConverterBase {
+    using SafeERC20 for IERC20;
+
     /**
      * @dev initializes a new LiquidTokenConverter instance
      *
@@ -265,8 +267,11 @@ contract LiquidTokenConverter is ConverterBase {
         reserves[reserveToken].balance = reserves[reserveToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the reserve token
-        if (reserveToken == ETH_RESERVE_ADDRESS) _beneficiary.transfer(amount);
-        else safeTransfer(reserveToken, _beneficiary, amount);
+        if (reserveToken == ETH_RESERVE_ADDRESS) {
+            _beneficiary.transfer(amount);
+        } else {
+            reserveToken.safeTransfer(_beneficiary, amount);
+        }
 
         // dispatch the conversion event
         dispatchConversionEvent(IDSToken(address(anchor)), reserveToken, _trader, _amount, amount, fee);

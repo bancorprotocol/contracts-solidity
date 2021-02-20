@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./interfaces/ILiquidityProtectionStore.sol";
 import "../utility/Owned.sol";
-import "../utility/TokenHandler.sol";
 import "../utility/Utils.sol";
 
 /**
@@ -13,8 +13,9 @@ import "../utility/Utils.sol";
  *
  * It holds the data and tokens, and it is generally non-upgradable.
  */
-contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHandler, Utils {
+contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     struct ProtectedLiquidity {
         address provider; // liquidity provider
@@ -138,7 +139,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, TokenHand
         address _to,
         uint256 _amount
     ) external override ownerOnly validAddress(_to) notThis(_to) {
-        safeTransfer(_token, _to, _amount);
+        _token.safeTransfer(_to, _amount);
     }
 
     /**

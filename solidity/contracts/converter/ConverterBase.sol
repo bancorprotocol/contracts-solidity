@@ -10,7 +10,6 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IBancorFormula.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
-import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
 import "../utility/interfaces/IWhitelist.sol";
 
@@ -39,14 +38,7 @@ import "../utility/interfaces/IWhitelist.sol";
  *
  * Note that converters don't currently support tokens with transfer fees.
  */
-abstract contract ConverterBase is
-    ConverterVersion,
-    IConverter,
-    TokenHandler,
-    TokenHolder,
-    ContractRegistryClient,
-    ReentrancyGuard
-{
+abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint32 internal constant PPM_RESOLUTION = 1000000;

@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../../ConverterVersion.sol";
 import "../../interfaces/IConverter.sol";
@@ -11,7 +12,6 @@ import "../../../token/interfaces/IDSToken.sol";
 import "../../../utility/MathEx.sol";
 import "../../../utility/ContractRegistryClient.sol";
 import "../../../utility/ReentrancyGuard.sol";
-import "../../../utility/TokenHandler.sol";
 import "../../../utility/TokenHolder.sol";
 import "../../../utility/Time.sol";
 
@@ -22,13 +22,13 @@ import "../../../utility/Time.sol";
 contract StandardPoolConverter is
     ConverterVersion,
     IConverter,
-    TokenHandler,
     TokenHolder,
     ContractRegistryClient,
     ReentrancyGuard,
     Time
 {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
     using MathEx for *;
 
     IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
@@ -659,7 +659,7 @@ contract StandardPoolConverter is
         if (_targetToken == ETH_RESERVE_ADDRESS) {
             _beneficiary.transfer(amount);
         } else {
-            safeTransfer(_targetToken, _beneficiary, amount);
+            _targetToken.safeTransfer(_beneficiary, amount);
         }
 
         // dispatch the conversion event
@@ -836,7 +836,7 @@ contract StandardPoolConverter is
             // transfer each one of the reserve amounts from the user to the pool
             if (reserveToken != ETH_RESERVE_ADDRESS) {
                 // ETH has already been transferred as part of the transaction
-                safeTransferFrom(reserveToken, msg.sender, address(this), reserveAmount);
+                reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
             } else if (_reserveAmounts[i] > reserveAmount) {
                 // transfer the extra amount of ETH back to the user
                 msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
@@ -966,7 +966,7 @@ contract StandardPoolConverter is
             if (reserveToken == ETH_RESERVE_ADDRESS) {
                 msg.sender.transfer(reserveAmount);
             } else {
-                safeTransfer(reserveToken, msg.sender, reserveAmount);
+                reserveToken.safeTransfer(msg.sender, reserveAmount);
             }
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);

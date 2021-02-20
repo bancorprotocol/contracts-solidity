@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
@@ -45,6 +46,7 @@ interface ILegacyConverter {
  */
 contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     uint256 private constant PPM_RESOLUTION = 1000000;
     IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
@@ -385,8 +387,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             if (stepData.isV28OrHigherConverter) {
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
-                if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken])
-                    safeTransfer(stepData.sourceToken, address(stepData.converter), fromAmount);
+                if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken]) {
+                    stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
+                }
             }
             // older converter
             // if the source token is the liquid token, no need to do any transfers as the converter controls it
@@ -474,7 +477,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         else if (etherTokens[_sourceToken]) {
             // claim the tokens - if the source token is ETH reserve, this call will fail
             // since in that case the transaction must be sent with msg.value
-            safeTransferFrom(_sourceToken, msg.sender, address(this), _amount);
+            _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
 
             // ETH converter - withdraw the ETH
             if (isNewerConverter) IEtherToken(address(_sourceToken)).withdraw(_amount);
@@ -483,8 +486,11 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         else {
             // newer converter - transfer the tokens from the sender directly to the converter
             // otherwise claim the tokens
-            if (isNewerConverter) safeTransferFrom(_sourceToken, msg.sender, address(firstConverter), _amount);
-            else safeTransferFrom(_sourceToken, msg.sender, address(this), _amount);
+            if (isNewerConverter) {
+                _sourceToken.safeTransferFrom(msg.sender, address(firstConverter), _amount);
+            } else {
+                _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
+            }
         }
     }
 
@@ -517,7 +523,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         }
         // other ERC20 token
         else {
-            safeTransfer(targetToken, _beneficiary, _amount);
+            targetToken.safeTransfer(_beneficiary, _amount);
         }
     }
 
@@ -624,8 +630,10 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     ) private {
         uint256 allowance = _token.allowance(address(this), _spender);
         if (allowance < _value) {
-            if (allowance > 0) safeApprove(_token, _spender, 0);
-            safeApprove(_token, _spender, _value);
+            if (allowance > 0) {
+                _token.safeApprove(_spender, 0);
+            }
+            _token.safeApprove(_spender, _value);
         }
     }
 

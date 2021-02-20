@@ -2,10 +2,10 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./Owned.sol";
 import "./Utils.sol";
-import "./TokenHandler.sol";
 import "./interfaces/ITokenHolder.sol";
 
 /**
@@ -19,7 +19,9 @@ import "./interfaces/ITokenHolder.sol";
  * in order to support both non standard as well as standard token contracts.
  * see https://github.com/ethereum/solidity/issues/4116
  */
-contract TokenHolder is ITokenHolder, TokenHandler, Owned, Utils {
+contract TokenHolder is ITokenHolder, Owned, Utils {
+    using SafeERC20 for IERC20;
+
     /**
      * @dev withdraws tokens held by the contract and sends them to an account
      * can only be called by the owner
@@ -33,6 +35,6 @@ contract TokenHolder is ITokenHolder, TokenHandler, Owned, Utils {
         address _to,
         uint256 _amount
     ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {
-        safeTransfer(_token, _to, _amount);
+        _token.safeTransfer(_to, _amount);
     }
 }

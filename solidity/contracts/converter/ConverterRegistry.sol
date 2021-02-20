@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "../utility/TokenHandler.sol";
+
 import "../utility/ContractRegistryClient.sol";
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
@@ -26,7 +26,7 @@ import "../token/interfaces/IDSToken.sol";
  *
  * The contract is upgradable.
  */
-contract ConverterRegistry is IConverterRegistry, ContractRegistryClient, TokenHandler {
+contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
     uint32 private constant PPM_RESOLUTION = 1000000;
 
     /**
