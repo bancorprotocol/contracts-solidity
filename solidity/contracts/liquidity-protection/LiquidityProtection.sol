@@ -913,20 +913,22 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             );
         }
 
-        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
+        IERC20Token otherReserve = converterOtherReserve(converter, _reserveToken);
+        (uint256 rateN, uint256 rateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
+
         stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         stats.addProviderPool(_provider, _poolToken);
-        return
-            store.addProtectedLiquidity(
-                _provider,
-                _poolToken,
-                _reserveToken,
-                _poolAmount,
-                _reserveAmount,
-                rate.n,
-                rate.d,
-                time()
-            );
+        return store.addProtectedLiquidity(
+            _provider,
+            _poolToken,
+            _reserveToken,
+            _poolAmount,
+            _reserveAmount,
+            rateN,
+            rateD,
+            time()
+        );
     }
 
     /**
