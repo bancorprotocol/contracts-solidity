@@ -43,7 +43,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
     uint256 public prevReleaseBlockNumber; // the block number of the last release transaction
     uint8 public minRequiredReports; // minimum number of required reports to release tokens
 
-    IERC20Token public override token; // erc20 token
+    IERC20 public override token; // erc20 token
 
     bool public xTransfersEnabled = true; // true if x transfers are enabled, false if not
     bool public reportingEnabled = true; // true if reporting is enabled, false if not
@@ -132,7 +132,7 @@ contract BancorX is IBancorX, TokenHandler, TokenHolder, ContractRegistryClient 
         uint256 _limitIncPerBlock,
         uint8 _minRequiredReports,
         IContractRegistry _registry,
-        IERC20Token _token
+        IERC20 _token
     )
         public
         ContractRegistryClient(_registry)

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./Owned.sol";
 import "./Utils.sol";
 import "./TokenHandler.sol";
 import "./interfaces/ITokenHolder.sol";
-import "../token/interfaces/IERC20Token.sol";
 
 /**
  * @dev This contract provides a safety mechanism for allowing the owner to
@@ -27,7 +29,7 @@ contract TokenHolder is ITokenHolder, TokenHandler, Owned, Utils {
      * @param _amount  amount to withdraw
      */
     function withdrawTokens(
-        IERC20Token _token,
+        IERC20 _token,
         address _to,
         uint256 _amount
     ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {

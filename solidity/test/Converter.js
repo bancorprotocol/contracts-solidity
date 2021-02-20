@@ -9,7 +9,7 @@ const { ZERO_ADDRESS } = constants;
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
@@ -216,7 +216,7 @@ describe('Converter', () => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, 1000000000);
         reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
@@ -528,7 +528,7 @@ describe('Converter', () => {
                 it('verifies that the owner can withdraw a non reserve token from the converter while the converter is not active', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
 
-                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 100000);
+                    const token = await TestStandardToken.new('ERC Token 3', 'ERC3', 18, 100000);
 
                     const value = new BN(1000);
                     await token.transfer(converter.address, value);
@@ -568,7 +568,7 @@ describe('Converter', () => {
                 it('verifies that the owner can withdraw a non reserve token from the converter while the converter is active', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
-                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 100000);
+                    const token = await TestStandardToken.new('ERC Token 3', 'ERC3', 18, 100000);
                     const value = new BN(1000);
                     await token.transfer(converter.address, value);
 
@@ -597,7 +597,7 @@ describe('Converter', () => {
                 it('should revert when a non owner attempts to withdraw a non reserve token while the converter is not active', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
 
-                    const token = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 100000);
+                    const token = await TestStandardToken.new('ERC Token 3', 'ERC3', 18, 100000);
 
                     const value = new BN(255);
                     await token.transfer(converter.address, value);

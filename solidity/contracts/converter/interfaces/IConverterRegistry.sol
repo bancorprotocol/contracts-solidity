@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./IConverterAnchor.sol";
-import "../../token/interfaces/IERC20Token.sol";
 
 interface IConverterRegistry {
     function getAnchorCount() external view returns (uint256);
@@ -24,18 +26,18 @@ interface IConverterRegistry {
 
     function getConvertibleTokens() external view returns (address[] memory);
 
-    function getConvertibleToken(uint256 _index) external view returns (IERC20Token);
+    function getConvertibleToken(uint256 _index) external view returns (IERC20);
 
     function isConvertibleToken(address _value) external view returns (bool);
 
-    function getConvertibleTokenAnchorCount(IERC20Token _convertibleToken) external view returns (uint256);
+    function getConvertibleTokenAnchorCount(IERC20 _convertibleToken) external view returns (uint256);
 
-    function getConvertibleTokenAnchors(IERC20Token _convertibleToken) external view returns (address[] memory);
+    function getConvertibleTokenAnchors(IERC20 _convertibleToken) external view returns (address[] memory);
 
-    function getConvertibleTokenAnchor(IERC20Token _convertibleToken, uint256 _index)
+    function getConvertibleTokenAnchor(IERC20 _convertibleToken, uint256 _index)
         external
         view
         returns (IConverterAnchor);
 
-    function isConvertibleTokenAnchor(IERC20Token _convertibleToken, address _value) external view returns (bool);
+    function isConvertibleTokenAnchor(IERC20 _convertibleToken, address _value) external view returns (bool);
 }

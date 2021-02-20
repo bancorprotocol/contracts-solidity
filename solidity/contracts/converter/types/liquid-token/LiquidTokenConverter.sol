@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "../../ConverterBase.sol";
 import "../../../token/interfaces/IDSToken.sol";
 
@@ -52,7 +53,7 @@ contract LiquidTokenConverter is ConverterBase {
      * @param _token   address of the reserve token
      * @param _weight  reserve weight, represented in ppm, 1-1000000
      */
-    function addReserve(IERC20Token _token, uint32 _weight) public override ownerOnly {
+    function addReserve(IERC20 _token, uint32 _weight) public override ownerOnly {
         // verify that the converter doesn't have a reserve yet
         require(reserveTokenCount() == 0, "ERR_INVALID_RESERVE_COUNT");
         super.addReserve(_token, _weight);
@@ -70,8 +71,8 @@ contract LiquidTokenConverter is ConverterBase {
      * @return expected fee
      */
     function targetAmountAndFee(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) public view override returns (uint256, uint256) {
         if (_targetToken == IDSToken(address(anchor)) && reserves[_sourceToken].isSet)
@@ -95,14 +96,14 @@ contract LiquidTokenConverter is ConverterBase {
      * @return amount of tokens received (in units of the target token)
      */
     function doConvert(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount,
         address _trader,
         address payable _beneficiary
     ) internal override returns (uint256) {
         uint256 targetAmount;
-        IERC20Token reserveToken;
+        IERC20 reserveToken;
 
         if (_targetToken == IDSToken(address(anchor)) && reserves[_sourceToken].isSet) {
             reserveToken = _sourceToken;
@@ -138,17 +139,18 @@ contract LiquidTokenConverter is ConverterBase {
      */
     function purchaseTargetAmount(uint256 _amount) internal view active returns (uint256, uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        IERC20Token reserveToken = reserveTokens[0];
+        IERC20 reserveToken = reserveTokens[0];
 
         // if the current supply is zero, then return the input amount divided by the normalized reserve-weight
         if (totalSupply == 0) return (_amount.mul(PPM_RESOLUTION).div(reserves[reserveToken].weight), 0);
 
-        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseTargetAmount(
-            totalSupply,
-            reserveBalance(reserveToken),
-            reserves[reserveToken].weight,
-            _amount
-        );
+        uint256 amount =
+            IBancorFormula(addressOf(BANCOR_FORMULA)).purchaseTargetAmount(
+                totalSupply,
+                reserveBalance(reserveToken),
+                reserves[reserveToken].weight,
+                _amount
+            );
 
         // return the amount minus the conversion fee and the conversion fee
         uint256 fee = calculateFee(amount);
@@ -166,17 +168,18 @@ contract LiquidTokenConverter is ConverterBase {
     function saleTargetAmount(uint256 _amount) internal view active returns (uint256, uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
 
-        IERC20Token reserveToken = reserveTokens[0];
+        IERC20 reserveToken = reserveTokens[0];
 
         // if selling the entire supply, then return the entire reserve
         if (totalSupply == _amount) return (reserveBalance(reserveToken), 0);
 
-        uint256 amount = IBancorFormula(addressOf(BANCOR_FORMULA)).saleTargetAmount(
-            totalSupply,
-            reserveBalance(reserveToken),
-            reserves[reserveToken].weight,
-            _amount
-        );
+        uint256 amount =
+            IBancorFormula(addressOf(BANCOR_FORMULA)).saleTargetAmount(
+                totalSupply,
+                reserveBalance(reserveToken),
+                reserves[reserveToken].weight,
+                _amount
+            );
 
         // return the amount minus the conversion fee and the conversion fee
         uint256 fee = calculateFee(amount);
@@ -203,7 +206,7 @@ contract LiquidTokenConverter is ConverterBase {
         // ensure the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
-        IERC20Token reserveToken = reserveTokens[0];
+        IERC20 reserveToken = reserveTokens[0];
 
         // ensure that the input amount was already deposited
         if (reserveToken == ETH_RESERVE_ADDRESS) require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
@@ -248,7 +251,7 @@ contract LiquidTokenConverter is ConverterBase {
         // ensure the trade gives something in return
         require(amount != 0, "ERR_ZERO_TARGET_AMOUNT");
 
-        IERC20Token reserveToken = reserveTokens[0];
+        IERC20 reserveToken = reserveTokens[0];
 
         // ensure that the trade will only deplete the reserve balance if the total supply is depleted as well
         uint256 tokenSupply = IDSToken(address(anchor)).totalSupply();

@@ -7,7 +7,7 @@ import "../utility/TokenHandler.sol";
 */
 contract TestTokenHandler is TokenHandler {
     function testSafeApprove(
-        IERC20Token _token,
+        IERC20 _token,
         address _spender,
         uint256 _value
     ) public {
@@ -15,7 +15,7 @@ contract TestTokenHandler is TokenHandler {
     }
 
     function testSafeTransfer(
-        IERC20Token _token,
+        IERC20 _token,
         address _to,
         uint256 _value
     ) public {
@@ -23,7 +23,7 @@ contract TestTokenHandler is TokenHandler {
     }
 
     function testSafeTransferFrom(
-        IERC20Token _token,
+        IERC20 _token,
         address _from,
         address _to,
         uint256 _value

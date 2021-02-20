@@ -10,8 +10,8 @@ contract OldConverter {
     }
 
     function getReturn(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) external view returns (uint256) {
         _sourceToken;
@@ -31,8 +31,8 @@ contract NewConverter {
     }
 
     function getReturn(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) external view returns (uint256, uint256) {
         _sourceToken;
@@ -78,10 +78,10 @@ contract TestBancorNetwork is BancorNetwork {
     }
 
     function getReturnOld() external view returns (uint256, uint256) {
-        return getReturn(IConverter(payable(address(oldConverter))), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(IConverter(payable(address(oldConverter))), IERC20(0), IERC20(0), uint256(0));
     }
 
     function getReturnNew() external view returns (uint256, uint256) {
-        return getReturn(IConverter(payable(address(newConverter))), IERC20Token(0), IERC20Token(0), uint256(0));
+        return getReturn(IConverter(payable(address(newConverter))), IERC20(0), IERC20(0), uint256(0));
     }
 }
