@@ -966,23 +966,6 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     /**
-     * @dev returns the average rate of 1 reserve token in the other reserve token units
-     *
-     * @param _poolToken            pool token
-     * @param _reserveToken         reserve token
-     * @param _validateAverageRate  true to validate the average rate; false otherwise
-     */
-    function reserveTokenAverageRate(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        bool _validateAverageRate
-    ) internal view returns (Fraction memory) {
-        (, , uint256 averageRateN, uint256 averageRateD) =
-            reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
-        return Fraction(averageRateN, averageRateD);
-    }
-
-    /**
      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
      *
      * @param _poolToken            pool token
