@@ -701,7 +701,7 @@ describe('Converter', () => {
                     await initConverter(type, true, isETHReserve);
                     await expectRevert(
                         convert([ZERO_ADDRESS, anchorAddress, getReserve1Address(isETHReserve)], 500, MIN_RETURN),
-                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE'
+                        'Address: call to non-contract'
                     );
                 });
 
