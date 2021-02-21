@@ -15,7 +15,7 @@ import "../token/interfaces/IDSToken.sol";
  * converter anchors internally and not the converters themselves.
  * The active converter for each anchor can be easily accessed by querying the anchor's owner.
  *
- * The registry exposes 3 differnet lists that can be accessed and iterated, based on the use-case of the caller:
+ * The registry exposes 3 different lists that can be accessed and iterated, based on the use-case of the caller:
  * - Anchors - can be used to get all the latest / historical data in the network
  * - Liquidity pools - can be used to get all liquidity pools for funding, liquidation etc.
  * - Convertible tokens - can be used to get all tokens that can be converted in the network (excluding pool
