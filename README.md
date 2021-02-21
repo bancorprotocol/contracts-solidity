@@ -47,6 +47,7 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 
 * **[Yudi Levi](https://github.com/yudilevi)**
 * **[Barak Manos](https://github.com/barakman)**
+* **[Leonid Beder](https://github.com/lbeder)**
 * **[Ilana Pinhas](https://github.com/ilanapi)**
 * **[David Benchimol](https://github.com/davidbancor)**
 * **[Or Dadosh](https://github.com/ordd)**
