@@ -913,20 +913,22 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             );
         }
 
-        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
+        IERC20Token otherReserve = converterOtherReserve(converter, _reserveToken);
+        (uint256 rateN, uint256 rateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
+
         stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         stats.addProviderPool(_provider, _poolToken);
-        return
-            store.addProtectedLiquidity(
-                _provider,
-                _poolToken,
-                _reserveToken,
-                _poolAmount,
-                _reserveAmount,
-                rate.n,
-                rate.d,
-                time()
-            );
+        return store.addProtectedLiquidity(
+            _provider,
+            _poolToken,
+            _reserveToken,
+            _poolAmount,
+            _reserveAmount,
+            rateN,
+            rateD,
+            time()
+        );
     }
 
     /**
@@ -961,23 +963,6 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // for standard pools, 50% of the pool supply value equals the value of each reserve
         return Fraction({ n: reserveBalance.mul(2), d: poolTokenSupply });
-    }
-
-    /**
-     * @dev returns the average rate of 1 reserve token in the other reserve token units
-     *
-     * @param _poolToken            pool token
-     * @param _reserveToken         reserve token
-     * @param _validateAverageRate  true to validate the average rate; false otherwise
-     */
-    function reserveTokenAverageRate(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        bool _validateAverageRate
-    ) internal view returns (Fraction memory) {
-        (, , uint256 averageRateN, uint256 averageRateD) =
-            reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
-        return Fraction(averageRateN, averageRateD);
     }
 
     /**
