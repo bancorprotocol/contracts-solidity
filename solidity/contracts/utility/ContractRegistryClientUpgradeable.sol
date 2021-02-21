@@ -54,7 +54,11 @@ contract ContractRegistryClientUpgradeable is Initializable, OwnedUpgradeable, U
         __ContractRegistryClientUpgradeable_init_unchained(_registry);
     }
 
-    function __ContractRegistryClientUpgradeable_init_unchained(IContractRegistry _registry) internal initializer validAddress(address(_registry)) {
+    function __ContractRegistryClientUpgradeable_init_unchained(IContractRegistry _registry)
+        internal
+        initializer
+        validAddress(address(_registry))
+    {
         registry = IContractRegistry(_registry);
         prevRegistry = IContractRegistry(_registry);
     }
@@ -110,4 +114,7 @@ contract ContractRegistryClientUpgradeable is Initializable, OwnedUpgradeable, U
     function addressOf(bytes32 _contractName) internal view returns (address) {
         return registry.addressOf(_contractName);
     }
+
+    // https://docs.openzeppelin.com/contracts/3.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 }

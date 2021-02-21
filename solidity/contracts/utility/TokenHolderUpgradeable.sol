@@ -47,4 +47,7 @@ contract TokenHolderUpgradeable is Initializable, ITokenHolder, TokenHandler, Ow
     ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {
         safeTransfer(_token, _to, _amount);
     }
+
+    // https://docs.openzeppelin.com/contracts/3.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 }

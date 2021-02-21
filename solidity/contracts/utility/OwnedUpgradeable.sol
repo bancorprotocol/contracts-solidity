@@ -63,4 +63,7 @@ contract OwnedUpgradeable is Initializable, IOwned {
         owner = newOwner;
         newOwner = address(0);
     }
+
+    // https://docs.openzeppelin.com/contracts/3.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 }

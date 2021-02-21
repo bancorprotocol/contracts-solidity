@@ -4,7 +4,8 @@
             "files": "*.sol",
             "options": {
                 "singleQuote": false,
-                "explicitTypes": "always"
+                "explicitTypes": "always",
+                "tabWidth": 4
             }
         }
     ],
