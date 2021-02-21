@@ -131,10 +131,12 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         // determine new converter type
         uint16 newType = 0;
         // new converter - get the type from the converter itself
-        if (isV28OrHigherConverter(_oldConverter))
+        if (isV28OrHigherConverter(_oldConverter)) {
             newType = _oldConverter.converterType();
+        } else if (reserveTokenCount > 1) {
             // old converter - if it has 1 reserve token, the type is a liquid token, otherwise the type liquidity pool
-        else if (reserveTokenCount > 1) newType = 1;
+            newType = 1;
+        }
 
         if (newType == 1 && reserveTokenCount == 2) {
             (, uint32 weight0, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(0));
