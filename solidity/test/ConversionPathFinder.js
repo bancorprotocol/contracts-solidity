@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const IConverterAnchor = contract.fromArtifact('IConverterAnchor');
 const ConverterBase = contract.fromArtifact('ConverterBase');
@@ -37,7 +37,7 @@ const getSymbol = async (tokenAddress) => {
         return 'ETH';
     }
 
-    const token = await ERC20Token.at(tokenAddress);
+    const token = await TestStandardToken.at(tokenAddress);
     return token.symbol.call();
 };
 
@@ -144,7 +144,7 @@ describe('ConversionPathFinder', () => {
 
     beforeEach(async () => {
         for (const reserve of LAYOUT.reserves) {
-            const erc20Token = await ERC20Token.new('name', reserve.symbol, 18, 0);
+            const erc20Token = await TestStandardToken.new('name', reserve.symbol, 18, 0);
             addresses[reserve.symbol] = erc20Token.address;
         }
 

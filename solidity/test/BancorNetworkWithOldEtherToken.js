@@ -23,7 +23,7 @@ Token network structure:
           \          \
            \        DSToken4
             \        /      \
-            EtherToken     ERC20Token
+            EtherToken     TKN
 
 */
 
@@ -90,7 +90,7 @@ describe('BancorNetworkWithOldEtherToken', () => {
 
         await contractRegistry.registerAddress(registry.BNT_TOKEN, anchor1.address);
 
-        erc20Token = await TestNonStandardToken.new('ERC20Token', 'ERC5', 2, 1000000);
+        erc20Token = await TestNonStandardToken.new('TKN', 'ERC5', 2, 1000000);
 
         converter1 = await ConverterHelper.new(
             0,

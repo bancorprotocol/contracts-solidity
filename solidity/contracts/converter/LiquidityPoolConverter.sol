@@ -23,7 +23,7 @@ abstract contract LiquidityPoolConverter is ConverterBase {
      */
     event LiquidityAdded(
         address indexed _provider,
-        IERC20Token indexed _reserveToken,
+        IERC20 indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
@@ -40,7 +40,7 @@ abstract contract LiquidityPoolConverter is ConverterBase {
      */
     event LiquidityRemoved(
         address indexed _provider,
-        IERC20Token indexed _reserveToken,
+        IERC20 indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply

@@ -8,7 +8,7 @@ import "../standard-pool/StandardPoolConverter.sol";
  * a constant conversion-rate (configurable by the owner of the converter).
  */
 contract FixedRatePoolConverter is StandardPoolConverter {
-    mapping(IERC20Token => uint256) private _rate;
+    mapping(IERC20 => uint256) private _rate;
 
     /**
      * @dev initializes a new FixedRatePoolConverter instance
@@ -39,7 +39,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return the denominator of the rate between the 1st reserve token and the 2nd reserve token
      */
     function rate() public view returns (uint256, uint256) {
-        IERC20Token[] memory _reserveTokens = reserveTokens();
+        IERC20[] memory _reserveTokens = reserveTokens();
         return (_rate[_reserveTokens[0]], _rate[_reserveTokens[1]]);
     }
 
@@ -52,7 +52,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      */
     function setRate(uint256 rateN, uint256 rateD) public ownerOnly {
         require(rateN > 0 && rateD > 0, "ERR_INVALID_RATE");
-        IERC20Token[] memory _reserveTokens = reserveTokens();
+        IERC20[] memory _reserveTokens = reserveTokens();
         _rate[_reserveTokens[0]] = rateN;
         _rate[_reserveTokens[1]] = rateD;
     }
@@ -68,8 +68,8 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return expected fee in units of the target reserve token
      */
     function targetAmountAndFee(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) public view override active returns (uint256, uint256) {
         return targetAmountAndFee(_sourceToken, _targetToken, 0, 0, _amount);
@@ -86,22 +86,22 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return expected fee in units of the target reserve token
      */
     function targetAmountAndFee(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
-        uint256 /* _sourceBalance */,
-        uint256 /* _targetBalance */,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
+        uint256, /* _sourceBalance */
+        uint256, /* _targetBalance */
         uint256 _amount
     ) internal view override returns (uint256, uint256) {
-        IERC20Token[] memory _reserveTokens = reserveTokens();
+        IERC20[] memory _reserveTokens = reserveTokens();
         require(
             (_sourceToken == _reserveTokens[0] && _targetToken == _reserveTokens[1]) ||
-            (_sourceToken == _reserveTokens[1] && _targetToken == _reserveTokens[0]),
+                (_sourceToken == _reserveTokens[1] && _targetToken == _reserveTokens[0]),
             "ERR_INVALID_RESERVES"
         );
 
         uint256 rateN = _rate[_sourceToken];
         uint256 rateD = _rate[_targetToken];
-    
+
         uint256 amount = _amount.mul(rateN).div(rateD);
 
         uint256 fee = calculateFee(amount);
@@ -120,13 +120,13 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return expected fee in units of the target reserve token
      */
     function sourceAmountAndFee(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) public view override active returns (uint256, uint256) {
         uint256 rateN = _rate[_sourceToken];
         uint256 rateD = _rate[_targetToken];
-    
+
         uint256 fee = calculateFeeInv(_amount);
 
         uint256 amount = _amount.add(fee).mul(rateD).div(rateN);
@@ -147,7 +147,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return amount of reserve tokens to transfer from the caller
      */
     function addLiquidityAmounts(
-        IERC20Token[] memory _reserveTokens,
+        IERC20[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply

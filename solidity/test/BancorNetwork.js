@@ -13,7 +13,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConversionPathFinder = contract.fromArtifact('ConversionPathFinder');
 const EtherToken = contract.fromArtifact('EtherToken');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterHelper = require('./helpers/Converter');
 const TestBancorNetwork = contract.fromArtifact('TestBancorNetwork');
@@ -32,11 +32,11 @@ Token network structure:
 
         Anchor1     Anchor2
         /     \     /     \
-      ETH       BNT    ERC20Token1
+      ETH       BNT      TKN1
 
         Anchor3      Anchor4
         /       \     /
-    ERC20Token2   BNT
+    TKN2          BNT
 */
 
 describe('BancorNetwork', () => {
@@ -119,6 +119,7 @@ describe('BancorNetwork', () => {
         return new BN(transaction.gasPrice).mul(new BN(txResult.receipt.cumulativeGasUsed));
     };
 
+    let network;
     let bntToken;
     let erc20Token1;
     let erc20Token2;
@@ -257,9 +258,9 @@ describe('BancorNetwork', () => {
             const pathFinder = await ConversionPathFinder.new(contractRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERSION_PATH_FINDER, pathFinder.address);
 
-            bntToken = await ERC20Token.new('BNT', 'BNT', 2, 10000000);
-            erc20Token1 = await ERC20Token.new('ERC20Token', 'ERC1', 2, 1000000);
-            erc20Token2 = await TestNonStandardToken.new('ERC20Token', 'ERC2', 2, 2000000);
+            bntToken = await TestStandardToken.new('BNT', 'BNT', 2, 10000000);
+            erc20Token1 = await TestStandardToken.new('TKN1', 'ERC1', 2, 1000000);
+            erc20Token2 = await TestNonStandardToken.new('TKN2', 'ERC2', 2, 2000000);
 
             anchor1 = await DSToken.new('Anchor1', 'ANCR1', 2);
             await anchor1.issue(sender, 1000000);

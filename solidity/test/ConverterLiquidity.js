@@ -8,7 +8,7 @@ const { MAX_UINT256 } = constants;
 
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const DSToken = contract.fromArtifact('DSToken');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
@@ -21,7 +21,7 @@ describe('ConverterLiquidity', () => {
             if (hasETH && i === weights.length - 1) {
                 await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
             } else {
-                const erc20Token = await ERC20Token.new('name', 'symbol', 0, MAX_UINT256);
+                const erc20Token = await TestStandardToken.new('name', 'symbol', 0, MAX_UINT256);
                 await converter.addReserve(erc20Token.address, weights[i] * 10000);
             }
         }
@@ -280,7 +280,7 @@ describe('ConverterLiquidity', () => {
             return;
         }
 
-        const token = await ERC20Token.at(reserveToken);
+        const token = await TestStandardToken.at(reserveToken);
         return token.approve(converter.address, amount);
     };
 
@@ -289,7 +289,7 @@ describe('ConverterLiquidity', () => {
             return new BN(0);
         }
 
-        const token = await ERC20Token.at(reserveToken);
+        const token = await TestStandardToken.at(reserveToken);
         return token.allowance.call(owner, converter.address);
     };
 
@@ -298,7 +298,7 @@ describe('ConverterLiquidity', () => {
             return balance.current(converter.address);
         }
 
-        const token = await ERC20Token.at(reserveToken);
+        const token = await TestStandardToken.at(reserveToken);
         return await token.balanceOf.call(converter.address);
     };
 
