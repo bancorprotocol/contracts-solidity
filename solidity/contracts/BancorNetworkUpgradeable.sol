@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./utility/ContractRegistryClientUpgradeable.sol";
 import "./utility/TokenHolderUpgradeable.sol";
@@ -19,10 +20,10 @@ import "./token/interfaces/IDSToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
 
 // interface of older converters for backward compatibility
-interface ILegacyConverter {
+interface ILegacyConverterUpgradeable {
     function change(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount,
         uint256 _minReturn
     ) external returns (uint256);
@@ -47,17 +48,23 @@ interface ILegacyConverter {
  * Format:
  * [source token, converter anchor, target token, converter anchor, target token...]
  */
-contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, ContractRegistryClientUpgradeable, ReentrancyGuardUpgradeable {
+contract BancorNetworkUpgradeable is
+    Initializable,
+    TokenHolderUpgradeable,
+    ContractRegistryClientUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     uint256 private constant PPM_RESOLUTION = 1000000;
-    IERC20Token private constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct ConversionStep {
         IConverter converter;
         IConverterAnchor anchor;
-        IERC20Token sourceToken;
-        IERC20Token targetToken;
+        IERC20 sourceToken;
+        IERC20 targetToken;
         address payable beneficiary;
         bool isV28OrHigherConverter;
         bool processAffiliateFee;
@@ -65,7 +72,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
 
     uint256 public maxAffiliateFee; // maximum affiliate-fee
 
-    mapping(IERC20Token => bool) public etherTokens; // list of all supported ether tokens
+    mapping(IERC20 => bool) public etherTokens; // list of all supported ether tokens
 
     /**
      * @dev triggered when a conversion between two tokens occurs
@@ -79,8 +86,8 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
      */
     event Conversion(
         IConverterAnchor indexed _smartToken,
-        IERC20Token indexed _fromToken,
-        IERC20Token indexed _toToken,
+        IERC20 indexed _fromToken,
+        IERC20 indexed _toToken,
         uint256 _fromAmount,
         uint256 _toAmount,
         address _trader
@@ -89,7 +96,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
     /**
      * @dev initializes a new BancorNetworkUpgradeable instance.
      * As this contract is upgradeable we need to call the inherited
-     * initialize functions from parents  
+     * initialize functions from parents
      *
      * @param _registry    address of a contract registry contract
      */
@@ -97,7 +104,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         __ContractRegistryClientUpgradeable_init_unchained(_registry);
         __TokenHolderUpgradeable_init_unchained();
         __OwnedUpgradeable_init_unchained();
-        
+
         __ReentrancyGuard_init();
 
         etherTokens[ETH_RESERVE_ADDRESS] = true;
@@ -138,7 +145,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
      *
      * @return conversion path between the two tokens
      */
-    function conversionPath(IERC20Token _sourceToken, IERC20Token _targetToken) public view returns (address[] memory) {
+    function conversionPath(IERC20 _sourceToken, IERC20 _targetToken) public view returns (address[] memory) {
         IConversionPathFinder pathFinder = IConversionPathFinder(addressOf(CONVERSION_PATH_FINDER));
         return pathFinder.findPath(_sourceToken, _targetToken);
     }
@@ -168,9 +175,9 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
 
         // iterate over the conversion path
         for (uint256 i = 2; i < _path.length; i += 2) {
-            IERC20Token sourceToken = IERC20Token(_path[i - 2]);
+            IERC20 sourceToken = IERC20(_path[i - 2]);
             address anchor = _path[i - 1];
-            IERC20Token targetToken = IERC20Token(_path[i]);
+            IERC20 targetToken = IERC20(_path[i]);
 
             converter = IConverter(payable(IConverterAnchor(anchor).owner()));
 
@@ -242,7 +249,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
-        handleSourceToken(IERC20Token(_path[0]), IConverterAnchor(_path[1]), _amount);
+        handleSourceToken(IERC20(_path[0]), IConverterAnchor(_path[1]), _amount);
 
         // check if affiliate fee is enabled
         bool affiliateFeeEnabled = false;
@@ -318,11 +325,11 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         address _affiliateAccount,
         uint256 _affiliateFee
     ) public payable greaterThanZero(_minReturn) returns (uint256) {
-        IERC20Token targetToken = IERC20Token(_path[_path.length - 1]);
+        IERC20 targetToken = IERC20(_path[_path.length - 1]);
         IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
 
         // verify that the destination token is BNT
-        require(targetToken == IERC20Token(addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
+        require(targetToken == IERC20(addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
 
         // convert and get the resulting amount
         uint256 amount =
@@ -360,7 +367,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         address payable _beneficiary
     ) public returns (uint256) {
         // verify that the source token is the BancorX token
-        require(IERC20Token(_path[0]) == _bancorX.token(), "ERR_INVALID_SOURCE_TOKEN");
+        require(IERC20(_path[0]) == _bancorX.token(), "ERR_INVALID_SOURCE_TOKEN");
 
         // get conversion amount from BancorX contract
         uint256 amount = _bancorX.getXTransferAmount(_conversionId, msg.sender);
@@ -399,7 +406,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
                 if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken])
-                    safeTransfer(stepData.sourceToken, address(stepData.converter), fromAmount);
+                    stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
             }
             // older converter
             // if the source token is the liquid token, no need to do any transfers as the converter controls it
@@ -410,7 +417,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
 
             // do the conversion
             if (!stepData.isV28OrHigherConverter)
-                toAmount = ILegacyConverter(address(stepData.converter)).change(
+                toAmount = ILegacyConverterUpgradeable(address(stepData.converter)).change(
                     stepData.sourceToken,
                     stepData.targetToken,
                     fromAmount,
@@ -465,7 +472,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
      * @param _amount      amount to convert from, in the source token
      */
     function handleSourceToken(
-        IERC20Token _sourceToken,
+        IERC20 _sourceToken,
         IConverterAnchor _anchor,
         uint256 _amount
     ) private {
@@ -487,7 +494,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         else if (etherTokens[_sourceToken]) {
             // claim the tokens - if the source token is ETH reserve, this call will fail
             // since in that case the transaction must be sent with msg.value
-            safeTransferFrom(_sourceToken, msg.sender, address(this), _amount);
+            _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
 
             // ETH converter - withdraw the ETH
             if (isNewerConverter) IEtherToken(address(_sourceToken)).withdraw(_amount);
@@ -496,8 +503,11 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         else {
             // newer converter - transfer the tokens from the sender directly to the converter
             // otherwise claim the tokens
-            if (isNewerConverter) safeTransferFrom(_sourceToken, msg.sender, address(firstConverter), _amount);
-            else safeTransferFrom(_sourceToken, msg.sender, address(this), _amount);
+            if (isNewerConverter) {
+                _sourceToken.safeTransferFrom(msg.sender, address(firstConverter), _amount);
+            } else {
+                _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
+            }
         }
     }
 
@@ -518,7 +528,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         // network contract doesn't hold the tokens, do nothing
         if (stepData.beneficiary != address(this)) return;
 
-        IERC20Token targetToken = stepData.targetToken;
+        IERC20 targetToken = stepData.targetToken;
 
         // ETH / EtherToken
         if (etherTokens[targetToken]) {
@@ -530,7 +540,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         }
         // other ERC20 token
         else {
-            safeTransfer(targetToken, _beneficiary, _amount);
+            targetToken.safeTransfer(_beneficiary, _amount);
         }
     }
 
@@ -551,13 +561,13 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
         bool affiliateFeeProcessed = false;
-        IERC20Token bntToken = IERC20Token(addressOf(BNT_TOKEN));
+        IERC20 bntToken = IERC20(addressOf(BNT_TOKEN));
         // iterate the conversion path and create the conversion data for each step
         uint256 i;
         for (i = 0; i < _conversionPath.length - 1; i += 2) {
             IConverterAnchor anchor = IConverterAnchor(_conversionPath[i + 1]);
             IConverter converter = IConverter(payable(anchor.owner()));
-            IERC20Token targetToken = IERC20Token(_conversionPath[i + 2]);
+            IERC20 targetToken = IERC20(_conversionPath[i + 2]);
 
             // check if the affiliate fee should be processed in this step
             bool processAffiliateFee = _affiliateFeeEnabled && !affiliateFeeProcessed && targetToken == bntToken;
@@ -566,7 +576,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
             data[i / 2] = ConversionStep({ // set the converter anchor
                 anchor: anchor, // set the converter
                 converter: converter, // set the source/target tokens
-                sourceToken: IERC20Token(_conversionPath[i]),
+                sourceToken: IERC20(_conversionPath[i]),
                 targetToken: targetToken, // requires knowledge about the next step, so initialize in the next phase
                 beneficiary: address(0), // set flags
                 isV28OrHigherConverter: isV28OrHigherConverter(converter),
@@ -631,22 +641,24 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
      * @param _value   allowance amount
      */
     function ensureAllowance(
-        IERC20Token _token,
+        IERC20 _token,
         address _spender,
         uint256 _value
     ) private {
         uint256 allowance = _token.allowance(address(this), _spender);
         if (allowance < _value) {
-            if (allowance > 0) safeApprove(_token, _spender, 0);
-            safeApprove(_token, _spender, _value);
+            if (allowance > 0) {
+                _token.safeApprove(_spender, 0);
+            }
+            _token.safeApprove(_spender, _value);
         }
     }
 
     // legacy - returns the address of an EtherToken used by the converter
-    function getConverterEtherTokenAddress(IConverter _converter) private view returns (IERC20Token) {
+    function getConverterEtherTokenAddress(IConverter _converter) private view returns (IERC20) {
         uint256 reserveCount = _converter.connectorTokenCount();
         for (uint256 i = 0; i < reserveCount; i++) {
-            IERC20Token reserveTokenAddress = _converter.connectorTokens(i);
+            IERC20 reserveTokenAddress = _converter.connectorTokens(i);
             if (etherTokens[reserveTokenAddress]) return reserveTokenAddress;
         }
 
@@ -655,7 +667,7 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
 
     // legacy - if the token is an ether token, returns the ETH reserve address
     // used by the converter, otherwise returns the input token address
-    function getConverterTokenAddress(IConverter _converter, IERC20Token _token) private view returns (IERC20Token) {
+    function getConverterTokenAddress(IConverter _converter, IERC20 _token) private view returns (IERC20) {
         if (!etherTokens[_token]) return _token;
 
         if (isV28OrHigherConverter(_converter)) return ETH_RESERVE_ADDRESS;
@@ -668,8 +680,8 @@ contract BancorNetworkUpgradeable is Initializable, TokenHolderUpgradeable, Cont
     // using a static call to get the return from older converters
     function getReturn(
         IConverter _dest,
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) internal view returns (uint256, uint256) {
         bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);

@@ -3,12 +3,11 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./Utils.sol";
 import "./OwnedUpgradeable.sol";
-import "./TokenHandler.sol";
 import "./interfaces/ITokenHolder.sol";
-import "../token/interfaces/IERC20Token.sol";
 
 /**
  * @dev This contract provides a safety mechanism for allowing the owner to
@@ -21,7 +20,9 @@ import "../token/interfaces/IERC20Token.sol";
  * in order to support both non standard as well as standard token contracts.
  * see https://github.com/ethereum/solidity/issues/4116
  */
-contract TokenHolderUpgradeable is Initializable, ITokenHolder, TokenHandler, OwnedUpgradeable, Utils {
+contract TokenHolderUpgradeable is Initializable, ITokenHolder, OwnedUpgradeable, Utils {
+    using SafeERC20 for IERC20;
+
     /**
      * @dev initializes a new TokenHolderUpgradeable instance
      */
@@ -41,11 +42,11 @@ contract TokenHolderUpgradeable is Initializable, ITokenHolder, TokenHandler, Ow
      * @param _amount  amount to withdraw
      */
     function withdrawTokens(
-        IERC20Token _token,
+        IERC20 _token,
         address _to,
         uint256 _amount
     ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {
-        safeTransfer(_token, _to, _amount);
+        _token.safeTransfer(_to, _amount);
     }
 
     // https://docs.openzeppelin.com/contracts/3.x/upgradeable#storage_gaps
