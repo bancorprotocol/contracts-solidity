@@ -39,7 +39,7 @@ library MathEx {
     }
 
     /**
-     * @dev computes an powered ratio
+     * @dev computes a powered ratio
      *
      * @param _n   ratio numerator
      * @param _d   ratio denominator
