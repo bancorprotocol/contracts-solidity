@@ -2,6 +2,8 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
@@ -9,45 +11,45 @@ import "../utility/interfaces/ICheckpointStore.sol";
 import "../utility/MathEx.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/Owned.sol";
-import "../utility/TokenHandler.sol";
 import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 import "./interfaces/ILiquidityProtection.sol";
 import "../token/interfaces/IDSToken.sol";
-import "../token/interfaces/IERC20Token.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
 import "../converter/interfaces/IConverter.sol";
 import "../converter/interfaces/IConverterRegistry.sol";
 
 interface ILiquidityPoolConverter is IConverter {
     function addLiquidity(
-        IERC20Token[] memory _reserveTokens,
+        IERC20[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _minReturn
     ) external payable;
 
     function removeLiquidity(
         uint256 _amount,
-        IERC20Token[] memory _reserveTokens,
+        IERC20[] memory _reserveTokens,
         uint256[] memory _reserveMinReturnAmounts
     ) external;
 
-    function recentAverageRate(IERC20Token _reserveToken) external view returns (uint256, uint256);
+    function recentAverageRate(IERC20 _reserveToken) external view returns (uint256, uint256);
 }
 
 /**
  * @dev This contract implements the liquidity protection mechanism.
  */
-contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned, ReentrancyGuard, Time {
+contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGuard, Time {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+    using SafeERC20 for IDSToken;
     using MathEx for *;
 
     struct ProtectedLiquidity {
         address provider; // liquidity provider
         IDSToken poolToken; // pool token address
-        IERC20Token reserveToken; // reserve token address
+        IERC20 reserveToken; // reserve token address
         uint256 poolAmount; // pool token amount
         uint256 reserveAmount; // reserve token amount
         uint256 reserveRateN; // rate of 1 protected reserve token in units of the other reserve token (numerator)
@@ -65,7 +67,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
-    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
@@ -75,9 +77,9 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     ILiquidityProtectionStats public immutable override stats;
     ILiquidityProtectionSystemStore public immutable override systemStore;
     ITokenHolder public immutable override wallet;
-    IERC20Token public immutable networkToken;
+    IERC20 public immutable networkToken;
     ITokenGovernance public immutable networkTokenGovernance;
-    IERC20Token public immutable govToken;
+    IERC20 public immutable govToken;
     ITokenGovernance public immutable govTokenGovernance;
     ICheckpointStore public immutable lastRemoveCheckpointStore;
 
@@ -111,8 +113,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         govTokenGovernance = ITokenGovernance(_contractAddresses[6]);
         lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[7]);
 
-        networkToken = IERC20Token(address(ITokenGovernance(_contractAddresses[5]).token()));
-        govToken = IERC20Token(address(ITokenGovernance(_contractAddresses[6]).token()));
+        networkToken = IERC20(address(ITokenGovernance(_contractAddresses[5]).token()));
+        govToken = IERC20(address(ITokenGovernance(_contractAddresses[6]).token()));
     }
 
     // ensures that the contract is currently removing liquidity from a converter
@@ -140,7 +142,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     // ensures that add liquidity is enabled
-    modifier addLiquidityEnabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) {
+    modifier addLiquidityEnabled(IConverterAnchor _poolAnchor, IERC20 _reserveToken) {
         _addLiquidityEnabled(_poolAnchor, _reserveToken);
         _;
     }
@@ -156,7 +158,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     // error message binary size optimization
-    function _addLiquidityEnabled(IConverterAnchor _poolAnchor, IERC20Token _reserveToken) internal view {
+    function _addLiquidityEnabled(IConverterAnchor _poolAnchor, IERC20 _reserveToken) internal view {
         require(!settings.addLiquidityDisabled(_poolAnchor, _reserveToken), "ERR_ADD_LIQUIDITY_DISABLED");
     }
 
@@ -220,7 +222,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function addLiquidityFor(
         address _owner,
         IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _amount
     )
         external
@@ -247,7 +249,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function addLiquidity(
         IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _amount
     )
         external
@@ -275,11 +277,11 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function addLiquidity(
         address _owner,
         IConverterAnchor _poolAnchor,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _amount
     ) private returns (uint256) {
         // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
+        IERC20 networkTokenLocal = networkToken;
 
         if (_reserveToken == networkTokenLocal) {
             verifyEthAmount(0);
@@ -304,7 +306,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function addNetworkTokenLiquidity(
         address _owner,
         IConverterAnchor _poolAnchor,
-        IERC20Token _networkToken,
+        IERC20 _networkToken,
         uint256 _amount
     ) internal returns (uint256) {
         IDSToken poolToken = IDSToken(address(_poolAnchor));
@@ -323,7 +325,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // burns the network tokens from the caller. we need to transfer the tokens to the contract itself, since only
         // token holders can burn their tokens
-        safeTransferFrom(_networkToken, msg.sender, address(this), _amount);
+        _networkToken.safeTransferFrom(msg.sender, address(this), _amount);
         burnNetworkTokens(_poolAnchor, _amount);
 
         // mint governance tokens to the recipient
@@ -345,8 +347,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function addBaseTokenLiquidity(
         address _owner,
         IConverterAnchor _poolAnchor,
-        IERC20Token _baseToken,
-        IERC20Token _networkToken,
+        IERC20 _baseToken,
+        IERC20 _networkToken,
         uint256 _amount
     ) internal returns (uint256) {
         IDSToken poolToken = IDSToken(address(_poolAnchor));
@@ -376,7 +378,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // transfer the base tokens from the caller and approve the converter
         ensureAllowance(_networkToken, address(converter), newNetworkLiquidityAmount);
         if (_baseToken != ETH_RESERVE_ADDRESS) {
-            safeTransferFrom(_baseToken, msg.sender, address(this), _amount);
+            _baseToken.safeTransferFrom(msg.sender, address(this), _amount);
             ensureAllowance(_baseToken, address(converter), _amount);
         }
 
@@ -385,7 +387,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
 
         // transfer the new pool tokens to the wallet
         uint256 poolTokenAmount = poolToken.balanceOf(address(this));
-        safeTransfer(poolToken, address(wallet), poolTokenAmount);
+        poolToken.safeTransfer(address(wallet), poolTokenAmount);
 
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
@@ -406,7 +408,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         poolSupportedAndWhitelisted(_poolAnchor)
         returns (uint256, uint256)
     {
-        IERC20Token networkTokenLocal = networkToken;
+        IERC20 networkTokenLocal = networkToken;
         return (
             baseTokenAvailableSpace(_poolAnchor, networkTokenLocal),
             networkTokenAvailableSpace(_poolAnchor, networkTokenLocal)
@@ -450,7 +452,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _networkToken the network token
      * @return maximum amount of base tokens that can be single-side staked in the pool
      */
-    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20Token _networkToken)
+    function baseTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20 _networkToken)
         internal
         view
         returns (uint256)
@@ -459,7 +461,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolAnchor)));
 
         // get the base token
-        IERC20Token baseToken = converterOtherReserve(converter, _networkToken);
+        IERC20 baseToken = converterOtherReserve(converter, _networkToken);
 
         // get the reserve balances
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
@@ -488,7 +490,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _networkToken the network token
      * @return maximum amount of network tokens that can be single-side staked in the pool
      */
-    function networkTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20Token _networkToken)
+    function networkTokenAvailableSpace(IConverterAnchor _poolAnchor, IERC20 _networkToken)
         internal
         view
         returns (uint256)
@@ -613,7 +615,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         ProtectedLiquidity memory liquidity = protectedLiquidity(_id, _provider);
 
         // save a local copy of `networkToken`
-        IERC20Token networkTokenLocal = networkToken;
+        IERC20 networkTokenLocal = networkToken;
 
         // verify that the pool is whitelisted
         _poolWhitelisted(liquidity.poolToken);
@@ -676,7 +678,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
         // tokens to the contract itself, since only token holders can burn their tokens
         if (liquidity.reserveToken == networkTokenLocal) {
-            safeTransferFrom(govToken, _provider, address(this), liquidity.reserveAmount);
+            govToken.safeTransferFrom(_provider, address(this), liquidity.reserveAmount);
             govTokenGovernance.burn(liquidity.reserveAmount);
         }
 
@@ -735,7 +737,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             _provider.transfer(baseBalance);
         } else {
             baseBalance = liquidity.reserveToken.balanceOf(address(this));
-            safeTransfer(liquidity.reserveToken, _provider, baseBalance);
+            liquidity.reserveToken.safeTransfer(_provider, baseBalance);
         }
 
         // compensate the caller with network tokens if still needed
@@ -748,7 +750,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             }
 
             // lock network tokens for the caller
-            safeTransfer(networkTokenLocal, address(wallet), delta);
+            networkTokenLocal.safeTransfer(address(wallet), delta);
             lockTokens(_provider, delta);
         }
 
@@ -775,7 +777,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function removeLiquidityTargetAmount(
         IDSToken _poolToken,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount,
         PackedRates memory _packedRates,
@@ -854,7 +856,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function poolROI(
         IDSToken _poolToken,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _reserveAmount,
         uint256 _poolRateN,
         uint256 _poolRateD,
@@ -896,7 +898,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function addProtectedLiquidity(
         address _provider,
         IDSToken _poolToken,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
     ) internal returns (uint256) {
@@ -913,7 +915,10 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
             );
         }
 
-        Fraction memory rate = reserveTokenAverageRate(_poolToken, _reserveToken, true);
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
+        IERC20 otherReserve = converterOtherReserve(converter, _reserveToken);
+        (uint256 rateN, uint256 rateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
+
         stats.increaseTotalAmounts(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
         stats.addProviderPool(_provider, _poolToken);
         return
@@ -923,8 +928,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
                 _reserveToken,
                 _poolAmount,
                 _reserveAmount,
-                rate.n,
-                rate.d,
+                rateN,
+                rateD,
                 time()
             );
     }
@@ -946,12 +951,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _poolToken       pool token
      * @param _reserveToken    reserve token
      */
-    function poolTokenRate(IDSToken _poolToken, IERC20Token _reserveToken)
-        internal
-        view
-        virtual
-        returns (Fraction memory)
-    {
+    function poolTokenRate(IDSToken _poolToken, IERC20 _reserveToken) internal view virtual returns (Fraction memory) {
         // get the pool token supply
         uint256 poolTokenSupply = _poolToken.totalSupply();
 
@@ -964,23 +964,6 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     }
 
     /**
-     * @dev returns the average rate of 1 reserve token in the other reserve token units
-     *
-     * @param _poolToken            pool token
-     * @param _reserveToken         reserve token
-     * @param _validateAverageRate  true to validate the average rate; false otherwise
-     */
-    function reserveTokenAverageRate(
-        IDSToken _poolToken,
-        IERC20Token _reserveToken,
-        bool _validateAverageRate
-    ) internal view returns (Fraction memory) {
-        (, , uint256 averageRateN, uint256 averageRateD) =
-            reserveTokenRates(_poolToken, _reserveToken, _validateAverageRate);
-        return Fraction(averageRateN, averageRateD);
-    }
-
-    /**
      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
      *
      * @param _poolToken            pool token
@@ -989,7 +972,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function reserveTokenRates(
         IDSToken _poolToken,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         bool _validateAverageRate
     )
         internal
@@ -1002,7 +985,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         )
     {
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
-        IERC20Token otherReserve = converterOtherReserve(converter, _reserveToken);
+        IERC20 otherReserve = converterOtherReserve(converter, _reserveToken);
 
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, _reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(_reserveToken);
@@ -1034,7 +1017,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function packRates(
         IDSToken _poolToken,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _addSpotRateN,
         uint256 _addSpotRateD,
         bool _validateAverageRate
@@ -1096,8 +1079,8 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      */
     function addLiquidity(
         ILiquidityPoolConverter _converter,
-        IERC20Token _reserveToken1,
-        IERC20Token _reserveToken2,
+        IERC20 _reserveToken1,
+        IERC20 _reserveToken2,
         uint256 _reserveAmount1,
         uint256 _reserveAmount2,
         uint256 _value
@@ -1105,7 +1088,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
 
-        IERC20Token[] memory reserveTokens = new IERC20Token[](2);
+        IERC20[] memory reserveTokens = new IERC20[](2);
         uint256[] memory amounts = new uint256[](2);
         reserveTokens[0] = _reserveToken1;
         reserveTokens[1] = _reserveToken2;
@@ -1128,15 +1111,15 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     function removeLiquidity(
         IDSToken _poolToken,
         uint256 _poolAmount,
-        IERC20Token _reserveToken1,
-        IERC20Token _reserveToken2
+        IERC20 _reserveToken1,
+        IERC20 _reserveToken2
     ) internal {
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(_poolToken)));
 
         // ensure that the contract can receive ETH
         updatingLiquidity = true;
 
-        IERC20Token[] memory reserveTokens = new IERC20Token[](2);
+        IERC20[] memory reserveTokens = new IERC20[](2);
         uint256[] memory minReturns = new uint256[](2);
         reserveTokens[0] = _reserveToken1;
         reserveTokens[1] = _reserveToken2;
@@ -1316,14 +1299,16 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
      * @param _value   allowance amount
      */
     function ensureAllowance(
-        IERC20Token _token,
+        IERC20 _token,
         address _spender,
         uint256 _value
     ) private {
         uint256 allowance = _token.allowance(address(this), _spender);
         if (allowance < _value) {
-            if (allowance > 0) safeApprove(_token, _spender, 0);
-            safeApprove(_token, _spender, _value);
+            if (allowance > 0) {
+                _token.safeApprove(_spender, 0);
+            }
+            _token.safeApprove(_spender, _value);
         }
     }
 
@@ -1348,7 +1333,7 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
         uint256 _id,
         address _provider,
         IDSToken _poolToken,
-        IERC20Token _reserveToken,
+        IERC20 _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
     ) private {
@@ -1369,15 +1354,15 @@ contract LiquidityProtection is ILiquidityProtection, TokenHandler, Utils, Owned
     // utility to get the reserve balances
     function converterReserveBalances(
         IConverter _converter,
-        IERC20Token _reserveToken1,
-        IERC20Token _reserveToken2
+        IERC20 _reserveToken1,
+        IERC20 _reserveToken2
     ) private view returns (uint256, uint256) {
         return (_converter.getConnectorBalance(_reserveToken1), _converter.getConnectorBalance(_reserveToken2));
     }
 
     // utility to get the other reserve
-    function converterOtherReserve(IConverter _converter, IERC20Token _thisReserve) private view returns (IERC20Token) {
-        IERC20Token otherReserve = _converter.connectorTokens(0);
+    function converterOtherReserve(IConverter _converter, IERC20 _thisReserve) private view returns (IERC20) {
+        IERC20 otherReserve = _converter.connectorTokens(0);
         return otherReserve != _thisReserve ? otherReserve : _converter.connectorTokens(1);
     }
 

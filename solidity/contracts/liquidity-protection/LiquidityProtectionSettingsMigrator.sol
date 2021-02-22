@@ -7,7 +7,7 @@ contract LiquidityProtectionSettingsMigrator {
     bytes32 private constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     constructor(
-        IERC20Token networkToken,
+        IERC20 networkToken,
         IContractRegistry registry,
         IConverterAnchor[] memory pools,
         uint256[] memory limits,

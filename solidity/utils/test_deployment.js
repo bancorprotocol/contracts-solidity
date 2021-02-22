@@ -252,23 +252,21 @@ const run = async () => {
 
     for (const reserve of getConfig().reserves) {
         if (reserve.type === undefined) {
-            const token = deployed(web3, 'ERC20Token', reserve.address);
+            const token = deployed(web3, 'ERC20', reserve.address);
             const symbol = await token.methods.symbol().call();
-            const decimals = await token.methods.decimals().call();
-            reserves[symbol] = { address: token._address, decimals: decimals };
+            reserves[symbol] = { address: token._address, decimals: 18 };
         }
         if (reserve.type === 0) {
             const name = reserve.symbol + ' ERC20 Token';
             const symbol = reserve.symbol;
-            const decimals = reserve.decimals;
             const supply = decimalToInteger(reserve.supply, decimals);
-            const token = await web3Func(deploy, 'erc20Token-' + symbol, 'ERC20Token', [
+            const token = await web3Func(deploy, 'erc20Token-' + symbol, 'TestStandardToken', [
                 name,
                 symbol,
                 decimals,
                 supply
             ]);
-            reserves[symbol] = { address: token._address, decimals: decimals };
+            reserves[symbol] = { address: token._address, decimals: 18 };
         }
         if (reserve.type === 1) {
             const name = reserve.symbol + ' DS Token';
@@ -280,7 +278,7 @@ const run = async () => {
             if (nonce !== (await web3.eth.getTransactionCount(account.address))) {
                 await execute(token.methods.issue(account.address, supply));
             }
-            reserves[symbol] = { address: token._address, decimals: decimals };
+            reserves[symbol] = { address: token._address, decimals };
         }
     }
 
@@ -325,13 +323,16 @@ const run = async () => {
                     await execute(deployedToken.methods.approve(converterBase._address, amounts[i]));
                 }
             }
-            if (type === 1) {
+            switch (type) {
+            case 1: {
                 const deployedConverter = deployed(web3, 'LiquidityPoolV1Converter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
+                break;
             }
-            if (type === 3) {
+            case 3: {
                 const deployedConverter = deployed(web3, 'StandardPoolConverter', converterBase._address);
                 await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
+                break;
             }
         }
 

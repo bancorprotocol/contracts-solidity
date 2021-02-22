@@ -5,7 +5,7 @@ const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const EtherToken = contract.fromArtifact('EtherToken');
 const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
@@ -1142,8 +1142,8 @@ describe('ConverterRegistry', () => {
         let erc20Token2;
 
         beforeEach(async () => {
-            erc20Token1 = await ERC20Token.new('ERC20Token1', 'ET1', 18, 1000000000);
-            erc20Token2 = await ERC20Token.new('ERC20Token2', 'ET2', 18, 1000000000);
+            erc20Token1 = await TestStandardToken.new('TKN1', 'ET1', 18, 1000000000);
+            erc20Token2 = await TestStandardToken.new('TKN2', 'ET2', 18, 1000000000);
         });
 
         const createConverters = async () => {
@@ -1361,8 +1361,8 @@ describe('ConverterRegistry', () => {
         let erc20Token2;
 
         beforeEach(async () => {
-            erc20Token1 = await ERC20Token.new('ERC20Token1', 'ET1', 18, 1000000000);
-            erc20Token2 = await ERC20Token.new('ERC20Token2', 'ET2', 18, 1000000000);
+            erc20Token1 = await TestStandardToken.new('TKN1', 'ET1', 18, 1000000000);
+            erc20Token2 = await TestStandardToken.new('TKN2', 'ET2', 18, 1000000000);
         });
 
         const createConverters = async () => {

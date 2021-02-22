@@ -9,7 +9,7 @@ const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
 const BancorFormula = contract.fromArtifact('BancorFormula');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
@@ -238,8 +238,8 @@ describe('ConverterUpgrader', () => {
     });
 
     beforeEach(async () => {
-        reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
-        reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
+        reserveToken1 = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
+        reserveToken2 = await TestStandardToken.new('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
     });
 
     const initFuncs = [

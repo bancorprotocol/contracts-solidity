@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "../../token/interfaces/IERC20Token.sol";
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBancorX {
-    function token() external view returns (IERC20Token);
+    function token() external view returns (IERC20);
 
     function xTransfer(
         bytes32 _toBlockchain,

@@ -23,7 +23,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
 
     uint32 private constant PPM_RESOLUTION = 1000000;
 
-    IERC20Token private immutable _networkToken;
+    IERC20 private immutable _networkToken;
 
     // list of whitelisted pools
     EnumerableSet.AddressSet private _poolWhitelist;
@@ -37,7 +37,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     mapping(IConverterAnchor => uint256) private _networkTokenMintingLimits;
 
     // permission of adding liquidity for a given reserve on a given pool
-    mapping(IConverterAnchor => mapping(IERC20Token => bool)) private _addLiquidityDisabled;
+    mapping(IConverterAnchor => mapping(IERC20 => bool)) private _addLiquidityDisabled;
 
     // number of seconds until any protection is in effect
     uint256 private _minProtectionDelay = 30 days;
@@ -141,7 +141,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param reserveToken  reserve token
      * @param disabled      true if disabled, false otherwise
      */
-    event AddLiquidityDisabled(IConverterAnchor indexed poolAnchor, IERC20Token indexed reserveToken, bool disabled);
+    event AddLiquidityDisabled(IConverterAnchor indexed poolAnchor, IERC20 indexed reserveToken, bool disabled);
 
     /**
      * @dev initializes a new LiquidityProtectionSettings contract
@@ -149,7 +149,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param registry  contract registry
      * @param token     the network token
      */
-    constructor(IERC20Token token, IContractRegistry registry)
+    constructor(IERC20 token, IContractRegistry registry)
         public
         ContractRegistryClient(registry)
         validAddress(address(token))
@@ -190,7 +190,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @return the network token
      */
-    function networkToken() external view returns (IERC20Token) {
+    function networkToken() external view returns (IERC20) {
         return _networkToken;
     }
 
@@ -229,7 +229,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param reserveToken  reserve token
      * @return true if adding liquidity is disabled, false otherwise
      */
-    function addLiquidityDisabled(IConverterAnchor poolAnchor, IERC20Token reserveToken)
+    function addLiquidityDisabled(IConverterAnchor poolAnchor, IERC20 reserveToken)
         external
         view
         override
@@ -492,7 +492,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     function disableAddLiquidity(
         IConverterAnchor poolAnchor,
-        IERC20Token reserveToken,
+        IERC20 reserveToken,
         bool disable
     ) external onlyOwner() {
         emit AddLiquidityDisabled(poolAnchor, reserveToken, disable);
@@ -509,7 +509,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @return true if the pool is supported, false otherwise
      */
     function isPoolSupported(IConverterAnchor poolAnchor) external view override returns (bool) {
-        IERC20Token tmpNetworkToken = _networkToken;
+        IERC20 tmpNetworkToken = _networkToken;
 
         // verify that the pool exists in the registry
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
@@ -524,8 +524,8 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         }
 
         // verify that one of the reserves is the network token
-        IERC20Token reserve0Token = converter.connectorTokens(0);
-        IERC20Token reserve1Token = converter.connectorTokens(1);
+        IERC20 reserve0Token = converter.connectorTokens(0);
+        IERC20 reserve1Token = converter.connectorTokens(1);
         if (reserve0Token != tmpNetworkToken && reserve1Token != tmpNetworkToken) {
             return false;
         }
@@ -542,7 +542,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     }
 
     // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
-    function converterReserveWeight(IConverter converter, IERC20Token reserveToken) private view returns (uint32) {
+    function converterReserveWeight(IConverter converter, IERC20 reserveToken) private view returns (uint32) {
         (, uint32 weight, , , ) = converter.connectors(reserveToken);
         return weight;
     }

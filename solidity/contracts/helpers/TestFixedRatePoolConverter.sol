@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "../converter/types/standard-pool/StandardPoolConverter.sol";
+import "../converter/types/fixed-rate-pool/FixedRatePoolConverter.sol";
 import "./TestTime.sol";
 
-contract TestStandardPoolConverter is StandardPoolConverter, TestTime {
+contract TestFixedRatePoolConverter is FixedRatePoolConverter, TestTime {
     uint256[] public reserveAmountsRemoved = new uint256[](2);
 
     constructor(
         IDSToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
-    ) public StandardPoolConverter(_token, _registry, _maxConversionFee) {}
+    ) public FixedRatePoolConverter(_token, _registry, _maxConversionFee) {}
 
     function removeLiquidityTest(
         uint256 _amount,
