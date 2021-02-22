@@ -5,6 +5,8 @@ pragma solidity 0.6.12;
  * @dev This library provides a set of complex math operations.
  */
 library MathEx {
+    uint256 private constant MAX_UINT128 = 2**128 - 1;
+
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a positive integer
      *
@@ -32,6 +34,40 @@ library MathEx {
     function ceilSqrt(uint256 _num) internal pure returns (uint256) {
         uint256 x = floorSqrt(_num);
         return x * x == _num ? x : x + 1;
+    }
+
+    /**
+     * @dev computes an powered ratio
+     *
+     * @param _n   ratio numerator
+     * @param _d   ratio denominator
+     * @param _exp ratio exponent
+     *
+     * @return powered ratio's numerator and denominator
+     */
+    function poweredRatio(
+        uint256 _n,
+        uint256 _d,
+        uint256 _exp
+    ) internal pure returns (uint256, uint256) {
+        uint256[257] memory ns;
+        uint256[257] memory ds;
+
+        (ns[0], ds[0]) = reducedRatio(_n, _d, MAX_UINT128);
+        for (uint256 i = 0; (_exp >> i) > 0; i++) {
+            (ns[i + 1], ds[i + 1]) = reducedRatio(ns[i] ** 2, ds[i] ** 2, MAX_UINT128);
+        }
+
+        uint256 n = 1;
+        uint256 d = 1;
+
+        for (uint256 i = 0; (_exp >> i) > 0; i++) {
+            if (((_exp >> i) & 1) > 0) {
+                (n, d) = reducedRatio(n * ns[i], d * ds[i], MAX_UINT128);
+            }
+        }
+
+        return (n, d);
     }
 
     /**

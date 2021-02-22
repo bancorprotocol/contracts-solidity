@@ -1,6 +1,7 @@
 module.exports = {
     floorSqrt,
     ceilSqrt,
+    poweredRatio,
     reducedRatio,
     normalizedRatio,
     accurateRatio,
@@ -18,6 +19,11 @@ function floorSqrt(n) {
 
 function ceilSqrt(n) {
     return Decimal(n).sqrt().ceil().toFixed();
+}
+
+function poweredRatio(a, b, exp) {
+    [a, b, exp] = [...arguments].map((x) => Decimal(x));
+    return [a, b].map(x => x.pow(exp).toFixed());
 }
 
 function reducedRatio(a, b, max) {
