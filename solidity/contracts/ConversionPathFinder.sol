@@ -13,7 +13,7 @@ import "./converter/interfaces/IConverterRegistry.sol";
  * See the BancorNetwork contract for conversion path format.
  */
 contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
-    IERC20Token public anchorToken;
+    IERC20 public anchorToken;
 
     /**
      * @dev initializes a new ConversionPathFinder instance
@@ -27,7 +27,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
      *
      * @param _anchorToken address of the anchor token
      */
-    function setAnchorToken(IERC20Token _anchorToken) public ownerOnly {
+    function setAnchorToken(IERC20 _anchorToken) public ownerOnly {
         anchorToken = _anchorToken;
     }
 
@@ -39,12 +39,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
      *
      * @return a path from the source token to the target token
      */
-    function findPath(IERC20Token _sourceToken, IERC20Token _targetToken)
-        external
-        view
-        override
-        returns (address[] memory)
-    {
+    function findPath(IERC20 _sourceToken, IERC20 _targetToken) external view override returns (address[] memory) {
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
         address[] memory sourcePath = getPath(_sourceToken, converterRegistry);
         address[] memory targetPath = getPath(_targetToken, converterRegistry);
@@ -59,11 +54,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
      *
      * @return a path from the input token to the anchor token
      */
-    function getPath(IERC20Token _token, IConverterRegistry _converterRegistry)
-        private
-        view
-        returns (address[] memory)
-    {
+    function getPath(IERC20 _token, IConverterRegistry _converterRegistry) private view returns (address[] memory) {
         if (_token == anchorToken) return getInitialArray(address(_token));
 
         address[] memory anchors;
@@ -74,7 +65,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
             IConverter converter = IConverter(payable(IConverterAnchor(anchors[n]).owner()));
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
-                IERC20Token connectorToken = converter.connectorTokens(i);
+                IERC20 connectorToken = converter.connectorTokens(i);
                 if (connectorToken != _token) {
                     address[] memory path = getPath(connectorToken, _converterRegistry);
                     if (path.length > 0) return getExtendedArray(address(_token), anchors[n], path);

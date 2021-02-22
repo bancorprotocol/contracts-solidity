@@ -26,14 +26,6 @@ describe('DSToken', () => {
         expect(await token.decimals.call()).to.be.bignumber.equal(decimals);
     });
 
-    it('should revert when attempting to construct a token with no name', async () => {
-        await expectRevert(DSToken.new('', symbol, decimals), 'ERR_INVALID_NAME');
-    });
-
-    it('should revert when attempting to construct a token with no symbol', async () => {
-        await expectRevert(DSToken.new(name, '', decimals), 'ERR_INVALID_SYMBOL');
-    });
-
     it('verifies that issue tokens updates the target balance and the total supply', async () => {
         const value = new BN(100);
         await token.issue(receiver, value);

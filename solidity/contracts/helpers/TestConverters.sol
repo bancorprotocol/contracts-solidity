@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
-import "../token/interfaces/IERC20Token.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 contract OldConverter {
     uint256 private amount;
@@ -10,8 +10,8 @@ contract OldConverter {
     }
 
     function getReturn(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) external view returns (uint256) {
         _sourceToken;
@@ -31,8 +31,8 @@ contract NewConverter {
     }
 
     function getReturn(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) external view returns (uint256, uint256) {
         _sourceToken;

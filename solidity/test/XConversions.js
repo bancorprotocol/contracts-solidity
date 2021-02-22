@@ -10,7 +10,7 @@ const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
 const BancorFormula = contract.fromArtifact('BancorFormula');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 
 const MAX_LOCK_LIMIT = new BN('1000000000000000000000'); // 1000 bnt
 const MAX_RELEASE_LIMIT = new BN('1000000000000000000000'); // 1000 bnt
@@ -54,7 +54,7 @@ describe('XConversions', () => {
     });
 
     beforeEach(async () => {
-        bntToken = await ERC20Token.new('Bancor', 'BNT', 18, BNT_AMOUNT);
+        bntToken = await TestStandardToken.new('Bancor', 'BNT', 18, BNT_AMOUNT);
 
         bancorX = await BancorX.new(
             MAX_LOCK_LIMIT,
@@ -77,7 +77,7 @@ describe('XConversions', () => {
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
         await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
 
-        erc20Token = await ERC20Token.new('Test Token', 'TST', 18, web3.utils.toWei(new BN(100)));
+        erc20Token = await TestStandardToken.new('Test Token', 'TST', 18, web3.utils.toWei(new BN(100)));
 
         // Create some converters.
         const poolToken1 = await DSToken.new('Pool Token 1', 'POOL1', 18);

@@ -15,7 +15,7 @@ contract TestLiquidityPoolV1Converter is LiquidityPoolV1Converter, TestTime {
 
     function removeLiquidityTest(
         uint256 _amount,
-        IERC20Token[] memory _reserveTokens,
+        IERC20[] memory _reserveTokens,
         uint256[] memory _reserveMinReturnAmounts
     ) public {
         reserveAmountsRemoved = removeLiquidity(_amount, _reserveTokens, _reserveMinReturnAmounts);

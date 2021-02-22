@@ -9,7 +9,7 @@ const { ZERO_ADDRESS } = constants;
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
@@ -143,9 +143,9 @@ describe('LiquidityPoolConverter', () => {
         upgrader = await ConverterUpgrader.new(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, 1000000000);
         reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
-        reserveToken3 = await ERC20Token.new('ERC Token 3', 'ERC3', 18, 1500000000);
+        reserveToken3 = await TestStandardToken.new('ERC Token 3', 'ERC3', 18, 1500000000);
     });
     for (const type of CONVERTER_TYPES) {
         for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {

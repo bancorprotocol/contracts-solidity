@@ -3,7 +3,7 @@ const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 
 const DUMMY_ADDRESS = '0x'.padEnd(42, 'f');
 
@@ -22,7 +22,7 @@ describe('LiquidityProtectionStore', () => {
 
     describe('general verification', () => {
         it('should revert when a non owner attempts to withdraw tokens', async () => {
-            const erc20Token = await ERC20Token.new('name', 'symbol', 0, 1);
+            const erc20Token = await TestStandardToken.new('name', 'symbol', 0, 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await expectRevert(
                 liquidityProtectionStore.withdrawTokens(erc20Token.address, defaultSender, 1, { from: nonOwner }),
@@ -50,7 +50,7 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should succeed when the owner attempts to withdraw tokens', async () => {
-            const erc20Token = await ERC20Token.new('name', 'symbol', 0, 1);
+            const erc20Token = await TestStandardToken.new('name', 'symbol', 0, 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await liquidityProtectionStore.withdrawTokens(erc20Token.address, defaultSender, 1, { from: owner });
             expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.bignumber.equal('0');

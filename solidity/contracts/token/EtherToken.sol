@@ -2,14 +2,15 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./ERC20Token.sol";
 import "./interfaces/IEtherToken.sol";
+import "../utility/Utils.sol";
 
 /**
  * @dev Ether tokenization contract
  */
-contract EtherToken is IEtherToken, ERC20Token {
+contract EtherToken is IEtherToken, ERC20, Utils {
     using SafeMath for uint256;
 
     /**
@@ -32,13 +33,13 @@ contract EtherToken is IEtherToken, ERC20Token {
      * @param _name        token name
      * @param _symbol      token symbol
      */
-    constructor(string memory _name, string memory _symbol) public ERC20Token(_name, _symbol, 18, 0) {}
+    constructor(string memory _name, string memory _symbol) public ERC20(_name, _symbol) {}
 
     /**
      * @dev deposit ether on behalf of the sender
      */
     function deposit() public payable override {
-        depositTo(msg.sender);
+        depositTo(_msgSender());
     }
 
     /**
@@ -47,7 +48,7 @@ contract EtherToken is IEtherToken, ERC20Token {
      * @param _amount  amount of ether to withdraw
      */
     function withdraw(uint256 _amount) public override {
-        withdrawTo(msg.sender, _amount);
+        withdrawTo(_msgSender(), _amount);
     }
 
     /**
@@ -56,11 +57,9 @@ contract EtherToken is IEtherToken, ERC20Token {
      * @param _to      account to be entitled for the ether
      */
     function depositTo(address _to) public payable override notThis(_to) {
-        balanceOf[_to] = balanceOf[_to].add(msg.value); // add the value to the account balance
-        totalSupply = totalSupply.add(msg.value); // increase the total supply
+        _mint(_to, msg.value);
 
         emit Issuance(msg.value);
-        emit Transfer(address(this), _to, msg.value);
     }
 
     /**
@@ -70,11 +69,10 @@ contract EtherToken is IEtherToken, ERC20Token {
      * @param _amount  amount of ether to withdraw
      */
     function withdrawTo(address payable _to, uint256 _amount) public override notThis(_to) {
-        balanceOf[msg.sender] = balanceOf[msg.sender].sub(_amount); // deduct the amount from the account balance
-        totalSupply = totalSupply.sub(_amount); // decrease the total supply
+        _burn(_msgSender(), _amount);
+
         _to.transfer(_amount); // send the amount to the target account
 
-        emit Transfer(msg.sender, address(this), _amount);
         emit Destruction(_amount);
     }
 
@@ -89,12 +87,7 @@ contract EtherToken is IEtherToken, ERC20Token {
      *
      * @return true if the transfer was successful, false if it wasn't
      */
-    function transfer(address _to, uint256 _value)
-        public
-        override(IERC20Token, ERC20Token)
-        notThis(_to)
-        returns (bool)
-    {
+    function transfer(address _to, uint256 _value) public override(IERC20, ERC20) notThis(_to) returns (bool) {
         return super.transfer(_to, _value);
     }
 
@@ -112,7 +105,7 @@ contract EtherToken is IEtherToken, ERC20Token {
         address _from,
         address _to,
         uint256 _value
-    ) public override(IERC20Token, ERC20Token) notThis(_to) returns (bool) {
+    ) public override(IERC20, ERC20) notThis(_to) returns (bool) {
         return super.transferFrom(_from, _to, _value);
     }
 

@@ -18,7 +18,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     // system balances
-    mapping(IERC20Token => uint256) private _systemBalances;
+    mapping(IERC20 => uint256) private _systemBalances;
 
     // network tokens minted
     mapping(IConverterAnchor => uint256) private _networkTokensMinted;
@@ -41,7 +41,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param prevAmount    previous amount
      * @param newAmount     new amount
      */
-    event SystemBalanceUpdated(IERC20Token indexed token, uint256 prevAmount, uint256 newAmount);
+    event SystemBalanceUpdated(IERC20 indexed token, uint256 prevAmount, uint256 newAmount);
 
     /**
      * @dev triggered when the amount of network tokens minted into a specific pool is updated
@@ -67,7 +67,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param token token address
      * @return system balance
      */
-    function systemBalance(IERC20Token token) external view override returns (uint256) {
+    function systemBalance(IERC20 token) external view override returns (uint256) {
         return _systemBalances[token];
     }
 
@@ -78,12 +78,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param token     token address
      * @param amount    token amount
      */
-    function incSystemBalance(IERC20Token token, uint256 amount)
-        external
-        override
-        ownerOnly
-        validAddress(address(token))
-    {
+    function incSystemBalance(IERC20 token, uint256 amount) external override ownerOnly validAddress(address(token)) {
         uint256 prevAmount = _systemBalances[token];
         uint256 newAmount = prevAmount.add(amount);
         _systemBalances[token] = newAmount;
@@ -98,12 +93,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @param token     token address
      * @param amount    token amount
      */
-    function decSystemBalance(IERC20Token token, uint256 amount)
-        external
-        override
-        ownerOnly
-        validAddress(address(token))
-    {
+    function decSystemBalance(IERC20 token, uint256 amount) external override ownerOnly validAddress(address(token)) {
         uint256 prevAmount = _systemBalances[token];
         uint256 newAmount = prevAmount.sub(amount);
         _systemBalances[token] = newAmount;
