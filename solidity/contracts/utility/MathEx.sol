@@ -5,6 +5,8 @@ pragma solidity 0.6.12;
  * @dev This library provides a set of complex math operations.
  */
 library MathEx {
+    uint256 private constant MAX_EXP_BIT_LEN = 4;
+    uint256 private constant MAX_EXP = 2**MAX_EXP_BIT_LEN - 1;
     uint256 private constant MAX_UINT128 = 2**128 - 1;
 
     /**
@@ -50,11 +52,13 @@ library MathEx {
         uint256 _d,
         uint256 _exp
     ) internal pure returns (uint256, uint256) {
-        uint256[257] memory ns;
-        uint256[257] memory ds;
+        require(_exp <= MAX_EXP, "ERR_EXP_TOO_LARGE");
+
+        uint256[MAX_EXP_BIT_LEN] memory ns;
+        uint256[MAX_EXP_BIT_LEN] memory ds;
 
         (ns[0], ds[0]) = reducedRatio(_n, _d, MAX_UINT128);
-        for (uint256 i = 0; (_exp >> i) > 0; i++) {
+        for (uint256 i = 0; (_exp >> i) > 1; i++) {
             (ns[i + 1], ds[i + 1]) = reducedRatio(ns[i] ** 2, ds[i] ** 2, MAX_UINT128);
         }
 
