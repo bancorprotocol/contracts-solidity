@@ -1,5 +1,5 @@
 const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
+const { expectRevert, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');

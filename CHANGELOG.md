@@ -1,3 +1,16 @@
+### 0.6.33
+General
+* Replaced the local ERC20Token/TokenHandler with OpenZepplin's ERC20/SafeERC20
+* Moved from npm to yarn
+* Added FixedRatePoolConverter (type 4)
+
+StandardPoolConverter
+* Added `sourceAmountAndFee` function that returns the source amount and fee based on a target amount
+
+LiquidityProtection
+* Pool spot rate is now recorded on deposit instead of the average rate
+
+
 ### 0.6.32
 LiquidityProtection
 * Updated settings contract conventions

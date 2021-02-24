@@ -10,7 +10,7 @@ contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSu
     uint256 private _id;
     address private _provider;
     IConverterAnchor private _poolAnchor;
-    IERC20Token private _reserveToken;
+    IERC20 private _reserveToken;
     uint256 private _poolAmount;
     uint256 private _reserveAmount;
     bool private _adding;
@@ -18,7 +18,7 @@ contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSu
     function onAddingLiquidity(
         address provider,
         IConverterAnchor poolAnchor,
-        IERC20Token reserveToken,
+        IERC20 reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override {
@@ -36,7 +36,7 @@ contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSu
         uint256 id,
         address provider,
         IConverterAnchor poolAnchor,
-        IERC20Token reserveToken,
+        IERC20 reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override {
@@ -62,7 +62,7 @@ contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSu
         return _poolAnchor;
     }
 
-    function reserveToken() external view returns (IERC20Token) {
+    function reserveToken() external view returns (IERC20) {
         return _reserveToken;
     }
 

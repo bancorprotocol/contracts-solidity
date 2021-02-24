@@ -9,6 +9,7 @@ Following installation, `yarn build` should be executed once.
 ### Test Deployment
 
 Deploys a set of contracts for testing purpose; can be used on both private and public networks:
+
 ```bash
 node test_deployment.js
     Configuration file name
@@ -19,31 +20,28 @@ node test_deployment.js
 The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
 
 Here is an example of the initial configuration file which should be provided to the process:
+
 ```json
 {
     "reserves": [
         {
             "type": 0,
             "symbol": "XXX",
-            "decimals": 18,
             "supply": "1829101"
         },
         {
             "type": 0,
             "symbol": "YYY",
-            "decimals": 18,
             "supply": "3603801"
         },
         {
             "type": 1,
             "symbol": "BNT",
-            "decimals": 18,
             "supply": "6914855"
         },
         {
             "type": 1,
             "symbol": "vBNT",
-            "decimals": 18,
             "supply": "0"
         },
         {
@@ -134,10 +132,7 @@ Here is an example of the initial configuration file which should be provided to
         "minProtectionDelay": 600,
         "maxProtectionDelay": 3600,
         "lockDuration": 60,
-        "converters": [
-            "ETHBNT",
-            "XXXBNT"
-        ]
+        "converters": ["ETHBNT", "XXXBNT"]
     }
 }
 ```
