@@ -5,7 +5,7 @@ const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 const { ZERO_ADDRESS } = constants;
 
 const TokenHolder = contract.fromArtifact('TokenHolder');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 
 describe('TokenHolder', () => {
     let holder;
@@ -15,7 +15,7 @@ describe('TokenHolder', () => {
 
     beforeEach(async () => {
         holder = await TokenHolder.new();
-        erc20Token = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 100000);
+        erc20Token = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, 100000);
         await erc20Token.transfer(holder.address, 1000);
     });
 

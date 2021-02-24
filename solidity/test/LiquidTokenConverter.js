@@ -11,7 +11,7 @@ const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterF
 const DSToken = contract.fromArtifact('DSToken');
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 const Whitelist = contract.fromArtifact('Whitelist');
@@ -115,8 +115,8 @@ describe('LiquidTokenConverter', () => {
         const token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
-        erc20Token = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
+        reserveToken = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        erc20Token = await TestStandardToken.new('ERC Token 2', 'ERC2', 18, 1000000000);
     });
 
     it('verifies the Activation event after converter activation', async () => {
@@ -163,7 +163,7 @@ describe('LiquidTokenConverter', () => {
 
                 await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
-                const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
+                const reserveToken2 = await TestStandardToken.new('ERC Token 2', 'ERC2', 18, 1000000000);
                 await expectRevert(
                     converter.addReserve(reserveToken2.address, WEIGHT_20_PERCENT),
                     'ERR_INVALID_RESERVE_COUNT'

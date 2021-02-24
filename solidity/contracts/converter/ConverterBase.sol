@@ -10,7 +10,6 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IBancorFormula.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
-import "../utility/TokenHandler.sol";
 import "../utility/TokenHolder.sol";
 import "../utility/interfaces/IWhitelist.sol";
 
@@ -39,18 +38,11 @@ import "../utility/interfaces/IWhitelist.sol";
  *
  * Note that converters don't currently support tokens with transfer fees.
  */
-abstract contract ConverterBase is
-    ConverterVersion,
-    IConverter,
-    TokenHandler,
-    TokenHolder,
-    ContractRegistryClient,
-    ReentrancyGuard
-{
+abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
     uint32 internal constant PPM_RESOLUTION = 1000000;
-    IERC20Token internal constant ETH_RESERVE_ADDRESS = IERC20Token(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct Reserve {
         uint256 balance; // reserve balance
@@ -62,8 +54,8 @@ abstract contract ConverterBase is
 
     IConverterAnchor public override anchor; // converter anchor contract
     IWhitelist public conversionWhitelist; // whitelist contract with list of addresses that are allowed to use the converter
-    IERC20Token[] public reserveTokens; // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
-    mapping(IERC20Token => Reserve) public reserves; // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
+    IERC20[] public reserveTokens; // ERC20 standard token addresses (prior version 17, use 'connectorTokens' instead)
+    mapping(IERC20 => Reserve) public reserves; // reserve token addresses -> reserve data (prior version 17, use 'connectors' instead)
     uint32 public reserveRatio = 0; // ratio between the reserves and the market cap, equal to the total reserve weights
     uint32 public override maxConversionFee = 0; // maximum conversion fee for the lifetime of the contract,
     // represented in ppm, 0...1000000 (0 = no fee, 100 = 0.01%, 1000000 = 100%)
@@ -108,13 +100,13 @@ abstract contract ConverterBase is
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
-    modifier validReserve(IERC20Token _address) {
+    modifier validReserve(IERC20 _address) {
         _validReserve(_address);
         _;
     }
 
     // error message binary size optimization
-    function _validReserve(IERC20Token _address) internal view {
+    function _validReserve(IERC20 _address) internal view {
         require(reserves[_address].isSet, "ERR_INVALID_RESERVE");
     }
 
@@ -145,8 +137,8 @@ abstract contract ConverterBase is
 
     // overrides interface declaration
     function targetAmountAndFee(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) public view virtual override returns (uint256, uint256);
 
@@ -252,7 +244,7 @@ abstract contract ConverterBase is
      * @param _amount  amount to withdraw
      */
     function withdrawTokens(
-        IERC20Token _token,
+        IERC20 _token,
         address _to,
         uint256 _amount
     ) public override(IConverter, TokenHolder) protected ownerOnly {
@@ -302,7 +294,7 @@ abstract contract ConverterBase is
      * @param _token   address of the reserve token
      * @param _weight  reserve weight, represented in ppm, 1-1000000
      */
-    function addReserve(IERC20Token _token, uint32 _weight)
+    function addReserve(IERC20 _token, uint32 _weight)
         public
         virtual
         override
@@ -333,7 +325,7 @@ abstract contract ConverterBase is
      *
      * @return reserve weight
      */
-    function reserveWeight(IERC20Token _reserveToken) public view validReserve(_reserveToken) returns (uint32) {
+    function reserveWeight(IERC20 _reserveToken) public view validReserve(_reserveToken) returns (uint32) {
         return reserves[_reserveToken].weight;
     }
 
@@ -345,13 +337,7 @@ abstract contract ConverterBase is
      *
      * @return reserve balance
      */
-    function reserveBalance(IERC20Token _reserveToken)
-        public
-        view
-        override
-        validReserve(_reserveToken)
-        returns (uint256)
-    {
+    function reserveBalance(IERC20 _reserveToken) public view override validReserve(_reserveToken) returns (uint256) {
         return reserves[_reserveToken].balance;
     }
 
@@ -368,8 +354,8 @@ abstract contract ConverterBase is
      * @return amount of tokens received (in units of the target token)
      */
     function convert(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount,
         address _trader,
         address payable _beneficiary
@@ -400,8 +386,8 @@ abstract contract ConverterBase is
      * @return amount of tokens received (in units of the target token)
      */
     function doConvert(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount,
         address _trader,
         address payable _beneficiary
@@ -423,7 +409,7 @@ abstract contract ConverterBase is
      *
      * @param _reserveToken    address of the reserve token
      */
-    function syncReserveBalance(IERC20Token _reserveToken) internal validReserve(_reserveToken) {
+    function syncReserveBalance(IERC20 _reserveToken) internal validReserve(_reserveToken) {
         if (_reserveToken == ETH_RESERVE_ADDRESS) {
             reserves[_reserveToken].balance = address(this).balance;
         } else {
@@ -449,8 +435,8 @@ abstract contract ConverterBase is
      * @param _returnAmount    amount returned (in the target token)
      */
     function dispatchConversionEvent(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         address _trader,
         uint256 _amount,
         uint256 _returnAmount,
@@ -488,7 +474,7 @@ abstract contract ConverterBase is
     /**
      * @dev deprecated, backward compatibility
      */
-    function connectors(IERC20Token _address)
+    function connectors(IERC20 _address)
         public
         view
         override
@@ -507,7 +493,7 @@ abstract contract ConverterBase is
     /**
      * @dev deprecated, backward compatibility
      */
-    function connectorTokens(uint256 _index) public view override returns (IERC20Token) {
+    function connectorTokens(uint256 _index) public view override returns (IERC20) {
         return ConverterBase.reserveTokens[_index];
     }
 
@@ -521,7 +507,7 @@ abstract contract ConverterBase is
     /**
      * @dev deprecated, backward compatibility
      */
-    function getConnectorBalance(IERC20Token _connectorToken) public view override returns (uint256) {
+    function getConnectorBalance(IERC20 _connectorToken) public view override returns (uint256) {
         return reserveBalance(_connectorToken);
     }
 
@@ -529,8 +515,8 @@ abstract contract ConverterBase is
      * @dev deprecated, backward compatibility
      */
     function getReturn(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) public view returns (uint256, uint256) {
         return targetAmountAndFee(_sourceToken, _targetToken, _amount);

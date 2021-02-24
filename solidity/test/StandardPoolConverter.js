@@ -13,7 +13,7 @@ const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter')
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
@@ -143,7 +143,7 @@ describe('StandardPoolConverter', () => {
         const token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        reserveToken = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, 1000000000);
         reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
@@ -723,8 +723,8 @@ describe('StandardPoolConverter', () => {
         beforeEach(async () => {
             const token = await DSToken.new('Token', 'TKN', 0);
             converter = await StandardPoolConverter.new(token.address, contractRegistry.address, 0);
-            reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
-            reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
+            reserveToken1 = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, 1000000000);
+            reserveToken2 = await TestStandardToken.new('ERC Token 2', 'ERC2', 18, 1000000000);
             await converter.addReserve(reserveToken1.address, 500000);
             await converter.addReserve(reserveToken2.address, 500000);
             await token.transferOwnership(converter.address);
@@ -764,8 +764,8 @@ describe('StandardPoolConverter', () => {
                 it(`(amounts = ${amounts}, percents = ${percents})`, async () => {
                     const token = await DSToken.new('Token', 'TKN', 0);
                     const converter = await StandardPoolConverter.new(token.address, contractRegistry.address, 0);
-                    const reserveToken1 = await ERC20Token.new('ERC Token 1', 'ERC1', 18, 1000000000);
-                    const reserveToken2 = await ERC20Token.new('ERC Token 2', 'ERC2', 18, 1000000000);
+                    const reserveToken1 = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, 1000000000);
+                    const reserveToken2 = await TestStandardToken.new('ERC Token 2', 'ERC2', 18, 1000000000);
                     await converter.addReserve(reserveToken1.address, 500000);
                     await converter.addReserve(reserveToken2.address, 500000);
                     await token.transferOwnership(converter.address);
@@ -1011,8 +1011,8 @@ describe('StandardPoolConverter', () => {
             const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 0);
 
             const reserveTokens = [
-                (await ERC20Token.new('name', 'symbol', 0, MAX_UINT256)).address,
-                hasETH ? ETH_RESERVE_ADDRESS : (await ERC20Token.new('name', 'symbol', 0, MAX_UINT256)).address
+                (await TestStandardToken.new('name', 'symbol', 0, MAX_UINT256)).address,
+                hasETH ? ETH_RESERVE_ADDRESS : (await TestStandardToken.new('name', 'symbol', 0, MAX_UINT256)).address
             ];
 
             for (const reserveToken of reserveTokens) {
@@ -1030,7 +1030,7 @@ describe('StandardPoolConverter', () => {
                 return;
             }
 
-            const token = await ERC20Token.at(reserveToken);
+            const token = await TestStandardToken.at(reserveToken);
             return token.approve(converter.address, amount);
         };
 
@@ -1039,7 +1039,7 @@ describe('StandardPoolConverter', () => {
                 return new BN(0);
             }
 
-            const token = await ERC20Token.at(reserveToken);
+            const token = await TestStandardToken.at(reserveToken);
             return token.allowance.call(sender, converter.address);
         };
 
@@ -1048,7 +1048,7 @@ describe('StandardPoolConverter', () => {
                 return balance.current(converter.address);
             }
 
-            const token = await ERC20Token.at(reserveToken);
+            const token = await TestStandardToken.at(reserveToken);
             return await token.balanceOf.call(converter.address);
         };
 

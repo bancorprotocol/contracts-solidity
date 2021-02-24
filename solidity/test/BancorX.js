@@ -3,7 +3,7 @@ const { expectRevert, expectEvent, BN, time } = require('@openzeppelin/test-help
 const { expect } = require('../../chai-local');
 
 const BancorX = contract.fromArtifact('BancorX');
-const ERC20Token = contract.fromArtifact('ERC20Token');
+const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
 const MAX_LOCK_LIMIT = new BN('1000000000000000000000'); // 1000 tokens
@@ -28,7 +28,7 @@ describe('BancorX', () => {
 
     beforeEach(async () => {
         const contractRegistry = await ContractRegistry.new();
-        const bancorXToken = await ERC20Token.new('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
+        const bancorXToken = await TestStandardToken.new('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
 
         bancorX = await BancorX.new(
             MAX_LOCK_LIMIT,

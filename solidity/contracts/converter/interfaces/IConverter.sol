@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./IConverterAnchor.sol";
-import "../../token/interfaces/IERC20Token.sol";
 import "../../utility/interfaces/IOwned.sol";
 
 /*
@@ -15,14 +17,14 @@ interface IConverter is IOwned {
     function isActive() external view returns (bool);
 
     function targetAmountAndFee(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount
     ) external view returns (uint256, uint256);
 
     function convert(
-        IERC20Token _sourceToken,
-        IERC20Token _targetToken,
+        IERC20 _sourceToken,
+        IERC20 _targetToken,
         uint256 _amount,
         address _trader,
         address payable _beneficiary
@@ -32,7 +34,7 @@ interface IConverter is IOwned {
 
     function maxConversionFee() external view returns (uint32);
 
-    function reserveBalance(IERC20Token _reserveToken) external view returns (uint256);
+    function reserveBalance(IERC20 _reserveToken) external view returns (uint256);
 
     receive() external payable;
 
@@ -43,14 +45,14 @@ interface IConverter is IOwned {
     function setConversionFee(uint32 _conversionFee) external;
 
     function withdrawTokens(
-        IERC20Token _token,
+        IERC20 _token,
         address _to,
         uint256 _amount
     ) external;
 
     function withdrawETH(address payable _to) external;
 
-    function addReserve(IERC20Token _token, uint32 _ratio) external;
+    function addReserve(IERC20 _token, uint32 _ratio) external;
 
     // deprecated, backward compatibility
     function token() external view returns (IConverterAnchor);
@@ -59,7 +61,7 @@ interface IConverter is IOwned {
 
     function acceptTokenOwnership() external;
 
-    function connectors(IERC20Token _address)
+    function connectors(IERC20 _address)
         external
         view
         returns (
@@ -70,9 +72,9 @@ interface IConverter is IOwned {
             bool
         );
 
-    function getConnectorBalance(IERC20Token _connectorToken) external view returns (uint256);
+    function getConnectorBalance(IERC20 _connectorToken) external view returns (uint256);
 
-    function connectorTokens(uint256 _index) external view returns (IERC20Token);
+    function connectorTokens(uint256 _index) external view returns (IERC20);
 
     function connectorTokenCount() external view returns (uint16);
 
@@ -96,8 +98,8 @@ interface IConverter is IOwned {
      * @param _conversionFee   conversion fee in units of the target token
      */
     event Conversion(
-        IERC20Token indexed _fromToken,
-        IERC20Token indexed _toToken,
+        IERC20 indexed _fromToken,
+        IERC20 indexed _toToken,
         address indexed _trader,
         uint256 _amount,
         uint256 _return,
@@ -113,7 +115,7 @@ interface IConverter is IOwned {
      * @param  _rateN  rate of 1 unit of `_token1` in `_token2` (numerator)
      * @param  _rateD  rate of 1 unit of `_token1` in `_token2` (denominator)
      */
-    event TokenRateUpdate(IERC20Token indexed _token1, IERC20Token indexed _token2, uint256 _rateN, uint256 _rateD);
+    event TokenRateUpdate(IERC20 indexed _token1, IERC20 indexed _token2, uint256 _rateN, uint256 _rateD);
 
     /**
      * @dev triggered when the conversion fee is updated

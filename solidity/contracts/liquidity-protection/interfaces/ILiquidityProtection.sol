@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./ILiquidityProtectionStore.sol";
 import "./ILiquidityProtectionStats.sol";
 import "./ILiquidityProtectionSettings.sol";
 import "./ILiquidityProtectionUserStore.sol";
 import "./ILiquidityProtectionSystemStore.sol";
 import "../../utility/interfaces/ITokenHolder.sol";
-import "../../token/interfaces/IERC20Token.sol";
 import "../../converter/interfaces/IConverterAnchor.sol";
 
 /*
@@ -28,13 +30,13 @@ interface ILiquidityProtection {
     function addLiquidityFor(
         address owner,
         IConverterAnchor poolAnchor,
-        IERC20Token reserveToken,
+        IERC20 reserveToken,
         uint256 amount
     ) external payable returns (uint256);
 
     function addLiquidity(
         IConverterAnchor poolAnchor,
-        IERC20Token reserveToken,
+        IERC20 reserveToken,
         uint256 amount
     ) external payable returns (uint256);
 
