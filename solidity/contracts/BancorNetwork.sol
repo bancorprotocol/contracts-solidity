@@ -157,7 +157,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             if (address(targetToken) == anchor) {
                 // buy the anchor
                 // check if the current anchor has changed
-                if (i < 3 || anchor != _path[i - 3]) supply = IDSToken(anchor).totalSupply();
+                if (i < 3 || anchor != _path[i - 3]) {
+                    supply = IDSToken(anchor).totalSupply();
+                }
 
                 // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(sourceToken);
@@ -171,7 +173,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             } else if (address(sourceToken) == anchor) {
                 // sell the anchor
                 // check if the current anchor has changed
-                if (i < 3 || anchor != _path[i - 3]) supply = IDSToken(anchor).totalSupply();
+                if (i < 3 || anchor != _path[i - 3]) {
+                    supply = IDSToken(anchor).totalSupply();
+                }
 
                 // get the amount & the conversion fee
                 balance = converter.getConnectorBalance(targetToken);
@@ -217,7 +221,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
 
         // check if beneficiary is set
         address payable beneficiary = msg.sender;
-        if (_beneficiary != address(0)) beneficiary = _beneficiary;
+        if (_beneficiary != address(0)) {
+            beneficiary = _beneficiary;
+        }
 
         // convert and get the resulting amount
         ConversionStep[] memory data = createConversionData(_path, beneficiary);
@@ -338,14 +344,14 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             }
 
             // do the conversion
-            if (!stepData.isV28OrHigherConverter)
+            if (!stepData.isV28OrHigherConverter) {
                 toAmount = ILegacyConverter(address(stepData.converter)).change(
                     stepData.sourceToken,
                     stepData.targetToken,
                     fromAmount,
                     1
                 );
-            else if (etherTokens[stepData.sourceToken])
+            } else if (etherTokens[stepData.sourceToken]) {
                 toAmount = stepData.converter.convert{ value: msg.value }(
                     stepData.sourceToken,
                     stepData.targetToken,
@@ -353,7 +359,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
                     msg.sender,
                     stepData.beneficiary
                 );
-            else
+            } else {
                 toAmount = stepData.converter.convert(
                     stepData.sourceToken,
                     stepData.targetToken,
@@ -361,6 +367,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
                     msg.sender,
                     stepData.beneficiary
                 );
+            }
 
             emit Conversion(
                 stepData.anchor,
@@ -402,8 +409,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             // EtherToken converter - deposit the ETH into the EtherToken
             // note that it can still be a non ETH converter if the path is wrong
             // but such conversion will simply revert
-            if (!isNewerConverter)
+            if (!isNewerConverter) {
                 IEtherToken(address(getConverterEtherTokenAddress(firstConverter))).deposit{ value: msg.value }();
+            }
         }
         // EtherToken
         else if (etherTokens[_sourceToken]) {
@@ -412,7 +420,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
 
             // ETH converter - withdraw the ETH
-            if (isNewerConverter) IEtherToken(address(_sourceToken)).withdraw(_amount);
+            if (isNewerConverter) {
+                IEtherToken(address(_sourceToken)).withdraw(_amount);
+            }
         }
         // other ERC20 token
         else {
@@ -441,7 +451,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         ConversionStep memory stepData = _data[_data.length - 1];
 
         // network contract doesn't hold the tokens, do nothing
-        if (stepData.beneficiary != address(this)) return;
+        if (stepData.beneficiary != address(this)) {
+            return;
+        }
 
         IERC20 targetToken = stepData.targetToken;
 
@@ -494,36 +506,43 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         // source is ETH
         ConversionStep memory stepData = data[0];
         if (etherTokens[stepData.sourceToken]) {
-            // newer converter - replace the source token address with ETH reserve address
-            if (stepData.isV28OrHigherConverter)
+            if (stepData.isV28OrHigherConverter) {
+                // newer converter - replace the source token address with ETH reserve address
                 stepData.sourceToken = ETH_RESERVE_ADDRESS;
+            } else {
                 // older converter - replace the source token with the EtherToken address used by the converter
-            else stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
+                stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
+            }
         }
 
         // target is ETH
         stepData = data[data.length - 1];
         if (etherTokens[stepData.targetToken]) {
-            // newer converter - replace the target token address with ETH reserve address
-            if (stepData.isV28OrHigherConverter)
+            if (stepData.isV28OrHigherConverter) {
+                // newer converter - replace the target token address with ETH reserve address
                 stepData.targetToken = ETH_RESERVE_ADDRESS;
+            } else {
                 // older converter - replace the target token with the EtherToken address used by the converter
-            else stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
+                stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
+            }
         }
 
         // set the beneficiary for each step
         for (i = 0; i < data.length; i++) {
             stepData = data[i];
 
-            // first check if the converter in this step is newer as older converters don't even support the beneficiary argument
+            // check if the converter in this step is newer as older converters don't even support the beneficiary argument
             if (stepData.isV28OrHigherConverter) {
-                if (i == data.length - 1)
+                if (i == data.length - 1) {
+                    // converter in this step is newer, beneficiary is the user input address
                     stepData.beneficiary = _beneficiary;
-                    // if the converter in the next step is newer, beneficiary is the next converter
-                else if (data[i + 1].isV28OrHigherConverter)
+                } else if (data[i + 1].isV28OrHigherConverter) {
+                    // the converter in the next step is newer, beneficiary is the next converter
                     stepData.beneficiary = address(data[i + 1].converter);
+                } else {
                     // the converter in the next step is older, beneficiary is the network contract
-                else stepData.beneficiary = payable(address(this));
+                    stepData.beneficiary = payable(address(this));
+                }
             } else {
                 // converter in this step is older, beneficiary is the network contract
                 stepData.beneficiary = payable(address(this));
@@ -561,7 +580,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         uint256 reserveCount = _converter.connectorTokenCount();
         for (uint256 i = 0; i < reserveCount; i++) {
             IERC20 reserveTokenAddress = _converter.connectorTokens(i);
-            if (etherTokens[reserveTokenAddress]) return reserveTokenAddress;
+            if (etherTokens[reserveTokenAddress]) {
+                return reserveTokenAddress;
+            }
         }
 
         return ETH_RESERVE_ADDRESS;
@@ -570,9 +591,13 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     // legacy - if the token is an ether token, returns the ETH reserve address
     // used by the converter, otherwise returns the input token address
     function getConverterTokenAddress(IConverter _converter, IERC20 _token) private view returns (IERC20) {
-        if (!etherTokens[_token]) return _token;
+        if (!etherTokens[_token]) {
+            return _token;
+        }
 
-        if (isV28OrHigherConverter(_converter)) return ETH_RESERVE_ADDRESS;
+        if (isV28OrHigherConverter(_converter)) {
+            return ETH_RESERVE_ADDRESS;
+        }
 
         return getConverterEtherTokenAddress(_converter);
     }
