@@ -198,7 +198,7 @@ describe('LiquidityProtection', () => {
                 }
 
                 await token.approve(bancorNetwork.address, amount);
-                return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0);
+                return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS);
             };
 
             const generateFee = async () => {

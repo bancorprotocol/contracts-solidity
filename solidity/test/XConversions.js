@@ -41,7 +41,6 @@ describe('XConversions', () => {
     const reporter1 = accounts[1];
     const reporter2 = accounts[2];
     const reporter3 = accounts[3];
-    const affiliateAddress = accounts[4];
     const sender = accounts[5];
     const sender2 = accounts[6];
 
@@ -149,7 +148,7 @@ describe('XConversions', () => {
             expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalance)).to.be.bignumber.equal(retAmount);
         });
 
-        it('should revert when attempting to xConvert2 to a different token than BNT', async () => {
+        it('should revert when attempting to xConvert to a different token than BNT', async () => {
             const path = [...ethBntPath.slice(0, 1), sender];
             const amount = web3.utils.toWei(new BN(1));
 
@@ -264,98 +263,4 @@ describe('XConversions', () => {
             );
         });
     });
-
-    for (const percent of [0.5, 1.0, 1.5, 2.0, 3.0]) {
-        describe(`advanced testing with affiliate fee of ${percent}%:`, () => {
-            const expectedFee = (amount, percent) =>
-                new BN(amount)
-                    .mul(new BN(10 * percent))
-                    .div(new BN(10))
-                    .div(new BN(100));
-
-            const affiliateFee = expectedFee(1000000, percent);
-
-            it('should be able to xConvert2 from ETH', async () => {
-                const path = ethBntPath;
-                const amount = web3.utils.toWei(new BN(1));
-                const expectedRate = await bancorNetwork.rateByPath.call(path, amount);
-
-                const retAmount = await bancorNetwork.xConvert2.call(
-                    path,
-                    amount,
-                    MIN_LIMIT,
-                    EOS_BLOCKCHAIN,
-                    EOS_ADDRESS,
-                    TX_ID,
-                    affiliateAddress,
-                    affiliateFee,
-                    { from: sender, value: amount }
-                );
-
-                const prevBalanceOfBancorX = await bntToken.balanceOf.call(bancorX.address);
-                const prevBalanceAffiliate = await bntToken.balanceOf.call(affiliateAddress);
-
-                await bancorNetwork.xConvert2(
-                    path,
-                    amount,
-                    MIN_LIMIT,
-                    EOS_BLOCKCHAIN,
-                    EOS_ADDRESS,
-                    TX_ID,
-                    affiliateAddress,
-                    affiliateFee,
-                    { from: sender, value: amount }
-                );
-
-                expect(
-                    (await bntToken.balanceOf.call(bancorX.address)).sub(prevBalanceOfBancorX)
-                ).to.be.bignumber.equal(retAmount);
-                expect(
-                    (await bntToken.balanceOf.call(affiliateAddress)).sub(prevBalanceAffiliate)
-                ).to.be.bignumber.equal(expectedFee(expectedRate, percent));
-            });
-
-            it('should be able to xConvert2 from an ERC20', async () => {
-                const path = erc20TokenBntPath;
-                const amount = web3.utils.toWei(new BN(1));
-                const expectedRate = await bancorNetwork.rateByPath.call(path, amount);
-
-                await erc20Token.approve(bancorNetwork.address, amount, { from: sender });
-
-                const retAmount = await bancorNetwork.xConvert2.call(
-                    path,
-                    amount,
-                    MIN_RETURN,
-                    EOS_BLOCKCHAIN,
-                    EOS_ADDRESS,
-                    TX_ID,
-                    affiliateAddress,
-                    affiliateFee,
-                    { from: sender }
-                );
-
-                const prevBalanceOfBancorX = await bntToken.balanceOf.call(bancorX.address);
-                const prevBalanceAffiliate = await bntToken.balanceOf.call(affiliateAddress);
-
-                await bancorNetwork.xConvert2(
-                    path,
-                    amount,
-                    MIN_RETURN,
-                    EOS_BLOCKCHAIN,
-                    EOS_ADDRESS,
-                    TX_ID,
-                    affiliateAddress,
-                    affiliateFee,
-                    { from: sender }
-                );
-
-                expect(
-                    (await bntToken.balanceOf.call(bancorX.address)).sub(prevBalanceOfBancorX)
-                ).to.be.bignumber.equal(retAmount);
-                expect(
-                    (await bntToken.balanceOf.call(affiliateAddress)).sub(prevBalanceAffiliate)
-                ).to.be.bignumber.equal(expectedFee(expectedRate, percent));
-            });
-        });
-    }
 });

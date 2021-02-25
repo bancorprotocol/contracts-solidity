@@ -91,7 +91,7 @@ describe('StandardPoolConverter', () => {
     };
 
     const convert = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
+        return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS, options);
     };
 
     const divCeil = (num, d) => {
