@@ -97,11 +97,11 @@ describe('LiquidityPoolConverter', () => {
     };
 
     const convert = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
+        return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS, options);
     };
 
     const convertCall = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath.call(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
+        return bancorNetwork.convertByPath2.call(path, amount, minReturn, ZERO_ADDRESS, options);
     };
 
     let bancorNetwork;
@@ -379,13 +379,11 @@ describe('LiquidityPoolConverter', () => {
                     }
 
                     await expectRevert(
-                        bancorNetwork.convertByPath(
+                        bancorNetwork.convertByPath2(
                             [getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address],
                             amount,
                             MIN_RETURN,
                             beneficiary,
-                            ZERO_ADDRESS,
-                            0,
                             { from: whitelisted, value }
                         ),
                         'ERR_NOT_WHITELISTED'
