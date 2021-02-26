@@ -11,7 +11,6 @@ import "./converter/interfaces/IBancorFormula.sol";
 import "./utility/ContractRegistryClient.sol";
 import "./utility/ReentrancyGuard.sol";
 import "./utility/TokenHolder.sol";
-import "./token/interfaces/IEtherToken.sol";
 import "./token/interfaces/IDSToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
 
@@ -60,8 +59,6 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         bool isV28OrHigherConverter;
     }
 
-    mapping(IERC20 => bool) public etherTokens; // list of all supported ether tokens
-
     /**
      * @dev triggered when a conversion between two tokens occurs
      *
@@ -87,22 +84,6 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
      * @param _registry    address of a contract registry contract
      */
     constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {
-        etherTokens[ETH_RESERVE_ADDRESS] = true;
-    }
-
-    /**
-     * @dev allows the owner to register/unregister ether tokens
-     *
-     * @param _token       ether token contract address
-     * @param _register    true to register, false to unregister
-     */
-    function registerEtherToken(IEtherToken _token, bool _register)
-        public
-        ownerOnly
-        validAddress(address(_token))
-        notThis(address(_token))
-    {
-        etherTokens[_token] = _register;
     }
 
     /**
@@ -149,10 +130,6 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             IERC20 targetToken = IERC20(_path[i]);
 
             converter = IConverter(payable(IConverterAnchor(anchor).owner()));
-
-            // backward compatibility
-            sourceToken = getConverterTokenAddress(converter, sourceToken);
-            targetToken = getConverterTokenAddress(converter, targetToken);
 
             if (address(targetToken) == anchor) {
                 // buy the anchor
@@ -332,7 +309,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             if (stepData.isV28OrHigherConverter) {
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
-                if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken]) {
+                if (i != 0 && _data[i - 1].beneficiary == address(this) && stepData.sourceToken != ETH_RESERVE_ADDRESS) {
                     stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
                 }
             }
@@ -351,7 +328,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
                     fromAmount,
                     1
                 );
-            } else if (etherTokens[stepData.sourceToken]) {
+            } else if (stepData.sourceToken == ETH_RESERVE_ADDRESS) {
                 toAmount = stepData.converter.convert{ value: msg.value }(
                     stepData.sourceToken,
                     stepData.targetToken,
@@ -401,36 +378,17 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         IConverter firstConverter = IConverter(payable(_anchor.owner()));
         bool isNewerConverter = isV28OrHigherConverter(firstConverter);
 
-        // ETH
         if (msg.value > 0) {
-            // validate msg.value
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-
-            // EtherToken converter - deposit the ETH into the EtherToken
-            // note that it can still be a non ETH converter if the path is wrong
-            // but such conversion will simply revert
-            if (!isNewerConverter) {
-                IEtherToken(address(getConverterEtherTokenAddress(firstConverter))).deposit{ value: msg.value }();
-            }
-        }
-        // EtherToken
-        else if (etherTokens[_sourceToken]) {
-            // claim the tokens - if the source token is ETH reserve, this call will fail
-            // since in that case the transaction must be sent with msg.value
-            _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
-
-            // ETH converter - withdraw the ETH
+            require(_sourceToken == ETH_RESERVE_ADDRESS, "ERR_SOURCE_TOKEN_ADDRESS");
+            require(isNewerConverter, "ERR_CONVERTER_NOT_SUPPORTED");
+        } else {
+            require(_sourceToken != ETH_RESERVE_ADDRESS, "ERR_SOURCE_TOKEN_ADDRESS");
             if (isNewerConverter) {
-                IEtherToken(address(_sourceToken)).withdraw(_amount);
-            }
-        }
-        // other ERC20 token
-        else {
-            // newer converter - transfer the tokens from the sender directly to the converter
-            // otherwise claim the tokens
-            if (isNewerConverter) {
+                // newer converter - transfer the tokens from the sender directly to the converter
                 _sourceToken.safeTransferFrom(msg.sender, address(firstConverter), _amount);
             } else {
+                // otherwise claim the tokens
                 _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
             }
         }
@@ -456,19 +414,8 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         }
 
         IERC20 targetToken = stepData.targetToken;
-
-        // ETH / EtherToken
-        if (etherTokens[targetToken]) {
-            // newer converter should send ETH directly to the beneficiary
-            assert(!stepData.isV28OrHigherConverter);
-
-            // EtherToken converter - withdraw the ETH and transfer to the beneficiary
-            IEtherToken(address(targetToken)).withdrawTo(_beneficiary, _amount);
-        }
-        // other ERC20 token
-        else {
-            targetToken.safeTransfer(_beneficiary, _amount);
-        }
+        assert(targetToken != ETH_RESERVE_ADDRESS);
+        targetToken.safeTransfer(_beneficiary, _amount);
     }
 
     /**
@@ -502,50 +449,23 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             });
         }
 
-        // ETH support
-        // source is ETH
-        ConversionStep memory stepData = data[0];
-        if (etherTokens[stepData.sourceToken]) {
-            if (stepData.isV28OrHigherConverter) {
-                // newer converter - replace the source token address with ETH reserve address
-                stepData.sourceToken = ETH_RESERVE_ADDRESS;
-            } else {
-                // older converter - replace the source token with the EtherToken address used by the converter
-                stepData.sourceToken = getConverterEtherTokenAddress(stepData.converter);
-            }
-        }
-
-        // target is ETH
-        stepData = data[data.length - 1];
-        if (etherTokens[stepData.targetToken]) {
-            if (stepData.isV28OrHigherConverter) {
-                // newer converter - replace the target token address with ETH reserve address
-                stepData.targetToken = ETH_RESERVE_ADDRESS;
-            } else {
-                // older converter - replace the target token with the EtherToken address used by the converter
-                stepData.targetToken = getConverterEtherTokenAddress(stepData.converter);
-            }
-        }
-
         // set the beneficiary for each step
         for (i = 0; i < data.length; i++) {
-            stepData = data[i];
-
             // check if the converter in this step is newer as older converters don't even support the beneficiary argument
-            if (stepData.isV28OrHigherConverter) {
+            if (data[i].isV28OrHigherConverter) {
                 if (i == data.length - 1) {
                     // converter in this step is newer, beneficiary is the user input address
-                    stepData.beneficiary = _beneficiary;
+                    data[i].beneficiary = _beneficiary;
                 } else if (data[i + 1].isV28OrHigherConverter) {
                     // the converter in the next step is newer, beneficiary is the next converter
-                    stepData.beneficiary = address(data[i + 1].converter);
+                    data[i].beneficiary = address(data[i + 1].converter);
                 } else {
                     // the converter in the next step is older, beneficiary is the network contract
-                    stepData.beneficiary = payable(address(this));
+                    data[i].beneficiary = payable(address(this));
                 }
             } else {
                 // converter in this step is older, beneficiary is the network contract
-                stepData.beneficiary = payable(address(this));
+                data[i].beneficiary = payable(address(this));
             }
         }
 
@@ -573,33 +493,6 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             }
             _token.safeApprove(_spender, _value);
         }
-    }
-
-    // legacy - returns the address of an EtherToken used by the converter
-    function getConverterEtherTokenAddress(IConverter _converter) private view returns (IERC20) {
-        uint256 reserveCount = _converter.connectorTokenCount();
-        for (uint256 i = 0; i < reserveCount; i++) {
-            IERC20 reserveTokenAddress = _converter.connectorTokens(i);
-            if (etherTokens[reserveTokenAddress]) {
-                return reserveTokenAddress;
-            }
-        }
-
-        return ETH_RESERVE_ADDRESS;
-    }
-
-    // legacy - if the token is an ether token, returns the ETH reserve address
-    // used by the converter, otherwise returns the input token address
-    function getConverterTokenAddress(IConverter _converter, IERC20 _token) private view returns (IERC20) {
-        if (!etherTokens[_token]) {
-            return _token;
-        }
-
-        if (isV28OrHigherConverter(_converter)) {
-            return ETH_RESERVE_ADDRESS;
-        }
-
-        return getConverterEtherTokenAddress(_converter);
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
