@@ -173,7 +173,7 @@ describe('Converter', () => {
     };
 
     const convert = async (path, amount, minReturn, options) => {
-        return bancorNetwork.convertByPath.call(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
+        return bancorNetwork.convertByPath2.call(path, amount, minReturn, ZERO_ADDRESS, options);
     };
 
     let bancorNetwork;

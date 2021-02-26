@@ -62,14 +62,14 @@ describe('LiquidTokenConverter', () => {
     };
 
     const convert = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, {
+        return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS, {
             from: sender,
             ...options
         });
     };
 
     const convertCall = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath.call(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, {
+        return bancorNetwork.convertByPath2.call(path, amount, minReturn, ZERO_ADDRESS, {
             from: sender,
             ...options
         });
@@ -661,13 +661,11 @@ describe('LiquidTokenConverter', () => {
                     await reserveToken.approve(bancorNetwork.address, amount, { from: whitelisted });
                 }
 
-                await bancorNetwork.convertByPath(
+                await bancorNetwork.convertByPath2(
                     [getReserve1Address(isETHReserve), tokenAddress, tokenAddress],
                     amount,
                     MIN_RETURN,
                     beneficiary,
-                    ZERO_ADDRESS,
-                    0,
                     { from: whitelisted, value }
                 );
             });
@@ -688,13 +686,11 @@ describe('LiquidTokenConverter', () => {
                 }
 
                 await expectRevert(
-                    bancorNetwork.convertByPath(
+                    bancorNetwork.convertByPath2(
                         [getReserve1Address(isETHReserve), tokenAddress, tokenAddress],
                         amount,
                         MIN_RETURN,
                         beneficiary,
-                        ZERO_ADDRESS,
-                        0,
                         { from: whitelisted, value }
                     ),
                     'ERR_NOT_WHITELISTED'

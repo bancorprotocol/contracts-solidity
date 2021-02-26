@@ -46,7 +46,7 @@ describe('LiquidityProtectionAverageRate', () => {
             const convert = async (sourceToken, targetToken, amount) => {
                 await sourceToken.approve(bancorNetwork.address, amount);
                 const path = [sourceToken.address, poolToken.address, targetToken.address];
-                await bancorNetwork.convertByPath(path, amount, 1, constants.ZERO_ADDRESS, constants.ZERO_ADDRESS, 0);
+                await bancorNetwork.convertByPath2(path, amount, 1, constants.ZERO_ADDRESS);
             };
 
             const owner = defaultSender;
