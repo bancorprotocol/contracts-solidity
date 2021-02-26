@@ -92,7 +92,7 @@ describe('LiquidityPoolV1Converter', () => {
     };
 
     const convert = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS);
+        return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS, options);
     };
 
     const divCeil = (num, d) => {
