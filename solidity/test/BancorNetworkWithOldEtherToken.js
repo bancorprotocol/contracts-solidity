@@ -50,13 +50,11 @@ describe('BancorNetworkWithOldEtherToken', () => {
     const sender = defaultSender;
     const sender2 = accounts[1];
     const nonOwner = accounts[5];
-    const affiliate = accounts[8];
 
     const value = new BN(1000);
 
     const OLD_CONVERTER_VERSION = 23;
     const MIN_RETURN = new BN(1);
-    const AFFILIATE_FEE = new BN(10000);
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -1141,71 +1139,5 @@ describe('BancorNetworkWithOldEtherToken', () => {
 
         const newEthBalance = await balance.current(sender2);
         expect(newEthBalance).to.be.bignumber.equal(prevEthBalance.add(returnByPath).sub(transactionCost));
-    });
-
-    it('verifies that convertFor2 transfers the affiliate fee correctly', async () => {
-        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
-
-        await bancorNetwork.convertFor2(anchor1BuyPath, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE, {
-            value
-        });
-
-        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
-        expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
-    });
-
-    it('verifies that convert2 transfers the affiliate fee correctly', async () => {
-        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
-
-        await bancorNetwork.convert2(anchor1BuyPath, value, MIN_RETURN, affiliate, AFFILIATE_FEE, {
-            from: sender2,
-            value
-        });
-
-        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
-        expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
-    });
-
-    it('verifies that claimAndConvert2 transfers the affiliate fee correctly', async () => {
-        await anchor3.approve(bancorNetwork.address, value);
-
-        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
-
-        await bancorNetwork.claimAndConvert2(anchor3SellPath, value, MIN_RETURN, affiliate, AFFILIATE_FEE);
-
-        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
-        expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
-    });
-
-    it('verifies that claimAndConvertFor2 transfers the affiliate fee correctly', async () => {
-        await anchor3.approve(bancorNetwork.address, value);
-
-        const prevTokenBalance = await anchor1.balanceOf.call(affiliate);
-
-        await bancorNetwork.claimAndConvertFor2(anchor3SellPath, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE);
-
-        const newTokenBalance = await anchor1.balanceOf.call(affiliate);
-        expect(newTokenBalance).to.be.bignumber.gt(prevTokenBalance);
-    });
-
-    it('verifies that setMaxAffiliateFee can set the maximum affiliate-fee', async () => {
-        const oldMaxAffiliateFee = await bancorNetwork.maxAffiliateFee.call();
-        await bancorNetwork.setMaxAffiliateFee(oldMaxAffiliateFee.add(MIN_RETURN));
-
-        const newMaxAffiliateFee = await bancorNetwork.maxAffiliateFee.call();
-        await bancorNetwork.setMaxAffiliateFee(oldMaxAffiliateFee);
-
-        expect(newMaxAffiliateFee).to.be.bignumber.equal(oldMaxAffiliateFee.add(MIN_RETURN));
-    });
-
-    it('should revert when calling setMaxAffiliateFee with a non-owner', async () => {
-        await expectRevert(bancorNetwork.setMaxAffiliateFee(new BN(1000000), { from: nonOwner }), 'ERR_ACCESS_DENIED');
-    });
-
-    it('should revert when calling setMaxAffiliateFee with an illegal value', async () => {
-        await expectRevert(
-            bancorNetwork.setMaxAffiliateFee(new BN(1000001), { from: sender }),
-            'ERR_INVALID_AFFILIATE_FEE'
-        );
     });
 });
