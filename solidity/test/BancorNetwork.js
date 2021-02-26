@@ -138,11 +138,9 @@ describe('BancorNetwork', () => {
     const sender = defaultSender;
     const nonOwner = accounts[1];
     const sender2 = accounts[2];
-    const affiliate = accounts[5];
 
     const OLD_CONVERTER_VERSION = 9;
     const MIN_RETURN = new BN(1);
-    const AFFILIATE_FEE = new BN(10000);
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -215,30 +213,6 @@ describe('BancorNetwork', () => {
             await expectRevert(
                 bancorNetwork1.registerEtherToken(etherToken.address, false, { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
-            );
-        });
-
-        it('verifies that setMaxAffiliateFee can set the maximum affiliate-fee', async () => {
-            const oldMaxAffiliateFee = await bancorNetwork.maxAffiliateFee.call();
-
-            const maxAffiliateFee = oldMaxAffiliateFee.add(new BN(1));
-            await bancorNetwork.setMaxAffiliateFee(maxAffiliateFee);
-
-            const newMaxAffiliateFee = await bancorNetwork.maxAffiliateFee.call();
-            expect(newMaxAffiliateFee).to.be.bignumber.equal(maxAffiliateFee);
-        });
-
-        it('should revert when calling setMaxAffiliateFee with a non-owner', async () => {
-            await expectRevert(
-                bancorNetwork.setMaxAffiliateFee(new BN(1000000), { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-        });
-
-        it('should revert when calling setMaxAffiliateFee with an illegal value', async () => {
-            await expectRevert(
-                bancorNetwork.setMaxAffiliateFee(new BN(1000001), { from: sender }),
-                'ERR_INVALID_AFFILIATE_FEE'
             );
         });
     });
@@ -365,22 +339,18 @@ describe('BancorNetwork', () => {
                     }
 
                     const prevBalance = await getBalance(targetToken, targetSymbol, sender);
-                    const returnAmount = await bancorNetwork.convertByPath.call(
+                    const returnAmount = await bancorNetwork.convertByPath2.call(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
                         ZERO_ADDRESS,
-                        ZERO_ADDRESS,
-                        0,
                         { value }
                     );
-                    const res = await bancorNetwork.convertByPath(
+                    const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
                         ZERO_ADDRESS,
-                        ZERO_ADDRESS,
-                        0,
                         { value }
                     );
                     const postBalance = await getBalance(targetToken, targetSymbol, sender);
@@ -408,22 +378,18 @@ describe('BancorNetwork', () => {
 
                     const beneficiary = accounts[2];
                     const prevBalance = await getBalance(targetToken, targetSymbol, beneficiary);
-                    const returnAmount = await bancorNetwork.convertByPath.call(
+                    const returnAmount = await bancorNetwork.convertByPath2.call(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
                         beneficiary,
-                        ZERO_ADDRESS,
-                        0,
                         { value }
                     );
-                    const res = await bancorNetwork.convertByPath(
+                    const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
                         beneficiary,
-                        ZERO_ADDRESS,
-                        0,
                         { value }
                     );
                     const postBalance = await getBalance(targetToken, targetSymbol, beneficiary);
@@ -434,40 +400,6 @@ describe('BancorNetwork', () => {
                     }
 
                     expect(postBalance).to.be.bignumber.equal(prevBalance.add(returnAmount).sub(transactionCost));
-                });
-
-                it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} with an affiliate fee succeeds`, async () => {
-                    const pathTokens = pathsTokens[sourceSymbol][targetSymbol];
-                    const sourceToken = pathTokens[0];
-
-                    const amount = new BN(1000);
-                    let value = 0;
-                    if (sourceSymbol === 'ETH') {
-                        value = amount;
-                    } else {
-                        await sourceToken.approve(bancorNetwork.address, amount, { from: sender });
-                    }
-
-                    const affiliate = accounts[2];
-                    const prevBalance = await getBalance(bntToken, 'BNT', affiliate);
-                    await bancorNetwork.convertByPath(
-                        paths[sourceSymbol][targetSymbol],
-                        amount,
-                        MIN_RETURN,
-                        ZERO_ADDRESS,
-                        affiliate,
-                        AFFILIATE_FEE,
-                        { value }
-                    );
-                    const postBalance = await getBalance(bntToken, 'BNT', affiliate);
-
-                    // Affiliate fee is only taken when converting to BNT, so BNT must exist and not be the first token
-                    // in the path.
-                    if (pathTokens.indexOf(bntToken) > 0) {
-                        expect(postBalance).to.be.bignumber.gt(prevBalance);
-                    } else {
-                        expect(postBalance).to.be.bignumber.equal(prevBalance);
-                    }
                 });
 
                 it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} returns the same amount returned by rateByPath`, async () => {
@@ -488,13 +420,11 @@ describe('BancorNetwork', () => {
                         amount
                     );
                     const prevBalance = await getBalance(targetToken, targetSymbol, sender);
-                    const res = await bancorNetwork.convertByPath(
+                    const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
                         ZERO_ADDRESS,
-                        ZERO_ADDRESS,
-                        0,
                         { value }
                     );
                     const postBalance = await getBalance(targetToken, targetSymbol, sender);
@@ -525,13 +455,11 @@ describe('BancorNetwork', () => {
                         amount
                     );
                     await expectRevert(
-                        bancorNetwork.convertByPath(
+                        bancorNetwork.convertByPath2(
                             paths[sourceSymbol][targetSymbol],
                             amount,
                             expectedReturn.add(new BN(1)),
                             ZERO_ADDRESS,
-                            ZERO_ADDRESS,
-                            0,
                             { value }
                         ),
                         'ERR_RETURN_TOO_LOW'
@@ -557,37 +485,11 @@ describe('BancorNetwork', () => {
             const value = new BN(10000);
 
             await expectRevert(
-                bancorNetwork.convertByPath(path, value.add(new BN(1)), MIN_RETURN, ZERO_ADDRESS, ZERO_ADDRESS, 0, {
+                bancorNetwork.convertByPath2(path, value.add(new BN(1)), MIN_RETURN, ZERO_ADDRESS, {
                     from: sender,
                     value
                 }),
                 'ERR_ETH_AMOUNT_MISMATCH'
-            );
-        });
-
-        it('should revert when attempting to convert without an affiliate account, but with an affiliate fee', async () => {
-            const path = paths.ETH.ANCR4;
-            const value = new BN(100);
-
-            await expectRevert(
-                bancorNetwork.convertByPath(path, value, MIN_RETURN, ZERO_ADDRESS, ZERO_ADDRESS, AFFILIATE_FEE, {
-                    from: sender,
-                    value
-                }),
-                'ERR_INVALID_AFFILIATE_FEE'
-            );
-        });
-
-        it('should revert when attempting to convert with a 0 affiliate fee', async () => {
-            const path = paths.ETH.ANCR4;
-            const value = new BN(100);
-
-            await expectRevert(
-                bancorNetwork.convertByPath(path, value, MIN_RETURN, ZERO_ADDRESS, affiliate, 0, {
-                    from: sender,
-                    value
-                }),
-                'ERR_INVALID_AFFILIATE_FEE'
             );
         });
 
@@ -924,59 +826,6 @@ describe('BancorNetwork', () => {
                 }),
                 'ERR_ETH_AMOUNT_MISMATCH'
             );
-        });
-
-        it('verifies that convertFor2 transfers the affiliate fee correctly', async () => {
-            const value = new BN(10000);
-            const path = paths.ETH.ERC1;
-
-            const balanceBeforeTransfer = await bntToken.balanceOf.call(affiliate);
-
-            await bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE, { value });
-
-            const balanceAfterTransfer = await bntToken.balanceOf.call(affiliate);
-            expect(balanceAfterTransfer).to.be.bignumber.gt(balanceBeforeTransfer);
-        });
-
-        it('verifies that convert2 transfers the affiliate fee correctly', async () => {
-            const value = new BN(10000);
-            const path = paths.ETH.ERC1;
-
-            const balanceBeforeTransfer = await bntToken.balanceOf.call(affiliate);
-
-            await bancorNetwork.convert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE, {
-                from: sender,
-                value
-            });
-
-            const balanceAfterTransfer = await bntToken.balanceOf.call(affiliate);
-            expect(balanceAfterTransfer).to.be.bignumber.gt(balanceBeforeTransfer);
-        });
-
-        it('verifies that claimAndConvert2 transfers the affiliate fee correctly', async () => {
-            const value = new BN(10000);
-            await erc20Token2.approve(bancorNetwork.address, value, { from: sender });
-
-            const balanceBeforeTransfer = await bntToken.balanceOf.call(affiliate);
-
-            const path = paths.ERC2.ETH;
-            await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, affiliate, AFFILIATE_FEE);
-
-            const balanceAfterTransfer = await bntToken.balanceOf.call(affiliate);
-            expect(balanceAfterTransfer).to.be.bignumber.gt(balanceBeforeTransfer);
-        });
-
-        it('verifies that claimAndConvertFor2 transfers the affiliate fee correctly', async () => {
-            const value = new BN(10000);
-            await erc20Token2.approve(bancorNetwork.address, value, { from: sender });
-
-            const balanceBeforeTransfer = await bntToken.balanceOf.call(affiliate);
-
-            const path = paths.ERC2.ETH;
-            await bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, affiliate, AFFILIATE_FEE);
-
-            const balanceAfterTransfer = await bntToken.balanceOf.call(affiliate);
-            expect(balanceAfterTransfer).to.be.bignumber.gt(balanceBeforeTransfer);
         });
     });
 });
