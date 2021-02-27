@@ -380,10 +380,10 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
 
         if (msg.value > 0) {
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-            require(_sourceToken == ETH_RESERVE_ADDRESS, "ERR_SOURCE_TOKEN_ADDRESS");
+            require(_sourceToken == ETH_RESERVE_ADDRESS, "ERR_INVALID_SOURCE_TOKEN");
             require(isNewerConverter, "ERR_CONVERTER_NOT_SUPPORTED");
         } else {
-            require(_sourceToken != ETH_RESERVE_ADDRESS, "ERR_SOURCE_TOKEN_ADDRESS");
+            require(_sourceToken != ETH_RESERVE_ADDRESS, "ERR_INVALID_SOURCE_TOKEN");
             if (isNewerConverter) {
                 // newer converter - transfer the tokens from the sender directly to the converter
                 _sourceToken.safeTransferFrom(msg.sender, address(firstConverter), _amount);
