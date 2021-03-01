@@ -21,7 +21,6 @@ const ConverterV27OrLowerWithFallback = contract.fromArtifact('ConverterV27OrLow
 const ConverterV28OrHigherWithoutFallback = contract.fromArtifact('ConverterV28OrHigherWithoutFallback');
 const ConverterV28OrHigherWithFallback = contract.fromArtifact('ConverterV28OrHigherWithFallback');
 
-const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 
 const DSToken = contract.fromArtifact('DSToken');
@@ -34,8 +33,8 @@ Token network structure:
       ETH       BNT      TKN1
 
         Anchor3      Anchor4
-        /       \     /
-    TKN2          BNT
+        /       \     /     \
+    TKN2          BNT      TKN3
 */
 
 describe('BancorNetwork', () => {
@@ -43,41 +42,42 @@ describe('BancorNetwork', () => {
         const bntToken = tokens[0];
         const erc20Token1 = tokens[1];
         const erc20Token2 = tokens[2];
-        const anchor1 = tokens[3];
-        const anchor2 = tokens[4];
-        const anchor3 = tokens[5];
-        const anchor4 = tokens[6];
+        const erc20Token3 = tokens[3];
+        const anchor1 = tokens[4];
+        const anchor2 = tokens[5];
+        const anchor3 = tokens[6];
+        const anchor4 = tokens[7];
 
         pathsTokens = {
             ETH: {
                 BNT: ['', anchor1, bntToken],
                 ERC1: ['', anchor1, bntToken, anchor2, erc20Token1],
                 ERC2: ['', anchor1, bntToken, anchor3, erc20Token2],
-                ANCR4: ['', anchor1, bntToken, anchor4, anchor4]
+                ERC3: ['', anchor1, bntToken, anchor4, erc20Token3]
             },
             BNT: {
                 ETH: [bntToken, anchor1, ''],
                 ERC1: [bntToken, anchor2, erc20Token1],
                 ERC2: [bntToken, anchor3, erc20Token2],
-                ANCR4: [bntToken, anchor4, anchor4]
+                ERC3: [bntToken, anchor4, erc20Token3]
             },
             ERC1: {
                 ETH: [erc20Token1, anchor2, bntToken, anchor1, ''],
                 BNT: [erc20Token1, anchor2, bntToken],
                 ERC2: [erc20Token1, anchor2, bntToken, anchor3, erc20Token2],
-                ANCR4: [erc20Token1, anchor2, bntToken, anchor4, anchor4]
+                ERC3: [erc20Token1, anchor2, bntToken, anchor4, erc20Token3]
             },
             ERC2: {
                 ETH: [erc20Token2, anchor3, bntToken, anchor1, ''],
                 BNT: [erc20Token2, anchor3, bntToken],
                 ERC1: [erc20Token2, anchor3, bntToken, anchor2, erc20Token1],
-                ANCR4: [erc20Token2, anchor3, bntToken, anchor4, anchor4]
+                ERC3: [erc20Token2, anchor3, bntToken, anchor4, erc20Token3]
             },
-            ANCR4: {
-                ETH: [anchor4, anchor4, bntToken, anchor1, ''],
-                BNT: [anchor4, anchor4, bntToken],
-                ERC1: [anchor4, anchor4, bntToken, anchor2, erc20Token1],
-                ERC2: [anchor4, anchor4, bntToken, anchor3, erc20Token2]
+            ERC3: {
+                ETH: [erc20Token3, anchor4, bntToken, anchor1, ''],
+                BNT: [erc20Token3, anchor4, bntToken],
+                ERC1: [erc20Token3, anchor4, bntToken, anchor2, erc20Token1],
+                ERC2: [erc20Token3, anchor4, bntToken, anchor3, erc20Token2]
             }
         };
 
@@ -122,6 +122,7 @@ describe('BancorNetwork', () => {
     let bntToken;
     let erc20Token1;
     let erc20Token2;
+    let erc20Token3;
     let anchor1;
     let anchor2;
     let anchor3;
@@ -171,6 +172,7 @@ describe('BancorNetwork', () => {
             bntToken = await TestStandardToken.new('BNT', 'BNT', 2, 10000000);
             erc20Token1 = await TestStandardToken.new('TKN1', 'ERC1', 2, 1000000);
             erc20Token2 = await TestNonStandardToken.new('TKN2', 'ERC2', 2, 2000000);
+            erc20Token3 = await TestStandardToken.new('TKN3', 'ERC3', 2, 3000000);
 
             anchor1 = await DSToken.new('Anchor1', 'ANCR1', 2);
             await anchor1.issue(sender, 1000000);
@@ -181,7 +183,7 @@ describe('BancorNetwork', () => {
             anchor3 = await DSToken.new('Anchor3', 'ANCR3', 2);
             await anchor3.issue(sender, 3000000);
 
-            anchor4 = await DSToken.new('Anchor4', 'ANCR4', 2);
+            anchor4 = await DSToken.new('Anchor4', 'ERC3', 2);
             await anchor4.issue(sender, 2500000);
 
             await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
@@ -205,8 +207,9 @@ describe('BancorNetwork', () => {
             );
             await converter3.addConnector(erc20Token2.address, 100000, false);
 
-            converter4 = await LiquidTokenConverter.new(anchor4.address, contractRegistry.address, 0);
+            converter4 = await LiquidityPoolV1Converter.new(anchor4.address, contractRegistry.address, 0);
             await converter4.addReserve(bntToken.address, 220000);
+            await converter4.addReserve(erc20Token3.address, 220000);
 
             await bntToken.transfer(converter1.address, 40000);
             await bntToken.transfer(converter2.address, 70000);
@@ -216,6 +219,7 @@ describe('BancorNetwork', () => {
             await web3.eth.sendTransaction({ from: sender, to: converter1.address, value: 50000 });
             await erc20Token1.transfer(converter2.address, 25000);
             await erc20Token2.transfer(converter3.address, 30000);
+            await erc20Token3.transfer(converter4.address, 35000);
 
             await anchor1.transferOwnership(converter1.address);
             await converter1.acceptTokenOwnership();
@@ -236,7 +240,7 @@ describe('BancorNetwork', () => {
             await converterRegistry.addConverter(converter3.address);
             await converterRegistry.addConverter(converter4.address);
 
-            initPaths([bntToken, erc20Token1, erc20Token2, anchor1, anchor2, anchor3, anchor4]);
+            initPaths([bntToken, erc20Token1, erc20Token2, erc20Token3, anchor1, anchor2, anchor3, anchor4]);
         });
 
         it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithoutFallback', async () => {
@@ -417,7 +421,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const value = new BN(10000);
 
             await expectRevert(
@@ -430,7 +434,7 @@ describe('BancorNetwork', () => {
         });
 
         it('verifies that convert returns a valid amount when buying a liquid token', async () => {
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const value = new BN(10000);
 
             const amount = await bancorNetwork.convert.call(path, value, MIN_RETURN, { from: sender, value });
@@ -438,14 +442,14 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor with ETH reserve but without sending ether', async () => {
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const value = new BN(10000);
 
             await expectRevert.unspecified(bancorNetwork.convertFor(path, value, MIN_RETURN, sender));
         });
 
         it('should revert when calling convertFor with ether amount lower than the ETH amount sent with the request', async () => {
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
 
             const value = new BN(10000);
             await expectRevert(
@@ -475,14 +479,14 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convert with ETH reserve but without sending ether', async () => {
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.convert(path, value, MIN_RETURN, { from: sender }));
         });
 
         it('should revert when calling convert with ether amount different than the amount sent', async () => {
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const value = new BN(1000);
 
             await expectRevert(
@@ -518,7 +522,7 @@ describe('BancorNetwork', () => {
 
             const balanceBeforeTransfer = await erc20Token2.balanceOf.call(sender2);
 
-            const path = paths.ANCR4.ERC2;
+            const path = paths.ERC3.ERC2;
             const returnAmount = await bancorNetwork.claimAndConvertFor.call(path, value, MIN_RETURN, sender2);
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2);
 
@@ -533,7 +537,7 @@ describe('BancorNetwork', () => {
 
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
-            const path = paths.ERC2.ANCR4;
+            const path = paths.ERC2.ERC3;
             const returnAmount = await bancorNetwork.claimAndConvertFor.call(path, value, MIN_RETURN, sender2);
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2);
 
@@ -542,7 +546,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling claimAndConvertFor without approval', async () => {
-            const path = paths.ERC1.ANCR4;
+            const path = paths.ERC1.ERC3;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2));
@@ -563,7 +567,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling claimAndConvert without approval', async () => {
-            const path = paths.ERC1.ANCR4;
+            const path = paths.ERC1.ERC3;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.claimAndConvert(path, value, MIN_RETURN));
@@ -587,7 +591,7 @@ describe('BancorNetwork', () => {
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const value = new BN(1000);
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const returnAmount = await bancorNetwork.convertFor2.call(
                 path,
                 value,
@@ -607,7 +611,7 @@ describe('BancorNetwork', () => {
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
             const value = new BN(1000);
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const returnAmount = await bancorNetwork.convert2.call(path, value, MIN_RETURN, ZERO_ADDRESS, 0, {
                 from: sender2,
                 value
@@ -707,7 +711,7 @@ describe('BancorNetwork', () => {
 
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
 
-            const path = paths.ERC1.ANCR4;
+            const path = paths.ERC1.ERC3;
             const returnAmount = await bancorNetwork.claimAndConvertFor2.call(
                 path,
                 value,
@@ -723,7 +727,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling claimAndConvertFor2 without approval', async () => {
-            const path = paths.ERC1.ANCR4;
+            const path = paths.ERC1.ERC3;
             const value = new BN(1000);
             await expectRevert.unspecified(
                 bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0)
@@ -736,7 +740,7 @@ describe('BancorNetwork', () => {
 
             const balanceBeforeTransfer = await anchor4.balanceOf.call(sender);
 
-            const path = paths.ERC1.ANCR4;
+            const path = paths.ERC1.ERC3;
             const returnAmount = await bancorNetwork.claimAndConvert2.call(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
             await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
@@ -745,14 +749,14 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling claimAndConvert2 without approval', async () => {
-            const path = paths.ERC1.ANCR4;
+            const path = paths.ERC1.ERC3;
             const value = new BN(1000);
 
             await expectRevert.unspecified(bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0));
         });
 
         it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
-            const path = paths.ETH.ANCR4;
+            const path = paths.ETH.ERC3;
             const value = new BN(1000);
 
             await expectRevert(
