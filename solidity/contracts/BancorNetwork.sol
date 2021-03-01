@@ -451,21 +451,22 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
 
         // set the beneficiary for each step
         for (i = 0; i < data.length; i++) {
+            ConversionStep memory stepData = data[i];
             // check if the converter in this step is newer as older converters don't even support the beneficiary argument
-            if (data[i].isV28OrHigherConverter) {
+            if (stepData.isV28OrHigherConverter) {
                 if (i == data.length - 1) {
                     // converter in this step is newer, beneficiary is the user input address
-                    data[i].beneficiary = _beneficiary;
+                    stepData.beneficiary = _beneficiary;
                 } else if (data[i + 1].isV28OrHigherConverter) {
                     // the converter in the next step is newer, beneficiary is the next converter
-                    data[i].beneficiary = address(data[i + 1].converter);
+                    stepData.beneficiary = address(data[i + 1].converter);
                 } else {
                     // the converter in the next step is older, beneficiary is the network contract
-                    data[i].beneficiary = payable(address(this));
+                    stepData.beneficiary = payable(address(this));
                 }
             } else {
                 // converter in this step is older, beneficiary is the network contract
-                data[i].beneficiary = payable(address(this));
+                stepData.beneficiary = payable(address(this));
             }
         }
 
