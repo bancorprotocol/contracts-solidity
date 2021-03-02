@@ -6,7 +6,6 @@ const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
-const EtherToken = contract.fromArtifact('EtherToken');
 const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
@@ -85,7 +84,7 @@ describe('ConverterRegistry', () => {
         let converter5;
         let converter6;
         let converter7;
-        let etherToken;
+        let token0;
         let token1;
         let token2;
         let token3;
@@ -99,7 +98,7 @@ describe('ConverterRegistry', () => {
         let tokenE;
 
         beforeEach(async () => {
-            etherToken = await EtherToken.new('Token0', 'TKN0');
+            token0 = await DSToken.new('Token0', 'TKN0', 18);
             token1 = await DSToken.new('Token1', 'TKN1', 18);
             token2 = await DSToken.new('Token2', 'TKN2', 18);
             token3 = await DSToken.new('Token3', 'TKN3', 18);
@@ -117,7 +116,7 @@ describe('ConverterRegistry', () => {
                 token1.address,
                 contractRegistry.address,
                 0,
-                etherToken.address,
+                token0.address,
                 0x1000,
                 23
             );
@@ -248,7 +247,7 @@ describe('ConverterRegistry', () => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])).to.eql(
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [token0.address], [0x1000])).to.eql(
                     ZERO_ADDRESS
                 );
                 expect(
@@ -449,7 +448,7 @@ describe('ConverterRegistry', () => {
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
                     expect(
-                        await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])
+                        await converterRegistry.getLiquidityPoolByConfig.call(0, [token0.address], [0x1000])
                     ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig.call(
@@ -638,7 +637,7 @@ describe('ConverterRegistry', () => {
         let converter5;
         let converter6;
         let converter7;
-        let etherToken;
+        let anchor0;
         let anchor1;
         let anchor2;
         let anchor3;
@@ -652,7 +651,7 @@ describe('ConverterRegistry', () => {
         let anchorE;
 
         beforeEach(async () => {
-            etherToken = await EtherToken.new('Token0', 'TKN0');
+            anchor0 = await DSToken.new('Token0', 'TKN0', 18);
             anchor1 = await DSToken.new('Token1', 'TKN1', 18);
             anchor2 = await DSToken.new('Token2', 'TKN2', 18);
             anchor3 = await DSToken.new('Token3', 'TKN3', 18);
@@ -673,7 +672,7 @@ describe('ConverterRegistry', () => {
             converter6 = await LiquidityPoolV1Converter.new(anchor6.address, contractRegistry.address, 0);
             converter7 = await LiquidityPoolV1Converter.new(anchor7.address, contractRegistry.address, 0);
 
-            await converter1.addReserve(etherToken.address, 0x1000);
+            await converter1.addReserve(anchor0.address, 0x1000);
             await converter2.addReserve(anchor4.address, 0x2400);
             await converter3.addReserve(anchor6.address, 0x3600);
             await converter4.addReserve(anchor8.address, 0x4800);
@@ -745,7 +744,7 @@ describe('ConverterRegistry', () => {
             });
 
             it('should find liquidity pool by its configuration', async () => {
-                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])).to.eql(
+                expect(await converterRegistry.getLiquidityPoolByConfig.call(0, [anchor0.address], [0x1000])).to.eql(
                     ZERO_ADDRESS
                 );
                 expect(
@@ -946,7 +945,7 @@ describe('ConverterRegistry', () => {
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
                     expect(
-                        await converterRegistry.getLiquidityPoolByConfig.call(0, [etherToken.address], [0x1000])
+                        await converterRegistry.getLiquidityPoolByConfig.call(0, [anchor0.address], [0x1000])
                     ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig.call(
