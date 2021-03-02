@@ -527,13 +527,13 @@ describe('BancorNetwork', () => {
             const value = new BN(1000);
             await erc20Token2.approve(bancorNetwork.address, value, { from: sender });
 
-            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await erc20Token3.balanceOf.call(sender2);
 
             const path = paths.ERC2.ERC3;
             const returnAmount = await bancorNetwork.claimAndConvertFor.call(path, value, MIN_RETURN, sender2);
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2);
 
-            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await erc20Token3.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
