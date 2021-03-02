@@ -22,7 +22,9 @@ describe('NetworkSettings', () => {
     const tooSmallFeePortion = new BN(0);
     const tooLargeFeePortion = PPM_RESOLUTION.addn(1);
 
-    const serialize = JSON.stringify;
+    const expectReturn = async (method, object) => {
+        expect(JSON.stringify(await method)).to.be.equal(JSON.stringify(object));
+    };
 
     it('should revert when creating a contract with an invalid fee wallet', async () => {
         await expectRevert(NetworkSettings.new(invalidFeeWallet, validFeePortion1), 'ERR_INVALID_ADDRESS');
@@ -39,47 +41,47 @@ describe('NetworkSettings', () => {
     it('should revert when setting an invalid fee wallet', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion1);
         await expectRevert(networkSettings.setFeeWallet(invalidFeeWallet), 'ERR_INVALID_ADDRESS');
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet1, 1: validFeePortion1}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet1, 1: validFeePortion1});
     });
 
     it('should revert when setting a too-small fee portion', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion1);
         await expectRevert(networkSettings.setFeePortion(tooSmallFeePortion), 'ERR_INVALID_PORTION');
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet1, 1: validFeePortion1}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet1, 1: validFeePortion1});
     });
 
     it('should revert when setting a too-large fee portion', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion1);
         await expectRevert(networkSettings.setFeePortion(tooLargeFeePortion), 'ERR_INVALID_PORTION');
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet1, 1: validFeePortion1}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet1, 1: validFeePortion1});
     });
 
     it('should revert when a non-owner sets a valid fee wallet', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion1);
         await expectRevert(networkSettings.setFeeWallet(validFeeWallet2, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet1, 1: validFeePortion1}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet1, 1: validFeePortion1});
     });
 
     it('should revert when a non-owner sets a valid fee portion', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion2);
         await expectRevert(networkSettings.setFeePortion(validFeePortion1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet1, 1: validFeePortion2}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet1, 1: validFeePortion2});
     });
 
     it('should suceed when creating a contract with a valid fee wallet and a valid fee portion', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion1);
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet1, 1: validFeePortion1}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet1, 1: validFeePortion1});
     });
 
     it('should suceed when setting a valid fee wallet', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion1);
         await networkSettings.setFeeWallet(validFeeWallet2);
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet2, 1: validFeePortion1}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet2, 1: validFeePortion1});
     });
 
     it('should suceed when setting a valid fee portion', async () => {
         let networkSettings = await NetworkSettings.new(validFeeWallet1, validFeePortion2);
         await networkSettings.setFeePortion(validFeePortion2);
-        expect(serialize(await networkSettings.feeParams())).to.be.equal(serialize({0: validFeeWallet1, 1: validFeePortion2}));
+        await expectReturn(networkSettings.feeParams(), {0: validFeeWallet1, 1: validFeePortion2});
     });
 });
