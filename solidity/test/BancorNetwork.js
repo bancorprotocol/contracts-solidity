@@ -510,7 +510,7 @@ describe('BancorNetwork', () => {
         // eslint-disable-next-line max-len
         it('verifies that claimAndConvertFor transfers the converted amount correctly when converter from a new converter to an old one', async () => {
             const value = new BN(1000);
-            await anchor4.approve(bancorNetwork.address, value, { from: sender });
+            await erc20Token3.approve(bancorNetwork.address, value, { from: sender });
 
             const balanceBeforeTransfer = await erc20Token2.balanceOf.call(sender2);
 
