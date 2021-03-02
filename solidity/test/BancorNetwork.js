@@ -433,14 +433,6 @@ describe('BancorNetwork', () => {
             );
         });
 
-        it('verifies that convert returns a valid amount when buying a liquid token', async () => {
-            const path = paths.ETH.ERC3;
-            const value = new BN(10000);
-
-            const amount = await bancorNetwork.convert.call(path, value, MIN_RETURN, { from: sender, value });
-            expect(amount).to.be.bignumber.equal(new BN(27654));
-        });
-
         it('should revert when calling convertFor with ETH reserve but without sending ether', async () => {
             const path = paths.ETH.ERC3;
             const value = new BN(10000);
