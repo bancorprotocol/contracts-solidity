@@ -10,7 +10,6 @@ import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 import "../utility/interfaces/ICheckpointStore.sol";
 import "../utility/MathEx.sol";
 import "../utility/ReentrancyGuard.sol";
-import "../utility/Owned.sol";
 import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
