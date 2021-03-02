@@ -12,7 +12,6 @@ const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConversionPathFinder = contract.fromArtifact('ConversionPathFinder');
-const EtherToken = contract.fromArtifact('EtherToken');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterHelper = require('./helpers/Converter');
@@ -152,69 +151,6 @@ describe('BancorNetwork', () => {
 
         const converterFactory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
-    });
-
-    describe('Settings', () => {
-        beforeEach(async () => {
-            bancorNetwork = await BancorNetwork.new(contractRegistry.address);
-        });
-
-        it('verifies valid ether token registration', async () => {
-            const etherToken = await EtherToken.new('Token0', 'TKN0');
-            const value = new BN(1000);
-            await etherToken.deposit({ value });
-
-            const bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await bancorNetwork1.registerEtherToken(etherToken.address, true);
-
-            const validEtherToken = await bancorNetwork1.etherTokens.call(etherToken.address);
-            expect(validEtherToken).to.be.true();
-        });
-
-        it('should revert when attempting register ether token with invalid address', async () => {
-            const bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await expectRevert(bancorNetwork1.registerEtherToken(ZERO_ADDRESS, true), 'ERR_INVALID_ADDRESS');
-        });
-
-        it('should revert when non owner attempting register ether token', async () => {
-            const etherToken = await EtherToken.new('Token0', 'TKN0');
-            const value = new BN(1000);
-            await etherToken.deposit({ value });
-            const bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await expectRevert(
-                bancorNetwork1.registerEtherToken(etherToken.address, true, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-        });
-
-        it('verifies valid ether token unregistration', async () => {
-            const etherToken = await EtherToken.new('Token0', 'TKN0');
-            const value = new BN(1000);
-            await etherToken.deposit({ value });
-            const bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await bancorNetwork1.registerEtherToken(etherToken.address, true);
-            const validEtherToken = await bancorNetwork1.etherTokens.call(etherToken.address);
-            expect(validEtherToken).to.be.true();
-
-            await bancorNetwork1.registerEtherToken(etherToken.address, false);
-            const validEtherToken2 = await bancorNetwork1.etherTokens.call(etherToken.address);
-            expect(validEtherToken2).to.be.false();
-        });
-
-        it('should revert when non owner attempting to unregister ether token', async () => {
-            const etherToken = await EtherToken.new('Token0', 'TKN0');
-            const value = new BN(1000);
-            await etherToken.deposit({ value });
-            const bancorNetwork1 = await BancorNetwork.new(contractRegistry.address);
-            await bancorNetwork1.registerEtherToken(etherToken.address, true);
-            const validEtherToken = await bancorNetwork1.etherTokens.call(etherToken.address);
-            expect(validEtherToken).to.be.true();
-
-            await expectRevert(
-                bancorNetwork1.registerEtherToken(etherToken.address, false, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
-        });
     });
 
     describe('Conversions', () => {
@@ -501,7 +437,7 @@ describe('BancorNetwork', () => {
             expect(amount).to.be.bignumber.equal(new BN(27654));
         });
 
-        it('should revert when calling convertFor with ether token but without sending ether', async () => {
+        it('should revert when calling convertFor with ETH reserve but without sending ether', async () => {
             const path = paths.ETH.ANCR4;
             const value = new BN(10000);
 
@@ -538,7 +474,7 @@ describe('BancorNetwork', () => {
             );
         });
 
-        it('should revert when calling convert with ether token but without sending ether', async () => {
+        it('should revert when calling convert with ETH reserve but without sending ether', async () => {
             const path = paths.ETH.ANCR4;
             const value = new BN(1000);
 
@@ -682,7 +618,7 @@ describe('BancorNetwork', () => {
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
-        it('should revert when calling convertFor2 with ether token but without sending ether', async () => {
+        it('should revert when calling convertFor2 with ETH reserve but without sending ether', async () => {
             const path = paths.ETH.ERC2;
             const value = new BN(1000);
 
@@ -723,7 +659,7 @@ describe('BancorNetwork', () => {
             );
         });
 
-        it('should revert when calling convert2 with ether token but without sending ether', async () => {
+        it('should revert when calling convert2 with ETH reserve but without sending ether', async () => {
             const path = paths.ETH.BNT;
             const value = new BN(1000);
 
