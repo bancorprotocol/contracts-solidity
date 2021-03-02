@@ -580,7 +580,7 @@ describe('BancorNetwork', () => {
         });
 
         it('verifies that convertFor2 transfers the converted amount correctly', async () => {
-            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await erc20Token3.balanceOf.call(sender2);
 
             const value = new BN(1000);
             const path = paths.ETH.ERC3;
@@ -595,12 +595,12 @@ describe('BancorNetwork', () => {
             );
             await bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0, { value });
 
-            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await erc20Token3.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
         it('verifies that convert2 transfers the converted amount correctly', async () => {
-            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await erc20Token3.balanceOf.call(sender2);
 
             const value = new BN(1000);
             const path = paths.ETH.ERC3;
@@ -610,7 +610,7 @@ describe('BancorNetwork', () => {
             });
             await bancorNetwork.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { from: sender2, value });
 
-            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await erc20Token3.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
@@ -701,7 +701,7 @@ describe('BancorNetwork', () => {
             const value = new BN(1000);
             await erc20Token1.approve(bancorNetwork.address, value, { from: sender });
 
-            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceBeforeTransfer = await erc20Token3.balanceOf.call(sender2);
 
             const path = paths.ERC1.ERC3;
             const returnAmount = await bancorNetwork.claimAndConvertFor2.call(
@@ -714,7 +714,7 @@ describe('BancorNetwork', () => {
             );
             await bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0);
 
-            const balanceAfterTransfer = await anchor4.balanceOf.call(sender2);
+            const balanceAfterTransfer = await erc20Token3.balanceOf.call(sender2);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
@@ -730,13 +730,13 @@ describe('BancorNetwork', () => {
             const value = new BN(1000);
             await erc20Token1.approve(bancorNetwork.address, value, { from: sender });
 
-            const balanceBeforeTransfer = await anchor4.balanceOf.call(sender);
+            const balanceBeforeTransfer = await erc20Token3.balanceOf.call(sender);
 
             const path = paths.ERC1.ERC3;
             const returnAmount = await bancorNetwork.claimAndConvert2.call(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
             await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
-            const balanceAfterTransfer = await anchor4.balanceOf.call(sender);
+            const balanceAfterTransfer = await erc20Token3.balanceOf.call(sender);
             expect(balanceAfterTransfer).to.be.bignumber.equal(balanceBeforeTransfer.add(returnAmount));
         });
 
