@@ -313,7 +313,8 @@ const run = async () => {
                 }
             }
 
-            const deployedConverter = deployed(web3, {1: 'LiquidityPoolV1Converter', 3: 'StandardPoolConverter'}[type], converterBase._address);
+            const deployedConverterType = {1: 'LiquidityPoolV1Converter', 3: 'StandardPoolConverter'}[type];
+            const deployedConverter = deployed(web3, deployedConverterType, converterBase._address);
             await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
         }
 
