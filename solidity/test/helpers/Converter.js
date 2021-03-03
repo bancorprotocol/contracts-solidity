@@ -9,7 +9,6 @@ const truffleContract = require('@truffle/contract');
 const { ZERO_ADDRESS } = constants;
 
 const Converter = contract.fromArtifact('ConverterBase');
-const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
 const FixedRatePoolConverter = contract.fromArtifact('FixedRatePoolConverter');
@@ -35,7 +34,6 @@ module.exports.new = async (
     }
 
     const converterType = {
-        0: LiquidTokenConverter,
         1: LiquidityPoolV1Converter,
         3: StandardPoolConverter,
         4: FixedRatePoolConverter

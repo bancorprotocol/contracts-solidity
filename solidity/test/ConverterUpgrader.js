@@ -13,7 +13,6 @@ const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
-const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
@@ -27,33 +26,6 @@ const TOKEN_TOTAL_SUPPLY = new BN(20000);
 const VERSIONS = [9, 10, 11, 23];
 
 describe('ConverterUpgrader', () => {
-    const initWith1Reserve = async (deployer, version, activate) => {
-        const anchor = await DSToken.new('Token1', 'TKN1', 0);
-        const converter = await ConverterHelper.new(
-            0,
-            anchor.address,
-            contractRegistry.address,
-            MAX_CONVERSION_FEE,
-            reserveToken1.address,
-            500000,
-            version
-        );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
-
-        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-
-        await converter.setConversionFee(CONVERSION_FEE);
-        await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
-        await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
-
-        if (activate) {
-            await anchor.transferOwnership(converter.address);
-            await converter.acceptTokenOwnership();
-        }
-
-        return [upgrader, converter];
-    };
-
     const initWith2Reserves = async (type, deployer, version, activate) => {
         const anchor = await DSToken.new('Token1', 'TKN1', 0);
         const converter = await ConverterHelper.new(
@@ -93,30 +65,6 @@ describe('ConverterUpgrader', () => {
 
     const initType3With2Reserves = async (deployer, version, activate) => {
         return await initWith2Reserves(3, deployer, version, activate);
-    };
-
-    const initWithoutReserves = async (deployer, version, activate) => {
-        const anchor = await DSToken.new('Token1', 'TKN1', 0);
-        const converter = await ConverterHelper.new(
-            0,
-            anchor.address,
-            contractRegistry.address,
-            MAX_CONVERSION_FEE,
-            ZERO_ADDRESS,
-            0,
-            version
-        );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
-
-        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-
-        await converter.setConversionFee(CONVERSION_FEE);
-
-        if (activate) {
-            throw new Error('Converter with no reserves cannot be activated');
-        }
-
-        return [upgrader, converter];
     };
 
     const initWithETHReserve = async (type, deployer, version, activate) => {
@@ -232,7 +180,6 @@ describe('ConverterUpgrader', () => {
         converterFactory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
 
-        await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
     });
@@ -243,8 +190,6 @@ describe('ConverterUpgrader', () => {
     });
 
     const initFuncs = [
-        initWithoutReserves,
-        initWith1Reserve,
         initType1With2Reserves,
         initType3With2Reserves,
         initType1WithETHReserve,
@@ -256,7 +201,6 @@ describe('ConverterUpgrader', () => {
     const product = cartesian(initFuncs, [...VERSIONS, null], [false, true]);
     const combinations = product.filter(
         ([init, version, active]) =>
-            !(init === initWithoutReserves && active) &&
             !(init === initType1WithETHReserve && version) &&
             !(init === initType3WithETHReserve && version)
     );
@@ -265,17 +209,15 @@ describe('ConverterUpgrader', () => {
         describe(`${init.name}(version = ${version || 'latest'}, activate = ${activate}):`, () => {
             it('should upgrade successfully', async () => {
                 let reserveTokens;
-                let upgradedReserveTokens;
 
                 switch (init) {
+                    case initType1With2Reserves:
+                    case initType3With2Reserves:
+                        reserveTokens = [reserveToken1.address, reserveToken2.address];
+                        break;
                     case initType1WithETHReserve:
                     case initType3WithETHReserve:
                         reserveTokens = [reserveToken1.address, ETH_RESERVE_ADDRESS];
-                        upgradedReserveTokens = reserveTokens;
-                        break;
-                    default:
-                        reserveTokens = [reserveToken1.address, reserveToken2.address];
-                        upgradedReserveTokens = reserveTokens;
                         break;
                 }
 
@@ -349,7 +291,7 @@ describe('ConverterUpgrader', () => {
                     expect(newConverterCurrentState.reserveTokens[i].balance).to.be.bignumber.equal(
                         upgradedReserveBalances[i]
                     );
-                    expect(newConverterCurrentState.reserveTokens[i].token).to.be.eql(upgradedReserveTokens[i]);
+                    expect(newConverterCurrentState.reserveTokens[i].token).to.be.eql(reserveTokens[i]);
                 }
             });
 
