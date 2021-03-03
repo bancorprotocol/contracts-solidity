@@ -169,12 +169,6 @@ const run = async () => {
     const converterRegistryData = await web3Func(deploy, 'converterRegistryData', 'ConverterRegistryData', [
         contractRegistry._address
     ]);
-    const liquidTokenConverterFactory = await web3Func(
-        deploy,
-        'liquidTokenConverterFactory',
-        'LiquidTokenConverterFactory',
-        []
-    );
     const liquidityPoolV1ConverterFactory = await web3Func(
         deploy,
         'liquidityPoolV1ConverterFactory',
@@ -191,11 +185,6 @@ const run = async () => {
     // contract deployment for etherscan verification only
     const poolToken1 = await web3Func(deploy, 'poolToken1', 'DSToken', ['Token1', 'TKN1', 18]);
     const poolToken2 = await web3Func(deploy, 'poolToken2', 'DSToken', ['Token2', 'TKN2', 18]);
-    await web3Func(deploy, 'liquidTokenConverter', 'LiquidTokenConverter', [
-        poolToken1._address,
-        contractRegistry._address,
-        1000
-    ]);
     await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [
         poolToken2._address,
         contractRegistry._address,
@@ -246,7 +235,6 @@ const run = async () => {
     );
 
     // initialize converter factory
-    await execute(converterFactory.methods.registerTypedConverterFactory(liquidTokenConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(standardPoolConverterFactory._address));
 
@@ -284,7 +272,7 @@ const run = async () => {
 
     for (const [converter, index] of getConfig().converters.map((converter, index) => [converter, index])) {
         const type = converter.type;
-        const name = converter.symbol + (type === 0 ? ' Liquid Token' : ' Liquidity Pool');
+        const name = converter.symbol + ' Liquidity Pool';
         const symbol = converter.symbol;
         const decimals = converter.decimals;
         const fee = percentageToPPM(converter.fee);
@@ -315,7 +303,7 @@ const run = async () => {
         await execute(converterBase.methods.acceptOwnership());
         await execute(converterBase.methods.setConversionFee(fee));
 
-        if (type !== 0 && amounts.every((amount) => amount > 0)) {
+        if (amounts.every((amount) => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {
                 const reserve = converter.reserves[i];
                 if (reserve.symbol !== 'ETH') {
