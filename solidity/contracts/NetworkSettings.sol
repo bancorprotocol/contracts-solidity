@@ -11,8 +11,8 @@ import "./utility/Utils.sol";
 contract NetworkSettings is INetworkSettings, Owned, Utils {
     uint32 private constant PPM_RESOLUTION = 1000000;
 
-    address private _feeWallet;
-    uint32 private _feePortion;
+    address private _networkFeeWallet;
+    uint32 private _networkFee;
 
     // ensures that the portion is valid
     modifier validPortion(uint32 _portion) {
@@ -28,38 +28,38 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     /**
      * @dev initializes a new NetworkSettings contract
      */
-    constructor(address feeWallet, uint32 feePortion) validAddress(feeWallet) validPortion(feePortion) public {
-        _feeWallet = feeWallet;
-        _feePortion = feePortion;
+    constructor(address networkFeeWallet, uint32 networkFee) validAddress(networkFeeWallet) validPortion(networkFee) public {
+        _networkFeeWallet = networkFeeWallet;
+        _networkFee = networkFee;
     }
 
     /**
-     * @dev returns the fee parameters
+     * @dev returns the network settings
      *
-     * @return fee wallet address
-     * @return fee portion in ppm units
+     * @return network fee wallet
+     * @return network fee in ppm units
      */
     function feeParams() external view override returns (address, uint32) {
-        return (_feeWallet, _feePortion);
+        return (_networkFeeWallet, _networkFee);
     }
 
     /**
-     * @dev sets the fee wallet
+     * @dev sets the network fee wallet
      * can be executed only by the owner
      *
-     * @param feeWallet fee wallet address
+     * @param networkFeeWallet network fee wallet
      */
-    function setFeeWallet(address feeWallet) external ownerOnly validAddress(feeWallet) {
-        _feeWallet = feeWallet;
+    function setNetworkFeeWallet(address networkFeeWallet) external ownerOnly validAddress(networkFeeWallet) {
+        _networkFeeWallet = networkFeeWallet;
     }
 
     /**
-     * @dev sets the fee portion
+     * @dev sets the network fee
      * can be executed only by the owner
      *
-     * @param feePortion fee portion in ppm units
+     * @param networkFee network fee in ppm units
      */
-    function setFeePortion(uint32 feePortion) external ownerOnly validPortion(feePortion) {
-        _feePortion = feePortion;
+    function setNetworkFee(uint32 networkFee) external ownerOnly validPortion(networkFee) {
+        _networkFee = networkFee;
     }
 }
