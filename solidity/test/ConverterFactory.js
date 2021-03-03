@@ -4,12 +4,18 @@ const { expect } = require('../../chai-local');
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('TestConverterFactory');
-const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
+const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const TypedConverterAnchorFactory = contract.fromArtifact('TestTypedConverterAnchorFactory');
 const ConverterBase = contract.fromArtifact('ConverterBase');
 const DSToken = contract.fromArtifact('DSToken');
+
+const Factories = {
+    LiquidityPoolV1ConverterFactory,
+    StandardPoolConverterFactory,
+    FixedRatePoolConverterFactory
+};
 
 describe('ConverterFactory', () => {
     let contractRegistry;
@@ -21,12 +27,8 @@ describe('ConverterFactory', () => {
 
     const MAX_CONVERSION_FEE = new BN(10000);
 
-    for (const Factory of [
-        LiquidTokenConverterFactory,
-        LiquidityPoolV1ConverterFactory,
-        StandardPoolConverterFactory
-    ]) {
-        describe(Factory.contractName, () => {
+    for (const contractName in Factories) {
+        describe(contractName, () => {
             before(async () => {
                 // The following contracts are unaffected by the underlying tests, this can be shared.
                 contractRegistry = await ContractRegistry.new();
@@ -35,7 +37,7 @@ describe('ConverterFactory', () => {
             beforeEach(async () => {
                 converterFactory = await ConverterFactory.new();
                 anchorFactory = await TypedConverterAnchorFactory.new('TypedAnchor');
-                factory = await Factory.new();
+                factory = await Factories[contractName].new();
             });
 
             it('should allow the owner to register a typed converter anchor factory', async () => {
@@ -76,7 +78,7 @@ describe('ConverterFactory', () => {
             it('should allow the owner to reregister a typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
 
-                const factory2 = await Factory.new();
+                const factory2 = await Factories[contractName].new();
                 expect(await factory.converterType.call()).to.be.bignumber.equal(await factory2.converterType.call());
 
                 await converterFactory.registerTypedConverterFactory(factory2.address);

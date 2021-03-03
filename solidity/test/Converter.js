@@ -16,11 +16,9 @@ const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 
-const LiquidTokenConverter = contract.fromArtifact('LiquidTokenConverter');
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
 const FixedRatePoolConverter = contract.fromArtifact('FixedRatePoolConverter');
-const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
@@ -34,8 +32,6 @@ describe('Converter', () => {
         maxConversionFee = 0
     ) => {
         switch (type) {
-            case 0:
-                return LiquidTokenConverter.new(anchorAddress, registryAddress, maxConversionFee);
             case 1:
                 return LiquidityPoolV1Converter.new(anchorAddress, registryAddress, maxConversionFee);
             case 3:
@@ -47,8 +43,6 @@ describe('Converter', () => {
 
     const getConverterName = (type) => {
         switch (type) {
-            case 0:
-                return 'LiquidTokenConverter';
             case 1:
                 return 'LiquidityPoolV1Converter';
             case 3:
@@ -62,8 +56,6 @@ describe('Converter', () => {
 
     const getConverterReserveAddresses = (type, isETHReserve) => {
         switch (type) {
-            case 0:
-                return [getReserve1Address(isETHReserve)];
             case 1:
                 return [getReserve1Address(isETHReserve), reserveToken2.address];
             case 3:
@@ -76,8 +68,6 @@ describe('Converter', () => {
 
     const getConverterReserveWeights = (type) => {
         switch (type) {
-            case 0:
-                return [250000];
             case 1:
                 return [250000, 150000];
             case 3:
@@ -90,8 +80,6 @@ describe('Converter', () => {
 
     const getConverterTargetAmountAndFeeError = (type) => {
         switch (type) {
-            case 0:
-                return 'ERR_INVALID_TOKEN';
             case 1:
                 return 'ERR_SAME_SOURCE_TARGET';
             case 3:
@@ -103,7 +91,7 @@ describe('Converter', () => {
     };
 
     const initConverter = async (type, activate, isETHReserve, maxConversionFee = 0) => {
-        await createAnchor(type);
+        await createAnchor();
         const reserveAddresses = getConverterReserveAddresses(type, isETHReserve);
         const reserveWeights = getConverterReserveWeights(type);
 
@@ -117,18 +105,8 @@ describe('Converter', () => {
             await converter.setRate(1, 1);
         }
 
-        switch (type) {
-            case 0:
-                await anchor.issue(owner, 20000);
-                break;
-
-            case 1:
-            case 3:
-            case 4:
-                await reserveToken2.transfer(converter.address, 8000);
-                await anchor.issue(owner, 20000);
-                break;
-        }
+        await reserveToken2.transfer(converter.address, 8000);
+        await anchor.issue(owner, 20000);
 
         if (isETHReserve) {
             await converter.send(5000);
@@ -144,19 +122,8 @@ describe('Converter', () => {
         return converter;
     };
 
-    const createAnchor = async (type) => {
-        switch (type) {
-            case 0:
-                anchor = await DSToken.new('Token1', 'TKN1', 2);
-                break;
-
-            case 1:
-            case 3:
-            case 4:
-                anchor = await DSToken.new('Pool1', 'POOL1', 2);
-                break;
-        }
-
+    const createAnchor = async () => {
+        anchor = await DSToken.new('Pool1', 'POOL1', 2);
         anchorAddress = anchor.address;
     };
 
@@ -203,7 +170,6 @@ describe('Converter', () => {
         factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
-        await factory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await FixedRatePoolConverterFactory.new()).address);
@@ -220,7 +186,7 @@ describe('Converter', () => {
         reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
-    for (const type of [0, 1, 3, 4]) {
+    for (const type of [1, 3, 4]) {
         it('verifies that converterType returns the correct type', async () => {
             const converter = await initConverter(type, true, true);
             const converterType = await converter.converterType.call();
@@ -378,7 +344,7 @@ describe('Converter', () => {
 
                 if (type != 3 && type != 4) {
                     it('should revert when a non owner attempts to add a reserve', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
 
                         await expectRevert(
@@ -390,7 +356,7 @@ describe('Converter', () => {
                     });
 
                     it('should revert when attempting to add a reserve with invalid address', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
 
                         await expectRevert(
@@ -400,7 +366,7 @@ describe('Converter', () => {
                     });
 
                     it('should revert when attempting to add a reserve with weight = 0', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
 
                         await expectRevert(
@@ -410,7 +376,7 @@ describe('Converter', () => {
                     });
 
                     it('should revert when attempting to add a reserve with weight greater than 100%', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
 
                         await expectRevert(
@@ -420,7 +386,7 @@ describe('Converter', () => {
                     });
 
                     it('should revert when attempting to add the anchor as a reserve', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
 
                         await expectRevert(
@@ -430,7 +396,7 @@ describe('Converter', () => {
                     });
 
                     it('should revert when attempting to add the converter as a reserve', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
 
                         await expectRevert(
@@ -440,7 +406,7 @@ describe('Converter', () => {
                     });
 
                     it('verifies that the correct reserve weight is returned', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
                         await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
@@ -449,7 +415,7 @@ describe('Converter', () => {
                     });
 
                     it('should revert when attempting to retrieve the balance for a reserve that does not exist', async () => {
-                        await createAnchor(type);
+                        await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
                         await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
@@ -466,7 +432,7 @@ describe('Converter', () => {
                 });
 
                 it('should revert when attempting to accept an anchor ownership of a converter without any reserves', async () => {
-                    await createAnchor(type);
+                    await createAnchor();
                     const converter = await createConverter(type, anchorAddress);
 
                     await anchor.transferOwnership(converter.address);
@@ -671,7 +637,7 @@ describe('Converter', () => {
 
                     await expectRevert(
                         converter.targetAmountAndFee.call(ZERO_ADDRESS, getReserve1Address(isETHReserve), 500),
-                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE'
+                        'ERR_INVALID_RESERVE'
                     );
                 });
 
@@ -680,7 +646,7 @@ describe('Converter', () => {
 
                     await expectRevert(
                         converter.targetAmountAndFee.call(getReserve1Address(isETHReserve), ZERO_ADDRESS, 500),
-                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE'
+                        'ERR_INVALID_RESERVE'
                     );
                 });
 
@@ -720,7 +686,7 @@ describe('Converter', () => {
                         convert([getReserve1Address(isETHReserve), anchorAddress, ZERO_ADDRESS], amount, MIN_RETURN, {
                             value
                         }),
-                        type === 0 ? 'ERR_INVALID_TOKEN' : 'ERR_INVALID_RESERVE'
+                        'ERR_INVALID_RESERVE'
                     );
                 });
 
