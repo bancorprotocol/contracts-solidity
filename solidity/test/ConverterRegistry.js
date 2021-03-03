@@ -621,12 +621,12 @@ describe('ConverterRegistry', () => {
             return testEvents(res, converter, 'Added');
         };
 
+        let converter1;
         let converter2;
         let converter3;
         let converter4;
         let converter5;
         let converter6;
-        let converter7;
         let anchor1;
         let anchor2;
         let anchor3;
@@ -652,58 +652,58 @@ describe('ConverterRegistry', () => {
             anchorC = await DSToken.new('TokenC', 'TKNC', 18);
             anchorE = await DSToken.new('TokenE', 'TKNE', 18);
 
-            converter2 = await LiquidityPoolV1Converter.new(anchor2.address, contractRegistry.address, 0);
-            converter3 = await LiquidityPoolV1Converter.new(anchor3.address, contractRegistry.address, 0);
-            converter4 = await LiquidityPoolV1Converter.new(anchor4.address, contractRegistry.address, 0);
-            converter5 = await LiquidityPoolV1Converter.new(anchor5.address, contractRegistry.address, 0);
-            converter6 = await LiquidityPoolV1Converter.new(anchor6.address, contractRegistry.address, 0);
-            converter7 = await LiquidityPoolV1Converter.new(anchor7.address, contractRegistry.address, 0);
+            converter1 = await LiquidityPoolV1Converter.new(anchor2.address, contractRegistry.address, 0);
+            converter2 = await LiquidityPoolV1Converter.new(anchor3.address, contractRegistry.address, 0);
+            converter3 = await LiquidityPoolV1Converter.new(anchor4.address, contractRegistry.address, 0);
+            converter4 = await LiquidityPoolV1Converter.new(anchor5.address, contractRegistry.address, 0);
+            converter5 = await LiquidityPoolV1Converter.new(anchor6.address, contractRegistry.address, 0);
+            converter6 = await LiquidityPoolV1Converter.new(anchor7.address, contractRegistry.address, 0);
 
-            await converter2.addReserve(anchor4.address, 0x2400);
-            await converter3.addReserve(anchor6.address, 0x3600);
-            await converter4.addReserve(anchor8.address, 0x4800);
-            await converter5.addReserve(anchorA.address, 0x5a00);
-            await converter6.addReserve(anchorC.address, 0x6c00);
-            await converter7.addReserve(anchorE.address, 0x7e00);
+            await converter1.addReserve(anchor4.address, 0x2400);
+            await converter2.addReserve(anchor6.address, 0x3600);
+            await converter3.addReserve(anchor8.address, 0x4800);
+            await converter4.addReserve(anchorA.address, 0x5a00);
+            await converter5.addReserve(anchorC.address, 0x6c00);
+            await converter6.addReserve(anchorE.address, 0x7e00);
 
-            await converter2.addReserve(anchor1.address, 0x2100);
-            await converter3.addReserve(anchor1.address, 0x3100);
-            await converter4.addReserve(anchor1.address, 0x4100);
-            await converter5.addReserve(anchor1.address, 0x5100);
-            await converter6.addReserve(anchor1.address, 0x6100);
-            await converter7.addReserve(anchor2.address, 0x7200);
+            await converter1.addReserve(anchor1.address, 0x2100);
+            await converter2.addReserve(anchor1.address, 0x3100);
+            await converter3.addReserve(anchor1.address, 0x4100);
+            await converter4.addReserve(anchor1.address, 0x5100);
+            await converter5.addReserve(anchor1.address, 0x6100);
+            await converter6.addReserve(anchor2.address, 0x7200);
 
-            await anchor2.transferOwnership(converter2.address);
-            await anchor3.transferOwnership(converter3.address);
-            await anchor4.transferOwnership(converter4.address);
-            await anchor5.transferOwnership(converter5.address);
-            await anchor6.transferOwnership(converter6.address);
-            await anchor7.transferOwnership(converter7.address);
+            await anchor2.transferOwnership(converter1.address);
+            await anchor3.transferOwnership(converter2.address);
+            await anchor4.transferOwnership(converter3.address);
+            await anchor5.transferOwnership(converter4.address);
+            await anchor6.transferOwnership(converter5.address);
+            await anchor7.transferOwnership(converter6.address);
 
+            await converter1.acceptAnchorOwnership();
             await converter2.acceptAnchorOwnership();
             await converter3.acceptAnchorOwnership();
             await converter4.acceptAnchorOwnership();
             await converter5.acceptAnchorOwnership();
             await converter6.acceptAnchorOwnership();
-            await converter7.acceptAnchorOwnership();
         });
 
         const addConverters = async () => {
+            await testAdd(converter1);
             await testAdd(converter2);
             await testAdd(converter3);
             await testAdd(converter4);
             await testAdd(converter5);
             await testAdd(converter6);
-            await testAdd(converter7);
         };
 
         const removeConverters = async () => {
+            await testRemove(converter1);
             await testRemove(converter2);
             await testRemove(converter3);
             await testRemove(converter4);
             await testRemove(converter5);
             await testRemove(converter6);
-            await testRemove(converter7);
         };
 
         it('should add converters', async () => {
@@ -716,12 +716,12 @@ describe('ConverterRegistry', () => {
             });
 
             it('should not allow to add the same converter twice', async () => {
+                await expectRevert(converterRegistry.addConverter(converter1.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter2.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter3.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter4.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter5.address), 'ERR_INVALID_ITEM');
                 await expectRevert(converterRegistry.addConverter(converter6.address), 'ERR_INVALID_ITEM');
-                await expectRevert(converterRegistry.addConverter(converter7.address), 'ERR_INVALID_ITEM');
             });
 
             it('should find liquidity pool by its configuration', async () => {
@@ -897,7 +897,7 @@ describe('ConverterRegistry', () => {
 
             it('should return a list of converters for a list of anchors', async () => {
                 const tokens = [anchor2.address, anchor3.address, anchor4.address];
-                const expected = [converter2.address, converter3.address, converter4.address];
+                const expected = [converter1.address, converter2.address, converter3.address];
                 const actual = await converterRegistry.getConvertersByAnchors.call(tokens);
                 expect(actual).to.deep.eql(expected);
             });
@@ -912,12 +912,12 @@ describe('ConverterRegistry', () => {
                 });
 
                 it('should not allow to remove the same converter twice', async () => {
+                    await expectRevert(converterRegistry.removeConverter(converter1.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter2.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter3.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter4.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter5.address), 'ERR_INVALID_ITEM');
                     await expectRevert(converterRegistry.removeConverter(converter6.address), 'ERR_INVALID_ITEM');
-                    await expectRevert(converterRegistry.removeConverter(converter7.address), 'ERR_INVALID_ITEM');
                 });
 
                 it('should not be able to find liquidity pool by its configuration', async () => {
