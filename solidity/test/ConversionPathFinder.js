@@ -9,7 +9,6 @@ const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const IConverterAnchor = contract.fromArtifact('IConverterAnchor');
 const ConverterBase = contract.fromArtifact('ConverterBase');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
@@ -19,9 +18,15 @@ const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
 /* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
-    reserves: [{ symbol: 'AAA' }, { symbol: 'BBB' }, { symbol: 'CCC' }, { symbol: 'DDD' }],
+    reserves: [
+        { symbol: 'BNT' },
+        { symbol: 'AAA' },
+        { symbol: 'BBB' },
+        { symbol: 'CCC' },
+        { symbol: 'DDD' }
+    ],
     converters: [
-        { symbol: 'BNT', reserves: [{ symbol: 'ETH' }] },
+        { symbol: 'ETHBNT', reserves: [{ symbol: 'ETH' }, { symbol: 'BNT' }] },
         { symbol: 'AAABNT', reserves: [{ symbol: 'AAA' }, { symbol: 'BNT' }] },
         { symbol: 'BBBBNT', reserves: [{ symbol: 'BBB' }, { symbol: 'BNT' }] },
         { symbol: 'CCCBNT', reserves: [{ symbol: 'CCC' }, { symbol: 'BNT' }] },
@@ -134,7 +139,6 @@ describe('ConversionPathFinder', () => {
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
         pathFinder = await ConversionPathFinder.new(contractRegistry.address);
 
-        await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
@@ -151,7 +155,7 @@ describe('ConversionPathFinder', () => {
         for (const converter of LAYOUT.converters) {
             const tokens = converter.reserves.map((reserve) => addresses[reserve.symbol]);
             await converterRegistry.newConverter(
-                tokens.length === 1 ? 0 : 1,
+                1,
                 'name',
                 converter.symbol,
                 0,
