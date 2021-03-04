@@ -66,7 +66,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
-    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
 

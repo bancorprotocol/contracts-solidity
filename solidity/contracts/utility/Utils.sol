@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 /**
  * @dev Utilities & Common Modifiers
  */
 contract Utils {
     uint32 internal constant PPM_RESOLUTION = 1000000;
+    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     // verifies that a value is greater than zero
     modifier greaterThanZero(uint256 _value) {

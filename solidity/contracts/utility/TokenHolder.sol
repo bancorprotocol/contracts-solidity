@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./Owned.sol";
@@ -21,8 +20,6 @@ import "./interfaces/ITokenHolder.sol";
  */
 contract TokenHolder is ITokenHolder, Owned, Utils {
     using SafeERC20 for IERC20;
-
-    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     /**
      * @dev withdraws tokens held by the contract and sends them to an account

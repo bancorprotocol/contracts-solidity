@@ -19,8 +19,6 @@ import "../utility/ContractRegistryClient.sol";
  * and then the upgrader 'upgrade' function should be executed directly.
  */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
-    IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-
     /**
      * @dev triggered when the contract accept a converter ownership
      *
