@@ -25,23 +25,23 @@ Here is an example of the initial configuration file which should be provided to
 {
     "reserves": [
         {
-            "type": 0,
             "symbol": "XXX",
+            "decimals": 18,
             "supply": "1829101"
         },
         {
-            "type": 0,
             "symbol": "YYY",
+            "decimals": 18,
             "supply": "3603801"
         },
         {
-            "type": 1,
             "symbol": "BNT",
+            "decimals": 18,
             "supply": "6914855"
         },
         {
-            "type": 1,
             "symbol": "vBNT",
+            "decimals": 18,
             "supply": "0"
         },
         {
