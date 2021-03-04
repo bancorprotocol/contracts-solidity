@@ -9,21 +9,8 @@ import "./utility/Utils.sol";
  * @dev This contract maintains the network settings.
  */
 contract NetworkSettings is INetworkSettings, Owned, Utils {
-    uint32 private constant PPM_RESOLUTION = 1000000;
-
     address private _networkFeeWallet;
     uint32 private _networkFee;
-
-    // ensures that the portion is valid
-    modifier validPortion(uint32 _portion) {
-        _validPortion(_portion);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validPortion(uint32 _portion) internal pure {
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
-    }
 
     /**
      * @dev initializes a new NetworkSettings contract

@@ -67,7 +67,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-    uint32 internal constant PPM_RESOLUTION = 1000000;
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
 
@@ -120,17 +119,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     modifier updatingLiquidityOnly() {
         require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
         _;
-    }
-
-    // ensures that the portion is valid
-    modifier validPortion(uint32 _portion) {
-        _validPortion(_portion);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validPortion(uint32 _portion) internal pure {
-        require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
     }
 
     // ensures that the pool is supported and whitelisted

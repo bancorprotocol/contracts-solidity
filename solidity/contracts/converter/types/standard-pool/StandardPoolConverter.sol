@@ -36,7 +36,6 @@ contract StandardPoolConverter is
     uint256 private constant MAX_UINT112 = 2**112 - 1;
     uint256 private constant MAX_UINT32 = 2**32 - 1;
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
-    uint32 private constant PPM_RESOLUTION = 1000000;
 
     uint256 private __reserveBalances;
     IERC20[] private __reserveTokens;

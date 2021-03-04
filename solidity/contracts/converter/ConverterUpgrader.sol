@@ -19,7 +19,6 @@ import "../utility/ContractRegistryClient.sol";
  * and then the upgrader 'upgrade' function should be executed directly.
  */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
-    uint32 private constant PPM_RESOLUTION = 1000000;
     IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     /**
