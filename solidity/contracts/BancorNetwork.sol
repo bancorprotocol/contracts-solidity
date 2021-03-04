@@ -47,8 +47,6 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-
     struct ConversionStep {
         IConverter converter;
         IConverterAnchor anchor;
