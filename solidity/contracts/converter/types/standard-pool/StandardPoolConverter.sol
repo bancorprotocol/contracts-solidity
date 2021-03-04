@@ -31,7 +31,6 @@ contract StandardPoolConverter is
     using SafeERC20 for IERC20;
     using MathEx for *;
 
-    IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint256 private constant MAX_UINT128 = 2**128 - 1;
     uint256 private constant MAX_UINT112 = 2**112 - 1;
     uint256 private constant MAX_UINT32 = 2**32 - 1;

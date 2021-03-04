@@ -22,6 +22,8 @@ import "./interfaces/ITokenHolder.sol";
 contract TokenHolder is ITokenHolder, Owned, Utils {
     using SafeERC20 for IERC20;
 
+    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
+
     /**
      * @dev withdraws tokens held by the contract and sends them to an account
      * can only be called by the owner
@@ -35,6 +37,11 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         address _to,
         uint256 _amount
     ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {
-        _token.safeTransfer(_to, _amount);
+        if (_token == ETH_RESERVE_ADDRESS) {
+            payable(_to).transfer(_amount);
+        }
+        else {
+            _token.safeTransfer(_to, _amount);
+        }
     }
 }

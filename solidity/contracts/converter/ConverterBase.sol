@@ -41,8 +41,6 @@ import "../utility/interfaces/IWhitelist.sol";
 abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
-    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-
     struct Reserve {
         uint256 balance; // reserve balance
         uint32 weight; // reserve weight, represented in ppm, 1-1000000
