@@ -183,7 +183,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
      *
      * @param _whitelist    address of a whitelist contract
      */
-    function setConversionWhitelist(IWhitelist _whitelist) public ownerOnly notThis(address(_whitelist)) {
+    function setConversionWhitelist(IWhitelist _whitelist) public ownerOnly {
         conversionWhitelist = _whitelist;
     }
 
@@ -300,8 +300,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
         override
         ownerOnly
         inactive
-        validAddress(address(_token))
-        notThis(address(_token))
+        validExternalAddress(address(_token))
         validReserveWeight(_weight)
     {
         // validate input

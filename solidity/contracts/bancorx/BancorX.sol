@@ -142,8 +142,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         greaterThanZero(_minLimit)
         greaterThanZero(_limitIncPerBlock)
         greaterThanZero(_minRequiredReports)
-        validAddress(address(_token))
-        notThis(address(_token))
+        validExternalAddress(address(_token))
     {
         // validate input
         require(_minLimit <= _maxLockLimit && _minLimit <= _maxReleaseLimit, "ERR_INVALID_MIN_LIMIT");
