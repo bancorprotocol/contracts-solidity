@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/ILiquidityProtectionSystemStore.sol";
