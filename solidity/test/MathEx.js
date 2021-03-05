@@ -39,6 +39,32 @@ describe('MathEx', () => {
         }
     }
 
+    for (let exp = 0; exp < 16; exp++) {
+        for (let a = 0; a < 10; a++) {
+            for (let b = 1; b <= 10; b++) {
+                it(`poweredRatio(${a}, ${b}, ${exp})`, async () => {
+                    const expected = MathUtils.poweredRatio(a, b, exp);
+                    const actual = await mathContract.poweredRatioTest(a, b, exp);
+                    expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0' });
+                });
+            }
+        }
+    }
+
+    for (let exp = 0; exp < 16; exp++) {
+        for (let i = 1; i <= 10; i++) {
+            const a = MAX_UINT128.mul(i).add(1);
+            for (let j = 1; j <= 10; j++) {
+                const b = MAX_UINT128.mul(j).add(1);
+                it(`poweredRatio(${a.toFixed()}, ${b.toFixed()}, ${exp})`, async () => {
+                    const expected = MathUtils.poweredRatio(a, b, exp);
+                    const actual = await mathContract.poweredRatioTest(a.toFixed(), b.toFixed(), exp);
+                    expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0.000000000000000000000000922' });
+                });
+            }
+        }
+    }
+
     for (const scale of SCALES) {
         for (let a = 0; a < 10; a++) {
             for (let b = 1; b <= 10; b++) {
