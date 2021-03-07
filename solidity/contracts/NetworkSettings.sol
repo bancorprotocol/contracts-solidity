@@ -14,10 +14,13 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
 
     /**
      * @dev initializes a new NetworkSettings contract
+     *
+     * @param initialNetworkFeeWallet initial network fee wallet
+     * @param initialNetworkFee initial network fee in ppm units
      */
-    constructor(address networkFeeWalletVal, uint32 networkFeeVal) validAddress(networkFeeWalletVal) validPortion(networkFeeVal) public {
-        _networkFeeWallet = networkFeeWalletVal;
-        _networkFee = networkFeeVal;
+    constructor(address initialNetworkFeeWallet, uint32 initialNetworkFee) validAddress(initialNetworkFeeWallet) validPortion(initialNetworkFee) public {
+        _networkFeeWallet = initialNetworkFeeWallet;
+        _networkFee = initialNetworkFee;
     }
 
     /**
@@ -52,19 +55,19 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @dev sets the network fee wallet
      * can be executed only by the owner
      *
-     * @param networkFeeWalletVal network fee wallet
+     * @param newNetworkFeeWallet new network fee wallet
      */
-    function setNetworkFeeWallet(address networkFeeWalletVal) external ownerOnly validAddress(networkFeeWalletVal) {
-        _networkFeeWallet = networkFeeWalletVal;
+    function setNetworkFeeWallet(address newNetworkFeeWallet) external ownerOnly validAddress(newNetworkFeeWallet) {
+        _networkFeeWallet = newNetworkFeeWallet;
     }
 
     /**
      * @dev sets the network fee
      * can be executed only by the owner
      *
-     * @param networkFeeVal network fee in ppm units
+     * @param newNetworkFee new network fee in ppm units
      */
-    function setNetworkFee(uint32 networkFeeVal) external ownerOnly validPortion(networkFeeVal) {
-        _networkFee = networkFeeVal;
+    function setNetworkFee(uint32 newNetworkFee) external ownerOnly validPortion(newNetworkFee) {
+        _networkFee = newNetworkFee;
     }
 }
