@@ -194,7 +194,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         for (uint16 i = 0; i < reserveTokenCount; i++) {
             IERC20 reserveAddress = _oldConverter.connectorTokens(i);
             // Ether reserve
-            if (reserveAddress == ETH_RESERVE_ADDRESS) {
+            if (reserveAddress == NATIVE_TOKEN_ADDRESS) {
                 if (address(_oldConverter).balance > 0) {
                     _oldConverter.withdrawETH(address(_newConverter));
                 }

@@ -1,7 +1,7 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
 const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
-const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry, roles } = require('./helpers/Constants');
 
 const { ROLE_OWNER } = roles;
 
@@ -213,7 +213,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, networkToken.address, reserveToken.address],
+                [NATIVE_TOKEN_ADDRESS, networkToken.address, reserveToken.address],
                 [100000, 100000, 100000]
             );
             const anchorCount = await converterRegistry.getAnchorCount.call();
@@ -230,7 +230,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, reserveToken.address],
+                [NATIVE_TOKEN_ADDRESS, reserveToken.address],
                 [500000, 500000]
             );
             const anchorCount = await converterRegistry.getAnchorCount.call();
@@ -246,7 +246,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, networkToken.address],
+                [NATIVE_TOKEN_ADDRESS, networkToken.address],
                 [450000, 550000]
             );
             const anchorCount = await converterRegistry.getAnchorCount.call();

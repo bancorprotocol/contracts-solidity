@@ -22,5 +22,5 @@ module.exports = {
         ROLE_SEEDER: web3.utils.keccak256('ROLE_SEEDER')
     },
 
-    ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+    NATIVE_TOKEN_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 };

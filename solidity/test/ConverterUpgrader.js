@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 
 const ConverterHelper = require('./helpers/Converter');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const { ZERO_ADDRESS } = constants;
 
@@ -84,7 +84,7 @@ describe('ConverterUpgrader', () => {
         const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-        await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
+        await converter.addReserve(NATIVE_TOKEN_ADDRESS, 500000);
         await converter.setConversionFee(CONVERSION_FEE);
         await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
@@ -217,7 +217,7 @@ describe('ConverterUpgrader', () => {
                         break;
                     case initType1WithETHReserve:
                     case initType3WithETHReserve:
-                        reserveTokens = [reserveToken1.address, ETH_RESERVE_ADDRESS];
+                        reserveTokens = [reserveToken1.address, NATIVE_TOKEN_ADDRESS];
                         break;
                 }
 

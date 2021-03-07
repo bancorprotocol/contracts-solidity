@@ -2,7 +2,7 @@ const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
@@ -38,7 +38,7 @@ const LAYOUT = {
 /* eslint-enable no-multi-spaces,comma-spacing */
 
 const getSymbol = async (tokenAddress) => {
-    if (tokenAddress === ETH_RESERVE_ADDRESS) {
+    if (tokenAddress === NATIVE_TOKEN_ADDRESS) {
         return 'ETH';
     }
 
@@ -128,7 +128,7 @@ describe('ConversionPathFinder', () => {
     let anchorToken;
     const nonOwner = accounts[1];
 
-    const addresses = { ETH: ETH_RESERVE_ADDRESS };
+    const addresses = { ETH: NATIVE_TOKEN_ADDRESS };
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
