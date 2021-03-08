@@ -37,6 +37,7 @@ contract StandardPoolConverter is
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
 
     uint256 private __reserveBalances;
+    uint256 private __reserveBalanceFees;
     IERC20[] private __reserveTokens;
     mapping(IERC20 => uint256) private __reserveIds;
 
@@ -467,6 +468,56 @@ contract StandardPoolConverter is
     }
 
     /**
+     * @dev loads the stored reserve balance fee for a given reserve id
+     *
+     * @param _reserveId   reserve id
+     */
+    function reserveBalanceFee(uint256 _reserveId) internal view returns (uint256) {
+        return decodeReserveBalance(__reserveBalanceFees, _reserveId);
+    }
+
+    /**
+     * @dev loads the stored reserve balance fees
+     *
+     * @param _sourceId    source reserve id
+     * @param _targetId    target reserve id
+     */
+    function reserveBalanceFees(uint256 _sourceId, uint256 _targetId) internal view returns (uint256, uint256) {
+        require((_sourceId == 1 && _targetId == 2) || (_sourceId == 2 && _targetId == 1), "ERR_INVALID_RESERVES");
+        return decodeReserveBalances(__reserveBalanceFees, _sourceId, _targetId);
+    }
+
+    /**
+     * @dev stores the stored reserve balance fee for a given reserve id
+     *
+     * @param _reserveId       reserve id
+     * @param _reserveBalanceFee  reserve balance fee
+     */
+    function setReserveBalanceFee(uint256 _reserveId, uint256 _reserveBalanceFee) internal {
+        require(_reserveBalanceFee <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
+        uint256 otherBalanceFee = decodeReserveBalance(__reserveBalanceFees, 3 - _reserveId);
+        __reserveBalanceFees = encodeReserveBalances(_reserveBalanceFee, _reserveId, otherBalanceFee, 3 - _reserveId);
+    }
+
+    /**
+     * @dev stores the stored reserve balance fees
+     *
+     * @param _sourceId        source reserve id
+     * @param _targetId        target reserve id
+     * @param _sourceBalanceFee   source reserve balance fee
+     * @param _targetBalanceFee   target reserve balance fee
+     */
+    function setReserveBalanceFees(
+        uint256 _sourceId,
+        uint256 _targetId,
+        uint256 _sourceBalanceFee,
+        uint256 _targetBalanceFee
+    ) internal {
+        require(_sourceBalanceFee <= MAX_UINT128 && _targetBalanceFee <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
+        __reserveBalanceFees = encodeReserveBalances(_sourceBalanceFee, _sourceId, _targetBalanceFee, _targetId);
+    }
+
+    /**
      * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
      *
      * @param _reserveToken    address of the reserve token
@@ -652,6 +703,9 @@ contract StandardPoolConverter is
 
         // sync the reserve balances
         setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
+
+        // sync the reserve balance fees
+        setReserveBalanceFees(sourceId, targetId, reserveBalanceFee(sourceId), reserveBalanceFee(targetId).add(fee));
 
         // transfer funds to the beneficiary in the to reserve token
         if (_targetToken == NATIVE_TOKEN_ADDRESS) {
