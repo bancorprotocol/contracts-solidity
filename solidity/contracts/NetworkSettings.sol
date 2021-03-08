@@ -35,7 +35,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     }
 
     /**
-     * @dev returns the network settings
+     * @dev returns the network fee parameters
      *
      * @return network fee wallet
      * @return network fee in ppm units
