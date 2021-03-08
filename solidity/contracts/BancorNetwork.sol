@@ -2,15 +2,19 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+
+import "@openzeppelin/contracts-upgradeable/proxy/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+
+import "./utility/ContractRegistryClientUpgradeable.sol";
+import "./utility/TokenHolderUpgradeable.sol";
 
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
 import "./converter/interfaces/IBancorFormula.sol";
-import "./utility/ContractRegistryClient.sol";
 import "./utility/ReentrancyGuard.sol";
-import "./utility/TokenHolder.sol";
 import "./token/interfaces/IEtherToken.sol";
 import "./token/interfaces/IDSToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
@@ -44,7 +48,12 @@ interface ILegacyConverter {
  * Format:
  * [source token, converter anchor, target token, converter anchor, target token...]
  */
-contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
+contract BancorNetwork is
+    Initializable,
+    TokenHolderUpgradeable,
+    ContractRegistryClientUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -61,7 +70,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         bool processAffiliateFee;
     }
 
-    uint256 public maxAffiliateFee = 30000; // maximum affiliate-fee
+    uint256 public maxAffiliateFee; // maximum affiliate-fee
 
     mapping(IERC20 => bool) public etherTokens; // list of all supported ether tokens
 
@@ -85,12 +94,21 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
     );
 
     /**
-     * @dev initializes a new BancorNetwork instance
+     * @dev initializes a new BancorNetwork instance.
+     * As this contract is upgradeable we need to call the inherited
+     * initialize functions from parents
      *
      * @param _registry    address of a contract registry contract
      */
-    constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {
+    function initialize(IContractRegistry _registry) public initializer {
+        __ContractRegistryClientUpgradeable_init_unchained(_registry);
+        __TokenHolderUpgradeable_init_unchained();
+        __OwnedUpgradeable_init_unchained();
+
+        __ReentrancyGuard_init();
+
         etherTokens[ETH_RESERVE_ADDRESS] = true;
+        maxAffiliateFee = 30000;
     }
 
     /**
@@ -226,7 +244,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         address payable _beneficiary,
         address _affiliateAccount,
         uint256 _affiliateFee
-    ) public payable protected greaterThanZero(_minReturn) returns (uint256) {
+    ) public payable nonReentrant greaterThanZero(_minReturn) returns (uint256) {
         // verify that the path contrains at least a single 'hop' and that the number of elements is odd
         require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
 
@@ -387,9 +405,8 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             if (stepData.isV28OrHigherConverter) {
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
-                if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken]) {
+                if (i != 0 && _data[i - 1].beneficiary == address(this) && !etherTokens[stepData.sourceToken])
                     stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
-                }
             }
             // older converter
             // if the source token is the liquid token, no need to do any transfers as the converter controls it
