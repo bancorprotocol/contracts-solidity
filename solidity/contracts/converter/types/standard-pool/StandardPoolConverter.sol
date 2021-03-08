@@ -372,9 +372,17 @@ contract StandardPoolConverter is
     }
 
     /**
-     * @dev transfers a portion of the accumulated fees and resets them
+     * @dev transfers a portion of the accumulated fees
      */
     function transferFees() public {
+        transferFeesWithoutSync();
+        syncReserveBalances();
+    }
+
+    /**
+     * @dev transfers a portion of the accumulated fees
+     */
+    function transferFeesWithoutSync() internal {
         INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
         (address networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
         (uint256 fee0, uint256 fee1) = reserveBalanceFees(1, 2);
@@ -844,7 +852,7 @@ contract StandardPoolConverter is
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
         // transfer the fees
-        transferFees();
+        transferFeesWithoutSync();
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < 2; i++) {
@@ -1000,7 +1008,7 @@ contract StandardPoolConverter is
         bool inputRearranged = verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
         // transfer the fees
-        transferFees();
+        transferFeesWithoutSync();
 
         // save a local copy of the pool token
         IDSToken poolToken = IDSToken(address(anchor));
