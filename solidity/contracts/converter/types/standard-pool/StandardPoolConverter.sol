@@ -1023,11 +1023,10 @@ contract StandardPoolConverter is
         syncReserveBalances();
 
         uint256 newPoolTokenSupply = totalSupply.sub(_amount);
-        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, _reserveTokens, totalSupply);
-
         uint256[2] memory oldReserveBalances;
         uint256[2] memory newReserveBalances;
         (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
+        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
 
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
@@ -1059,6 +1058,27 @@ contract StandardPoolConverter is
         return reserveAmounts;
     }
 
+    function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
+        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
+        uint256 reserveId = __reserveIds[_reserveToken];
+        uint32 networkFee = networkSettings.networkFee();
+        return reserveBalance(reserveId).sub(reserveBalanceFee(reserveId).mul(networkFee).div(PPM_RESOLUTION));
+    }
+
+    function reserveBalancesMinusFees(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
+        uint256[2] memory _reserveBalances;
+        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
+        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
+        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
+        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
+        uint32 networkFee = networkSettings.networkFee();
+        (uint256 fee0, uint256 fee1) = reserveBalanceFees(reserve0Id, reserve1Id);
+        return [
+            _reserveBalances[0].sub(fee0.mul(networkFee).div(PPM_RESOLUTION)),
+            _reserveBalances[1].sub(fee1.mul(networkFee).div(PPM_RESOLUTION))
+        ];
+    }
+
     /**
      * @dev given the amount of one of the reserve tokens to add liquidity of,
      * returns the required amount of each one of the other reserve tokens
@@ -1077,13 +1097,9 @@ contract StandardPoolConverter is
         uint256 _reserveAmount
     ) public view returns (uint256[] memory) {
         uint256[] memory _reserveAmounts = new uint256[](2);
-        uint256[] memory _reserveBalances = new uint256[](2);
-
-        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
-        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
-        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
 
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
+        uint256[2] memory _reserveBalances = reserveBalancesMinusFees(_reserveTokens);
         uint256 amount = fundSupplyAmount(totalSupply, _reserveBalances[_reserveTokenIndex], _reserveAmount);
 
         for (uint256 i = 0; i < 2; i++) {
@@ -1106,7 +1122,8 @@ contract StandardPoolConverter is
      */
     function addLiquidityReturn(IERC20 _reserveToken, uint256 _reserveAmount) public view returns (uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        return fundSupplyAmount(totalSupply, reserveBalance(__reserveIds[_reserveToken]), _reserveAmount);
+        uint256 _reserveBalance = reserveBalanceMinusFee(_reserveToken);
+        return fundSupplyAmount(totalSupply, _reserveBalance, _reserveAmount);
     }
 
     /**
@@ -1123,7 +1140,8 @@ contract StandardPoolConverter is
         returns (uint256[] memory)
     {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        return removeLiquidityReserveAmounts(_amount, _reserveTokens, totalSupply);
+        uint256[2] memory _reserveBalances = reserveBalancesMinusFees(_reserveTokens);
+        return removeLiquidityReserveAmounts(_amount, totalSupply, _reserveBalances);
     }
 
     /**
@@ -1176,23 +1194,17 @@ contract StandardPoolConverter is
      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
      *
      * @param _amount          amount of pool tokens
-     * @param _reserveTokens   address of each reserve token
-     * @param _totalSupply     token total supply
+     * @param _totalSupply     total supply of pool tokens
+     * @param _reserveBalances balance of each reserve token
      *
      * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
     function removeLiquidityReserveAmounts(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
-        uint256 _totalSupply
-    ) private view returns (uint256[] memory) {
+        uint256 _totalSupply,
+        uint256[2] memory _reserveBalances
+    ) private pure returns (uint256[] memory) {
         uint256[] memory _reserveAmounts = new uint256[](2);
-        uint256[] memory _reserveBalances = new uint256[](2);
-
-        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
-        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
-        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
-
         for (uint256 i = 0; i < 2; i++) {
             _reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
         }
