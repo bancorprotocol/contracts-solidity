@@ -384,7 +384,7 @@ contract StandardPoolConverter is
      */
     function transferFeesWithoutSync() internal {
         INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        (address networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
+        (address networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
         (uint256 fee0, uint256 fee1) = reserveBalanceFees(1, 2);
         safeTransfer(__reserveTokens[0], networkFeeWallet, fee0.mul(networkFee).div(PPM_RESOLUTION));
         safeTransfer(__reserveTokens[1], networkFeeWallet, fee1.mul(networkFee).div(PPM_RESOLUTION));
