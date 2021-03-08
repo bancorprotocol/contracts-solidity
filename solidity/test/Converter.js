@@ -15,6 +15,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
@@ -23,6 +24,9 @@ const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1Co
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
+
+const NETWORK_FEE_WALLET = '0x'.padEnd(42, '1');
+const NETWORK_FEE = 0;
 
 describe('Converter', () => {
     const createConverter = async (
@@ -169,6 +173,9 @@ describe('Converter', () => {
 
         factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
+
+        const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
