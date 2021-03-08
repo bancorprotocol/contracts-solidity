@@ -119,6 +119,7 @@ describe('StandardPoolConverter', () => {
     let token;
     let tokenAddress;
     let contractRegistry;
+    let networkSettings;
     let reserveToken;
     let reserveToken2;
     let upgrader;
@@ -134,7 +135,7 @@ describe('StandardPoolConverter', () => {
         const factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
-        const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
+        networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
@@ -297,39 +298,63 @@ describe('StandardPoolConverter', () => {
 
     for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
         describe(`${isETHReserve === 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
-            it('verifies that convert returns valid amount and fee after converting', async () => {
-                const converter = await initConverter(true, isETHReserve, 5000);
-                await converter.setConversionFee(3000);
+            for (const conversionFee of [0, 5, 10, 20, 25]) {
+                for (const networkFee of [0, 5, 10, 20, 25]) {
+                    it.only(`verifies conversion with conversion fee = ${conversionFee}% and network fee = ${networkFee}%`, async () => {
+                        const converter = await initConverter(true, isETHReserve, conversionFee * 10000);
+                        await converter.setConversionFee(conversionFee * 10000);
+                        await networkSettings.setNetworkFee(networkFee * 10000);
 
-                const amount = new BN(500);
-                let value = 0;
-                if (isETHReserve) {
-                    value = amount;
-                } else {
-                    await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                        const amount = new BN(100000000);
+                        let value = 0;
+                        if (isETHReserve) {
+                            value = amount;
+                        } else {
+                            await reserveToken.approve(bancorNetwork.address, amount, { from: sender });
+                        }
+
+                        const targetAmountAndFee = (
+                            await converter.targetAmountAndFee.call(
+                                getReserve1Address(isETHReserve),
+                                reserveToken2.address,
+                                amount
+                            )
+                        );
+                        const res = await convert(
+                            [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
+                            amount,
+                            MIN_RETURN,
+                            { value }
+                        );
+                        expectEvent(res, 'Conversion', {
+                            _smartToken: token.address,
+                            _fromToken: getReserve1Address(isETHReserve),
+                            _toToken: reserveToken2.address,
+                            _fromAmount: amount,
+                            _toAmount: targetAmountAndFee[0]
+                        });
+                        const before = {
+                            reserveBalanceFees: await converter.reserveBalanceFees(),
+                            balance1: await (isETHReserve ? web3.eth.getBalance(NETWORK_FEE_WALLET) : reserveToken.balanceOf(NETWORK_FEE_WALLET)),
+                            balance2: await reserveToken2.balanceOf(NETWORK_FEE_WALLET)
+                        };
+                        await converter.transferFees();
+                        const after = {
+                            reserveBalanceFees: await converter.reserveBalanceFees(),
+                            balance1: await (isETHReserve ? web3.eth.getBalance(NETWORK_FEE_WALLET) : reserveToken.balanceOf(NETWORK_FEE_WALLET)),
+                            balance2: await reserveToken2.balanceOf(NETWORK_FEE_WALLET)
+                        };
+                        expect(before.reserveBalanceFees[0]).to.be.bignumber.equal('0');
+                        expect(before.reserveBalanceFees[1]).to.be.bignumber.equal(targetAmountAndFee[1]);
+                        expect(before.balance1).to.be.bignumber.equal('0');
+                        expect(before.balance2).to.be.bignumber.equal('0');
+                        expect(after.reserveBalanceFees[0]).to.be.bignumber.equal('0');
+                        expect(after.reserveBalanceFees[1]).to.be.bignumber.equal('0');
+                        expect(after.balance1).to.be.bignumber.equal('0');
+                        expect(after.balance2).to.be.bignumber.equal(targetAmountAndFee[0].add(targetAmountAndFee[1]).muln(conversionFee).divn(100).muln(networkFee).divn(100));
+                    });
                 }
-
-                const purchaseAmount = (
-                    await converter.targetAmountAndFee.call(
-                        getReserve1Address(isETHReserve),
-                        reserveToken2.address,
-                        amount
-                    )
-                )[0];
-                const res = await convert(
-                    [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
-                    amount,
-                    MIN_RETURN,
-                    { value }
-                );
-                expectEvent(res, 'Conversion', {
-                    _smartToken: token.address,
-                    _fromToken: getReserve1Address(isETHReserve),
-                    _toToken: reserveToken2.address,
-                    _fromAmount: amount,
-                    _toAmount: purchaseAmount
-                });
-            });
+            }
 
             it('verifies the TokenRateUpdate event after conversion', async () => {
                 const converter = await initConverter(true, isETHReserve, 10000);
