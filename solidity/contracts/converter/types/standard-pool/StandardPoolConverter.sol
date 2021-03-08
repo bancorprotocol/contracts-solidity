@@ -372,6 +372,28 @@ contract StandardPoolConverter is
     }
 
     /**
+     * @dev returns the balance fee of a given reserve token
+     *
+     * @param _reserveToken    reserve token contract address
+     *
+     * @return the balance fee of the given reserve token
+     */
+    function reserveBalanceFee(IERC20 _reserveToken) public view returns (uint256) {
+        uint256 reserveId = __reserveIds[_reserveToken];
+        require(reserveId != 0, "ERR_INVALID_RESERVE");
+        return reserveBalanceFee(reserveId);
+    }
+
+    /**
+     * @dev returns the balance fees of both reserve tokens
+     *
+     * @return the balance fees of both reserve tokens
+     */
+    function reserveBalanceFees() public view returns (uint256, uint256) {
+        return reserveBalanceFees(1, 2);
+    }
+
+    /**
      * @dev transfers a portion of the accumulated fees
      */
     function transferFees() public {
