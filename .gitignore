@@ -10,6 +10,7 @@ yarn-error.log*
 # python
 *.pyc
 
+cache
 solidity/build
 .coverage_artifacts
 .coverage_contracts
