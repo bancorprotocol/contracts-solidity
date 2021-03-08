@@ -41,41 +41,41 @@ describe('NetworkSettings', () => {
 
         it('should revert when setting an invalid network fee wallet', async () => {
             await expectRevert(networkSettings.setNetworkFeeWallet(invalidAddress), 'ERR_INVALID_ADDRESS');
-            await expectReturn(networkSettings.feeParams(), {0: address1, 1: portion1});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 
         it('should revert when setting a too-small network fee', async () => {
             await expectRevert(networkSettings.setNetworkFee(tooSmallPortion), 'ERR_INVALID_PORTION');
-            await expectReturn(networkSettings.feeParams(), {0: address1, 1: portion1});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 
         it('should revert when setting a too-large network fee', async () => {
             await expectRevert(networkSettings.setNetworkFee(tooLargePortion), 'ERR_INVALID_PORTION');
-            await expectReturn(networkSettings.feeParams(), {0: address1, 1: portion1});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 
         it('should revert when a non-owner sets a valid network fee wallet', async () => {
             await expectRevert(networkSettings.setNetworkFeeWallet(address2, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            await expectReturn(networkSettings.feeParams(), {0: address1, 1: portion1});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 
         it('should revert when a non-owner sets a valid network fee', async () => {
             await expectRevert(networkSettings.setNetworkFee(portion2, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-            await expectReturn(networkSettings.feeParams(), {0: address1, 1: portion1});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 
         it('should suceed when creating a contract with a valid network fee wallet and a valid network fee', async () => {
-            await expectReturn(networkSettings.feeParams(), {0: address1, 1: portion1});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 
         it('should suceed when setting a valid network fee wallet', async () => {
             await networkSettings.setNetworkFeeWallet(address2);
-            await expectReturn(networkSettings.feeParams(), {0: address2, 1: portion1});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address2, 1: portion1});
         });
 
         it('should suceed when setting a valid network fee', async () => {
             await networkSettings.setNetworkFee(portion2);
-            await expectReturn(networkSettings.feeParams(), {0: address1, 1: portion2});
+            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion2});
         });
     });
 });

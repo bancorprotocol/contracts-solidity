@@ -29,7 +29,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @return network fee wallet
      * @return network fee in ppm units
      */
-    function feeParams() external view override returns (address, uint32) {
+    function networkFeeParams() external view override returns (address, uint32) {
         return (_networkFeeWallet, _networkFee);
     }
 
