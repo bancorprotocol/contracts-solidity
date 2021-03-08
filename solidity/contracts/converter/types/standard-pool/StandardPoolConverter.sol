@@ -847,6 +847,9 @@ contract StandardPoolConverter is
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
+        // transfer the fees
+        transferFees();
+
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < 2; i++) {
             if (_reserveTokens[i] == NATIVE_TOKEN_ADDRESS) {
@@ -999,6 +1002,9 @@ contract StandardPoolConverter is
     ) public protected active returns (uint256[] memory) {
         // verify the user input
         bool inputRearranged = verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
+
+        // transfer the fees
+        transferFees();
 
         // save a local copy of the pool token
         IDSToken poolToken = IDSToken(address(anchor));

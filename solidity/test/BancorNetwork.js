@@ -146,6 +146,9 @@ describe('BancorNetwork', () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
 
+        const networkSettings = await NetworkSettings.new(ZERO_ADDRESS, 0);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
+
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
