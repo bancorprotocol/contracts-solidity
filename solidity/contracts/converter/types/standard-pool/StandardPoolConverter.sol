@@ -376,10 +376,10 @@ contract StandardPoolConverter is
      */
     function transferFees() public {
         INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        (address  networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
+        (address payable networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
         (uint256 fee0, uint256 fee1) = reserveBalanceFees(1, 2);
-        __reserveTokens[0].safeTransfer(networkFeeWallet, fee0.mul(networkFee).div(PPM_RESOLUTION));
-        __reserveTokens[1].safeTransfer(networkFeeWallet, fee1.mul(networkFee).div(PPM_RESOLUTION));
+        safeTransfer(__reserveTokens[0], networkFeeWallet, fee0.mul(networkFee).div(PPM_RESOLUTION));
+        safeTransfer(__reserveTokens[1], networkFeeWallet, fee1.mul(networkFee).div(PPM_RESOLUTION));
         __reserveBalanceFees = 0;
     }
 
@@ -721,11 +721,7 @@ contract StandardPoolConverter is
         setReserveBalanceFees(sourceId, targetId, reserveBalanceFee(sourceId), reserveBalanceFee(targetId).add(fee));
 
         // transfer funds to the beneficiary in the to reserve token
-        if (_targetToken == NATIVE_TOKEN_ADDRESS) {
-            _beneficiary.transfer(amount);
-        } else {
-            _targetToken.safeTransfer(_beneficiary, amount);
-        }
+        safeTransfer(_targetToken, _beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
@@ -1034,11 +1030,7 @@ contract StandardPoolConverter is
             newReserveBalances[i] = oldReserveBalances[i].sub(reserveAmount);
 
             // transfer each one of the reserve amounts from the pool to the user
-            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
-                msg.sender.transfer(reserveAmount);
-            } else {
-                reserveToken.safeTransfer(msg.sender, reserveAmount);
-            }
+            safeTransfer(reserveToken, msg.sender, reserveAmount);
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
@@ -1225,6 +1217,14 @@ contract StandardPoolConverter is
         // dispatch token rate update events for the pool token
         emit TokenRateUpdate(poolToken, _sourceToken, _sourceBalance, poolTokenSupply);
         emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
+    }
+
+    function safeTransfer(IERC20 token, address payable to, uint256 amount) private {
+        if (token == NATIVE_TOKEN_ADDRESS) {
+            to.transfer(amount);
+        } else {
+            token.safeTransfer(to, amount);
+        }
     }
 
     function encodeReserveBalance(uint256 _balance, uint256 _id) private pure returns (uint256) {
