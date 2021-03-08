@@ -25,6 +25,9 @@ const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverte
 const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 
+const NETWORK_FEE_WALLET = '0x'.padEnd(42, '1');
+const NETWORK_FEE = 0;
+
 describe('Converter', () => {
     const createConverter = async (
         type,
@@ -164,15 +167,15 @@ describe('Converter', () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
 
-        const networkSettings = await NetworkSettings.new('0x'.padEnd(42, '1'), 0);
-        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
-
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
 
         factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
+
+        const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
         await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);

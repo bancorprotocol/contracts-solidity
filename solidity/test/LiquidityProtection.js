@@ -36,6 +36,9 @@ const RESERVE1_AMOUNT = new BN(1000000);
 const RESERVE2_AMOUNT = new BN(2500000);
 const TOTAL_SUPPLY = new BN(10).pow(new BN(24));
 
+const NETWORK_FEE_WALLET = '0x'.padEnd(42, '1');
+const NETWORK_FEE = 0;
+
 const PROTECTION_NO_PROTECTION = 0;
 const PROTECTION_PARTIAL_PROTECTION = 1;
 const PROTECTION_FULL_PROTECTION = 2;
@@ -301,11 +304,11 @@ describe('LiquidityProtection', () => {
                 const converterFactory = await ConverterFactory.new();
                 await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
-
-                const networkSettings = await NetworkSettings.new('0x'.padEnd(42, '1'), 0);
         
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();
+
+                const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
 
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
