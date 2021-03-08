@@ -25,6 +25,7 @@ const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -125,7 +126,7 @@ describe('LiquidityProtectionAverageRate', () => {
                 await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
-                const networkSettings = await NetworkSettings.new(ZERO_ADDRESS, 0);
+                const networkSettings = await NetworkSettings.new('0x'.padEnd(42, '1'), 0);
 
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();

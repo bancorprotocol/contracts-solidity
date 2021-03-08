@@ -47,8 +47,6 @@ describe('LiquidityProtectionSettings', () => {
         await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
         await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
-        const networkSettings = await NetworkSettings.new(ZERO_ADDRESS, 0);
-
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
 
@@ -57,7 +55,6 @@ describe('LiquidityProtectionSettings', () => {
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
-        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
         await converterRegistry.newConverter(
             1,
