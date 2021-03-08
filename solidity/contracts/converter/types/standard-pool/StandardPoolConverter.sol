@@ -376,7 +376,7 @@ contract StandardPoolConverter is
      */
     function transferFees() public {
         INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        (address payable networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
+        (address networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
         (uint256 fee0, uint256 fee1) = reserveBalanceFees(1, 2);
         safeTransfer(__reserveTokens[0], networkFeeWallet, fee0.mul(networkFee).div(PPM_RESOLUTION));
         safeTransfer(__reserveTokens[1], networkFeeWallet, fee1.mul(networkFee).div(PPM_RESOLUTION));
@@ -1219,9 +1219,9 @@ contract StandardPoolConverter is
         emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
     }
 
-    function safeTransfer(IERC20 token, address payable to, uint256 amount) private {
+    function safeTransfer(IERC20 token, address to, uint256 amount) private {
         if (token == NATIVE_TOKEN_ADDRESS) {
-            to.transfer(amount);
+            payable(to).transfer(amount);
         } else {
             token.safeTransfer(to, amount);
         }
