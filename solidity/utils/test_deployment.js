@@ -169,10 +169,6 @@ const run = async () => {
     const converterRegistryData = await web3Func(deploy, 'converterRegistryData', 'ConverterRegistryData', [
         contractRegistry._address
     ]);
-    const networkSettings = await web3Func(deploy, 'networkSettings', 'NetworkSettings', [
-        getConfig().networkSettingsParams.networkFeeWallet,
-        percentageToPPM(getConfig().networkSettingsParams.networkFee)
-    ]);
     const liquidityPoolV1ConverterFactory = await web3Func(
         deploy,
         'liquidityPoolV1ConverterFactory',
@@ -212,9 +208,6 @@ const run = async () => {
     );
     await execute(
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorNetwork'), bancorNetwork._address)
-    );
-    await execute(
-        contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('NetworkSettings'), networkSettings._address)
     );
     await execute(
         contractRegistry.methods.registerAddress(

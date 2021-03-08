@@ -8,7 +8,6 @@ import "../../ConverterVersion.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/IConverterAnchor.sol";
 import "../../interfaces/IConverterUpgrader.sol";
-import "../../../INetworkSettings.sol";
 import "../../../token/interfaces/IDSToken.sol";
 import "../../../utility/MathEx.sol";
 import "../../../utility/ContractRegistryClient.sol";
@@ -38,7 +37,6 @@ contract StandardPoolConverter is
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
 
     uint256 private __reserveBalances;
-    uint256 private __reserveBalanceFees;
     IERC20[] private __reserveTokens;
     mapping(IERC20 => uint256) private __reserveIds;
 
@@ -372,26 +370,6 @@ contract StandardPoolConverter is
     }
 
     /**
-     * @dev transfers a portion of the accumulated fees
-     */
-    function transferFees() public {
-        transferFeesWithoutSync();
-        syncReserveBalances();
-    }
-
-    /**
-     * @dev transfers a portion of the accumulated fees
-     */
-    function transferFeesWithoutSync() internal {
-        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        (address networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
-        (uint256 fee0, uint256 fee1) = reserveBalanceFees(1, 2);
-        safeTransfer(__reserveTokens[0], networkFeeWallet, fee0.mul(networkFee).div(PPM_RESOLUTION));
-        safeTransfer(__reserveTokens[1], networkFeeWallet, fee1.mul(networkFee).div(PPM_RESOLUTION));
-        __reserveBalanceFees = 0;
-    }
-
-    /**
      * @dev converts a specific amount of source tokens to target tokens
      * can only be called by the bancor network contract
      *
@@ -486,56 +464,6 @@ contract StandardPoolConverter is
     ) internal {
         require(_sourceBalance <= MAX_UINT128 && _targetBalance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
         __reserveBalances = encodeReserveBalances(_sourceBalance, _sourceId, _targetBalance, _targetId);
-    }
-
-    /**
-     * @dev loads the stored reserve balance fee for a given reserve id
-     *
-     * @param _reserveId   reserve id
-     */
-    function reserveBalanceFee(uint256 _reserveId) internal view returns (uint256) {
-        return decodeReserveBalance(__reserveBalanceFees, _reserveId);
-    }
-
-    /**
-     * @dev loads the stored reserve balance fees
-     *
-     * @param _sourceId    source reserve id
-     * @param _targetId    target reserve id
-     */
-    function reserveBalanceFees(uint256 _sourceId, uint256 _targetId) internal view returns (uint256, uint256) {
-        require((_sourceId == 1 && _targetId == 2) || (_sourceId == 2 && _targetId == 1), "ERR_INVALID_RESERVES");
-        return decodeReserveBalances(__reserveBalanceFees, _sourceId, _targetId);
-    }
-
-    /**
-     * @dev stores the stored reserve balance fee for a given reserve id
-     *
-     * @param _reserveId       reserve id
-     * @param _reserveBalanceFee  reserve balance fee
-     */
-    function setReserveBalanceFee(uint256 _reserveId, uint256 _reserveBalanceFee) internal {
-        require(_reserveBalanceFee <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
-        uint256 otherBalanceFee = decodeReserveBalance(__reserveBalanceFees, 3 - _reserveId);
-        __reserveBalanceFees = encodeReserveBalances(_reserveBalanceFee, _reserveId, otherBalanceFee, 3 - _reserveId);
-    }
-
-    /**
-     * @dev stores the stored reserve balance fees
-     *
-     * @param _sourceId        source reserve id
-     * @param _targetId        target reserve id
-     * @param _sourceBalanceFee   source reserve balance fee
-     * @param _targetBalanceFee   target reserve balance fee
-     */
-    function setReserveBalanceFees(
-        uint256 _sourceId,
-        uint256 _targetId,
-        uint256 _sourceBalanceFee,
-        uint256 _targetBalanceFee
-    ) internal {
-        require(_sourceBalanceFee <= MAX_UINT128 && _targetBalanceFee <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
-        __reserveBalanceFees = encodeReserveBalances(_sourceBalanceFee, _sourceId, _targetBalanceFee, _targetId);
     }
 
     /**
@@ -725,11 +653,12 @@ contract StandardPoolConverter is
         // sync the reserve balances
         setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
 
-        // sync the reserve balance fees
-        setReserveBalanceFees(sourceId, targetId, reserveBalanceFee(sourceId), reserveBalanceFee(targetId).add(fee));
-
         // transfer funds to the beneficiary in the to reserve token
-        safeTransfer(_targetToken, _beneficiary, amount);
+        if (_targetToken == NATIVE_TOKEN_ADDRESS) {
+            _beneficiary.transfer(amount);
+        } else {
+            _targetToken.safeTransfer(_beneficiary, amount);
+        }
 
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
@@ -850,9 +779,6 @@ contract StandardPoolConverter is
     ) public payable protected active returns (uint256) {
         // verify the user input
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
-
-        // transfer the fees
-        transferFeesWithoutSync();
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < 2; i++) {
@@ -1007,9 +933,6 @@ contract StandardPoolConverter is
         // verify the user input
         bool inputRearranged = verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
-        // transfer the fees
-        transferFeesWithoutSync();
-
         // save a local copy of the pool token
         IDSToken poolToken = IDSToken(address(anchor));
 
@@ -1038,7 +961,11 @@ contract StandardPoolConverter is
             newReserveBalances[i] = oldReserveBalances[i].sub(reserveAmount);
 
             // transfer each one of the reserve amounts from the pool to the user
-            safeTransfer(reserveToken, msg.sender, reserveAmount);
+            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
+                msg.sender.transfer(reserveAmount);
+            } else {
+                reserveToken.safeTransfer(msg.sender, reserveAmount);
+            }
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
@@ -1225,14 +1152,6 @@ contract StandardPoolConverter is
         // dispatch token rate update events for the pool token
         emit TokenRateUpdate(poolToken, _sourceToken, _sourceBalance, poolTokenSupply);
         emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
-    }
-
-    function safeTransfer(IERC20 token, address to, uint256 amount) private {
-        if (token == NATIVE_TOKEN_ADDRESS) {
-            payable(to).transfer(amount);
-        } else {
-            token.safeTransfer(to, amount);
-        }
     }
 
     function encodeReserveBalance(uint256 _balance, uint256 _id) private pure returns (uint256) {

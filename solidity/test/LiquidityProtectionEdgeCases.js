@@ -26,7 +26,6 @@ const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
-const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -62,9 +61,6 @@ const DECIMAL_COMBINATIONS = cartesian([12, 24], [12, 24], [15, 21], [15, 21]);
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
-
-const NETWORK_FEE_WALLET = '0x'.padEnd(42, '1');
-const NETWORK_FEE = 0;
 
 describe('LiquidityProtectionEdgeCases', () => {
     for (const converterType of [1, 3]) {
@@ -146,14 +142,11 @@ describe('LiquidityProtectionEdgeCases', () => {
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();
 
-                const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
-
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
                 await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
-                await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
                 await converterRegistry.enableTypeChanging(false);
             });
