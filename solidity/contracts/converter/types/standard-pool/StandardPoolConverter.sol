@@ -1058,25 +1058,21 @@ contract StandardPoolConverter is
         return reserveAmounts;
     }
 
-    function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
-        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        uint256 reserveId = __reserveIds[_reserveToken];
-        uint32 networkFee = networkSettings.networkFee();
-        return reserveBalance(reserveId).sub(reserveBalanceFee(reserveId).mul(networkFee).div(PPM_RESOLUTION));
+    function reserveBalancesMinusFees(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
+        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
+        return [
+            reserveBalanceMinusFee(__reserveIds[_reserveTokens[0]], networkFee),
+            reserveBalanceMinusFee(__reserveIds[_reserveTokens[1]], networkFee)
+        ];
     }
 
-    function reserveBalancesMinusFees(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
-        uint256[2] memory _reserveBalances;
-        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
-        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
-        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
-        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        uint32 networkFee = networkSettings.networkFee();
-        (uint256 fee0, uint256 fee1) = reserveBalanceFees(reserve0Id, reserve1Id);
-        return [
-            _reserveBalances[0].sub(fee0.mul(networkFee).div(PPM_RESOLUTION)),
-            _reserveBalances[1].sub(fee1.mul(networkFee).div(PPM_RESOLUTION))
-        ];
+    function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
+        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
+        return reserveBalanceMinusFee(__reserveIds[_reserveToken], networkFee);
+    }
+
+    function reserveBalanceMinusFee(uint256 reserveId, uint32 networkFee) internal view returns (uint256) {
+        return reserveBalance(reserveId).sub(reserveBalanceFee(reserveId).mul(networkFee).div(PPM_RESOLUTION));
     }
 
     /**
