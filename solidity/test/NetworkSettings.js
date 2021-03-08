@@ -11,8 +11,7 @@ describe('NetworkSettings', () => {
     const portion1 = new BN(111);
     const portion2 = new BN(222);
     const invalidAddress = constants.ZERO_ADDRESS;
-    const tooSmallPortion = new BN(0);
-    const tooLargePortion = new BN(1000001);
+    const invalidPortion = new BN(1000001);
 
     const expectReturn = async (method, object) => {
         expect(JSON.stringify(await method)).to.be.equal(JSON.stringify(object));
@@ -23,12 +22,8 @@ describe('NetworkSettings', () => {
             await expectRevert(NetworkSettings.new(invalidAddress, portion1), 'ERR_INVALID_ADDRESS');
         });
 
-        it('should revert when creating a contract with a too-small network fee', async () => {
-            await expectRevert(NetworkSettings.new(address1, tooSmallPortion), 'ERR_INVALID_PORTION');
-        });
-
-        it('should revert when creating a contract with a too-large network fee', async () => {
-            await expectRevert(NetworkSettings.new(address1, tooLargePortion), 'ERR_INVALID_PORTION');
+        it('should revert when creating a contract with an invalid network fee', async () => {
+            await expectRevert(NetworkSettings.new(address1, invalidPortion), 'ERR_INVALID_FEE');
         });
     });
 
@@ -44,13 +39,8 @@ describe('NetworkSettings', () => {
             await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 
-        it('should revert when setting a too-small network fee', async () => {
-            await expectRevert(networkSettings.setNetworkFee(tooSmallPortion), 'ERR_INVALID_PORTION');
-            await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
-        });
-
-        it('should revert when setting a too-large network fee', async () => {
-            await expectRevert(networkSettings.setNetworkFee(tooLargePortion), 'ERR_INVALID_PORTION');
+        it('should revert when setting an invalid network fee', async () => {
+            await expectRevert(networkSettings.setNetworkFee(invalidPortion), 'ERR_INVALID_FEE');
             await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion1});
         });
 

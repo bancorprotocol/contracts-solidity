@@ -12,13 +12,24 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     address private _networkFeeWallet;
     uint32 private _networkFee;
 
+    // ensures that the fee is valid
+    modifier validFee(uint32 fee) {
+        _validFee(fee);
+        _;
+    }
+
+    // error message binary size optimization
+    function _validFee(uint32 fee) internal pure {
+        require(fee <= PPM_RESOLUTION, "ERR_INVALID_FEE");
+    }
+
     /**
      * @dev initializes a new NetworkSettings contract
      *
      * @param initialNetworkFeeWallet initial network fee wallet
      * @param initialNetworkFee initial network fee in ppm units
      */
-    constructor(address initialNetworkFeeWallet, uint32 initialNetworkFee) validAddress(initialNetworkFeeWallet) validPortion(initialNetworkFee) public {
+    constructor(address initialNetworkFeeWallet, uint32 initialNetworkFee) validAddress(initialNetworkFeeWallet) validFee(initialNetworkFee) public {
         _networkFeeWallet = initialNetworkFeeWallet;
         _networkFee = initialNetworkFee;
     }
@@ -67,7 +78,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      *
      * @param newNetworkFee new network fee in ppm units
      */
-    function setNetworkFee(uint32 newNetworkFee) external ownerOnly validPortion(newNetworkFee) {
+    function setNetworkFee(uint32 newNetworkFee) external ownerOnly validFee(newNetworkFee) {
         _networkFee = newNetworkFee;
     }
 }
