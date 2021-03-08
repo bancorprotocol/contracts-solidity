@@ -22,6 +22,7 @@ const ConverterV28OrHigherWithoutFallback = contract.fromArtifact('ConverterV28O
 const ConverterV28OrHigherWithFallback = contract.fromArtifact('ConverterV28OrHigherWithFallback');
 
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const DSToken = contract.fromArtifact('DSToken');
 
