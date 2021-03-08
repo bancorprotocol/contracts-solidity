@@ -8,6 +8,7 @@ import "../../ConverterVersion.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/IConverterAnchor.sol";
 import "../../interfaces/IConverterUpgrader.sol";
+import "../../../INetworkSettings.sol";
 import "../../../token/interfaces/IDSToken.sol";
 import "../../../utility/MathEx.sol";
 import "../../../utility/ContractRegistryClient.sol";
@@ -368,6 +369,18 @@ contract StandardPoolConverter is
      */
     function reserveBalances() public view returns (uint256, uint256) {
         return reserveBalances(1, 2);
+    }
+
+    /**
+     * @dev transfers a portion of the accumulated fees and resets them
+     */
+    function transferFees() public {
+        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
+        (address  networkFeeWallet, uint32 networkFee) = networkSettings.feeParams();
+        (uint256 fee0, uint256 fee1) = reserveBalanceFees(1, 2);
+        __reserveTokens[0].safeTransfer(networkFeeWallet, fee0.mul(networkFee).div(PPM_RESOLUTION));
+        __reserveTokens[1].safeTransfer(networkFeeWallet, fee1.mul(networkFee).div(PPM_RESOLUTION));
+        __reserveBalanceFees = 0;
     }
 
     /**
