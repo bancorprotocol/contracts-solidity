@@ -214,6 +214,9 @@ const run = async () => {
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorNetwork'), bancorNetwork._address)
     );
     await execute(
+        contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('NetworkSettings'), networkSettings._address)
+    );
+    await execute(
         contractRegistry.methods.registerAddress(
             Web3.utils.asciiToHex('ConversionPathFinder'),
             conversionPathFinder._address
