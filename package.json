@@ -20,7 +20,7 @@
     "scripts": {
         "build": "hardhat compile",
         "test": "hardhat test",
-        "coverage": "node --max-old-space-size=4096 node_modules/truffle/build/cli.bundled.js run coverage",
+        "coverage": "hardhat coverage",
         "export": "node scripts/export.js",
         "lint": "yarn lint:js && yarn lint:sol",
         "lint:js": "eslint .",
