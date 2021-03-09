@@ -27,6 +27,22 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     }
 
     /**
+     * @dev triggered when the network fee wallet is updated
+     *
+     * @param prevNetworkFeeWallet  previous network fee wallet
+     * @param newNetworkFeeWallet   new network fee wallet
+     */
+    event NetworkFeeWalletUpdated(address prevNetworkFeeWallet, address newNetworkFeeWallet);
+
+    /**
+     * @dev triggered when the network fee is updated
+     *
+     * @param prevNetworkFee    previous network fee
+     * @param newNetworkFee     new network fee
+     */
+    event NetworkFeeUpdated(uint32 prevNetworkFee, uint32 newNetworkFee);
+
+    /**
      * @dev initializes a new NetworkSettings contract
      *
      * @param initialNetworkFeeWallet initial network fee wallet
@@ -72,6 +88,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @param newNetworkFeeWallet new network fee wallet
      */
     function setNetworkFeeWallet(address newNetworkFeeWallet) external ownerOnly validAddress(newNetworkFeeWallet) {
+        emit NetworkFeeWalletUpdated(_networkFeeWallet, newNetworkFeeWallet);
         _networkFeeWallet = newNetworkFeeWallet;
     }
 
@@ -82,6 +99,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @param newNetworkFee new network fee in ppm units
      */
     function setNetworkFee(uint32 newNetworkFee) external ownerOnly validFee(newNetworkFee) {
+        emit NetworkFeeUpdated(_networkFee, newNetworkFee);
         _networkFee = newNetworkFee;
     }
 }
