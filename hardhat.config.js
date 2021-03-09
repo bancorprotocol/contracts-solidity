@@ -4,6 +4,11 @@ require('@nomiclabs/hardhat-ethers');
 require('solidity-coverage');
 
 module.exports = {
+    networks: {
+        hardhat: {
+            gasPrice: 0
+        }
+    },
     paths: {
         sources: './solidity/contracts',
         tests: './solidity/test',

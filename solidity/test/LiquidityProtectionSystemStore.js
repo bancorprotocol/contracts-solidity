@@ -2,8 +2,6 @@ const { expect } = require('chai');
 
 const { roles } = require('./helpers/Constants');
 
-const { BigNumber } = require('ethers');
-
 const LiquidityProtectionSystemStore = ethers.getContractFactory('LiquidityProtectionSystemStore');
 
 let liquidityProtectionSystemStore;
