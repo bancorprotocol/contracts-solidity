@@ -2,7 +2,7 @@ const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-
 const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
@@ -96,7 +96,7 @@ describe('BancorNetwork', () => {
                 const pathTokens = pathsTokens[sourceSymbol][targetSymbol];
                 for (let i = 0; i < pathTokens.length; i++) {
                     if (pathTokens[i] === '') {
-                        path[i] = ETH_RESERVE_ADDRESS;
+                        path[i] = NATIVE_TOKEN_ADDRESS;
                     } else {
                         path[i] = pathTokens[i].address;
                     }
@@ -106,7 +106,7 @@ describe('BancorNetwork', () => {
     };
 
     const getBalance = async (token, address, account) => {
-        if (address === ETH_RESERVE_ADDRESS) {
+        if (address === NATIVE_TOKEN_ADDRESS) {
             return balance.current(account);
         }
 
@@ -190,7 +190,7 @@ describe('BancorNetwork', () => {
 
             converter1 = await LiquidityPoolV1Converter.new(anchor1.address, contractRegistry.address, 0);
             await converter1.addReserve(bntToken.address, 500000);
-            await converter1.addReserve(ETH_RESERVE_ADDRESS, 500000);
+            await converter1.addReserve(NATIVE_TOKEN_ADDRESS, 500000);
 
             converter2 = await LiquidityPoolV1Converter.new(anchor2.address, contractRegistry.address, 0);
             await converter2.addReserve(bntToken.address, 300000);
@@ -409,7 +409,7 @@ describe('BancorNetwork', () => {
         }
 
         it('verifies that conversionPath returns the correct path', async () => {
-            const conversionPath = await bancorNetwork.conversionPath.call(erc20Token2.address, ETH_RESERVE_ADDRESS);
+            const conversionPath = await bancorNetwork.conversionPath.call(erc20Token2.address, NATIVE_TOKEN_ADDRESS);
             const expectedPath = paths.ERC2.ETH;
 
             expect(conversionPath).not.to.be.empty();
@@ -451,7 +451,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor4.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(
@@ -461,7 +461,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(
@@ -488,7 +488,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convert with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor4.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(
@@ -498,7 +498,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convert with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
             const value = new BN(1000);
 
             await expectRevert(
@@ -566,14 +566,14 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when attempting to call rateByPath on a path with fewer than 3 elements', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.rateByPath.call(invalidPath, value), 'ERR_INVALID_PATH');
         });
 
         it('should revert when attempting to call rateByPath on a path with an even number of elements', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = new BN(1000);
 
             await expectRevert(bancorNetwork.rateByPath.call(invalidPath, value), 'ERR_INVALID_PATH');
@@ -636,7 +636,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor2 with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address];
             const value = new BN(1000);
 
             await expectRevert(
@@ -646,7 +646,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor2 with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = new BN(1000);
 
             await expectRevert(
@@ -678,7 +678,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convert2 with too-short path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address];
             const value = new BN(1000);
 
             await expectRevert(
@@ -688,7 +688,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convert2 with even-length path', async () => {
-            const invalidPath = [ETH_RESERVE_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
+            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = new BN(1000);
 
             await expectRevert(

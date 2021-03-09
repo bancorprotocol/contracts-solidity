@@ -21,8 +21,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // the owner role is used to update the settings
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
-    uint32 private constant PPM_RESOLUTION = 1000000;
-
     IERC20 private immutable _networkToken;
 
     // list of whitelisted pools
@@ -172,17 +170,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // error message binary size optimization
     function _onlyOwner() internal view {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
-    }
-
-    // ensures that the portion is valid
-    modifier validPortion(uint32 portion) {
-        _validPortion(portion);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validPortion(uint32 portion) internal pure {
-        require(portion > 0 && portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
     }
 
     /**

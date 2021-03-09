@@ -2,7 +2,7 @@ const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-
 const { expect } = require('../../chai-local');
 const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const BancorX = contract.fromArtifact('BancorX');
@@ -88,7 +88,7 @@ describe('XConversions', () => {
         erc20TokenConverter2 = await LiquidityPoolV1Converter.new(poolToken2.address, contractRegistry.address, 30000);
 
         await erc20TokenConverter1.addReserve(bntToken.address, 500000);
-        await erc20TokenConverter1.addReserve(ETH_RESERVE_ADDRESS, 500000);
+        await erc20TokenConverter1.addReserve(NATIVE_TOKEN_ADDRESS, 500000);
 
         await erc20TokenConverter2.addReserve(bntToken.address, 500000);
         await erc20TokenConverter2.addReserve(erc20Token.address, 500000);
@@ -108,8 +108,8 @@ describe('XConversions', () => {
         await erc20TokenConverter2.acceptTokenOwnership();
 
         // Set paths for easer use.
-        ethBntPath = [ETH_RESERVE_ADDRESS, poolToken1.address, bntToken.address];
-        bntEthPath = [bntToken.address, poolToken1.address, ETH_RESERVE_ADDRESS];
+        ethBntPath = [NATIVE_TOKEN_ADDRESS, poolToken1.address, bntToken.address];
+        bntEthPath = [bntToken.address, poolToken1.address, NATIVE_TOKEN_ADDRESS];
         erc20TokenBntPath = [erc20Token.address, poolToken2.address, bntToken.address];
         bntErc20Path = [bntToken.address, poolToken2.address, erc20Token.address];
     });

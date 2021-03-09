@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./Owned.sol";
@@ -35,6 +34,11 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         address _to,
         uint256 _amount
     ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {
-        _token.safeTransfer(_to, _amount);
+        if (_token == NATIVE_TOKEN_ADDRESS) {
+            payable(_to).transfer(_amount);
+        }
+        else {
+            _token.safeTransfer(_to, _amount);
+        }
     }
 }

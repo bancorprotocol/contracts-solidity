@@ -31,12 +31,10 @@ contract StandardPoolConverter is
     using SafeERC20 for IERC20;
     using MathEx for *;
 
-    IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     uint256 private constant MAX_UINT128 = 2**128 - 1;
     uint256 private constant MAX_UINT112 = 2**112 - 1;
     uint256 private constant MAX_UINT32 = 2**32 - 1;
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
-    uint32 private constant PPM_RESOLUTION = 1000000;
 
     uint256 private __reserveBalances;
     IERC20[] private __reserveTokens;
@@ -171,7 +169,7 @@ contract StandardPoolConverter is
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override validReserve(ETH_RESERVE_ADDRESS) {}
+    receive() external payable override validReserve(NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev withdraws ether
@@ -181,7 +179,7 @@ contract StandardPoolConverter is
      *
      * @param _to  address to send the ETH to
      */
-    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(ETH_RESERVE_ADDRESS) {
+    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(NATIVE_TOKEN_ADDRESS) {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // verify that the converter is inactive or that the owner is the upgrader contract
@@ -189,7 +187,7 @@ contract StandardPoolConverter is
         _to.transfer(address(this).balance);
 
         // sync the ETH reserve balance
-        syncReserveBalance(ETH_RESERVE_ADDRESS);
+        syncReserveBalance(NATIVE_TOKEN_ADDRESS);
     }
 
     /**
@@ -476,7 +474,7 @@ contract StandardPoolConverter is
     function syncReserveBalance(IERC20 _reserveToken) internal {
         uint256 reserveId = __reserveIds[_reserveToken];
         uint256 balance =
-            _reserveToken == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken.balanceOf(address(this));
+            _reserveToken == NATIVE_TOKEN_ADDRESS ? address(this).balance : _reserveToken.balanceOf(address(this));
         setReserveBalance(reserveId, balance);
     }
 
@@ -487,9 +485,9 @@ contract StandardPoolConverter is
         IERC20 _reserveToken0 = __reserveTokens[0];
         IERC20 _reserveToken1 = __reserveTokens[1];
         uint256 balance0 =
-            _reserveToken0 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken0.balanceOf(address(this));
+            _reserveToken0 == NATIVE_TOKEN_ADDRESS ? address(this).balance : _reserveToken0.balanceOf(address(this));
         uint256 balance1 =
-            _reserveToken1 == ETH_RESERVE_ADDRESS ? address(this).balance : _reserveToken1.balanceOf(address(this));
+            _reserveToken1 == NATIVE_TOKEN_ADDRESS ? address(this).balance : _reserveToken1.balanceOf(address(this));
         setReserveBalances(1, 2, balance0, balance1);
     }
 
@@ -502,11 +500,11 @@ contract StandardPoolConverter is
         IERC20 _reserveToken0 = __reserveTokens[0];
         IERC20 _reserveToken1 = __reserveTokens[1];
         uint256 balance0 =
-            _reserveToken0 == ETH_RESERVE_ADDRESS
+            _reserveToken0 == NATIVE_TOKEN_ADDRESS
                 ? address(this).balance - _value
                 : _reserveToken0.balanceOf(address(this));
         uint256 balance1 =
-            _reserveToken1 == ETH_RESERVE_ADDRESS
+            _reserveToken1 == NATIVE_TOKEN_ADDRESS
                 ? address(this).balance - _value
                 : _reserveToken1.balanceOf(address(this));
         setReserveBalances(1, 2, balance0, balance1);
@@ -644,7 +642,7 @@ contract StandardPoolConverter is
 
         // ensure that the input amount was already deposited
         uint256 actualSourceBalance;
-        if (_sourceToken == ETH_RESERVE_ADDRESS) {
+        if (_sourceToken == NATIVE_TOKEN_ADDRESS) {
             actualSourceBalance = address(this).balance;
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         } else {
@@ -656,7 +654,7 @@ contract StandardPoolConverter is
         setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        if (_targetToken == ETH_RESERVE_ADDRESS) {
+        if (_targetToken == NATIVE_TOKEN_ADDRESS) {
             _beneficiary.transfer(amount);
         } else {
             _targetToken.safeTransfer(_beneficiary, amount);
@@ -784,14 +782,14 @@ contract StandardPoolConverter is
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < 2; i++) {
-            if (_reserveTokens[i] == ETH_RESERVE_ADDRESS) {
+            if (_reserveTokens[i] == NATIVE_TOKEN_ADDRESS) {
                 require(_reserveAmounts[i] == msg.value, "ERR_ETH_AMOUNT_MISMATCH");
             }
         }
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
-            require(__reserveIds[ETH_RESERVE_ADDRESS] != 0, "ERR_NO_ETH_RESERVE");
+            require(__reserveIds[NATIVE_TOKEN_ADDRESS] != 0, "ERR_NO_ETH_RESERVE");
         }
 
         // save a local copy of the pool token
@@ -834,7 +832,7 @@ contract StandardPoolConverter is
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
-            if (reserveToken != ETH_RESERVE_ADDRESS) {
+            if (reserveToken != NATIVE_TOKEN_ADDRESS) {
                 // ETH has already been transferred as part of the transaction
                 reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
             } else if (_reserveAmounts[i] > reserveAmount) {
@@ -963,7 +961,7 @@ contract StandardPoolConverter is
             newReserveBalances[i] = oldReserveBalances[i].sub(reserveAmount);
 
             // transfer each one of the reserve amounts from the pool to the user
-            if (reserveToken == ETH_RESERVE_ADDRESS) {
+            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
                 msg.sender.transfer(reserveAmount);
             } else {
                 reserveToken.safeTransfer(msg.sender, reserveAmount);
