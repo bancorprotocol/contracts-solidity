@@ -1,5 +1,5 @@
 const { contract, accounts } = require('@openzeppelin/test-environment');
-const { BN, constants, expectRevert } = require('@openzeppelin/test-helpers');
+const { BN, constants, expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
@@ -59,13 +59,15 @@ describe('NetworkSettings', () => {
         });
 
         it('should suceed when setting a valid network fee wallet', async () => {
-            await networkSettings.setNetworkFeeWallet(address2);
+            const response = await networkSettings.setNetworkFeeWallet(address2);
             await expectReturn(networkSettings.networkFeeParams(), {0: address2, 1: portion1});
+            expectEvent(response, 'NetworkFeeWalletUpdated', { prevNetworkFeeWallet: address1, newNetworkFeeWallet: address2 });
         });
 
         it('should suceed when setting a valid network fee', async () => {
-            await networkSettings.setNetworkFee(portion2);
+            const response = await networkSettings.setNetworkFee(portion2);
             await expectReturn(networkSettings.networkFeeParams(), {0: address1, 1: portion2});
+            expectEvent(response, 'NetworkFeeUpdated', { prevNetworkFee: portion1, newNetworkFee: portion2 });
         });
     });
 });
