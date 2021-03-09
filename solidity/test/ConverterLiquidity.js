@@ -3,7 +3,7 @@ const { expectRevert, BN, balance, constants } = require('@openzeppelin/test-hel
 const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 const { MAX_UINT256 } = constants;
 
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
@@ -19,7 +19,7 @@ describe('ConverterLiquidity', () => {
 
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
-                await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
+                await converter.addReserve(NATIVE_TOKEN_ADDRESS, weights[i] * 10000);
             } else {
                 const erc20Token = await TestStandardToken.new('name', 'symbol', 0, MAX_UINT256);
                 await converter.addReserve(erc20Token.address, weights[i] * 10000);
@@ -276,7 +276,7 @@ describe('ConverterLiquidity', () => {
     });
 
     const approve = async (reserveToken, converter, amount) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return;
         }
 
@@ -285,7 +285,7 @@ describe('ConverterLiquidity', () => {
     };
 
     const getAllowance = async (reserveToken, converter) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return new BN(0);
         }
 
@@ -294,7 +294,7 @@ describe('ConverterLiquidity', () => {
     };
 
     const getBalance = async (reserveToken, converter) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return balance.current(converter.address);
         }
 

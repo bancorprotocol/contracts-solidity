@@ -27,8 +27,6 @@ import "../token/interfaces/IDSToken.sol";
  * The contract is upgradable.
  */
 contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
-    uint32 private constant PPM_RESOLUTION = 1000000;
-
     /**
      * @dev triggered when a converter anchor is added to the registry
      *

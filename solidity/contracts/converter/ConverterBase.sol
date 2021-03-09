@@ -41,9 +41,6 @@ import "../utility/interfaces/IWhitelist.sol";
 abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
 
-    uint32 internal constant PPM_RESOLUTION = 1000000;
-    IERC20 internal constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-
     struct Reserve {
         uint256 balance; // reserve balance
         uint32 weight; // reserve weight, represented in ppm, 1-1000000
@@ -146,7 +143,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override validReserve(ETH_RESERVE_ADDRESS) {}
+    receive() external payable override validReserve(NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev withdraws ether
@@ -156,7 +153,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
      *
      * @param _to  address to send the ETH to
      */
-    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(ETH_RESERVE_ADDRESS) {
+    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(NATIVE_TOKEN_ADDRESS) {
         address converterUpgrader = addressOf(CONVERTER_UPGRADER);
 
         // verify that the converter is inactive or that the owner is the upgrader contract
@@ -164,7 +161,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
         _to.transfer(address(this).balance);
 
         // sync the ETH reserve balance
-        syncReserveBalance(ETH_RESERVE_ADDRESS);
+        syncReserveBalance(NATIVE_TOKEN_ADDRESS);
     }
 
     /**
@@ -410,7 +407,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
      * @param _reserveToken    address of the reserve token
      */
     function syncReserveBalance(IERC20 _reserveToken) internal validReserve(_reserveToken) {
-        if (_reserveToken == ETH_RESERVE_ADDRESS) {
+        if (_reserveToken == NATIVE_TOKEN_ADDRESS) {
             reserves[_reserveToken].balance = address(this).balance;
         } else {
             reserves[_reserveToken].balance = _reserveToken.balanceOf(address(this));
