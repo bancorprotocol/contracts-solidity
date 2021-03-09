@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const { registry } = require('./helpers/Constants');
 
 const Whitelist = ethers.getContractFactory('Whitelist');
 
