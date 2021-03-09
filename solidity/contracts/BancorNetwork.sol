@@ -306,7 +306,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             if (stepData.isV28OrHigherConverter) {
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
-                if (i != 0 && _data[i - 1].beneficiary == address(this) && stepData.sourceToken != ETH_RESERVE_ADDRESS) {
+                if (i != 0 && _data[i - 1].beneficiary == address(this) && stepData.sourceToken != NATIVE_TOKEN_ADDRESS) {
                     stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
                 }
             }
@@ -325,7 +325,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
                     fromAmount,
                     1
                 );
-            } else if (stepData.sourceToken == ETH_RESERVE_ADDRESS) {
+            } else if (stepData.sourceToken == NATIVE_TOKEN_ADDRESS) {
                 toAmount = stepData.converter.convert{ value: msg.value }(
                     stepData.sourceToken,
                     stepData.targetToken,
@@ -377,10 +377,10 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
 
         if (msg.value > 0) {
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-            require(_sourceToken == ETH_RESERVE_ADDRESS, "ERR_INVALID_SOURCE_TOKEN");
+            require(_sourceToken == NATIVE_TOKEN_ADDRESS, "ERR_INVALID_SOURCE_TOKEN");
             require(isNewerConverter, "ERR_CONVERTER_NOT_SUPPORTED");
         } else {
-            require(_sourceToken != ETH_RESERVE_ADDRESS, "ERR_INVALID_SOURCE_TOKEN");
+            require(_sourceToken != NATIVE_TOKEN_ADDRESS, "ERR_INVALID_SOURCE_TOKEN");
             if (isNewerConverter) {
                 // newer converter - transfer the tokens from the sender directly to the converter
                 _sourceToken.safeTransferFrom(msg.sender, address(firstConverter), _amount);
@@ -411,7 +411,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         }
 
         IERC20 targetToken = stepData.targetToken;
-        assert(targetToken != ETH_RESERVE_ADDRESS);
+        assert(targetToken != NATIVE_TOKEN_ADDRESS);
         targetToken.safeTransfer(_beneficiary, _amount);
     }
 

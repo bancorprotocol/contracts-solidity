@@ -1,7 +1,7 @@
 const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
 const { expectRevert, BN, constants, time, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
-const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
 const { ZERO_ADDRESS } = constants;
@@ -56,7 +56,7 @@ describe('LiquidityProtection', () => {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
             const initPool = async (isETH = false, whitelist = true, standard = true) => {
                 if (isETH) {
-                    baseTokenAddress = ETH_RESERVE_ADDRESS;
+                    baseTokenAddress = NATIVE_TOKEN_ADDRESS;
                 } else {
                     // create a pool with ERC20 as the base token
                     baseToken = await DSToken.new('RSV1', 'RSV1', 18);
@@ -170,7 +170,7 @@ describe('LiquidityProtection', () => {
             };
 
             const getBalance = async (token, address, account) => {
-                if (address === ETH_RESERVE_ADDRESS) {
+                if (address === NATIVE_TOKEN_ADDRESS) {
                     return balance.current(account);
                 }
 

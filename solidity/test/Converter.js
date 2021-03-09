@@ -2,7 +2,7 @@ const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-
 const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const { ZERO_ADDRESS } = constants;
 
@@ -128,11 +128,11 @@ describe('Converter', () => {
     };
 
     const getReserve1Address = (isETH) => {
-        return isETH ? ETH_RESERVE_ADDRESS : reserveToken.address;
+        return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
     const getBalance = async (token, address, account) => {
-        if (address === ETH_RESERVE_ADDRESS) {
+        if (address === NATIVE_TOKEN_ADDRESS) {
             return balance.current(account);
         }
 

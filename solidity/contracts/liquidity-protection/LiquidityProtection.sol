@@ -275,7 +275,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         }
 
         // verify that ETH was passed with the call if needed
-        verifyEthAmount(_reserveToken == ETH_RESERVE_ADDRESS ? _amount : 0);
+        verifyEthAmount(_reserveToken == NATIVE_TOKEN_ADDRESS ? _amount : 0);
         return addBaseTokenLiquidity(_owner, _poolAnchor, _reserveToken, networkTokenLocal, _amount);
     }
 
@@ -363,7 +363,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // transfer the base tokens from the caller and approve the converter
         ensureAllowance(_networkToken, address(converter), newNetworkLiquidityAmount);
-        if (_baseToken != ETH_RESERVE_ADDRESS) {
+        if (_baseToken != NATIVE_TOKEN_ADDRESS) {
             _baseToken.safeTransferFrom(msg.sender, address(this), _amount);
             ensureAllowance(_baseToken, address(converter), _amount);
         }
@@ -718,7 +718,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // transfer the base tokens to the caller
         uint256 baseBalance;
-        if (liquidity.reserveToken == ETH_RESERVE_ADDRESS) {
+        if (liquidity.reserveToken == NATIVE_TOKEN_ADDRESS) {
             baseBalance = address(this).balance;
             _provider.transfer(baseBalance);
         } else {

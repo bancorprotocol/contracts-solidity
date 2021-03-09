@@ -34,7 +34,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         address _to,
         uint256 _amount
     ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) {
-        if (_token == ETH_RESERVE_ADDRESS) {
+        if (_token == NATIVE_TOKEN_ADDRESS) {
             payable(_to).transfer(_amount);
         } else {
             _token.safeTransfer(_to, _amount);
