@@ -1,4 +1,4 @@
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
 
 const { BigNumber } = require('ethers');
 
