@@ -300,7 +300,7 @@ describe('StandardPoolConverter', () => {
         describe(`${isETHReserve === 0 ? '(with ERC20 reserves)' : '(with ETH reserve)'}:`, () => {
             for (const conversionFee of [0, 5, 10, 20, 25]) {
                 for (const networkFee of [0, 5, 10, 20, 25]) {
-                    it.only(`verifies conversion with conversion fee = ${conversionFee}% and network fee = ${networkFee}%`, async () => {
+                    it(`verifies conversion with conversion fee = ${conversionFee}% and network fee = ${networkFee}%`, async () => {
                         const converter = await initConverter(true, isETHReserve, conversionFee * 10000);
                         await converter.setConversionFee(conversionFee * 10000);
                         await networkSettings.setNetworkFee(networkFee * 10000);
