@@ -19,9 +19,6 @@ import "../utility/ContractRegistryClient.sol";
  * and then the upgrader 'upgrade' function should be executed directly.
  */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
-    uint32 private constant PPM_RESOLUTION = 1000000;
-    IERC20 private constant ETH_RESERVE_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
-
     /**
      * @dev triggered when the contract accept a converter ownership
      *
@@ -167,14 +164,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             IERC20 reserveAddress = _oldConverter.connectorTokens(i);
             (, uint32 weight, , , ) = _oldConverter.connectors(reserveAddress);
 
-            // Ether reserve
-            if (reserveAddress == ETH_RESERVE_ADDRESS) {
-                _newConverter.addReserve(ETH_RESERVE_ADDRESS, weight);
-            }
-            // ERC20 reserve token
-            else {
-                _newConverter.addReserve(reserveAddress, weight);
-            }
+            _newConverter.addReserve(reserveAddress, weight);
         }
     }
 
@@ -204,7 +194,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         for (uint16 i = 0; i < reserveTokenCount; i++) {
             IERC20 reserveAddress = _oldConverter.connectorTokens(i);
             // Ether reserve
-            if (reserveAddress == ETH_RESERVE_ADDRESS) {
+            if (reserveAddress == NATIVE_TOKEN_ADDRESS) {
                 if (address(_oldConverter).balance > 0) {
                     _oldConverter.withdrawETH(address(_newConverter));
                 }
