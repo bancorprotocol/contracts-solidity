@@ -1,17 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const { contract, web3 } = require('@openzeppelin/test-environment');
-const { constants } = require('@openzeppelin/test-helpers');
+const { ContractFactory } = require('ethers');
 
-const truffleContract = require('@truffle/contract');
-
-const { ZERO_ADDRESS } = constants;
-
-const Converter = contract.fromArtifact('ConverterBase');
-const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
-const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
-const FixedRatePoolConverter = contract.fromArtifact('FixedRatePoolConverter');
+const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
+const StandardPoolConverter = ethers.getContractFactory('StandardPoolConverter');
+const FixedRatePoolConverter = ethers.getContractFactory('FixedRatePoolConverter');
 
 module.exports.new = async (
     type,
@@ -22,24 +16,23 @@ module.exports.new = async (
     weight,
     version
 ) => {
+    accounts = await ethers.getSigners();
+
     if (version) {
         const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
         const bin = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.bin`));
-        const converter = truffleContract({ abi: JSON.parse(abi), unlinked_binary: `0x${bin}` });
-        const block = await web3.eth.getBlock('latest');
-        converter.setProvider(web3.currentProvider);
-        converter.defaults({ from: (await web3.eth.getAccounts())[0], gas: block.gasLimit });
+        const converter = new ContractFactory(JSON.parse(abi), `0x${bin}`, accounts[0]);
 
-        return converter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
+        return await converter.deploy(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
 
     const converterType = {
-        1: LiquidityPoolV1Converter,
-        3: StandardPoolConverter,
-        4: FixedRatePoolConverter
+        1: await LiquidityPoolV1Converter,
+        3: await StandardPoolConverter,
+        4: await FixedRatePoolConverter
     }[type];
-    const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
-    if (reserveTokenAddress !== ZERO_ADDRESS) {
+    const converter = await converterType.deploy(tokenAddress, registryAddress, maxConversionFee);
+    if (reserveTokenAddress !== ethers.constants.AddressZero) {
         await converter.addReserve(reserveTokenAddress, weight);
     }
 
@@ -47,11 +40,11 @@ module.exports.new = async (
 };
 
 module.exports.at = async (address, version) => {
+    console.log('2');
     if (version) {
         const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
-        const converter = truffleContract({ abi: JSON.parse(abi) });
-        return converter.at(address);
+        return await ethers.getContractAt(JSON.parse(abi), address);
     }
 
-    return Converter.at(address);
+    return await ethers.getContractAt('ConverterBase', address);
 };
