@@ -38,7 +38,7 @@ contract StandardPoolConverter is
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
 
     uint256 private __reserveBalances;
-    uint256 private __reserveBalancesProd;
+    uint256 public __reserveBalancesProd;
     IERC20[] private __reserveTokens;
     mapping(IERC20 => uint256) private __reserveIds;
 
@@ -372,18 +372,20 @@ contract StandardPoolConverter is
     }
 
     /**
-     * @dev transfers a portion of the accumulated fees
+     * @dev transfers a portion of the accumulated conversion fees
      */
     function transferFees() public {
-        transferFeesAndSyncReserveBalances(0);
+        (uint256 reserveBalance0, uint256 reserveBalance1) = transferFeesAndSyncReserveBalances(0);
+        __reserveBalancesProd = reserveBalance0 * reserveBalance1;
     }
 
     /**
-     * @dev transfers a portion of the accumulated fees and syncs the reserve balances
+     * @dev transfers a portion of the accumulated conversion fees and syncs the reserve balances
      *
      * @param _value    amount of ether to exclude from the ether reserve balance (if relevant)
+     * @return new reserve balances
      */
-    function transferFeesAndSyncReserveBalances(uint256 _value) internal {
+    function transferFeesAndSyncReserveBalances(uint256 _value) internal returns (uint256, uint256) {
         syncReserveBalances(_value);
 
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
@@ -401,8 +403,9 @@ contract StandardPoolConverter is
             reserveBalance0 -= fee0;
             reserveBalance1 -= fee1;
             setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
-            __reserveBalancesProd = reserveBalance0 * reserveBalance1;
         }
+
+        return (reserveBalance0, reserveBalance1);
     }
 
     /**
@@ -870,12 +873,11 @@ contract StandardPoolConverter is
         // get the total supply
         uint256 totalSupply = poolToken.totalSupply();
 
-        // transfer the fees and sync the balances to ensure no mismatch
-        transferFeesAndSyncReserveBalances(msg.value);
-
         uint256[2] memory oldReserveBalances;
         uint256[2] memory newReserveBalances;
-        (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
+
+        // transfer the fees and sync the balances to ensure no mismatch
+        (oldReserveBalances[0], oldReserveBalances[1]) = transferFeesAndSyncReserveBalances(msg.value);
 
         uint256 amount;
         uint256[2] memory reserveAmounts;
@@ -923,6 +925,9 @@ contract StandardPoolConverter is
 
         // set the reserve balances
         setReserveBalances(1, 2, newReserveBalances[0], newReserveBalances[1]);
+
+        // set the reserve balances product
+        __reserveBalancesProd = newReserveBalances[0] * newReserveBalances[1];
 
         // verify that the equivalent amount of tokens is equal to or larger than the user's expectation
         require(amount >= _minReturn, "ERR_RETURN_TOO_LOW");
@@ -1014,13 +1019,14 @@ contract StandardPoolConverter is
         // destroy the user tokens
         poolToken.destroy(msg.sender, _amount);
 
-        // transfer the fees and sync the balances to ensure no mismatch
-        transferFeesAndSyncReserveBalances(0);
-
         uint256 newPoolTokenSupply = totalSupply.sub(_amount);
+
         uint256[2] memory oldReserveBalances;
         uint256[2] memory newReserveBalances;
-        (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
+
+        // transfer the fees and sync the balances to ensure no mismatch
+        (oldReserveBalances[0], oldReserveBalances[1]) = transferFeesAndSyncReserveBalances(0);
+
         uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
 
         for (uint256 i = 0; i < 2; i++) {
@@ -1042,6 +1048,9 @@ contract StandardPoolConverter is
 
         // set the reserve balances
         setReserveBalances(1, 2, newReserveBalances[0], newReserveBalances[1]);
+
+        // set the reserve balancesb product
+        __reserveBalancesProd = newReserveBalances[0] * newReserveBalances[1];
 
         if (inputRearranged) {
             uint256 tempReserveAmount = reserveAmounts[0];

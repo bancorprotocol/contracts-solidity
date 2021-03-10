@@ -305,7 +305,7 @@ describe('StandardPoolConverter', () => {
                         await converter.setConversionFee(conversionFee * 10000);
                         await networkSettings.setNetworkFee(networkFee * 10000);
 
-                        const amount = new BN(100000000);
+                        const amount = new BN(1000);
                         let value = 0;
                         if (isETHReserve) {
                             value = amount;
@@ -334,19 +334,24 @@ describe('StandardPoolConverter', () => {
                             _toAmount: targetAmountAndFee[0]
                         });
                         const before = {
-                            balance1: await (isETHReserve ? web3.eth.getBalance(NETWORK_FEE_WALLET) : reserveToken.balanceOf(NETWORK_FEE_WALLET)),
-                            balance2: await reserveToken2.balanceOf(NETWORK_FEE_WALLET)
+                            poolBalance1  : await (isETHReserve ? web3.eth.getBalance(converter.address) : reserveToken.balanceOf(converter.address)),
+                            walletBalance1: await (isETHReserve ? web3.eth.getBalance(NETWORK_FEE_WALLET) : reserveToken.balanceOf(NETWORK_FEE_WALLET)),
+                            poolBalance2  : await reserveToken2.balanceOf(converter.address),
+                            walletBalance2: await reserveToken2.balanceOf(NETWORK_FEE_WALLET),
+                            __reserveBalancesProd: await converter.__reserveBalancesProd()
                         };
                         await converter.transferFees();
                         const after = {
-                            balance1: await (isETHReserve ? web3.eth.getBalance(NETWORK_FEE_WALLET) : reserveToken.balanceOf(NETWORK_FEE_WALLET)),
-                            balance2: await reserveToken2.balanceOf(NETWORK_FEE_WALLET)
+                            poolBalance1  : await (isETHReserve ? web3.eth.getBalance(converter.address) : reserveToken.balanceOf(converter.address)),
+                            walletBalance1: await (isETHReserve ? web3.eth.getBalance(NETWORK_FEE_WALLET) : reserveToken.balanceOf(NETWORK_FEE_WALLET)),
+                            poolBalance2  : await reserveToken2.balanceOf(converter.address),
+                            walletBalance2: await reserveToken2.balanceOf(NETWORK_FEE_WALLET),
+                            __reserveBalancesProd: await converter.__reserveBalancesProd()
                         };
-                        console.log(after.balance1.toString(), after.balance2.toString());
-                        //expect(before.balance1).to.be.bignumber.equal('0');
-                        //expect(before.balance2).to.be.bignumber.equal('0');
-                        //expect(after.balance1).to.be.bignumber.equal('0');
-                        //expect(after.balance2).to.be.bignumber.equal(targetAmountAndFee[0].add(targetAmountAndFee[1]).muln(conversionFee).divn(100).muln(networkFee).divn(100));
+                        console.log();
+                        for (const obj of [before, after])
+                            console.log(obj.__reserveBalancesProd.toString());
+                        console.log(after.walletBalance2.sub(before.walletBalance2).toString(), targetAmountAndFee[1].muln(networkFee).divn(200).toString());
                     });
                 }
             }
