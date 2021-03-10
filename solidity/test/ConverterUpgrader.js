@@ -201,8 +201,7 @@ describe('ConverterUpgrader', () => {
     const product = cartesian(initFuncs, [...VERSIONS, null], [false, true]);
     const combinations = product.filter(
         ([init, version, active]) =>
-            !(init === initType1WithETHReserve && version) &&
-            !(init === initType3WithETHReserve && version)
+            !(init === initType1WithETHReserve && version) && !(init === initType3WithETHReserve && version)
     );
 
     for (const [init, version, activate] of combinations) {
