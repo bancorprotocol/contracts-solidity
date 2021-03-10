@@ -1,3 +1,5 @@
+const { BigNumber } = require('ethers');
+
 module.exports = {
     registry: {
         CONTRACT_REGISTRY: ethers.utils.formatBytes32String('ContractRegistry'),
@@ -20,5 +22,26 @@ module.exports = {
         ROLE_SEEDER: ethers.utils.id('ROLE_SEEDER')
     },
 
-    ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+    ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+
+    duration: {
+        seconds: function (val) {
+            return BigNumber.from(val);
+        },
+        minutes: function (val) {
+            return BigNumber.from(val).mul(this.seconds('60'));
+        },
+        hours: function (val) {
+            return BigNumber.from(val).mul(this.minutes('60'));
+        },
+        days: function (val) {
+            return BigNumber.from(val).mul(this.hours('24'));
+        },
+        weeks: function (val) {
+            return BigNumber.from(val).mul(this.days('7'));
+        },
+        years: function (val) {
+            return BigNumber.from(val).mul(this.days('365'));
+        }
+    }
 };
