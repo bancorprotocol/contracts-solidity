@@ -1199,11 +1199,12 @@ describe('StandardPoolConverter', () => {
 
     describe('verifies that the network fee is transferred correctly when', () => {
         const TOTAL_SUPPLY = new BN(1000000000000);
-        const LIQUIDITY_AMOUNTS = [1, 2, 3, 4, 5].map((n) => new BN(1000000000 * n));
         const CONVERSION_AMOUNT = new BN(1000000);
+        const LIQUIDITY1_AMOUNTS = [1, 2, 4, 6].map((n) => new BN(1000000000 * n));
+        const LIQUIDITY2_AMOUNTS = [1, 3, 5, 7].map((n) => new BN(1000000000 * n));
 
-        for (const amount1 of LIQUIDITY_AMOUNTS) {
-            for (const amount2 of LIQUIDITY_AMOUNTS) {
+        for (const amount1 of LIQUIDITY1_AMOUNTS) {
+            for (const amount2 of LIQUIDITY2_AMOUNTS) {
                 for (const conversionFeePercent of [0, 5, 10, 20, 25]) {
                     for (const networkFeePercent of [0, 5, 10, 20, 25]) {
                         const description =
