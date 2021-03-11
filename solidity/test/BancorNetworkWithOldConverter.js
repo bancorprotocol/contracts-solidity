@@ -1,15 +1,15 @@
-const { defaultSender, contract } = require('@openzeppelin/test-environment');
-const { BN } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
+
+const { BigNumber } = require('ethers');
 
 const { registry } = require('./helpers/Constants');
 const ConverterHelper = require('./helpers/Converter');
 
-const BancorNetwork = contract.fromArtifact('BancorNetwork');
-const TestBancorNetwork = contract.fromArtifact('TestBancorNetwork');
-const DSToken = contract.fromArtifact('DSToken');
-const BancorFormula = contract.fromArtifact('BancorFormula');
-const ContractRegistry = contract.fromArtifact('ContractRegistry');
+const BancorNetwork = ethers.getContractFactory('BancorNetwork');
+const TestBancorNetwork = ethers.getContractFactory('TestBancorNetwork');
+const DSToken = ethers.getContractFactory('DSToken');
+const BancorFormula = ethers.getContractFactory('BancorFormula');
+const ContractRegistry = ethers.getContractFactory('ContractRegistry');
 
 /*
 Token network structure:
@@ -20,38 +20,43 @@ Token network structure:
 
 */
 
+const OLD_CONVERTER_VERSION = 9;
+
+let poolToken1;
+let poolToken2;
+let poolToken3;
+let contractRegistry;
+let converter;
+let bancorNetwork;
+
+let owner;
+
 describe('BancorNetworkWithOldConverter', () => {
-    const OLD_CONVERTER_VERSION = 9;
-
-    let poolToken1;
-    let poolToken2;
-    let poolToken3;
-    let contractRegistry;
-    let converter;
-    let bancorNetwork;
-    const owner = defaultSender;
-
     before(async () => {
-        // The following contracts are unaffected by the underlying tests, this can be shared.
-        contractRegistry = await ContractRegistry.new();
+        accounts = await ethers.getSigners();
 
-        const bancorFormula = await BancorFormula.new();
+        owner = accounts[0];
+
+        // The following contracts are unaffected by the underlying tests, this can be shared.
+        contractRegistry = await (await ContractRegistry).deploy();
+
+        const bancorFormula = await (await BancorFormula).deploy();
         await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     beforeEach(async () => {
-        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        poolToken1 = await DSToken.new('Token1', 'TKN1', 2);
-        await poolToken1.issue(owner, 1000000);
+        poolToken1 = await (await DSToken).deploy('Token1', 'TKN1', 2);
+        await poolToken1.issue(owner.address, 1000000);
 
-        poolToken2 = await DSToken.new('Token2', 'TKN2', 2);
-        await poolToken2.issue(owner, 2000000);
+        poolToken2 = await (await DSToken).deploy('Token2', 'TKN2', 2);
+        await poolToken2.issue(owner.address, 2000000);
 
-        poolToken3 = await DSToken.new('Token3', 'TKN3', 2);
-        await poolToken3.issue(owner, 3000000);
+        poolToken3 = await (await DSToken).deploy('Token3', 'TKN3', 2);
+        await poolToken3.issue(owner.address, 3000000);
 
         converter = await ConverterHelper.new(
             1,
@@ -72,47 +77,41 @@ describe('BancorNetworkWithOldConverter', () => {
     });
 
     it('verifies that isV28OrHigherConverter returns false', async () => {
-        const network = await TestBancorNetwork.new(0, 0);
+        const network = await (await TestBancorNetwork).deploy(0, 0);
 
-        expect(await network.isV28OrHigherConverterExternal.call(converter.address)).to.be.false();
+        expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.false;
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting a reserve to the liquid token', async () => {
-        const value = new BN(100);
-        const getReturn = await converter.getReturn.call(poolToken1.address, poolToken2.address, value);
+        const value = BigNumber.from(100);
+        const getReturn = await converter.getReturn(poolToken1.address, poolToken2.address, value);
         const returnByPath = (
-            await bancorNetwork.getReturnByPath.call(
-                [poolToken1.address, poolToken2.address, poolToken2.address],
-                value
-            )
+            await bancorNetwork.getReturnByPath([poolToken1.address, poolToken2.address, poolToken2.address], value)
         )[0];
 
-        expect(getReturn).to.be.bignumber.equal(returnByPath);
+        expect(getReturn).to.be.equal(returnByPath);
     });
 
     it('verifies that getReturnByPath returns the same amount as getReturn when converting from a token to a reserve', async () => {
-        const value = new BN(100);
-        const getReturn = await converter.getReturn.call(poolToken2.address, poolToken1.address, value);
+        const value = BigNumber.from(100);
+        const getReturn = await converter.getReturn(poolToken2.address, poolToken1.address, value);
         const returnByPath = (
-            await bancorNetwork.getReturnByPath.call(
-                [poolToken2.address, poolToken2.address, poolToken1.address],
-                value
-            )
+            await bancorNetwork.getReturnByPath([poolToken2.address, poolToken2.address, poolToken1.address], value)
         )[0];
 
-        expect(getReturn).to.be.bignumber.equal(returnByPath);
+        expect(getReturn).to.be.equal(returnByPath);
     });
 
     for (let amount = 0; amount < 10; amount++) {
         for (let fee = 0; fee < 10; fee++) {
             it(`test old getReturn with amount = ${amount} and fee = ${fee}`, async () => {
-                const tester = await TestBancorNetwork.new(amount, fee);
-                const amounts = await tester.getReturnOld.call();
+                const tester = await (await TestBancorNetwork).deploy(amount, fee);
+                const amounts = await tester.getReturnOld();
                 const returnAmount = amounts[0];
                 const returnFee = amounts[1];
 
-                expect(returnAmount).to.be.bignumber.equal(new BN(amount));
-                expect(returnFee).to.be.bignumber.equal(new BN(0));
+                expect(returnAmount).to.be.equal(BigNumber.from(amount));
+                expect(returnFee).to.be.equal(BigNumber.from(0));
             });
         }
     }
@@ -120,13 +119,13 @@ describe('BancorNetworkWithOldConverter', () => {
     for (let amount = 0; amount < 10; amount++) {
         for (let fee = 0; fee < 10; fee++) {
             it(`test new getReturn with amount = ${amount} and fee = ${fee}`, async () => {
-                const tester = await TestBancorNetwork.new(amount, fee);
-                const amounts = await tester.getReturnNew.call();
+                const tester = await (await TestBancorNetwork).deploy(amount, fee);
+                const amounts = await tester.getReturnNew();
                 const returnAmount = amounts[0];
                 const returnFee = amounts[1];
 
-                expect(returnAmount).to.be.bignumber.equal(new BN(amount));
-                expect(returnFee).to.be.bignumber.equal(new BN(fee));
+                expect(returnAmount).to.be.equal(BigNumber.from(amount));
+                expect(returnFee).to.be.equal(BigNumber.from(fee));
             });
         }
     }
