@@ -1213,7 +1213,7 @@ describe('StandardPoolConverter', () => {
                 );
             }
         }
-    
+
         for (let i = 1; i < 5; i++) {
             for (let j = 1; j < 5; j++) {
                 for (const conversionFeePercent of [0, 5, 10, 20, 25]) {
@@ -1246,12 +1246,14 @@ describe('StandardPoolConverter', () => {
                             const balance1Before = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
                             const balance2Before = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
 
+                            const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
+                            const reserveBalance2 = await reserveToken1.balanceOf(converter.address);
                             await converter.transferFees();
 
                             const balance1After = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
                             const balance2After = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
 
-                            const expectedFee1 = expectedFeeBase.mul(amount1).div(amount2);
+                            const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(balance2After);
                             const expectedFee2 = expectedFeeBase;
 
                             const actualFee1 = balance1After.sub(balance1Before);
