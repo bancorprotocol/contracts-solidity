@@ -1197,7 +1197,7 @@ describe('StandardPoolConverter', () => {
         }
     });
 
-    describe.only('verifies that the network fee is transferred correctly when', () => {
+    describe('verifies that the network fee is transferred correctly when', () => {
         const TOTAL_SUPPLY = new BN(1000000000000);
         const LIQUIDITY_AMOUNTS = [1, 2, 3, 4, 5].map((n) => new BN(1000000000 * n));
         const CONVERSION_AMOUNT = new BN(1000000);
@@ -1222,7 +1222,7 @@ describe('StandardPoolConverter', () => {
                             await converter.addReserve(reserveToken2.address, 500000);
                             await poolToken.transferOwnership(converter.address);
                             await converter.acceptTokenOwnership();
-                
+
                             await reserveToken1.approve(converter.address, amount1);
                             await reserveToken2.approve(converter.address, amount2);
                             await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [amount1, amount2], 1);
