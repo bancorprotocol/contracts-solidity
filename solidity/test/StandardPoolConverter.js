@@ -1200,7 +1200,7 @@ describe('StandardPoolConverter', () => {
     describe('verifies that the network fee is transferred correctly when', () => {
         const TOTAL_SUPPLY = new BN(1000000000000);
         const CONVERSION_AMOUNT = new BN(1000000);
-        const LIQUIDITY1_AMOUNTS = [1, 2, 4, 6].map((n) => new BN(1000000000 * n));
+        const LIQUIDITY1_AMOUNTS = [1, 2, 4, 8].map((n) => new BN(1000000000 * n));
         const LIQUIDITY2_AMOUNTS = [1, 3, 5, 7].map((n) => new BN(1000000000 * n));
 
         for (const amount1 of LIQUIDITY1_AMOUNTS) {
@@ -1233,7 +1233,7 @@ describe('StandardPoolConverter', () => {
                             const response = await bancorNetwork.convertByPath2(conversionPath, CONVERSION_AMOUNT, 1, ZERO_ADDRESS);
                             const events = await converter.getPastEvents('Conversion', { fromBlock: response.receipt.blockNumber });
 
-                            const expectedFeeBase = events[0].args._conversionFee.muln(networkFeePercent).divn(200);
+                            const expectedFeeBase = events[0].args._conversionFee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
                             const reserveBalance1 = amount1.add(CONVERSION_AMOUNT);
                             const reserveBalance2 = amount2.sub(events[0].args._return);
 
@@ -1251,8 +1251,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = balance1After.sub(balance1Before);
                             const actualFee2 = balance2After.sub(balance2Before);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, networkFeePercent / 100);
-                            expectAlmostEqual(actualFee2, expectedFee2, networkFeePercent / 100);
+                            expectAlmostEqual(actualFee1, expectedFee1, '0.00042');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0.00023');
                         });
                     }
                 }
