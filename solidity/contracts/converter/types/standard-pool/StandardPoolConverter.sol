@@ -394,8 +394,7 @@ contract StandardPoolConverter is
         if (curr > prev) {
             INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
             (address networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
-            uint256 n = (curr - prev) * networkFee;
-            uint256 d = (curr * (PPM_RESOLUTION - networkFee)).add(prev * networkFee * 2);
+            (uint256 n, uint256 d) = networkFeeRatio(curr, prev, networkFee);
             uint256 fee0 = reserveBalance0.mul(n).div(d);
             uint256 fee1 = reserveBalance1.mul(n).div(d);
             safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
@@ -422,8 +421,7 @@ contract StandardPoolConverter is
 
         if (curr > prev) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-            uint256 n = (curr - prev) * networkFee;
-            uint256 d = (curr * (PPM_RESOLUTION - networkFee)).add(prev * networkFee * 2);
+            (uint256 n, uint256 d) = networkFeeRatio(curr, prev, networkFee);
             return [
                 reserveBalance0.sub(reserveBalance0.mul(n).div(d)),
                 reserveBalance1.sub(reserveBalance1.mul(n).div(d))
@@ -446,8 +444,7 @@ contract StandardPoolConverter is
 
         if (curr > prev) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-            uint256 n = (curr - prev) * networkFee;
-            uint256 d = (curr * (PPM_RESOLUTION - networkFee)).add(prev * networkFee * 2);
+            (uint256 n, uint256 d) = networkFeeRatio(curr, prev, networkFee);
             return thisReserveBalance.sub(thisReserveBalance.mul(n).div(d));
         }
 
@@ -1360,6 +1357,17 @@ contract StandardPoolConverter is
         }
 
         return _amount.mul(_reserveBalance) / _supply;
+    }
+
+    function networkFeeRatio(
+        uint256 curr,
+        uint256 prev,
+        uint256 networkFee
+    ) private pure returns (uint256, uint256) {
+        return (
+            (curr - prev) * networkFee,
+            (curr * (PPM_RESOLUTION - networkFee)).add(prev * networkFee * 2)
+        );
     }
 
     /**
