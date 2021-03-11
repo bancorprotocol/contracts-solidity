@@ -389,12 +389,12 @@ contract StandardPoolConverter is
         syncReserveBalances(_value);
 
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
-        (uint256 curr, uint256 prev) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
+        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
-        if (curr > prev) {
+        if (currPoint > prevPoint) {
             INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
             (address networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
-            (uint256 n, uint256 d) = networkFeeRatio(curr, prev, networkFee);
+            (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
             uint256 fee0 = reserveBalance0.mul(n).div(d);
             uint256 fee1 = reserveBalance1.mul(n).div(d);
             safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
@@ -417,11 +417,11 @@ contract StandardPoolConverter is
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
-        (uint256 curr, uint256 prev) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
+        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
-        if (curr > prev) {
+        if (currPoint > prevPoint) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-            (uint256 n, uint256 d) = networkFeeRatio(curr, prev, networkFee);
+            (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
             return [
                 reserveBalance0.sub(reserveBalance0.mul(n).div(d)),
                 reserveBalance1.sub(reserveBalance1.mul(n).div(d))
@@ -440,11 +440,11 @@ contract StandardPoolConverter is
     function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
         uint256 reserveId = __reserveIds[_reserveToken];
         (uint256 thisReserveBalance, uint256 otherReserveBalance) = reserveBalances(reserveId, 3 - reserveId);
-        (uint256 curr, uint256 prev) = networkFeePoints(thisReserveBalance * otherReserveBalance, __reserveBalancesProd);
+        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(thisReserveBalance * otherReserveBalance, __reserveBalancesProd);
 
-        if (curr > prev) {
+        if (currPoint > prevPoint) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-            (uint256 n, uint256 d) = networkFeeRatio(curr, prev, networkFee);
+            (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
             return thisReserveBalance.sub(thisReserveBalance.mul(n).div(d));
         }
 
@@ -1363,13 +1363,13 @@ contract StandardPoolConverter is
     }
 
     function networkFeeRatio(
-        uint256 curr,
-        uint256 prev,
+        uint256 currPoint,
+        uint256 prevPoint,
         uint256 networkFee
     ) private pure returns (uint256, uint256) {
         return (
-            (curr - prev) * networkFee,
-            (curr * (PPM_RESOLUTION - networkFee)).add(prev * networkFee * 2)
+            (currPoint - prevPoint) * networkFee,
+            (currPoint * (PPM_RESOLUTION - networkFee)).add(prevPoint * networkFee * 2)
         );
     }
 
