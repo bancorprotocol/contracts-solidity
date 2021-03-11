@@ -1202,20 +1202,10 @@ describe('StandardPoolConverter', () => {
         const LIQUIDITY_AMOUNT = new BN(1000000000);
         const CONVERSION_AMOUNT = new BN(1000000);
 
-        function expectAlmostEqual(actual, expected, maxAbsoluteError, maxRelativeError) {
-            if (!actual.eq(expected)) {
-                actual = Decimal(actual.toString());
-                expected = Decimal(expected.toString());
-                const absoluteError = actual.sub(expected).abs();
-                const relativeError = actual.div(expected).sub(1).abs();
-                expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.be.true(
-                    `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
-                );
-            }
-        }
+        const liquidityAmounts = [1, 2, 3, 4, 5].map((n) => LIQUIDITY_AMOUNT.muln(n));
 
-        for (let i = 1; i < 5; i++) {
-            for (let j = 1; j < 5; j++) {
+        for (const amount1 of liquidityAmounts) {
+            for (const amount2 of liquidityAmounts) {
                 for (const conversionFeePercent of [0, 5, 10, 20, 25]) {
                     for (const networkFeePercent of [0, 5, 10, 20, 25]) {
                         it(`when conversion fee = ${conversionFeePercent}% and network fee = ${networkFeePercent}%`, async () => {                
@@ -1231,8 +1221,6 @@ describe('StandardPoolConverter', () => {
                             await poolToken.transferOwnership(converter.address);
                             await converter.acceptTokenOwnership();
                 
-                            const amount1 = LIQUIDITY_AMOUNT.muln(i);
-                            const amount2 = LIQUIDITY_AMOUNT.muln(j);
                             await reserveToken1.approve(converter.address, amount1);
                             await reserveToken2.approve(converter.address, amount2);
                             await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [amount1, amount2], 1);
@@ -1241,13 +1229,14 @@ describe('StandardPoolConverter', () => {
                             await reserveToken1.approve(bancorNetwork.address, CONVERSION_AMOUNT);
                             const response = await bancorNetwork.convertByPath2(conversionPath, CONVERSION_AMOUNT, 1, ZERO_ADDRESS);
                             const events = await converter.getPastEvents('Conversion', { fromBlock: response.receipt.blockNumber });
+
                             const expectedFeeBase = events[0].args._conversionFee.muln(networkFeePercent).divn(200);
+                            const reserveBalance1 = amount1.add(CONVERSION_AMOUNT);
+                            const reserveBalance2 = amount2.sub(events[0].args._return);
 
                             const balance1Before = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
                             const balance2Before = await reserveToken2.balanceOf(NETWORK_FEE_WALLET);
 
-                            const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
-                            const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
                             await converter.transferFees();
 
                             const balance1After = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
@@ -1259,8 +1248,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = balance1After.sub(balance1Before);
                             const actualFee2 = balance2After.sub(balance2Before);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.1');
-                            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.1');
+                            expectAlmostEqual(actualFee1, expectedFee1, networkFeePercent / 100);
+                            expectAlmostEqual(actualFee2, expectedFee2, networkFeePercent / 100);
                         });
                     }
                 }
