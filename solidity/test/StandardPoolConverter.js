@@ -1197,18 +1197,20 @@ describe('StandardPoolConverter', () => {
         }
     });
 
-    describe.only('verifies that the network fee is transferred correctly', () => {
+    describe.only('verifies that the network fee is transferred correctly when', () => {
         const TOTAL_SUPPLY = new BN(1000000000000);
-        const LIQUIDITY_AMOUNT = new BN(1000000000);
+        const LIQUIDITY_AMOUNTS = [1, 2, 3, 4, 5].map((n) => new BN(1000000000 * n));
         const CONVERSION_AMOUNT = new BN(1000000);
 
-        const liquidityAmounts = [1, 2, 3, 4, 5].map((n) => LIQUIDITY_AMOUNT.muln(n));
-
-        for (const amount1 of liquidityAmounts) {
-            for (const amount2 of liquidityAmounts) {
+        for (const amount1 of LIQUIDITY_AMOUNTS) {
+            for (const amount2 of LIQUIDITY_AMOUNTS) {
                 for (const conversionFeePercent of [0, 5, 10, 20, 25]) {
                     for (const networkFeePercent of [0, 5, 10, 20, 25]) {
-                        it(`when conversion fee = ${conversionFeePercent}% and network fee = ${networkFeePercent}%`, async () => {                
+                        const description =
+                            `balances = [${amount1}, ${amount2}], ` + 
+                            `conversion fee = ${conversionFeePercent}% ` +
+                            `and network fee = ${networkFeePercent}%`;
+                        it(description, async () => {                
                             const poolToken = await DSToken.new('token0', 'token0', 18);
                             const reserveToken1 = await TestStandardToken.new('token1', 'token1', 18, TOTAL_SUPPLY);
                             const reserveToken2 = await TestStandardToken.new('token2', 'token2', 18, TOTAL_SUPPLY);
