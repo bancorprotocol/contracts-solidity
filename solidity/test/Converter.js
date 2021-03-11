@@ -1,6 +1,4 @@
 const { expect } = require('chai');
-const { waffle } = require('hardhat');
-const provider = waffle.provider;
 
 const { BigNumber } = require('ethers');
 
@@ -147,7 +145,7 @@ describe('Converter', () => {
 
     const getBalance = async (token, address, account) => {
         if (address === ETH_RESERVE_ADDRESS) {
-            return provider.getBalance(account);
+            return ethers.provider.getBalance(account);
         }
 
         return token.balanceOf(account);

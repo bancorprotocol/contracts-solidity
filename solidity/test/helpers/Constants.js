@@ -1,5 +1,9 @@
 const { BigNumber } = require('ethers');
 
+const advanceBlock = async () => {
+    return await ethers.provider.send('evm_mine', [new Date().getTime()]);
+};
+
 module.exports = {
     registry: {
         CONTRACT_REGISTRY: ethers.utils.formatBytes32String('ContractRegistry'),
@@ -43,5 +47,6 @@ module.exports = {
         years: function (val) {
             return BigNumber.from(val).mul(this.days('365'));
         }
-    }
+    },
+    advanceBlock
 };
