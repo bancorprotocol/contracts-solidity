@@ -40,7 +40,6 @@ module.exports.new = async (
 };
 
 module.exports.at = async (address, version) => {
-    console.log('2');
     if (version) {
         const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
         return await ethers.getContractAt(JSON.parse(abi), address);
