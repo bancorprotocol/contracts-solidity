@@ -389,7 +389,7 @@ contract StandardPoolConverter is
         syncReserveBalances(_value);
 
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
-        (uint256 curr, uint256 prev) = reserveBalancePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
+        (uint256 curr, uint256 prev) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
         if (curr > prev) {
             INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
@@ -417,7 +417,7 @@ contract StandardPoolConverter is
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
-        (uint256 curr, uint256 prev) = reserveBalancePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
+        (uint256 curr, uint256 prev) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
         if (curr > prev) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
@@ -440,7 +440,7 @@ contract StandardPoolConverter is
     function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
         uint256 reserveId = __reserveIds[_reserveToken];
         (uint256 thisReserveBalance, uint256 otherReserveBalance) = reserveBalances(reserveId, 3 - reserveId);
-        (uint256 curr, uint256 prev) = reserveBalancePoints(thisReserveBalance * otherReserveBalance, __reserveBalancesProd);
+        (uint256 curr, uint256 prev) = networkFeePoints(thisReserveBalance * otherReserveBalance, __reserveBalancesProd);
 
         if (curr > prev) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
@@ -449,13 +449,6 @@ contract StandardPoolConverter is
         }
 
         return thisReserveBalance;
-    }
-
-    function reserveBalancePoints(uint256 currProd, uint256 prevProd) internal pure returns (uint256, uint256) {
-        return (
-            currProd > 0 ? MathEx.floorSqrt(currProd) : 0,
-            prevProd > 0 ? MathEx.floorSqrt(prevProd) : 0
-        );
     }
 
     /**
@@ -1357,6 +1350,16 @@ contract StandardPoolConverter is
         }
 
         return _amount.mul(_reserveBalance) / _supply;
+    }
+
+    function networkFeePoints(
+        uint256 currProd,
+        uint256 prevProd
+    ) private pure returns (uint256, uint256) {
+        return (
+            currProd > 0 ? MathEx.floorSqrt(currProd) : 0,
+            prevProd > 0 ? MathEx.floorSqrt(prevProd) : 0
+        );
     }
 
     function networkFeeRatio(
