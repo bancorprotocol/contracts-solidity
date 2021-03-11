@@ -38,7 +38,7 @@ contract StandardPoolConverter is
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
 
     uint256 private __reserveBalances;
-    uint256 public __reserveBalancesProd;
+    uint256 private __reserveBalancesProd;
     IERC20[] private __reserveTokens;
     mapping(IERC20 => uint256) private __reserveIds;
 
