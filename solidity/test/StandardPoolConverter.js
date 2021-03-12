@@ -1251,8 +1251,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = balance1After.sub(balance1Before);
                             const actualFee2 = balance2After.sub(balance2Before);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0.00169');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0.00023');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0.00507');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0.00177');
                         });
                     }
                 }
