@@ -211,7 +211,7 @@ contract StandardPoolConverter is
     /**
      * @dev transfers the anchor ownership
      * the new owner needs to accept the transfer
-     * can only be called by the converter upgrder while the upgrader is the owner
+     * can only be called by the converter upgrader while the upgrader is the owner
      * note that prior to version 28, you should use 'transferAnchorOwnership' instead
      *
      * @param _newOwner    new token owner
