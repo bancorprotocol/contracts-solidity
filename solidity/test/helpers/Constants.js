@@ -4,6 +4,11 @@ const advanceBlock = async () => {
     return await ethers.provider.send('evm_mine', [new Date().getTime()]);
 };
 
+const latest = async () => {
+    const block = await ethers.provider.getBlock('latest');
+    return BigNumber.from(block.timestamp);
+};
+
 module.exports = {
     registry: {
         CONTRACT_REGISTRY: ethers.utils.formatBytes32String('ContractRegistry'),
@@ -48,5 +53,6 @@ module.exports = {
             return BigNumber.from(val).mul(this.days('365'));
         }
     },
-    advanceBlock
+    advanceBlock,
+    latest
 };
