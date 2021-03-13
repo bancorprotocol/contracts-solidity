@@ -13,32 +13,66 @@ import "./interfaces/ITokenHolder.sol";
  *
  * We consider every contract to be a 'token holder' since it's currently not possible
  * for a contract to deny receiving tokens.
- *
- * Note that we use the non standard ERC-20 interface which has no return value for transfer
- * in order to support both non standard as well as standard token contracts.
- * see https://github.com/ethereum/solidity/issues/4116
  */
 contract TokenHolder is ITokenHolder, Owned, Utils {
     using SafeERC20 for IERC20;
 
+    // prettier-ignore
+    receive() external payable override virtual {}
+
     /**
-     * @dev withdraws tokens held by the contract and sends them to an account
+     * @dev withdraws funds held by the contract and sends them to an account
      * can only be called by the owner
      *
-     * @param _token   ERC20 token contract address
-     * @param _to      account to receive the new amount
-     * @param _amount  amount to withdraw
+     * @param token ERC20 token contract address (with a special handling of NATIVE_TOKEN_ADDRESS)
+     * @param to account to receive the new amount
+     * @param amount amount to withdraw
      */
     function withdrawTokens(
-        IERC20 _token,
-        address _to,
-        uint256 _amount
-    ) public virtual override ownerOnly validAddress(address(_token)) validAddress(_to) notThis(_to) {
-        if (_token == NATIVE_TOKEN_ADDRESS) {
-            payable(_to).transfer(_amount);
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) public virtual override ownerOnly validAddress(to) {
+        withdraw(token, to, amount);
+    }
+
+    /**
+     * @dev withdraws multiple funds held by the contract and sends them to an account
+     * can only be called by the owner
+     *
+     * @param tokens ERC20 token contract addresses (with a special handling of NATIVE_TOKEN_ADDRESS)
+     * @param to account to receive the new amount
+     * @param amounts amounts to withdraw
+     */
+    function withdrawMultipleTokens(
+        IERC20[] calldata tokens,
+        address to,
+        uint256[] calldata amounts
+    ) public virtual override ownerOnly validAddress(to) {
+        uint256 length = tokens.length;
+        require(length == amounts.length, "ERR_INVALID_LENGTH");
+
+        for (uint256 i = 0; i < length; ++i) {
+            withdraw(tokens[i], to, amounts[i]);
         }
-        else {
-            _token.safeTransfer(_to, _amount);
+    }
+
+    /**
+     * @dev withdraws funds held by the contract and sends them to an account
+     *
+     * @param token ERC20 token contract address
+     * @param to account to receive the new amount
+     * @param amount amount to withdraw
+     */
+    function withdraw(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) private {
+        if (token == NATIVE_TOKEN_ADDRESS) {
+            payable(to).transfer(amount);
+        } else {
+            token.safeTransfer(to, amount);
         }
     }
 }

@@ -169,26 +169,7 @@ contract StandardPoolConverter is
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override validReserve(NATIVE_TOKEN_ADDRESS) {}
-
-    /**
-     * @dev withdraws ether
-     * can only be called by the owner if the converter is inactive or by upgrader contract
-     * can only be called after the upgrader contract has accepted the ownership of this contract
-     * can only be called if the converter has an ETH reserve
-     *
-     * @param _to  address to send the ETH to
-     */
-    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(NATIVE_TOKEN_ADDRESS) {
-        address converterUpgrader = addressOf(CONVERTER_UPGRADER);
-
-        // verify that the converter is inactive or that the owner is the upgrader contract
-        require(!isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
-        _to.transfer(address(this).balance);
-
-        // sync the ETH reserve balance
-        syncReserveBalance(NATIVE_TOKEN_ADDRESS);
-    }
+    receive() external payable override(IConverter, TokenHolder) validReserve(NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev checks whether or not the converter version is 28 or higher
@@ -274,6 +255,26 @@ contract StandardPoolConverter is
         if (reserveId != 0) {
             syncReserveBalance(_token);
         }
+    }
+
+    /**
+     * @dev withdraws ether
+     * can only be called by the owner if the converter is inactive or by upgrader contract
+     * can only be called after the upgrader contract has accepted the ownership of this contract
+     * can only be called if the converter has an ETH reserve
+     *
+     * @param _to  address to send the ETH to
+     */
+    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(NATIVE_TOKEN_ADDRESS) {
+        address converterUpgrader = addressOf(CONVERTER_UPGRADER);
+
+        // verify that the converter is inactive or that the owner is the upgrader contract
+        require(!isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
+
+        super.withdrawTokens(NATIVE_TOKEN_ADDRESS, _to, address(this).balance);
+
+        // sync the ETH reserve balance
+        syncReserveBalance(NATIVE_TOKEN_ADDRESS);
     }
 
     /**
