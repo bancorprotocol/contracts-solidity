@@ -250,6 +250,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
         // if the token is not a reserve token, allow withdrawal
         // otherwise verify that the converter is inactive or that the owner is the upgrader contract
         require(!reserves[_token].isSet || !isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
+
         super.withdrawTokens(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
