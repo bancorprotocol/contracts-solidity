@@ -33,7 +33,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         address to,
         uint256 amount
     ) public virtual override ownerOnly validAddress(to) {
-        withdraw(token, to, amount);
+        safeTransfer(token, to, amount);
     }
 
     /**
@@ -53,22 +53,22 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         require(length == amounts.length, "ERR_INVALID_LENGTH");
 
         for (uint256 i = 0; i < length; ++i) {
-            withdraw(tokens[i], to, amounts[i]);
+            safeTransfer(tokens[i], to, amounts[i]);
         }
     }
 
     /**
-     * @dev withdraws funds held by the contract and sends them to an account
+     * @dev transfers funds held by the contract and sends them to an account
      *
      * @param token ERC20 token contract address
      * @param to account to receive the new amount
      * @param amount amount to withdraw
      */
-    function withdraw(
+    function safeTransfer(
         IERC20 token,
         address to,
         uint256 amount
-    ) private {
+    ) internal {
         if (token == NATIVE_TOKEN_ADDRESS) {
             payable(to).transfer(amount);
         } else {
