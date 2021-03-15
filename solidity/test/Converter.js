@@ -1,5 +1,5 @@
 const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, constants, BN, balance, time } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, constants, BN, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
@@ -101,7 +101,7 @@ describe('Converter', () => {
             await converter.addReserve(reserveAddresses[i], reserveWeights[i]);
         }
 
-        if (type == 4) {
+        if (type === 4) {
             await converter.setRate(1, 1);
         }
 
@@ -253,7 +253,7 @@ describe('Converter', () => {
                     );
                 });
 
-                if (type != 3 && type != 4) {
+                if (type !== 3 && type !== 4) {
                     it('verifies the owner can update the conversion whitelist contract address', async () => {
                         const converter = await initConverter(type, false, isETHReserve);
                         const prevWhitelist = await converter.conversionWhitelist.call();
@@ -286,6 +286,7 @@ describe('Converter', () => {
                         expect(whitelist).to.eql(ZERO_ADDRESS);
                     });
 
+                    // eslint-disable-next-line max-len
                     it('should revert when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
                         const converter = await initConverter(type, false, isETHReserve);
 
@@ -342,7 +343,7 @@ describe('Converter', () => {
                     }
                 });
 
-                if (type != 3 && type != 4) {
+                if (type !== 3 && type !== 4) {
                     it('should revert when a non owner attempts to add a reserve', async () => {
                         await createAnchor();
                         const converter = await createConverter(type, anchorAddress);
@@ -503,7 +504,7 @@ describe('Converter', () => {
                     expect(converterBalance).to.be.bignumber.equal(value);
 
                     const value2 = new BN(10);
-                    await converter.withdrawTokens(token.address, receiver, value2);
+                    await converter.withdrawInactiveTokens(token.address, receiver, value2);
 
                     converterBalance = await token.balanceOf.call(converter.address);
                     expect(converterBalance).to.be.bignumber.equal(value.sub(value2));
@@ -521,11 +522,12 @@ describe('Converter', () => {
                         getReserve1Address(isETHReserve),
                         converter.address
                     );
-                    if (isETHReserve) {
-                        await converter.withdrawETH(receiver);
-                    } else {
-                        await converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, converterBalance);
-                    }
+
+                    await converter.withdrawInactiveTokens(
+                        getReserve1Address(isETHReserve),
+                        receiver,
+                        converterBalance
+                    );
 
                     const balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), receiver);
                     expect(balance).to.be.bignumber.equal(prevBalance.add(converterBalance));
@@ -540,7 +542,7 @@ describe('Converter', () => {
 
                     const prevBalance = await token.balanceOf.call(receiver);
                     const value2 = new BN(1);
-                    await converter.withdrawTokens(token.address, receiver, value2);
+                    await converter.withdrawInactiveTokens(token.address, receiver, value2);
 
                     const balance = await token.balanceOf.call(receiver);
                     expect(balance).to.be.bignumber.equal(prevBalance.add(value2));
@@ -550,14 +552,10 @@ describe('Converter', () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
                     const value = new BN(1);
-                    if (isETHReserve) {
-                        await expectRevert(converter.withdrawETH(receiver), 'ERR_ACCESS_DENIED');
-                    } else {
-                        await expectRevert(
-                            converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value),
-                            'ERR_ACCESS_DENIED'
-                        );
-                    }
+                    await expectRevert(
+                        converter.withdrawInactiveTokens(getReserve1Address(isETHReserve), receiver, value),
+                        'ERR_ACCESS_DENIED'
+                    );
                 });
 
                 it('should revert when a non owner attempts to withdraw a non reserve token while the converter is not active', async () => {
@@ -573,7 +571,7 @@ describe('Converter', () => {
 
                     const value2 = new BN(5);
                     await expectRevert(
-                        converter.withdrawTokens(token.address, receiver, value2, { from: nonOwner }),
+                        converter.withdrawInactiveTokens(token.address, receiver, value2, { from: nonOwner }),
                         'ERR_ACCESS_DENIED'
                     );
                 });
@@ -582,32 +580,24 @@ describe('Converter', () => {
                     const converter = await initConverter(type, false, isETHReserve);
 
                     const value = new BN(5);
-                    if (isETHReserve) {
-                        await expectRevert(converter.withdrawETH(receiver, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-                    } else {
-                        await expectRevert(
-                            converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value, {
-                                from: nonOwner
-                            }),
-                            'ERR_ACCESS_DENIED'
-                        );
-                    }
+                    await expectRevert(
+                        converter.withdrawInactiveTokens(getReserve1Address(isETHReserve), receiver, value, {
+                            from: nonOwner
+                        }),
+                        'ERR_ACCESS_DENIED'
+                    );
                 });
 
                 it('should revert when a non owner attempts to withdraw a reserve token while the converter is active', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
                     const value = new BN(5);
-                    if (isETHReserve) {
-                        await expectRevert(converter.withdrawETH(receiver, { from: nonOwner }), 'ERR_ACCESS_DENIED');
-                    } else {
-                        await expectRevert(
-                            converter.withdrawTokens(getReserve1Address(isETHReserve), receiver, value, {
-                                from: nonOwner
-                            }),
-                            'ERR_ACCESS_DENIED'
-                        );
-                    }
+                    await expectRevert(
+                        converter.withdrawInactiveTokens(getReserve1Address(isETHReserve), receiver, value, {
+                            from: nonOwner
+                        }),
+                        'ERR_ACCESS_DENIED'
+                    );
                 });
 
                 it('verifies that the owner can upgrade the converter while the converter is active', async () => {
@@ -620,19 +610,13 @@ describe('Converter', () => {
                     await converter.upgrade();
                 });
 
-                it('verifies that the owner can upgrade the converter while the converter using the legacy upgrade function', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-                    await converter.transferOwnership(upgrader.address);
-                    await upgrader.upgradeOld(converter.address, web3.utils.utf8ToHex('0.9'));
-                });
-
                 it('should revert when a non owner attempts to upgrade the converter', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
                     await expectRevert(converter.upgrade({ from: nonOwner }), 'ERR_ACCESS_DENIED');
                 });
 
-                it('should revert when attempting to get the target amount with an invalid source token adress', async () => {
+                it('should revert when attempting to get the target amount with an invalid source token address', async () => {
                     const converter = await initConverter(type, true, isETHReserve);
 
                     await expectRevert(

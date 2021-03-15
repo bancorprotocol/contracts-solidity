@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./ConverterVersion.sol";
 import "./interfaces/IConverter.sol";
@@ -10,7 +11,6 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IBancorFormula.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
-import "../utility/TokenHolder.sol";
 import "../utility/interfaces/IWhitelist.sol";
 
 /**
@@ -32,14 +32,15 @@ import "../utility/interfaces/IWhitelist.sol";
  * and the anchor.
  *
  * Converter types (defined as uint16 type) -
- * 0 = liquid token converter
+ * 0 = liquid token converter (deprecated)
  * 1 = liquidity pool v1 converter
- * 2 = liquidity pool v2 converter
+ * 2 = liquidity pool v2 converter (deprecated)
  *
  * Note that converters don't currently support tokens with transfer fees.
  */
-abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, ContractRegistryClient, ReentrancyGuard {
+abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     struct Reserve {
         uint256 balance; // reserve balance
@@ -143,7 +144,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override(IConverter, TokenHolder) validReserve(NATIVE_TOKEN_ADDRESS) {}
+    receive() external payable override(IConverter) validReserve(NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev checks whether or not the converter version is 28 or higher
@@ -212,52 +213,56 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
     }
 
     /**
-     * @dev withdraws tokens held by the converter and sends them to an account
+     * @dev transfers reserves to a new converter during an upgrade
+     * can only be called by the converter upgraded which should be set at its owner
+     *
+     * @param _newConverter account to receive the new amount
+     */
+    function upgradeReserves(address _newConverter) external override protected ownerOnly {
+        // verify that the converter is inactive or that the owner is the upgrader contract
+        require(owner == addressOf(CONVERTER_UPGRADER), "ERR_ACCESS_DENIED");
+
+        uint256 reserveCount = reserveTokens.length;
+        for (uint256 i = 0; i < reserveCount; ++i) {
+            IERC20 reserveToken = reserveTokens[i];
+
+            uint256 amount;
+            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
+                amount = address(this).balance;
+            } else {
+                amount = reserveToken.balanceOf(address(this));
+            }
+
+            safeTransfer(reserveToken, _newConverter, amount);
+
+            syncReserveBalance(reserveToken);
+        }
+    }
+
+    /**
+     * @dev withdraws non-reserve or inactive tokens held by the converter and sends them to an account
      * can only be called by the owner
      * note that reserve tokens can only be withdrawn by the owner while the converter is inactive
      * unless the owner is the converter upgrader contract
      *
-     * @param _token   ERC20 token contract address
-     * @param _to      account to receive the new amount
+     * @param _token ERC20 token contract address
+     * @param _to account to receive the new amount
      * @param _amount  amount to withdraw
      */
-    function withdrawTokens(
+    function withdrawInactiveTokens(
         IERC20 _token,
         address _to,
         uint256 _amount
-    ) public override(IConverter, TokenHolder) protected ownerOnly {
-        address converterUpgrader = addressOf(CONVERTER_UPGRADER);
+    ) public override(IConverter) protected ownerOnly {
+        // verify that the token is not a reserve token or that the converter is inactive
+        require(!reserves[_token].isSet || !isActive(), "ERR_ACCESS_DENIED");
 
-        // if the token is not a reserve token, allow withdrawal
-        // otherwise verify that the converter is inactive or that the owner is the upgrader contract
-        require(!reserves[_token].isSet || !isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
-
-        super.withdrawTokens(_token, _to, _amount);
+        safeTransfer(_token, _to, _amount);
 
         // if the token is a reserve token, sync the reserve balance
         if (reserves[_token].isSet) {
             syncReserveBalance(_token);
         }
-    }
-
-    /**
-     * @dev withdraws ether
-     * can only be called by the owner if the converter is inactive or by upgrader contract
-     * can only be called after the upgrader contract has accepted the ownership of this contract
-     * can only be called if the converter has an ETH reserve
-     *
-     * @param _to  address to send the ETH to
-     */
-    function withdrawETH(address payable _to) public override protected ownerOnly validReserve(NATIVE_TOKEN_ADDRESS) {
-        address converterUpgrader = addressOf(CONVERTER_UPGRADER);
-
-        // verify that the converter is inactive or that the owner is the upgrader contract
-        require(!isActive() || owner == converterUpgrader, "ERR_ACCESS_DENIED");
-
-        super.withdrawTokens(NATIVE_TOKEN_ADDRESS, _to, address(this).balance);
-
-        // sync the ETH reserve balance
-        syncReserveBalance(NATIVE_TOKEN_ADDRESS);
     }
 
     /**
@@ -421,7 +426,9 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
      */
     function syncReserveBalances() internal {
         uint256 reserveCount = reserveTokens.length;
-        for (uint256 i = 0; i < reserveCount; i++) syncReserveBalance(reserveTokens[i]);
+        for (uint256 i = 0; i < reserveCount; i++) {
+            syncReserveBalance(reserveTokens[i]);
+        }
     }
 
     /**
@@ -447,6 +454,25 @@ abstract contract ConverterBase is ConverterVersion, IConverter, TokenHolder, Co
         // since we convert it to a signed number, we first ensure that it's capped at 255 bits to prevent overflow
         assert(_feeAmount < 2**255);
         emit Conversion(_sourceToken, _targetToken, _trader, _amount, _returnAmount, int256(_feeAmount));
+    }
+
+    /**
+     * @dev transfers funds held by the contract and sends them to an account
+     *
+     * @param token ERC20 token contract address
+     * @param to account to receive the new amount
+     * @param amount amount to withdraw
+     */
+    function safeTransfer(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) private {
+        if (token == NATIVE_TOKEN_ADDRESS) {
+            payable(to).transfer(amount);
+        } else {
+            token.safeTransfer(to, amount);
+        }
     }
 
     /**

@@ -44,15 +44,15 @@ interface IConverter is IOwned {
 
     function setConversionFee(uint32 _conversionFee) external;
 
-    function withdrawTokens(
+    function addReserve(IERC20 _token, uint32 _ratio) external;
+
+    function upgradeReserves(address _newConverter) external;
+
+    function withdrawInactiveTokens(
         IERC20 _token,
         address _to,
         uint256 _amount
     ) external;
-
-    function withdrawETH(address payable _to) external;
-
-    function addReserve(IERC20 _token, uint32 _ratio) external;
 
     // deprecated, backward compatibility
     function token() external view returns (IConverterAnchor);
