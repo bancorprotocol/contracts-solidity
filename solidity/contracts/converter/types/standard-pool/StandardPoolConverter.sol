@@ -1212,6 +1212,13 @@ contract StandardPoolConverter is
         emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
     }
 
+    /**
+     * @dev transfers tokens or ether from this contract to a given recipient
+     *
+     * @param token     address of the token
+     * @param to        address of the recipient
+     * @param amount    amount of tokens or ether
+     */
     function safeTransfer(IERC20 token, address to, uint256 amount) private {
         if (token == NATIVE_TOKEN_ADDRESS) {
             payable(to).transfer(amount);
@@ -1352,6 +1359,15 @@ contract StandardPoolConverter is
         return _amount.mul(_reserveBalance) / _supply;
     }
 
+    /**
+     * @dev returns two samples required for calculating the network fee
+     *
+     * @param currProd  the current product of the balances
+     * @param prevProd  the previous product of the balances
+     *
+     * @return the square root of the current product of the balances
+     * @return the square root of the previous product of the balances
+     */
     function networkFeePoints(
         uint256 currProd,
         uint256 prevProd
@@ -1362,6 +1378,17 @@ contract StandardPoolConverter is
         );
     }
 
+    /**
+     * @dev returns the network fee ratio
+     *
+     * @param currPoint     the current product of the balances
+     * @param prevPoint     the previous product of the balances
+     * @param networkFee    the relative portion (in PPM units) that
+     * should be taken from the conversion fees accumulated in this pool
+     *
+     * @return numerator of the portion that should be taken from the balances of this pool
+     * @return denominator of the portion that should be taken from the balances of this pool
+     */
     function networkFeeRatio(
         uint256 currPoint,
         uint256 prevPoint,
