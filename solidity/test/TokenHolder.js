@@ -117,7 +117,7 @@ describe('TokenHolder', () => {
         it('should allow the owner to withdraw', async () => {
             const prevBalances = await getBalances(tokenAddresses, receiver);
 
-            await holder.withdrawMultipleTokens(tokenAddresses, receiver, Object.values(amounts));
+            await holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(amounts));
 
             const newBalances = await getBalances(tokenAddresses, receiver);
             for (const [tokenAddress, prevBalance] of Object.entries(prevBalances)) {
@@ -127,26 +127,26 @@ describe('TokenHolder', () => {
 
         it('should revert when a non-owner attempts to withdraw', async () => {
             await expectRevert(
-                holder.withdrawMultipleTokens(tokenAddresses, receiver, Object.values(amounts), { from: nonOwner }),
+                holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(amounts), { from: nonOwner }),
                 'ERR_ACCESS_DENIED'
             );
         });
 
         it('should revert when attempting to withdraw from an invalid asset address', async () => {
             await expectRevert(
-                holder.withdrawMultipleTokens([token.address, ZERO_ADDRESS], receiver, [new BN(1), new BN(1)]),
+                holder.withdrawTokensMultiple([token.address, ZERO_ADDRESS], receiver, [new BN(1), new BN(1)]),
                 'Address: call to non-contract'
             );
 
             await expectRevert(
-                holder.withdrawMultipleTokens([ZERO_ADDRESS, token.address], receiver, [new BN(1), new BN(1)]),
+                holder.withdrawTokensMultiple([ZERO_ADDRESS, token.address], receiver, [new BN(1), new BN(1)]),
                 'Address: call to non-contract'
             );
         });
 
         it('should revert when attempting to withdraw tokens to an invalid account address', async () => {
             await expectRevert(
-                holder.withdrawMultipleTokens(tokenAddresses, ZERO_ADDRESS, Object.values(amounts)),
+                holder.withdrawTokensMultiple(tokenAddresses, ZERO_ADDRESS, Object.values(amounts)),
                 'ERR_INVALID_ADDRESS'
             );
         });
@@ -155,13 +155,13 @@ describe('TokenHolder', () => {
             let balances = await getBalances(tokenAddresses, holder.address);
             balances[NATIVE_TOKEN_ADDRESS] = balances[NATIVE_TOKEN_ADDRESS].add(new BN(1));
             await expectRevert.unspecified(
-                holder.withdrawMultipleTokens(tokenAddresses, receiver, Object.values(balances))
+                holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(balances))
             );
 
             balances = await getBalances(tokenAddresses, holder.address);
             balances[token2.address] = balances[token2.address].add(new BN(1));
             await expectRevert(
-                holder.withdrawMultipleTokens(tokenAddresses, receiver, Object.values(balances)),
+                holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(balances)),
                 'SafeMath: subtraction overflow'
             );
         });

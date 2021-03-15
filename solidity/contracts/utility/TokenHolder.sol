@@ -44,7 +44,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
      * @param to account to receive the new amount
      * @param amounts amounts to withdraw
      */
-    function withdrawMultipleTokens(
+    function withdrawTokensMultiple(
         IERC20[] calldata tokens,
         address to,
         uint256[] calldata amounts

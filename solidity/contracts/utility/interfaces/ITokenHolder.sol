@@ -17,7 +17,7 @@ interface ITokenHolder is IOwned {
         uint256 amount
     ) external;
 
-    function withdrawMultipleTokens(
+    function withdrawTokensMultiple(
         IERC20[] calldata tokens,
         address to,
         uint256[] calldata amounts
