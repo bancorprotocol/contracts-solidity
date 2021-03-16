@@ -5,7 +5,7 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
 
-interface IConverterWithTokenHolder is IConverter {
+interface ILegacyConverter is IConverter {
     function withdrawTokens(
         IERC20 _token,
         address _to,
@@ -219,7 +219,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         uint16 _version
     ) private {
         if (_version <= 45) {
-            transferReserveBalancesVersion45(IConverterWithTokenHolder(address(_oldConverter)), _newConverter);
+            transferReserveBalancesVersion45(ILegacyConverter(address(_oldConverter)), _newConverter);
 
             return;
         }
@@ -235,9 +235,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * @param _oldConverter old converter contract address
      * @param _newConverter new converter contract address
      */
-    function transferReserveBalancesVersion45(IConverterWithTokenHolder _oldConverter, IConverter _newConverter)
-        private
-    {
+    function transferReserveBalancesVersion45(ILegacyConverter _oldConverter, IConverter _newConverter) private {
         uint256 reserveBalance;
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
