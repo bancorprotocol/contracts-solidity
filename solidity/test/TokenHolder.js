@@ -109,8 +109,9 @@ describe('TokenHolder', () => {
             tokenAddresses = [NATIVE_TOKEN_ADDRESS, token.address, token2.address];
             amounts = {};
 
-            for (const tokenAddress of tokenAddresses) {
-                amounts[tokenAddress] = new BN(100);
+            for (let i = 0; i < tokenAddresses.length; ++i) {
+                const tokenAddress = tokenAddresses[i];
+                amounts[tokenAddress] = new BN(100 * (i + 1));
             }
         });
 
