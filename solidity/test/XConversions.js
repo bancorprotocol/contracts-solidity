@@ -117,7 +117,7 @@ describe('XConversions', () => {
         await bntToken.transfer(erc20TokenConverter2.address, ethers.utils.parseEther('100'));
 
         // TODO
-        await erc20TokenConverter1.send(ethers.utils.parseEther('1'));
+        await owner.sendTransaction({ to: erc20TokenConverter1.address, value: ethers.utils.parseEther('1') });
         //
         await erc20Token.transfer(erc20TokenConverter2.address, ethers.utils.parseEther('50'));
 
@@ -153,13 +153,13 @@ describe('XConversions', () => {
 
             const retAmount = await bancorNetwork
                 .connect(sender)
-                .xConvert.call(path, amount, MIN_RETURN, EOS_BLOCKCHAIN, EOS_ADDRESS, TX_ID);
+                .xConvert(path, amount, MIN_RETURN, EOS_BLOCKCHAIN, EOS_ADDRESS, TX_ID);
 
-            const prevBalance = await bntToken.balanceOf.call(bancorX.address);
+            const prevBalance = await bntToken.balanceOf(bancorX.address);
 
             await bancorNetwork.connect(sender).xConvert(path, amount, MIN_RETURN, EOS_BLOCKCHAIN, EOS_ADDRESS, TX_ID);
 
-            expect((await bntToken.balanceOf.call(bancorX.address)).sub(prevBalance)).to.be.equal(retAmount);
+            expect((await bntToken.balanceOf(bancorX.address)).sub(prevBalance)).to.be.equal(retAmount);
         });
 
         it('should revert when attempting to xConvert to a different token than BNT', async () => {

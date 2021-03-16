@@ -38,7 +38,7 @@ describe('LiquidityProtectionSettingsMigrator', () => {
         );
 
         const targetAddress = '0x' + ethers.utils.keccak256(rlp.encode([migrator.address, 1])).slice(26);
-        const targetSettings = await LiquidityProtectionSettings.at(targetAddress);
+        const targetSettings = await (await LiquidityProtectionSettings).attach(targetAddress);
         const targetState = await readState(targetSettings);
 
         expect(targetState).to.be.deep.equal(sourceState);

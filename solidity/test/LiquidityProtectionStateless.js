@@ -1,16 +1,17 @@
-const { defaultSender, contract } = require('@openzeppelin/test-environment');
-const { BN } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
+
+const { BigNumber } = require('ethers');
+
 const Decimal = require('decimal.js');
 
-const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
-const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
-const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
-const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
-const TokenHolder = contract.fromArtifact('TokenHolder');
-const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
-const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const LiquidityProtectionSettings = ethers.getContractFactory('LiquidityProtectionSettings');
+const LiquidityProtectionStore = ethers.getContractFactory('LiquidityProtectionStore');
+const LiquidityProtectionStats = ethers.getContractFactory('LiquidityProtectionStats');
+const LiquidityProtectionSystemStore = ethers.getContractFactory('LiquidityProtectionSystemStore');
+const TokenHolder = ethers.getContractFactory('TokenHolder');
+const TokenGovernance = ethers.getContractFactory('TestTokenGovernance');
+const CheckpointStore = ethers.getContractFactory('TestCheckpointStore');
+const LiquidityProtection = ethers.getContractFactory('TestLiquidityProtection');
 
 const MIN_AMOUNT = Decimal(2).pow(0);
 const MAX_AMOUNT = Decimal(2).pow(127);
@@ -21,20 +22,29 @@ const MAX_RATIO = Decimal(2).pow(256 / 3);
 const MIN_DURATION = 30 * 24 * 60 * 60;
 const MAX_DURATION = 100 * 24 * 60 * 60;
 
+let liquidityProtection;
+let owner;
+
+// TODO Error: missing argument: passed to contract
 describe('LiquidityProtectionStateless', () => {
-    let liquidityProtection;
-
     before(async () => {
-        const liquidityProtectionSettings = await LiquidityProtectionSettings.new(defaultSender, defaultSender);
-        const liquidityProtectionStore = await LiquidityProtectionStore.new();
-        const liquidityProtectionStats = await LiquidityProtectionStats.new();
-        const liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-        const liquidityProtectionWallet = await TokenHolder.new();
-        const networkTokenGovernance = await TokenGovernance.new(defaultSender);
-        const govTokenGovernance = await TokenGovernance.new(defaultSender);
-        const checkpointStore = await CheckpointStore.new();
+        accounts = await ethers.getSigners();
 
-        liquidityProtection = await LiquidityProtection.new([
+        owner = accounts[0];
+
+        const liquidityProtectionSettings = await (await LiquidityProtectionSettings).deploy(
+            owner.address,
+            owner.address
+        );
+        const liquidityProtectionStore = await (await LiquidityProtectionStore).deploy();
+        const liquidityProtectionStats = await (await LiquidityProtectionStats).deploy();
+        const liquidityProtectionSystemStore = await (await LiquidityProtectionSystemStore).deploy();
+        const liquidityProtectionWallet = await (await TokenHolder).deploy();
+        const networkTokenGovernance = await (await TokenGovernance).deploy(owner.address);
+        const govTokenGovernance = await (await TokenGovernance).deploy(owner.address);
+        const checkpointStore = await (await CheckpointStore).deploy();
+
+        liquidityProtection = await (await LiquidityProtection).deploy([
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             liquidityProtectionStats.address,
@@ -47,7 +57,10 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('sanity part 1', () => {
-        const amounts = [new BN(MIN_AMOUNT.toFixed()), new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed())];
+        const amounts = [
+            BigNumber.from(MIN_AMOUNT.toFixed()),
+            BigNumber.from(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed())
+        ];
         const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '1';
         const range = {
@@ -58,7 +71,10 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('sanity part 2', () => {
-        const amounts = [new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()), new BN(MAX_AMOUNT.toFixed())];
+        const amounts = [
+            BigNumber.from(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()),
+            BigNumber.from(MAX_AMOUNT.toFixed())
+        ];
         const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '1';
         const range = {
@@ -69,7 +85,10 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 1', () => {
-        const amounts = [new BN(MIN_AMOUNT.toFixed()), new BN(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed())];
+        const amounts = [
+            BigNumber.from(MIN_AMOUNT.toFixed()),
+            BigNumber.from(MIN_AMOUNT.mul(MAX_RATIO).floor().toFixed())
+        ];
         const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '0.25';
         const range = {
@@ -80,7 +99,10 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 2', () => {
-        const amounts = [new BN(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()), new BN(MAX_AMOUNT.toFixed())];
+        const amounts = [
+            BigNumber.from(MAX_AMOUNT.div(MIN_RATIO).ceil().toFixed()),
+            BigNumber.from(MAX_AMOUNT.toFixed())
+        ];
         const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '0.75';
         const range = {
@@ -91,7 +113,7 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 3', () => {
-        const amounts = [new BN(MAX_AMOUNT.toFixed())];
+        const amounts = [BigNumber.from(MAX_AMOUNT.toFixed())];
         const durations = [MIN_DURATION, MAX_DURATION - 1];
         const deviation = '1';
         const range = {
@@ -102,7 +124,7 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 4', () => {
-        const amounts = [new BN('123456789123456789'), new BN('987654321987654321')];
+        const amounts = [BigNumber.from('123456789123456789'), BigNumber.from('987654321987654321')];
         const durations = [Math.floor((MIN_DURATION + MAX_DURATION) / 2)];
         const deviation = '1';
         const range = {
@@ -113,13 +135,13 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 5', () => {
-        const poolAmounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
-        const poolRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
-        const poolRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
-        const addRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
-        const addRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
-        const removeRateNs = [24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
-        const removeRateDs = [23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
+        const poolAmounts = [31, 63, 127].map((x) => BigNumber.from(2).pow(BigNumber.from(x)));
+        const poolRateNs = [24, 30, 36].map((x) => BigNumber.from(10).pow(BigNumber.from(x)));
+        const poolRateDs = [23, 47, 95].map((x) => BigNumber.from(x).pow(BigNumber.from(18)));
+        const addRateNs = [24, 30, 36].map((x) => BigNumber.from(10).pow(BigNumber.from(x)));
+        const addRateDs = [23, 47, 95].map((x) => BigNumber.from(x).pow(BigNumber.from(18)));
+        const removeRateNs = [24, 30, 36].map((x) => BigNumber.from(10).pow(BigNumber.from(x)));
+        const removeRateDs = [23, 47, 95].map((x) => BigNumber.from(x).pow(BigNumber.from(18)));
         const range = {
             maxAbsoluteError: '1.0',
             maxRelativeError: '0.0000000005'
@@ -137,10 +159,10 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 6', () => {
-        const initialRateNs = [18, 24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
-        const initialRateDs = [11, 23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
-        const currentRateNs = [18, 24, 30, 36].map((x) => new BN(10).pow(new BN(x)));
-        const currentRateDs = [11, 23, 47, 95].map((x) => new BN(x).pow(new BN(18)));
+        const initialRateNs = [18, 24, 30, 36].map((x) => BigNumber.from(10).pow(BigNumber.from(x)));
+        const initialRateDs = [11, 23, 47, 95].map((x) => BigNumber.from(x).pow(BigNumber.from(18)));
+        const currentRateNs = [18, 24, 30, 36].map((x) => BigNumber.from(10).pow(BigNumber.from(x)));
+        const currentRateDs = [11, 23, 47, 95].map((x) => BigNumber.from(x).pow(BigNumber.from(18)));
         const range = {
             maxAbsoluteError:
                 '0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006',
@@ -151,12 +173,12 @@ describe('LiquidityProtectionStateless', () => {
     });
 
     describe('accuracy part 7', () => {
-        const amounts = [31, 63, 127].map((x) => new BN(2).pow(new BN(x)));
-        const fees = [30, 60, 90].map((x) => new BN(2).pow(new BN(x)));
-        const lossNs = [12, 15, 18].map((x) => new BN(10).pow(new BN(x)));
-        const lossDs = [18, 24, 30].map((x) => new BN(10).pow(new BN(x)));
-        const levelNs = [3, 5, 7].map((x) => new BN(x).pow(new BN(10)));
-        const levelDs = [7, 9, 11].map((x) => new BN(x).pow(new BN(10)));
+        const amounts = [31, 63, 127].map((x) => BigNumber.from(2).pow(BigNumber.from(x)));
+        const fees = [30, 60, 90].map((x) => BigNumber.from(2).pow(BigNumber.from(x)));
+        const lossNs = [12, 15, 18].map((x) => BigNumber.from(10).pow(BigNumber.from(x)));
+        const lossDs = [18, 24, 30].map((x) => BigNumber.from(10).pow(BigNumber.from(x)));
+        const levelNs = [3, 5, 7].map((x) => BigNumber.from(x).pow(BigNumber.from(10)));
+        const levelDs = [7, 9, 11].map((x) => BigNumber.from(x).pow(BigNumber.from(10)));
         const range = {
             maxAbsoluteError: '1.0',
             maxRelativeError: '0.0000000006'
@@ -216,7 +238,7 @@ describe('LiquidityProtectionStateless', () => {
                                                             removeSpotRateD,
                                                             removeAverageRateN,
                                                             removeAverageRateD,
-                                                            0,
+                                                            BigNumber.from(0),
                                                             timeElapsed
                                                         );
                                                         const expected = removeLiquidityTargetAmount(
@@ -439,10 +461,10 @@ describe('LiquidityProtectionStateless', () => {
         const y = Decimal(b.toString());
         const q = Decimal(1).sub(p);
         if (x.lt(y.mul(q))) {
-            return new BN(y.mul(q).toFixed(0, Decimal.ROUND_UP));
+            return BigNumber.from(y.mul(q).toFixed(0, Decimal.ROUND_UP));
         }
         if (x.gt(y.div(q))) {
-            return new BN(y.div(q).toFixed(0, Decimal.ROUND_DOWN));
+            return BigNumber.from(y.div(q).toFixed(0, Decimal.ROUND_DOWN));
         }
         return a;
     }
@@ -451,7 +473,9 @@ describe('LiquidityProtectionStateless', () => {
         if (!actual.eq(expected)) {
             const absoluteError = actual.sub(expected).abs();
             const relativeError = actual.div(expected).sub(1).abs();
-            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true(
+            expect(
+                absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)
+            ).to.be.true.with(
                 `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
             );
         }

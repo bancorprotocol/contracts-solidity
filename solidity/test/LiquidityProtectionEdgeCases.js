@@ -1,31 +1,31 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { BN, constants } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
-const { registry, roles } = require('./helpers/Constants');
+const { expect } = require('chai');
+
+const { BigNumber } = require('ethers');
+
+const { registry, roles, MAX_UINT256, ZERO_ADDRESS } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
-const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const BancorFormula = contract.fromArtifact('BancorFormula');
-const BancorNetwork = contract.fromArtifact('BancorNetwork');
-const DSToken = contract.fromArtifact('DSToken');
-const ConverterRegistry = contract.fromArtifact('TestConverterRegistry');
-const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
-const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
-const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
-const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
-const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
-const LiquidityProtectionStore = contract.fromArtifact('LiquidityProtectionStore');
-const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats');
-const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
-const TokenHolder = contract.fromArtifact('TokenHolder');
-const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
-const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
-const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const ContractRegistry = ethers.getContractFactory('ContractRegistry');
+const BancorFormula = ethers.getContractFactory('BancorFormula');
+const BancorNetwork = ethers.getContractFactory('BancorNetwork');
+const DSToken = ethers.getContractFactory('DSToken');
+const ConverterRegistry = ethers.getContractFactory('TestConverterRegistry');
+const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
+const ConverterFactory = ethers.getContractFactory('ConverterFactory');
+const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('TestLiquidityPoolV1ConverterFactory');
+const LiquidityPoolV1Converter = ethers.getContractFactory('TestLiquidityPoolV1Converter');
+const StandardPoolConverterFactory = ethers.getContractFactory('TestStandardPoolConverterFactory');
+const StandardPoolConverter = ethers.getContractFactory('TestStandardPoolConverter');
+const LiquidityProtectionSettings = ethers.getContractFactory('LiquidityProtectionSettings');
+const LiquidityProtectionStore = ethers.getContractFactory('LiquidityProtectionStore');
+const LiquidityProtectionStats = ethers.getContractFactory('LiquidityProtectionStats');
+const LiquidityProtectionSystemStore = ethers.getContractFactory('LiquidityProtectionSystemStore');
+const TokenHolder = ethers.getContractFactory('TokenHolder');
+const TokenGovernance = ethers.getContractFactory('TestTokenGovernance');
+const CheckpointStore = ethers.getContractFactory('TestCheckpointStore');
+const LiquidityProtection = ethers.getContractFactory('TestLiquidityProtection');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -62,6 +62,24 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
+let contractRegistry;
+let converterRegistry;
+let bancorNetwork;
+let baseToken;
+let networkToken;
+let govToken;
+let checkpointStore;
+let poolToken;
+let converter;
+let liquidityProtectionSettings;
+let liquidityProtectionStore;
+let liquidityProtectionStats;
+let liquidityProtectionSystemStore;
+let liquidityProtectionWallet;
+let liquidityProtection;
+
+let owner;
+
 describe('LiquidityProtectionEdgeCases', () => {
     for (const converterType of [1, 3]) {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
@@ -78,15 +96,15 @@ describe('LiquidityProtectionEdgeCases', () => {
 
             const increaseRate = async (sourceToken, targetToken) => {
                 const sourceBalance = await converter.reserveBalance(sourceToken.address);
-                await convert(sourceToken, targetToken, sourceBalance.div(new BN(100)));
+                await convert(sourceToken, targetToken, sourceBalance.div(BigNumber.from(100)));
             };
 
             const generateFee = async (conversionFee, sourceToken, targetToken) => {
                 await converter.setConversionFee(conversionFee);
-                const prevBalance = await targetToken.balanceOf(owner);
+                const prevBalance = await targetToken.balanceOf(owner.address);
                 const sourceBalance = await converter.reserveBalance(sourceToken.address);
-                await convert(sourceToken, targetToken, sourceBalance.div(new BN(100)));
-                const currBalance = await targetToken.balanceOf(owner);
+                await convert(sourceToken, targetToken, sourceBalance.div(BigNumber.from(100)));
+                const currBalance = await targetToken.balanceOf(owner.address);
                 await convert(targetToken, sourceToken, currBalance.sub(prevBalance));
                 await converter.setConversionFee(0);
             };
@@ -108,38 +126,25 @@ describe('LiquidityProtectionEdgeCases', () => {
                 }
             };
 
-            let contractRegistry;
-            let converterRegistry;
-            let bancorNetwork;
-            let baseToken;
-            let networkToken;
-            let govToken;
-            let checkpointStore;
-            let poolToken;
-            let converter;
-            let liquidityProtectionSettings;
-            let liquidityProtectionStore;
-            let liquidityProtectionStats;
-            let liquidityProtectionSystemStore;
-            let liquidityProtectionWallet;
-            let liquidityProtection;
-
-            const owner = defaultSender;
-
             before(async () => {
-                contractRegistry = await ContractRegistry.new();
-                converterRegistry = await ConverterRegistry.new(contractRegistry.address);
-                bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+                accounts = await ethers.getSigners();
 
-                const converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
+                owner = accounts[0];
+                governor = accounts[1];
 
-                const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
-                const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
-                const converterFactory = await ConverterFactory.new();
+                contractRegistry = await (await ContractRegistry).deploy();
+                converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
+                bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+
+                const converterRegistryData = await (await ConverterRegistryData).deploy(contractRegistry.address);
+
+                const liquidityPoolV1ConverterFactory = await (await LiquidityPoolV1ConverterFactory).deploy();
+                const standardPoolConverterFactory = await (await StandardPoolConverterFactory).deploy();
+                const converterFactory = await (await ConverterFactory).deploy();
                 await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
-                const bancorFormula = await BancorFormula.new();
+                const bancorFormula = await (await BancorFormula).deploy();
                 await bancorFormula.init();
 
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
@@ -152,21 +157,19 @@ describe('LiquidityProtectionEdgeCases', () => {
             });
 
             beforeEach(async () => {
-                const governor = accounts[1];
+                baseToken = await (await DSToken).deploy('TKN', 'TKN', 18);
+                await baseToken.issue(owner.address, BigNumber.from('1'.padEnd(40, '0')));
 
-                baseToken = await DSToken.new('TKN', 'TKN', 18);
-                await baseToken.issue(owner, new BN('1'.padEnd(40, '0')));
-
-                networkToken = await DSToken.new('BNT', 'BNT', 18);
-                await networkToken.issue(owner, new BN('1'.padEnd(40, '0')));
-                const networkTokenGovernance = await TokenGovernance.new(networkToken.address);
-                await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
+                networkToken = await (await DSToken).deploy('BNT', 'BNT', 18);
+                await networkToken.issue(owner.address, BigNumber.from('1'.padEnd(40, '0')));
+                const networkTokenGovernance = await (await TokenGovernance).deploy(networkToken.address);
+                await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor.address);
                 await networkToken.transferOwnership(networkTokenGovernance.address);
                 await networkTokenGovernance.acceptTokenOwnership();
 
-                govToken = await DSToken.new('vBNT', 'vBNT', 18);
-                const govTokenGovernance = await TokenGovernance.new(govToken.address);
-                await govTokenGovernance.grantRole(ROLE_GOVERNOR, governor);
+                govToken = await (await DSToken).deploy('vBNT', 'vBNT', 18);
+                const govTokenGovernance = await (await TokenGovernance).deploy(govToken.address);
+                await govTokenGovernance.grantRole(ROLE_GOVERNOR, governor.address);
                 await govToken.transferOwnership(govTokenGovernance.address);
                 await govTokenGovernance.acceptTokenOwnership();
 
@@ -180,29 +183,29 @@ describe('LiquidityProtectionEdgeCases', () => {
                     [HALF_PPM, HALF_PPM]
                 );
                 const anchorCount = await converterRegistry.getAnchorCount();
-                const poolTokenAddress = await converterRegistry.getAnchor(anchorCount.sub(new BN(1)));
-                poolToken = await DSToken.at(poolTokenAddress);
+                const poolTokenAddress = await converterRegistry.getAnchor(anchorCount.sub(BigNumber.from(1)));
+                poolToken = await (await DSToken).attach(poolTokenAddress);
                 const converterAddress = await poolToken.owner();
                 if (converterType === 1) {
-                    converter = await LiquidityPoolV1Converter.at(converterAddress);
+                    converter = await (await LiquidityPoolV1Converter).attach(converterAddress);
                 } else {
-                    converter = await StandardPoolConverter.at(converterAddress);
+                    converter = await (await StandardPoolConverter).attach(converterAddress);
                 }
                 await converter.acceptOwnership();
 
-                checkpointStore = await CheckpointStore.new({ from: owner });
+                checkpointStore = await (await CheckpointStore).deploy();
 
-                liquidityProtectionSettings = await LiquidityProtectionSettings.new(
+                liquidityProtectionSettings = await (await LiquidityProtectionSettings).deploy(
                     networkToken.address,
                     contractRegistry.address
                 );
-                await liquidityProtectionSettings.setMinNetworkCompensation(new BN(3));
+                await liquidityProtectionSettings.setMinNetworkCompensation(BigNumber.from(3));
 
-                liquidityProtectionStore = await LiquidityProtectionStore.new();
-                liquidityProtectionStats = await LiquidityProtectionStats.new();
-                liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-                liquidityProtectionWallet = await TokenHolder.new();
-                liquidityProtection = await LiquidityProtection.new([
+                liquidityProtectionStore = await (await LiquidityProtectionStore).deploy();
+                liquidityProtectionStats = await (await LiquidityProtectionStats).deploy();
+                liquidityProtectionSystemStore = await (await LiquidityProtectionSystemStore).deploy();
+                liquidityProtectionWallet = await (await TokenHolder).deploy();
+                liquidityProtection = await (await LiquidityProtection).deploy([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
@@ -213,19 +216,17 @@ describe('LiquidityProtectionEdgeCases', () => {
                     checkpointStore.address
                 ]);
 
-                await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
-                await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {
-                    from: owner
-                });
-                await checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
+                await liquidityProtectionStats.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
+                await liquidityProtectionSystemStore.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
+                await checkpointStore.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
                 await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptWalletOwnership();
-                await networkTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
-                await govTokenGovernance.grantRole(ROLE_MINTER, liquidityProtection.address, { from: governor });
+                await networkTokenGovernance.connect(governor).grantRole(ROLE_MINTER, liquidityProtection.address);
+                await govTokenGovernance.connect(governor).grantRole(ROLE_MINTER, liquidityProtection.address);
 
-                await setTime(new BN(1));
+                await setTime(BigNumber.from(1));
 
                 await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
                 await liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(0);
@@ -236,7 +237,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                 for (const numOfDays of NUM_OF_DAYS) {
                     const timestamp = numOfDays * 24 * 60 * 60 + 1;
                     for (const decimals of DECIMAL_COMBINATIONS) {
-                        const amounts = decimals.map((n) => new BN(10).pow(new BN(n)));
+                        const amounts = decimals.map((n) => BigNumber.from(10).pow(BigNumber.from(n)));
 
                         let test;
                         if (!config.increaseRate && !config.generateFee) {
@@ -275,10 +276,10 @@ describe('LiquidityProtectionEdgeCases', () => {
                             throw new Error('invalid configuration');
                         }
 
-                        it(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
+                        it.only(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
                             await baseToken.approve(converter.address, amounts[0]);
                             await networkToken.approve(converter.address, amounts[1]);
-                            await converter.addLiquidity(
+                            await converter['addLiquidity(address[],uint256[],uint256)'](
                                 [baseToken.address, networkToken.address],
                                 [amounts[0], amounts[1]],
                                 1
@@ -300,7 +301,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                             await setTime(timestamp);
                             const actual = await liquidityProtection.removeLiquidityReturn(0, FULL_PPM, timestamp);
                             const error = test(actual[0], amounts[2]);
-                            expect(error).to.be.empty(error);
+                            expect(error).to.be.empty;
                         });
                     }
                 }
@@ -310,7 +311,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                 for (const numOfDays of NUM_OF_DAYS) {
                     const timestamp = numOfDays * 24 * 60 * 60 + 1;
                     for (const decimals of DECIMAL_COMBINATIONS) {
-                        const amounts = decimals.map((n) => new BN(10).pow(new BN(n)));
+                        const amounts = decimals.map((n) => BigNumber.from(10).pow(BigNumber.from(n)));
 
                         let test;
                         if (!config.increaseRate && !config.generateFee) {
@@ -352,7 +353,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                         it(`network token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
                             await baseToken.approve(converter.address, amounts[0]);
                             await networkToken.approve(converter.address, amounts[1]);
-                            await converter.addLiquidity(
+                            await converter['addLiquidity(address[],uint256[],uint256)'](
                                 [baseToken.address, networkToken.address],
                                 [amounts[0], amounts[1]],
                                 1
@@ -374,7 +375,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                             await setTime(timestamp);
                             const actual = await liquidityProtection.removeLiquidityReturn(1, FULL_PPM, timestamp);
                             const error = test(actual[0], amounts[3]);
-                            expect(error).to.be.empty(error);
+                            expect(error).to.be.empty;
                         });
                     }
                 }

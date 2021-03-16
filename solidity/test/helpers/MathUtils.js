@@ -23,7 +23,7 @@ function ceilSqrt(n) {
 
 function poweredRatio(a, b, exp) {
     [a, b, exp] = [...arguments].map((x) => Decimal(x));
-    return [a, b].map(x => x.pow(exp).toFixed());
+    return [a, b].map((x) => x.pow(exp).toFixed());
 }
 
 function reducedRatio(a, b, max) {
@@ -31,7 +31,7 @@ function reducedRatio(a, b, max) {
     if (a.gt(max) || b.gt(max)) {
         return normalizedRatio(a, b, max);
     }
-    return [a, b].map(x => x.toFixed());
+    return [a, b].map((x) => x.toFixed());
 }
 
 function normalizedRatio(a, b, scale) {
@@ -44,7 +44,7 @@ function normalizedRatio(a, b, scale) {
 
 function accurateRatio(a, b, scale) {
     [a, b, scale] = [...arguments].map((x) => Decimal(x));
-    return [a, b].map(x => x.div(a.add(b)).mul(scale).toFixed());
+    return [a, b].map((x) => x.div(a.add(b)).mul(scale).toFixed());
 }
 
 function roundDiv(a, b) {
@@ -64,5 +64,8 @@ function weightedAverageForIntegers(a, b, p, q) {
 
 function weightedAverageForFractions(a, b, c, d, p, q) {
     [a, b, c, d, p, q] = [...arguments].map((x) => Decimal(x));
-    return a.div(b).add(c.div(d).sub(a.div(b)).mul(p).div(q)).toFixed();
+    return a
+        .div(b)
+        .add(c.div(d).sub(a.div(b)).mul(p).div(q))
+        .toFixed();
 }
