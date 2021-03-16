@@ -23,7 +23,7 @@ const RESERVE1_BALANCE = new BN(5000);
 const RESERVE2_BALANCE = new BN(8000);
 const TOKEN_TOTAL_SUPPLY = new BN(20000);
 
-const VERSIONS = [9, 10, 11, 23, 45];
+const LEGACY_VERSIONS = [9, 10, 11, 23, 45];
 
 describe('ConverterUpgrader', () => {
     const initWith2Reserves = async (type, deployer, version, activate) => {
@@ -198,7 +198,7 @@ describe('ConverterUpgrader', () => {
 
     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
-    const product = cartesian(initFuncs, [...VERSIONS, null], [false, true]);
+    const product = cartesian(initFuncs, [...LEGACY_VERSIONS, null], [false, true]);
     const combinations = product.filter(
         ([init, version]) =>
             !(init === initType1WithETHReserve && version) && !(init === initType3WithETHReserve && version)
