@@ -1134,13 +1134,13 @@ describe('StandardPoolConverter', () => {
 
                 for (let i = 0; i < allowances.length; i++) {
                     const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
-                    expect(diff.eq('0')).to.be.true();
+                    expect(diff.toFixed()).to.be.equal('0');
                 }
 
                 const actual = balances.map((balance) => Decimal(balance.toString()).div(supply.toString()));
                 for (let i = 0; i < expected.length; i++) {
                     const diff = expected[i].div(actual[i]);
-                    expect(diff.eq('1')).to.be.true();
+                    expect(diff.toFixed()).to.be.equal('1');
                     for (const liquidityCost of liquidityCosts) {
                         expect(liquidityCost[i]).to.be.bignumber.equal(balances[i].sub(prevBalances[i]));
                     }
@@ -1168,7 +1168,7 @@ describe('StandardPoolConverter', () => {
                 );
                 for (let i = 0; i < balances.length; i++) {
                     const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
-                    expect(diff.eq('1')).to.be.true();
+                    expect(diff.toFixed()).to.be.equal('1');
                     expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
                 }
                 prevBalances = balances;
