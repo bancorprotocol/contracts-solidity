@@ -1206,8 +1206,8 @@ describe('StandardPoolConverter', () => {
 
         for (const amount1 of LIQUIDITY1_AMOUNTS) {
             for (const amount2 of LIQUIDITY2_AMOUNTS) {
-                for (const conversionFeePercent of [0, 5, 10, 20, 25]) {
-                    for (const networkFeePercent of [0, 5, 10, 20, 25]) {
+                for (const conversionFeePercent of [0, 5, 10, 25, 75]) {
+                    for (const networkFeePercent of [0, 5, 10, 25, 75]) {
                         const description =
                             `balances = [${amount1}, ${amount2}], ` + 
                             `conversion fee = ${conversionFeePercent}% ` +
@@ -1252,11 +1252,23 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = balance1After.sub(balance1Before);
                             const actualFee2 = balance2After.sub(balance2Before);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0.00507');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0.00177');
+                            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.000509');
+                            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.000509');
                         });
                     }
                 }
+            }
+        }
+
+        function expectAlmostEqual(actual, expected, maxAbsoluteError, maxRelativeError) {
+                const x = Decimal(actual.toString());
+                const y = Decimal(expected.toString());
+                if (!x.eq(y)) {
+                    const absoluteError = x.sub(y).abs();
+                    const relativeError = x.div(y).sub(1).abs();
+                    expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.be.true(
+                    `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
+                );
             }
         }
     });
