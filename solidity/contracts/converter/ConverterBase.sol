@@ -218,10 +218,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistr
      *
      * @param _newConverter account to receive the new amount
      */
-    function upgradeReserves(address _newConverter) external override protected ownerOnly {
-        // verify that the converter is inactive or that the owner is the upgrader contract
-        require(owner == addressOf(CONVERTER_UPGRADER), "ERR_ACCESS_DENIED");
-
+    function upgradeReserves(address _newConverter) external override protected ownerOnly only(CONVERTER_UPGRADER) {
         uint256 reserveCount = reserveTokens.length;
         for (uint256 i = 0; i < reserveCount; ++i) {
             IERC20 reserveToken = reserveTokens[i];
