@@ -1198,10 +1198,11 @@ describe('StandardPoolConverter', () => {
     });
 
     describe('verifies that the network fee is transferred correctly when', () => {
-        const TOTAL_SUPPLY = new BN(1000000000000);
-        const CONVERSION_AMOUNT = new BN(1000000);
-        const LIQUIDITY1_AMOUNTS = [1, 2, 4, 8].map((n) => new BN(1000000000 * n));
-        const LIQUIDITY2_AMOUNTS = [1, 3, 5, 7].map((n) => new BN(1000000000 * n));
+        const ONE_TOKEN = new BN(10).pow(new BN(18));
+        const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
+        const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
+        const LIQUIDITY1_AMOUNTS = [1, 2, 4, 8].map((n) => ONE_TOKEN.muln(n * 100000));
+        const LIQUIDITY2_AMOUNTS = [1, 3, 5, 7].map((n) => ONE_TOKEN.muln(n * 100000));
 
         for (const amount1 of LIQUIDITY1_AMOUNTS) {
             for (const amount2 of LIQUIDITY2_AMOUNTS) {

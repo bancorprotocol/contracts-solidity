@@ -374,7 +374,7 @@ contract StandardPoolConverter is
     /**
      * @dev transfers a portion of the accumulated conversion fees
      */
-    function transferFees() public {
+    function transferFees() external protected {
         (uint256 reserveBalance0, uint256 reserveBalance1) = transferFeesAndSyncReserveBalances(0);
         __reserveBalancesProd = reserveBalance0 * reserveBalance1;
     }
@@ -397,11 +397,11 @@ contract StandardPoolConverter is
             (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
             uint256 fee0 = reserveBalance0.mul(n).div(d);
             uint256 fee1 = reserveBalance1.mul(n).div(d);
-            safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
-            safeTransfer(__reserveTokens[1], networkFeeWallet, fee1);
             reserveBalance0 -= fee0;
             reserveBalance1 -= fee1;
             setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
+            safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
+            safeTransfer(__reserveTokens[1], networkFeeWallet, fee1);
         }
 
         return (reserveBalance0, reserveBalance1);
@@ -1039,7 +1039,7 @@ contract StandardPoolConverter is
         // set the reserve balances
         setReserveBalances(1, 2, newReserveBalances[0], newReserveBalances[1]);
 
-        // set the reserve balancesb product
+        // set the reserve balances product
         __reserveBalancesProd = newReserveBalances[0] * newReserveBalances[1];
 
         if (inputRearranged) {
@@ -1220,10 +1220,12 @@ contract StandardPoolConverter is
      * @param amount    amount of tokens or ether
      */
     function safeTransfer(IERC20 token, address to, uint256 amount) private {
-        if (token == NATIVE_TOKEN_ADDRESS) {
-            payable(to).transfer(amount);
-        } else {
-            token.safeTransfer(to, amount);
+        if (amount > 0) {
+            if (token == NATIVE_TOKEN_ADDRESS) {
+                payable(to).transfer(amount);
+            } else {
+                token.safeTransfer(to, amount);
+            }
         }
     }
 
