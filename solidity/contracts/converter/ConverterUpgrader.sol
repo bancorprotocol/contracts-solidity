@@ -224,7 +224,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
             return;
         }
 
-        _oldConverter.upgradeReserves(address(_newConverter));
+        _oldConverter.transferReservesOnUpgrade(address(_newConverter));
     }
 
     /**

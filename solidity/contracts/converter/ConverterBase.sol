@@ -218,7 +218,13 @@ abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistr
      *
      * @param _newConverter account to receive the new amount
      */
-    function upgradeReserves(address _newConverter) external override protected ownerOnly only(CONVERTER_UPGRADER) {
+    function transferReservesOnUpgrade(address _newConverter)
+        external
+        override
+        protected
+        ownerOnly
+        only(CONVERTER_UPGRADER)
+    {
         uint256 reserveCount = reserveTokens.length;
         for (uint256 i = 0; i < reserveCount; ++i) {
             IERC20 reserveToken = reserveTokens[i];

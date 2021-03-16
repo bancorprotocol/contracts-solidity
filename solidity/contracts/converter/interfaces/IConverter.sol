@@ -46,7 +46,7 @@ interface IConverter is IOwned {
 
     function addReserve(IERC20 _token, uint32 _ratio) external;
 
-    function upgradeReserves(address _newConverter) external;
+    function transferReservesOnUpgrade(address _newConverter) external;
 
     function withdrawInactiveTokens(
         IERC20 _token,
