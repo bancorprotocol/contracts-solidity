@@ -250,10 +250,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev withdraws non-reserve or inactive tokens held by the converter and sends them to an account
+     * @dev withdraws inactive reserves tokens held by the converter and sends them to an account
      * can only be called by the owner
-     * note that reserve tokens can only be withdrawn by the owner while the converter is inactive
-     * unless the owner is the converter upgrader contract
      *
      * @param _token ERC20 token contract address
      * @param _to account to receive the new amount
@@ -266,15 +264,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     ) public override(IConverter) protected ownerOnly {
         uint256 reserveId = __reserveIds[_token];
 
-        // verify that the token is not a reserve token or that the converter is inactive
-        require(reserveId == 0 || !isActive(), "ERR_ACCESS_DENIED");
+        // verify that the token is a reserve token and that the converter is inactive
+        require(reserveId != 0 && !isActive(), "ERR_ACCESS_DENIED");
 
         safeTransfer(_token, _to, _amount);
 
-        // if the token is a reserve token, sync the reserve balance
-        if (reserveId != 0) {
-            syncReserveBalance(_token);
-        }
+        syncReserveBalance(_token);
     }
 
     /**
