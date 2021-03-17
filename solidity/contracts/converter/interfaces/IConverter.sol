@@ -44,7 +44,7 @@ interface IConverter is IOwned {
 
     function setConversionFee(uint32 _conversionFee) external;
 
-    function addReserve(IERC20 _token, uint32 _ratio) external;
+    function addReserve(IERC20 _token, uint32 _weight) external;
 
     function transferReservesOnUpgrade(address _newConverter) external;
 
