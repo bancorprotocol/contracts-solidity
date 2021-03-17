@@ -150,8 +150,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     constructor(IERC20 token, IContractRegistry registry)
         public
         ContractRegistryClient(registry)
-        validAddress(address(token))
-        notThis(address(token))
+        validExternalAddress(address(token))
     {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
@@ -279,8 +278,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function addPoolToWhitelist(IConverterAnchor poolAnchor)
         external
         onlyOwner
-        validAddress(address(poolAnchor))
-        notThis(address(poolAnchor))
+        validExternalAddress(address(poolAnchor))
     {
         require(_poolWhitelist.add(address(poolAnchor)), "ERR_POOL_ALREADY_WHITELISTED");
 
@@ -293,12 +291,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param poolAnchor    pool anchor
      */
-    function removePoolFromWhitelist(IConverterAnchor poolAnchor)
-        external
-        onlyOwner
-        validAddress(address(poolAnchor))
-        notThis(address(poolAnchor))
-    {
+    function removePoolFromWhitelist(IConverterAnchor poolAnchor) external onlyOwner {
         require(_poolWhitelist.remove(address(poolAnchor)), "ERR_POOL_NOT_WHITELISTED");
 
         emit PoolWhitelistUpdated(poolAnchor, false);
@@ -337,8 +330,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function addSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
         external
         onlyOwner
-        validAddress(address(subscriber))
-        notThis(address(subscriber))
+        validExternalAddress(address(subscriber))
     {
         require(_subscribers.add(address(subscriber)), "ERR_SUBSCRIBER_ALREADY_SET");
 
@@ -351,12 +343,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param subscriber    subscriber address
      */
-    function removeSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
-        external
-        onlyOwner
-        validAddress(address(subscriber))
-        notThis(address(subscriber))
-    {
+    function removeSubscriber(ILiquidityProtectionEventsSubscriber subscriber) external onlyOwner {
         require(_subscribers.remove(address(subscriber)), "ERR_INVALID_SUBSCRIBER");
 
         emit SubscriberUpdated(subscriber, false);
