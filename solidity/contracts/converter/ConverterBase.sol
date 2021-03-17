@@ -466,6 +466,10 @@ abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistr
         address to,
         uint256 amount
     ) private {
+        if (amount == 0) {
+            return;
+        }
+
         if (token == NATIVE_TOKEN_ADDRESS) {
             payable(to).transfer(amount);
         } else {

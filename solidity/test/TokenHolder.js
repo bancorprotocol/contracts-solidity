@@ -63,6 +63,15 @@ describe('TokenHolder', () => {
                     expect(balance).to.be.bignumber.equal(prevBalance.add(amount));
                 });
 
+                it('should not revert when withdrawing zero amount', async () => {
+                    const prevBalance = await getBalance(tokenAddress, receiver);
+
+                    await holder.withdrawTokens(tokenAddress, receiver, new BN(0));
+
+                    const balance = await getBalance(tokenAddress, receiver);
+                    expect(balance).to.be.bignumber.equal(prevBalance);
+                });
+
                 it('should revert when a non-owner attempts to withdraw', async () => {
                     await expectRevert(
                         holder.withdrawTokens(tokenAddress, receiver, new BN(1), { from: nonOwner }),

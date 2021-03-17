@@ -69,6 +69,10 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         address to,
         uint256 amount
     ) internal {
+        if (amount == 0) {
+            return;
+        }
+
         if (token == NATIVE_TOKEN_ADDRESS) {
             payable(to).transfer(amount);
         } else {

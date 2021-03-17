@@ -1295,6 +1295,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         address to,
         uint256 amount
     ) private {
+        if (amount == 0) {
+            return;
+        }
+
         if (token == NATIVE_TOKEN_ADDRESS) {
             payable(to).transfer(amount);
         } else {
