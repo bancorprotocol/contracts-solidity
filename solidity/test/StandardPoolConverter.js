@@ -1197,7 +1197,7 @@ describe('StandardPoolConverter', () => {
         }
     });
 
-    describe('verifies that the network fee is transferred correctly when', () => {
+    describe('verifies that the network fee is transferred correctly', () => {
         const ONE_TOKEN = new BN(10).pow(new BN(18));
         const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
         const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
@@ -1208,10 +1208,10 @@ describe('StandardPoolConverter', () => {
             for (const amount2 of LIQUIDITY2_AMOUNTS) {
                 for (const conversionFeePercent of [0, 5, 10, 25, 75]) {
                     for (const networkFeePercent of [0, 5, 10, 25, 75]) {
-                        const description =
-                            `balances = [${amount1}, ${amount2}], ` + 
-                            `conversion fee = ${conversionFeePercent}% ` +
-                            `and network fee = ${networkFeePercent}%`;
+                        const description = 'after a single conversion when'
+                            + ` balances = [${amount1}, ${amount2}],`
+                            + ` conversion fee = ${conversionFeePercent}%`
+                            + ` and network fee = ${networkFeePercent}%`;
                         it(description, async () => {                
                             const poolToken = await DSToken.new('token0', 'token0', 18);
                             const reserveToken1 = await TestStandardToken.new('token1', 'token1', 18, TOTAL_SUPPLY);
@@ -1229,14 +1229,10 @@ describe('StandardPoolConverter', () => {
                             await reserveToken2.approve(converter.address, amount2);
                             await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [amount1, amount2], 1);
 
-                            const conversionPath = [reserveToken1.address, poolToken.address, reserveToken2.address];
-                            await reserveToken1.approve(bancorNetwork.address, CONVERSION_AMOUNT);
-                            const response = await bancorNetwork.convertByPath2(conversionPath, CONVERSION_AMOUNT, 1, ZERO_ADDRESS);
-                            const events = await converter.getPastEvents('Conversion', { fromBlock: response.receipt.blockNumber });
-
-                            const expectedFeeBase = events[0].args._conversionFee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, CONVERSION_AMOUNT);
+                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
                             const reserveBalance1 = amount1.add(CONVERSION_AMOUNT);
-                            const reserveBalance2 = amount2.sub(events[0].args._return);
+                            const reserveBalance2 = amount2.sub(conversion.amount);
 
                             const balance1Before = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
                             const balance2Before = await reserveToken2.balanceOf(NETWORK_FEE_WALLET);
@@ -1259,6 +1255,86 @@ describe('StandardPoolConverter', () => {
                 }
             }
         }
+
+        it('after multiple conversions', async () => {                
+            const poolToken = await DSToken.new('token0', 'token0', 18);
+            const reserveToken1 = await TestStandardToken.new('token1', 'token1', 18, TOTAL_SUPPLY);
+            const reserveToken2 = await TestStandardToken.new('token2', 'token2', 18, TOTAL_SUPPLY);
+            const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 1000000);
+
+            const networkFeePercent = 10;
+            const conversionFeePercent = 1;
+            const initialBalance1 = ONE_TOKEN.muln(10000);
+            const initialBalance2 = ONE_TOKEN.muln(40000);
+
+            await networkSettings.setNetworkFee(networkFeePercent * 10000);
+            await converter.setConversionFee(conversionFeePercent * 10000);
+            await converter.addReserve(reserveToken1.address, 500000);
+            await converter.addReserve(reserveToken2.address, 500000);
+            await poolToken.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
+
+            await reserveToken1.approve(converter.address, initialBalance1);
+            await reserveToken2.approve(converter.address, initialBalance2);
+            await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [initialBalance1, initialBalance2], 1);
+
+            let totalConversionFee1 = new BN(0);
+            let totalConversionFee2 = new BN(0);
+
+            for (const n of [10, 20, 30, 40]) {
+                const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, ONE_TOKEN.muln(n));
+                totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+            }
+
+            for (const n of [50, 60, 70, 80]) {
+                const conversion = await convert(reserveToken2, poolToken, reserveToken1, bancorNetwork, converter, ONE_TOKEN.muln(n));
+                totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+            }
+
+            for (const n of [180, 170, 160, 150]) {
+                const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, ONE_TOKEN.muln(n));
+                totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+            }
+
+            for (const n of [140, 130, 120, 110]) {
+                const conversion = await convert(reserveToken2, poolToken, reserveToken1, bancorNetwork, converter, ONE_TOKEN.muln(n));
+                totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+            }
+
+            const totalSupply = await poolToken.totalSupply();
+            const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
+            const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
+
+            const balance1Before = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
+            const balance2Before = await reserveToken2.balanceOf(NETWORK_FEE_WALLET);
+
+            await converter.removeLiquidity(await poolToken.balanceOf(defaultSender), [reserveToken1.address, reserveToken2.address], [1, 1]);
+
+            const balance1After = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
+            const balance2After = await reserveToken2.balanceOf(NETWORK_FEE_WALLET);
+
+            const totalConversionFee1InPoolTokenUnits = totalConversionFee1.mul(totalSupply).div(reserveBalance1);
+            const totalConversionFee2InPoolTokenUnits = totalConversionFee2.mul(totalSupply).div(reserveBalance2);
+            const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(totalConversionFee2InPoolTokenUnits);
+            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+            const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
+            const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
+
+            const actualFee1 = balance1After.sub(balance1Before);
+            const actualFee2 = balance2After.sub(balance2Before);
+
+            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.0097');
+            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.0097');
+        });
+
+        async function convert(sourceToken, poolToken, targetToken, bancorNetwork, converter, conversionAmount) {
+            const conversionPath = [sourceToken.address, poolToken.address, targetToken.address];
+            await sourceToken.approve(bancorNetwork.address, conversionAmount);
+            const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS);
+            const events = await converter.getPastEvents('Conversion', { fromBlock: response.receipt.blockNumber });
+            const args = events.slice(-1)[0].args;
+            return { amount: args._return, fee: args._conversionFee };
+        };
 
         function expectAlmostEqual(actual, expected, maxAbsoluteError, maxRelativeError) {
                 const x = Decimal(actual.toString());
