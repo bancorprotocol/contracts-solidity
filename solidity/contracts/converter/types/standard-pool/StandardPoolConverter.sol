@@ -325,8 +325,7 @@ contract StandardPoolConverter is
         override
         ownerOnly
         inactive
-        validAddress(address(_token))
-        notThis(address(_token))
+        validExternalAddress(address(_token))
         validReserveWeight(_weight)
     {
         // validate input

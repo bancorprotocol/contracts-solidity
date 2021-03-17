@@ -43,17 +43,6 @@ contract Utils {
         require(_portion > 0 && _portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
     }
 
-    // verifies that the address is different than this contract address
-    modifier notThis(address _address) {
-        _notThis(_address);
-        _;
-    }
-
-    // error message binary size optimization
-    function _notThis(address _address) internal view {
-        require(_address != address(this), "ERR_ADDRESS_IS_SELF");
-    }
-
     // validates an external address - currently only checks that it isn't null or this
     modifier validExternalAddress(address _address) {
         _validExternalAddress(_address);

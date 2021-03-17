@@ -292,12 +292,6 @@ describe('Converter', () => {
 
                         expect(whitelist).to.eql(ZERO_ADDRESS);
                     });
-
-                    it('should revert when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
-                        const converter = await initConverter(type, false, isETHReserve);
-
-                        await expectRevert(converter.setConversionWhitelist(converter.address), 'ERR_ADDRESS_IS_SELF');
-                    });
                 }
 
                 it('verifies the owner can update the fee', async () => {
@@ -368,7 +362,7 @@ describe('Converter', () => {
 
                         await expectRevert(
                             converter.addReserve(ZERO_ADDRESS, WEIGHT_10_PERCENT),
-                            'ERR_INVALID_ADDRESS'
+                            'ERR_INVALID_EXTERNAL_ADDRESS.'
                         );
                     });
 
@@ -399,16 +393,6 @@ describe('Converter', () => {
                         await expectRevert(
                             converter.addReserve(anchorAddress, WEIGHT_10_PERCENT),
                             'ERR_INVALID_RESERVE'
-                        );
-                    });
-
-                    it('should revert when attempting to add the converter as a reserve', async () => {
-                        await createAnchor();
-                        const converter = await createConverter(type, anchorAddress);
-
-                        await expectRevert(
-                            converter.addReserve(converter.address, WEIGHT_10_PERCENT),
-                            'ERR_ADDRESS_IS_SELF'
                         );
                     });
 
