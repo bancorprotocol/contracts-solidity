@@ -285,13 +285,6 @@ describe.only('Converter', () => {
 
                         expect(whitelist).to.eql(ZERO_ADDRESS);
                     });
-
-                    // eslint-disable-next-line max-len
-                    it('should revert when the owner attempts update the conversion whitelist contract address with the converter address', async () => {
-                        const converter = await initConverter(type, false, isETHReserve);
-
-                        await expectRevert(converter.setConversionWhitelist(converter.address), 'ERR_ADDRESS_IS_SELF');
-                    });
                 }
 
                 it('verifies the owner can update the fee', async () => {
