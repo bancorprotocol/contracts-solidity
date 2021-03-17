@@ -1308,7 +1308,14 @@ describe('StandardPoolConverter', () => {
             const balance1Before = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
             const balance2Before = await reserveToken2.balanceOf(NETWORK_FEE_WALLET);
 
-            await converter.removeLiquidity(await poolToken.balanceOf(defaultSender), [reserveToken1.address, reserveToken2.address], [1, 1]);
+            const poolTokenBalance = await poolToken.balanceOf(defaultSender);
+            const expectedReturn = await converter.removeLiquidityReturn(poolTokenBalance, [reserveToken1.address, reserveToken2.address]);
+            const actualReturn = await converter.removeLiquidity.call(poolTokenBalance, [reserveToken1.address, reserveToken2.address], [1, 1]);
+
+            expect(actualReturn[0]).to.be.bignumber.equal(expectedReturn[0]);
+            expect(actualReturn[1]).to.be.bignumber.equal(expectedReturn[1]);
+
+            await converter.removeLiquidity(poolTokenBalance, [reserveToken1.address, reserveToken2.address], [1, 1]);
 
             const balance1After = await reserveToken1.balanceOf(NETWORK_FEE_WALLET);
             const balance2After = await reserveToken2.balanceOf(NETWORK_FEE_WALLET);
