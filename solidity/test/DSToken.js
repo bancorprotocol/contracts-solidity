@@ -46,11 +46,11 @@ describe('DSToken', () => {
     });
 
     it('should revert when the owner attempts to issue tokens to an invalid address', async () => {
-        await expectRevert(token.issue(ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
+        await expectRevert(token.issue(ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_EXTERNAL_ADDRESS');
     });
 
     it('should revert when the owner attempts to issue tokens to the token address', async () => {
-        await expectRevert(token.issue(token.address, new BN(1)), 'ERR_ADDRESS_IS_SELF');
+        await expectRevert(token.issue(token.address, new BN(1)), 'ERR_INVALID_EXTERNAL_ADDRESS');
     });
 
     it('should revert when a non owner attempts to issue tokens', async () => {
