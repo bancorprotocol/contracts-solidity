@@ -44,10 +44,6 @@ describe('TokenHolder', () => {
         await expectRevert(holder.withdrawTokens(erc20Token.address, ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_ADDRESS');
     });
 
-    it('should revert when attempting to withdraw tokens to the holder address', async () => {
-        await expectRevert(holder.withdrawTokens(erc20Token.address, holder.address, new BN(1)), 'ERR_ADDRESS_IS_SELF');
-    });
-
     it('should revert when attempting to withdraw an amount greater than the holder balance', async () => {
         const balance = await erc20Token.balanceOf.call(holder.address);
 

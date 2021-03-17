@@ -138,7 +138,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
         IERC20 _token,
         address _to,
         uint256 _amount
-    ) external override ownerOnly validAddress(_to) notThis(_to) {
+    ) external override ownerOnly validExternalAddress(_to) {
         _token.safeTransfer(_to, _amount);
     }
 
@@ -440,8 +440,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
         external
         override
         ownerOnly
-        validAddress(_provider)
-        notThis(_provider)
+        validExternalAddress(_provider)
         greaterThanZero(_amount)
         greaterThanZero(_expirationTime)
         returns (uint256)
