@@ -1197,7 +1197,7 @@ describe('StandardPoolConverter', () => {
         }
     });
 
-    describe('verifies that the network fee is transferred correctly', () => {
+    describe('verifies that the network fee is transferred correctly after', () => {
         const ONE_TOKEN = new BN(10).pow(new BN(18));
         const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
         const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
@@ -1206,11 +1206,7 @@ describe('StandardPoolConverter', () => {
             for (const initialBalance2 of [100000, 300000, 500000, 700000]) {
                 for (const conversionFeePercent of [0, 5, 10, 25, 75]) {
                     for (const networkFeePercent of [0, 5, 10, 25, 75]) {
-                        const description = 'after a single conversion when'
-                            + ` initial balances = [${initialBalance1}, ${initialBalance2}],`
-                            + ` conversion fee = ${conversionFeePercent}%`
-                            + ` and network fee = ${networkFeePercent}%`;
-                        it(description, async () => {
+                        it(description('a single conversion when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
                             const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
@@ -1245,11 +1241,7 @@ describe('StandardPoolConverter', () => {
             for (const initialBalance2 of [100000, 500000]) {
                 for (const conversionFeePercent of [1, 2]) {
                     for (const networkFeePercent of [5, 10]) {
-                        const description = 'after multiple conversions when'
-                            + ` initial balances = [${initialBalance1}, ${initialBalance2}],`
-                            + ` conversion fee = ${conversionFeePercent}%`
-                            + ` and network fee = ${networkFeePercent}%`;
-                        it(description, async () => {
+                        it(description('several conversions when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
                             const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
@@ -1311,6 +1303,14 @@ describe('StandardPoolConverter', () => {
                     }
                 }
             }
+        }
+
+        function description(prefix, initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent) {
+            return prefix
+                + ` initial balances = [${initialBalance1}, ${initialBalance2}],`
+                + ` conversion fee = ${conversionFeePercent}%`
+                + ` and network fee = ${networkFeePercent}%`
+            ;
         }
 
         async function createPool(networkFeePercent, conversionFeePercent) {
