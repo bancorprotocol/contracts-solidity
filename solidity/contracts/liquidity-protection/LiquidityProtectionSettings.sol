@@ -275,7 +275,11 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param poolAnchor    pool anchor
      */
-    function addPoolToWhitelist(IConverterAnchor poolAnchor) external onlyOwner validAddress(address(poolAnchor)) {
+    function addPoolToWhitelist(IConverterAnchor poolAnchor)
+        external
+        onlyOwner
+        validExternalAddress(address(poolAnchor))
+    {
         require(_poolWhitelist.add(address(poolAnchor)), "ERR_POOL_ALREADY_WHITELISTED");
 
         emit PoolWhitelistUpdated(poolAnchor, true);

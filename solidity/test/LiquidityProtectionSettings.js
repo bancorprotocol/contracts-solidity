@@ -1,7 +1,9 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const { NATIVE_TOKEN_ADDRESS, registry, roles } = require('./helpers/Constants');
+
+const { ZERO_ADDRESS } = constants;
 
 const { ROLE_OWNER } = roles;
 
@@ -112,6 +114,14 @@ describe('LiquidityProtectionSettings', () => {
                 settings.removePoolFromWhitelist(poolToken.address, { from: owner }),
                 'ERR_POOL_NOT_WHITELISTED'
             );
+        });
+
+        it('should revert when an owner attempts to whitelist a zero address pool', async () => {
+            await expectRevert(settings.addPoolToWhitelist(ZERO_ADDRESS), 'ERR_INVALID_EXTERNAL_ADDRESS');
+        });
+
+        it('should revert when an owner attempts to whitelist the settings contract itself', async () => {
+            await expectRevert(settings.addPoolToWhitelist(settings.address), 'ERR_INVALID_EXTERNAL_ADDRESS');
         });
 
         it('should succeed when an owner attempts to add a whitelisted pool', async () => {
