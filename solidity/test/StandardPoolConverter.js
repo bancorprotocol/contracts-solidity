@@ -1371,10 +1371,10 @@ describe('StandardPoolConverter', () => {
             return { poolToken, reserveToken1, reserveToken2, converter };
         }
 
-        async function addLiquidity(reserveToken1, reserveToken2, converter, initialBalances) {
-            await reserveToken1.approve(converter.address, initialBalances[0]);
-            await reserveToken2.approve(converter.address, initialBalances[1]);
-            await converter.addLiquidity([reserveToken1.address, reserveToken2.address], initialBalances, 1);
+        async function addLiquidity(reserveToken1, reserveToken2, converter, liquidityAmounts) {
+            await reserveToken1.approve(converter.address, liquidityAmounts[0]);
+            await reserveToken2.approve(converter.address, liquidityAmounts[1]);
+            await converter.addLiquidity([reserveToken1.address, reserveToken2.address], liquidityAmounts, 1);
         }
 
         async function convert(sourceToken, poolToken, targetToken, bancorNetwork, converter, conversionAmount) {
