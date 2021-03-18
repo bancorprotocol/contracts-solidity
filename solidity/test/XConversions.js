@@ -153,7 +153,7 @@ describe('XConversions', () => {
 
             const retAmount = await bancorNetwork
                 .connect(sender)
-                .xConvert(path, amount, MIN_RETURN, EOS_BLOCKCHAIN, EOS_ADDRESS, TX_ID);
+                .callStatic.xConvert(path, amount, MIN_RETURN, EOS_BLOCKCHAIN, EOS_ADDRESS, TX_ID);
 
             const prevBalance = await bntToken.balanceOf(bancorX.address);
 
@@ -186,17 +186,16 @@ describe('XConversions', () => {
 
             const retAmount = await bancorNetwork
                 .connect(sender)
-                .completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender.address);
+                .callStatic.completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender.address);
 
             const prevBalance = await sender.getBalance();
 
             const res = await bancorNetwork
                 .connect(sender)
                 .completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender.address);
-            const transaction = await web3.eth.getTransaction(res.tx);
-            const transactionCost = BigNumber.from(transaction.gasPrice).mul(
-                BigNumber.from(res.receipt.cumulativeGasUsed)
-            );
+
+            const cumulativeGasUsed = (await res.wait()).cumulativeGasUsed;
+            const transactionCost = BigNumber.from(res.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
 
             expect(await sender.getBalance()).to.be.equal(prevBalance.add(retAmount).sub(transactionCost));
         });
@@ -216,12 +215,12 @@ describe('XConversions', () => {
 
             const retAmount = await bancorNetwork
                 .connect(sender)
-                .completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender.address);
+                .callStatic.completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender.address);
             await bancorNetwork
                 .connect(sender)
                 .completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender.address);
 
-            expect(await erc20Token.balanceOf(sender.address)).to.be.bignumber.equal(prevBalance.add(retAmount));
+            expect(await erc20Token.balanceOf(sender.address)).to.be.equal(prevBalance.add(retAmount));
         });
 
         it("shouldn't be able to completeXConversion to an ERC20 with a different xTransferId", async () => {

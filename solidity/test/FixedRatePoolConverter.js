@@ -6,6 +6,8 @@ const Decimal = require('decimal.js');
 
 const { ETH_RESERVE_ADDRESS, registry, duration, latest } = require('./helpers/Constants');
 
+const { divCeil } = require('./helpers/MathUtils');
+
 const BancorNetwork = ethers.getContractFactory('BancorNetwork');
 const FixedRatePoolConverter = ethers.getContractFactory('TestFixedRatePoolConverter');
 const FixedRatePoolConverterFactory = ethers.getContractFactory('FixedRatePoolConverterFactory');
@@ -102,15 +104,6 @@ describe('FixedRatePoolConverter', () => {
 
     const convert = async (path, amount, minReturn, options = {}) => {
         return bancorNetwork.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
-    };
-
-    const divCeil = (num, d) => {
-        const dm = num.divmod(d);
-        if (dm.mod.isZero()) {
-            return dm.div;
-        }
-
-        return dm.div.negative !== 0 ? dm.div.isubn(1) : dm.div.iaddn(1);
     };
 
     before(async () => {

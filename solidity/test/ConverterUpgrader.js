@@ -124,18 +124,9 @@ describe('ConverterUpgrader', () => {
             await converter.acceptOwnership();
         }
 
-        // TODO
-        const logs = res.logs.filter((log) => log.event === 'ConverterUpgrade');
-        expect(logs.length).to.be.at.most(1);
+        const events = await upgrader.queryFilter('ConverterUpgrade', res.blockNumber, res.blockNumber);
 
-        if (logs.length === 1) {
-            return ConverterHelper.at(logs[0].args._newConverter);
-        }
-
-        const events = await upgrader.getPastEvents('ConverterUpgrade', {
-            fromBlock: res.blockNumber,
-            toBlock: res.blockNumber
-        });
+        expect(events.length).to.be.at.most(1);
 
         return ConverterHelper.at(events[0].args._newConverter);
     };
@@ -274,7 +265,7 @@ describe('ConverterUpgrader', () => {
                     oldConverterInitialState.reserveTokenCount
                 );
 
-                for (let i = 0; i < oldConverterCurrentState.reserveTokenCount(); ++i) {
+                for (let i = 0; i < oldConverterCurrentState.reserveTokenCount; ++i) {
                     expect(oldConverterCurrentState.reserveTokens[i].token).to.be.eql(
                         oldConverterInitialState.reserveTokens[i].token
                     );

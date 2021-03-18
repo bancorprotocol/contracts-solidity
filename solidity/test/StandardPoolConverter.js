@@ -4,6 +4,7 @@ const { BigNumber } = require('ethers');
 
 const Decimal = require('decimal.js');
 
+const { divCeil } = require('./helpers/MathUtils');
 const { ETH_RESERVE_ADDRESS, registry, MAX_UINT256, latest, duration } = require('./helpers/Constants');
 
 const BancorNetwork = ethers.getContractFactory('BancorNetwork');
@@ -95,21 +96,12 @@ describe('StandardPoolConverter', () => {
     };
 
     const getTransactionCost = async (txResult) => {
-        const transaction = await txResult.wait();
-        return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(transaction.cumulativeGasUsed));
+        const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
+        return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
     };
 
     const convert = async (path, amount, minReturn, options = {}) => {
         return bancorNetwork.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
-    };
-
-    const divCeil = (num, d) => {
-        const dm = num.divmod(d);
-        if (dm.mod.isZero()) {
-            return dm.div;
-        }
-
-        return dm.div.negative !== 0 ? dm.div.isubn(1) : dm.div.add(1);
     };
 
     const expectAlmostEqual = (amount1, amount2, maxError) => {
@@ -293,7 +285,7 @@ describe('StandardPoolConverter', () => {
                     [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
                     amount,
                     MIN_RETURN,
-                    { value }
+                    { value: value }
                 );
                 expect(res)
                     .to.emit(bancorNetwork, 'Conversion')
@@ -323,17 +315,14 @@ describe('StandardPoolConverter', () => {
                     [getReserve1Address(isETHReserve), tokenAddress, reserveToken2.address],
                     amount,
                     MIN_RETURN,
-                    { value }
+                    { value: value }
                 );
 
                 const poolTokenSupply = await token.totalSupply();
                 const reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
 
-                const events = await converter.getPastEvents('TokenRateUpdate', {
-                    fromBlock: res.blockNumber,
-                    toBlock: res.blockNumber
-                });
+                const events = await converter.queryFilter('TokenRateUpdate', res.blockNumber, res.blockNumber);
 
                 // TokenRateUpdate for [source, target):
                 const { args: event1 } = events[0];
@@ -402,7 +391,7 @@ describe('StandardPoolConverter', () => {
                 await reserveToken2.connect(sender2).approve(converter.address, amount);
                 await converter
                     .connect(sender2)
-                    .addLiquidity(
+                    ['addLiquidity(address[],uint256[],uint256)'](
                         [getReserve1Address(isETHReserve), reserveToken2.address],
                         [amount, token2Amount],
                         1,
@@ -443,7 +432,7 @@ describe('StandardPoolConverter', () => {
                 await reserveToken2.connect(sender2).approve(converter.address, amount);
                 await converter
                     .connect(sender2)
-                    .addLiquidity(
+                    ['addLiquidity(address[],uint256[],uint256)'](
                         [getReserve1Address(isETHReserve), reserveToken2.address],
                         [amount, token2Amount],
                         1,

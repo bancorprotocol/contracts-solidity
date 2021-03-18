@@ -41,7 +41,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         IDSToken _token,
         IContractRegistry _registry,
         uint32 _maxConversionFee
-    ) public LiquidityPoolConverter(_token, _registry, _maxConversionFee) {}
+    )
+        public
+        LiquidityPoolConverter(_token, _registry, _maxConversionFee)
+        validAddress(address(_registry))
+        validConversionFee(_maxConversionFee)
+    {}
 
     /**
      * @dev returns the converter type
