@@ -1393,12 +1393,12 @@ describe('StandardPoolConverter', () => {
         }
 
         function expectAlmostEqual(actual, expected, maxAbsoluteError, maxRelativeError) {
-                const x = Decimal(actual.toString());
-                const y = Decimal(expected.toString());
-                if (!x.eq(y)) {
-                    const absoluteError = x.sub(y).abs();
-                    const relativeError = x.div(y).sub(1).abs();
-                    expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.be.true(
+            const x = Decimal(actual.toString());
+            const y = Decimal(expected.toString());
+            if (!x.eq(y)) {
+                const absoluteError = x.sub(y).abs();
+                const relativeError = x.div(y).sub(1).abs();
+                expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.be.true(
                     `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
                 );
             }
