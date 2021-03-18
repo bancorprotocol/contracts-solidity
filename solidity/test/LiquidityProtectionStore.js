@@ -225,14 +225,14 @@ describe('LiquidityProtectionStore', () => {
             for (let amount = 1; amount <= 10; amount++)
                 await liquidityProtectionStore.addLockedBalance(provider, amount, 1, { from: owner });
             const range = await liquidityProtectionStore.lockedBalanceRange(provider, 3, 8);
-            for (let i = 0; i < range.length; i++) expect(range[i][0]).to.be.bignumber.equal(new BN(i + 3));
+            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.bignumber.equal(new BN(i + 4));
         });
 
         it('should succeed when end-index is larger than the total number of items', async () => {
             for (let amount = 1; amount <= 10; amount++)
                 await liquidityProtectionStore.addLockedBalance(provider, amount, 1, { from: owner });
             const range = await liquidityProtectionStore.lockedBalanceRange(provider, 8, 1000);
-            for (let i = 0; i < range.length; i++) expect(range[i][0]).to.be.bignumber.equal(new BN(i + 8));
+            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.bignumber.equal(new BN(i + 9));
         });
     });
 
