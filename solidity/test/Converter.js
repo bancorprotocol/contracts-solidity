@@ -24,7 +24,7 @@ const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverte
 const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 
-describe.only('Converter', () => {
+describe('Converter', () => {
     const createConverter = async (
         type,
         anchorAddress,
@@ -473,110 +473,6 @@ describe.only('Converter', () => {
                     const converter = await initConverter(type, false, isETHReserve);
                     const isActive = await converter.isActive.call();
                     expect(isActive).to.be.false();
-                });
-
-                it('verifies that the owner can withdraw a reserve token from the converter while the converter is not active', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-
-                    const prevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), receiver);
-                    const converterBalance = await getBalance(
-                        reserveToken,
-                        getReserve1Address(isETHReserve),
-                        converter.address
-                    );
-
-                    await converter.withdrawInactiveTokens(
-                        getReserve1Address(isETHReserve),
-                        receiver,
-                        converterBalance
-                    );
-
-                    const balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), receiver);
-                    expect(balance).to.be.bignumber.equal(prevBalance.add(converterBalance));
-                });
-
-                it('should revert when the owner attempts to withdraw a reserve token while the converter is active', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-
-                    const value = new BN(1);
-                    await expectRevert(
-                        converter.withdrawInactiveTokens(getReserve1Address(isETHReserve), receiver, value),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
-
-                // eslint-disable-next-line max-len
-                it('should revert when the owner attempts to withdraw a non reserve token from the converter while the converter is not active', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-
-                    const token = await TestStandardToken.new('ERC Token 3', 'ERC3', 18, 100000);
-
-                    const value = new BN(1000);
-                    await token.transfer(converter.address, value);
-
-                    const converterBalance = await token.balanceOf.call(converter.address);
-                    expect(converterBalance).to.be.bignumber.equal(value);
-
-                    await expectRevert(
-                        converter.withdrawInactiveTokens(token.address, receiver, value),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
-
-                // eslint-disable-next-line max-len
-                it('should revert when the owner attempts to withdraw a non reserve token from the converter while the converter is active', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-
-                    const token = await TestStandardToken.new('ERC Token 3', 'ERC3', 18, 100000);
-                    const value = new BN(1000);
-                    await token.transfer(converter.address, value);
-
-                    await expectRevert(
-                        converter.withdrawInactiveTokens(token.address, receiver, value),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
-
-                it('should revert when a non owner attempts to withdraw a non reserve token while the converter is not active', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-
-                    const token = await TestStandardToken.new('ERC Token 3', 'ERC3', 18, 100000);
-
-                    const value = new BN(255);
-                    await token.transfer(converter.address, value);
-
-                    const balance = await token.balanceOf.call(converter.address);
-                    expect(balance).to.be.bignumber.equal(value);
-
-                    const value2 = new BN(5);
-                    await expectRevert(
-                        converter.withdrawInactiveTokens(token.address, receiver, value2, { from: nonOwner }),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
-
-                it('should revert when a non owner attempts to withdraw a reserve token while the converter is not active', async () => {
-                    const converter = await initConverter(type, false, isETHReserve);
-
-                    const value = new BN(5);
-                    await expectRevert(
-                        converter.withdrawInactiveTokens(getReserve1Address(isETHReserve), receiver, value, {
-                            from: nonOwner
-                        }),
-                        'ERR_ACCESS_DENIED'
-                    );
-                });
-
-                it('should revert when a non owner attempts to withdraw a reserve token while the converter is active', async () => {
-                    const converter = await initConverter(type, true, isETHReserve);
-
-                    const value = new BN(5);
-                    await expectRevert(
-                        converter.withdrawInactiveTokens(getReserve1Address(isETHReserve), receiver, value, {
-                            from: nonOwner
-                        }),
-                        'ERR_ACCESS_DENIED'
-                    );
                 });
 
                 it('verifies that the owner can upgrade the converter while the converter is active', async () => {

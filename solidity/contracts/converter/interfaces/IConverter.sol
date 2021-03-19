@@ -48,12 +48,6 @@ interface IConverter is IOwned {
 
     function transferReservesOnUpgrade(address _newConverter) external;
 
-    function withdrawInactiveTokens(
-        IERC20 _token,
-        address _to,
-        uint256 _amount
-    ) external;
-
     // deprecated, backward compatibility
     function token() external view returns (IConverterAnchor);
 

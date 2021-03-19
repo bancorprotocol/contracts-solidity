@@ -250,29 +250,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev withdraws inactive reserves tokens held by the converter and sends them to an account
-     * can only be called by the owner
-     *
-     * @param _token ERC20 token contract address
-     * @param _to account to receive the new amount
-     * @param _amount amount to withdraw
-     */
-    function withdrawInactiveTokens(
-        IERC20 _token,
-        address _to,
-        uint256 _amount
-    ) public override(IConverter) protected ownerOnly {
-        uint256 reserveId = __reserveIds[_token];
-
-        // verify that the token is a reserve token and that the converter is inactive
-        require(reserveId != 0 && !isActive(), "ERR_ACCESS_DENIED");
-
-        safeTransfer(_token, _to, _amount);
-
-        syncReserveBalance(_token);
-    }
-
-    /**
      * @dev upgrades the converter to the latest version
      * can only be called by the owner
      * note that the owner needs to call acceptOwnership on the new converter after the upgrade
