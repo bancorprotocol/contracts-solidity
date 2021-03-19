@@ -131,14 +131,6 @@ describe('Converter', () => {
         return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
-    const getBalance = async (token, address, account) => {
-        if (address === NATIVE_TOKEN_ADDRESS) {
-            return balance.current(account);
-        }
-
-        return token.balanceOf.call(account);
-    };
-
     const convert = async (path, amount, minReturn, options) => {
         return bancorNetwork.convertByPath2.call(path, amount, minReturn, ZERO_ADDRESS, options);
     };
