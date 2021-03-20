@@ -373,8 +373,8 @@ contract StandardPoolConverter is
     /**
      * @dev transfers a portion of the accumulated conversion fees
      */
-    function transferFees() external protected {
-        (uint256 reserveBalance0, uint256 reserveBalance1) = transferFeesAndSyncReserveBalances(0);
+    function processNetworkFees() external protected {
+        (uint256 reserveBalance0, uint256 reserveBalance1) = processNetworkFeesAndSyncReserveBalances(0);
         __reserveBalancesProd = reserveBalance0 * reserveBalance1;
     }
 
@@ -384,7 +384,7 @@ contract StandardPoolConverter is
      * @param _value    amount of ether to exclude from the ether reserve balance (if relevant)
      * @return new reserve balances
      */
-    function transferFeesAndSyncReserveBalances(uint256 _value) internal returns (uint256, uint256) {
+    function processNetworkFeesAndSyncReserveBalances(uint256 _value) internal returns (uint256, uint256) {
         syncReserveBalances(_value);
 
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
@@ -866,7 +866,7 @@ contract StandardPoolConverter is
         uint256[2] memory newReserveBalances;
 
         // transfer the fees and sync the balances to ensure no mismatch
-        (oldReserveBalances[0], oldReserveBalances[1]) = transferFeesAndSyncReserveBalances(msg.value);
+        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFeesAndSyncReserveBalances(msg.value);
 
         uint256 amount;
         uint256[2] memory reserveAmounts;
@@ -1014,7 +1014,7 @@ contract StandardPoolConverter is
         uint256[2] memory newReserveBalances;
 
         // transfer the fees and sync the balances to ensure no mismatch
-        (oldReserveBalances[0], oldReserveBalances[1]) = transferFeesAndSyncReserveBalances(0);
+        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFeesAndSyncReserveBalances(0);
 
         uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
 
