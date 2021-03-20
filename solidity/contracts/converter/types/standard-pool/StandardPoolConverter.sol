@@ -382,6 +382,7 @@ contract StandardPoolConverter is
      * @dev transfers a portion of the accumulated conversion fees and syncs the reserve balances
      *
      * @param _value amount of ether to exclude from the ether reserve balance (if relevant)
+     *
      * @return new reserve balances
      */
     function processNetworkFeesAndSyncReserveBalances(uint256 _value) internal returns (uint256, uint256) {
@@ -409,7 +410,8 @@ contract StandardPoolConverter is
     /**
      * @dev returns the reserve balances of the given reserve tokens minus their corresponding fees
      *
-     * @param _reserveTokens    reserve tokens
+     * @param _reserveTokens reserve tokens
+     *
      * @return reserve balances minus their corresponding fees
      */
     function reserveBalancesMinusFees(IERC20[] calldata _reserveTokens) internal view returns (uint256[2] memory) {
@@ -434,6 +436,7 @@ contract StandardPoolConverter is
      * @dev returns the reserve balances of the given reserve token minus its corresponding fee
      *
      * @param _reserveToken reserve token
+     *
      * @return reserve balance minus its corresponding fee
      */
     function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
@@ -737,6 +740,7 @@ contract StandardPoolConverter is
      * @dev returns the recent average rate of 1 `_token` in the other reserve token units
      *
      * @param _token   token to get the rate for
+     *
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
@@ -769,6 +773,7 @@ contract StandardPoolConverter is
      * @dev returns the recent average rate of 1 reserve token 0 in reserve token 1 units
      *
      * @param _averageRateInfo a local copy of the `averageRateInfo` state-variable
+     *
      * @return recent average rate between the reserves
      */
     function calcRecentAverageRate(uint256 _averageRateInfo) internal view returns (uint256) {
