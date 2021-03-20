@@ -211,14 +211,14 @@ describe('LiquidityProtectionStore', () => {
             for (let amount = 1; amount <= 10; amount++)
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
             const range = await liquidityProtectionStore.lockedBalanceRange(provider.address, 3, 8);
-            for (let i = 0; i < range.length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 4));
+            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 4));
         });
 
         it('should succeed when end-index is larger than the total number of items', async () => {
             for (let amount = 1; amount <= 10; amount++)
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
             const range = await liquidityProtectionStore.lockedBalanceRange(provider.address, 8, 1000);
-            for (let i = 0; i < range.length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 9));
+            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 9));
         });
     });
 
