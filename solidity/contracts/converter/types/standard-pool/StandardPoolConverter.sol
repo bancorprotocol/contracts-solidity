@@ -1398,7 +1398,7 @@ contract StandardPoolConverter is
     function networkFeeRatio(
         uint256 currPoint,
         uint256 prevPoint,
-        uint256 networkFee
+        uint32 networkFee
     ) private pure returns (uint256, uint256) {
         return (
             (currPoint - prevPoint) * networkFee,
