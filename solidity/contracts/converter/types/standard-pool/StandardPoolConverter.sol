@@ -381,7 +381,7 @@ contract StandardPoolConverter is
     /**
      * @dev transfers a portion of the accumulated conversion fees and syncs the reserve balances
      *
-     * @param _value    amount of ether to exclude from the ether reserve balance (if relevant)
+     * @param _value amount of ether to exclude from the ether reserve balance (if relevant)
      * @return new reserve balances
      */
     function processNetworkFeesAndSyncReserveBalances(uint256 _value) internal returns (uint256, uint256) {
