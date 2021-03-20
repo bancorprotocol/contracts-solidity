@@ -89,7 +89,7 @@ describe('LiquidityProtectionSettings', () => {
     });
 
     describe('whitelisted pools', () => {
-        it.only('should revert when a non owner attempts to add a whitelisted pool', async () => {
+        it('should revert when a non owner attempts to add a whitelisted pool', async () => {
             await expect(settings.connect(nonOwner).addPoolToWhitelist(poolToken.address)).to.be.revertedWith(
                 'ERR_ACCESS_DENIED'
             );
@@ -308,7 +308,7 @@ describe('LiquidityProtectionSettings', () => {
 
             expect(await settings.setNetworkTokenMintingLimit(poolToken.address, newLimit))
                 .to.emit(settings, 'NetworkTokenMintingLimitUpdated')
-                .withArgs(prevLimit, newLimit);
+                .withArgs(poolToken.address, prevLimit, newLimit);
 
             const limit = await settings.networkTokenMintingLimits(poolToken.address);
 

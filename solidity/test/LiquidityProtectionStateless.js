@@ -227,7 +227,7 @@ describe('LiquidityProtectionStateless', () => {
                                                         .join('')
                                                         .slice(1, -1);
                                                     it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
-                                                        const actual = await liquidityProtection.removeLiquidityTargetAmountTest.call(
+                                                        const actual = await liquidityProtection.callStatic.removeLiquidityTargetAmountTest(
                                                             poolTokenRateN,
                                                             poolTokenRateD,
                                                             poolAmount,
@@ -473,11 +473,7 @@ describe('LiquidityProtectionStateless', () => {
         if (!actual.eq(expected)) {
             const absoluteError = actual.sub(expected).abs();
             const relativeError = actual.div(expected).sub(1).abs();
-            expect(
-                absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)
-            ).to.be.true.with(
-                `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
-            );
+            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true;
         }
     }
 });

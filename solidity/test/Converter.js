@@ -151,8 +151,11 @@ describe('Converter', () => {
         return token.balanceOf(account);
     };
 
-    const convert = async (path, amount, minReturn, options) => {
-        return bancorNetwork.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
+    const convert = async (path, amount, minReturn, options = undefined) => {
+        if (options != undefined) {
+            return await bancorNetwork.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
+        }
+        return await bancorNetwork.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero);
     };
 
     const MIN_RETURN = BigNumber.from(1);
@@ -712,7 +715,7 @@ describe('Converter', () => {
                             amount,
                             MIN_RETURN,
                             {
-                                value
+                                value: value
                             }
                         )
                     ).to.be.revertedWith('ERR_INVALID_RESERVE');
@@ -734,7 +737,7 @@ describe('Converter', () => {
                             [getReserve1Address(isETHReserve), anchorAddress, getReserve1Address(isETHReserve)],
                             amount,
                             MIN_RETURN,
-                            { value }
+                            { value: value }
                         )
                     ).to.be.revertedWith('ERR_SAME_SOURCE_TARGET');
                 });
