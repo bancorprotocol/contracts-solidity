@@ -23,7 +23,7 @@ const RESERVE1_BALANCE = new BN(5000);
 const RESERVE2_BALANCE = new BN(8000);
 const TOKEN_TOTAL_SUPPLY = new BN(20000);
 
-const VERSIONS = [9, 10, 11, 23];
+const LEGACY_VERSIONS = [9, 10, 11, 23, 45];
 
 describe('ConverterUpgrader', () => {
     const initWith2Reserves = async (type, deployer, version, activate) => {
@@ -40,7 +40,7 @@ describe('ConverterUpgrader', () => {
         const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-        if (version) {
+        if (version && version < 45) {
             await converter.addConnector(reserveToken2.address, 500000, false);
         } else {
             await converter.addReserve(reserveToken2.address, 500000);
@@ -198,11 +198,10 @@ describe('ConverterUpgrader', () => {
 
     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
-    const product = cartesian(initFuncs, [...VERSIONS, null], [false, true]);
+    const product = cartesian(initFuncs, [...LEGACY_VERSIONS, null], [false, true]);
     const combinations = product.filter(
-        ([init, version, active]) =>
-            !(init === initType1WithETHReserve && version) &&
-            !(init === initType3WithETHReserve && version)
+        ([init, version]) =>
+            !(init === initType1WithETHReserve && version) && !(init === initType3WithETHReserve && version)
     );
 
     for (const [init, version, activate] of combinations) {
@@ -233,11 +232,6 @@ describe('ConverterUpgrader', () => {
                 // Token balances are always migrated during an upgrade, regardless of the reported reserve balance by
                 // the original converter.
                 const upgradedReserveBalances = [
-                    activate ? RESERVE1_BALANCE : new BN(0),
-                    activate ? RESERVE2_BALANCE : new BN(0)
-                ];
-
-                const stakedBalances = [
                     activate ? RESERVE1_BALANCE : new BN(0),
                     activate ? RESERVE2_BALANCE : new BN(0)
                 ];
