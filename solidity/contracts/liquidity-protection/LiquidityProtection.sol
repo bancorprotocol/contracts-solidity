@@ -105,7 +105,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         store = ILiquidityProtectionStore(_contractAddresses[1]);
         stats = ILiquidityProtectionStats(_contractAddresses[2]);
         systemStore = ILiquidityProtectionSystemStore(_contractAddresses[3]);
-        wallet = ITokenHolder(_contractAddresses[4]);
+        wallet = ITokenHolder(payable(_contractAddresses[4]));
         networkTokenGovernance = ITokenGovernance(_contractAddresses[5]);
         govTokenGovernance = ITokenGovernance(_contractAddresses[6]);
         lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[7]);
