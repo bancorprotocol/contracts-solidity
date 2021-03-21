@@ -5,6 +5,16 @@ import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
 import "../utility/ContractRegistryClient.sol";
 
+interface ILegacyConverterVersion45 is IConverter {
+    function withdrawTokens(
+        IERC20 _token,
+        address _to,
+        uint256 _amount
+    ) external;
+
+    function withdrawETH(address payable _to) external;
+}
+
 /**
  * @dev This contract contract allows upgrading an older converter contract (0.4 and up)
  * to the latest version.
@@ -51,7 +61,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      *
      * @param _version old converter version
      */
-    function upgrade(bytes32 _version) public override {
+    function upgrade(bytes32 _version) external override {
         upgradeOld(IConverter(msg.sender), _version);
     }
 
@@ -64,8 +74,8 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      *
      * @param _version old converter version
      */
-    function upgrade(uint16 _version) public override {
-        upgradeOld(IConverter(msg.sender), bytes32(uint256(_version)));
+    function upgrade(uint16 _version) external override {
+        upgrade(IConverter(msg.sender), _version);
     }
 
     /**
@@ -74,18 +84,33 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * ownership of the new converter will be transferred back to the original owner.
      * fires the ConverterUpgrade event upon success.
      *
-     * @param _converter   old converter contract address
-     * @param _version     old converter version
+     * @param _converter old converter contract address
      */
-    function upgradeOld(IConverter _converter, bytes32 _version) public {
-        _version; // suppress compilation warning
+    function upgradeOld(
+        IConverter _converter,
+        bytes32 /* _version */
+    ) public {
+        // the upgrader doesn't require the version for older converters
+        upgrade(_converter, 0);
+    }
+
+    /**
+     * @dev upgrades an old converter to the latest version
+     * will throw if ownership wasn't transferred to the upgrader before calling this function.
+     * ownership of the new converter will be transferred back to the original owner.
+     * fires the ConverterUpgrade event upon success.
+     *
+     * @param _converter old converter contract address
+     * @param _version old converter version
+     */
+    function upgrade(IConverter _converter, uint16 _version) private {
         IConverter converter = IConverter(_converter);
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
         IConverter newConverter = createConverter(converter);
         copyReserves(converter, newConverter);
         copyConversionFee(converter, newConverter);
-        transferReserveBalances(converter, newConverter);
+        transferReserveBalances(converter, newConverter, _version);
         IConverterAnchor anchor = converter.token();
 
         if (anchor.owner() == address(converter)) {
@@ -181,13 +206,38 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     /**
      * @dev transfers the balance of each reserve in the old converter to the new one.
-     * note that the function assumes that the new converter already has the exact same number of
+     * note that the function assumes that the new converter already has the exact same number of reserves
      * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
      *
      * @param _oldConverter    old converter contract address
      * @param _newConverter    new converter contract address
+     * @param _version old converter version
      */
-    function transferReserveBalances(IConverter _oldConverter, IConverter _newConverter) private {
+    function transferReserveBalances(
+        IConverter _oldConverter,
+        IConverter _newConverter,
+        uint16 _version
+    ) private {
+        if (_version <= 45) {
+            transferReserveBalancesVersion45(ILegacyConverterVersion45(address(_oldConverter)), _newConverter);
+
+            return;
+        }
+
+        _oldConverter.transferReservesOnUpgrade(address(_newConverter));
+    }
+
+    /**
+     * @dev transfers the balance of each reserve in the old converter to the new one.
+     * note that the function assumes that the new converter already has the exact same number of reserves
+     * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
+     *
+     * @param _oldConverter old converter contract address
+     * @param _newConverter new converter contract address
+     */
+    function transferReserveBalancesVersion45(ILegacyConverterVersion45 _oldConverter, IConverter _newConverter)
+        private
+    {
         uint256 reserveBalance;
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 

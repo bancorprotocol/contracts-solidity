@@ -130,7 +130,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
         anchor.acceptOwnership();
         converter.acceptOwnership();
 
-        for (uint256 i = 0; i < length; i++) converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
+        for (uint256 i = 0; i < length; i++) {
+            converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
+        }
 
         anchor.transferOwnership(address(converter));
         converter.acceptAnchorOwnership();

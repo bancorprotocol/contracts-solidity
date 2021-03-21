@@ -9,9 +9,17 @@ import "./IOwned.sol";
     Token Holder interface
 */
 interface ITokenHolder is IOwned {
+    receive() external payable;
+
     function withdrawTokens(
-        IERC20 _token,
-        address _to,
-        uint256 _amount
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) external;
+
+    function withdrawTokensMultiple(
+        IERC20[] calldata tokens,
+        address to,
+        uint256[] calldata amounts
     ) external;
 }
