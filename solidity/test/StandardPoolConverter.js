@@ -1213,9 +1213,6 @@ describe('StandardPoolConverter', () => {
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
-                            const balance1Before = await reserveToken1.balanceOf(networkFeeWallet);
-                            const balance2Before = await reserveToken2.balanceOf(networkFeeWallet);
-
                             await converter.processNetworkFees();
 
                             const balance1After = await reserveToken1.balanceOf(networkFeeWallet);
@@ -1224,8 +1221,8 @@ describe('StandardPoolConverter', () => {
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
                             const expectedFee2 = expectedFeeBase;
 
-                            const actualFee1 = balance1After.sub(balance1Before);
-                            const actualFee2 = balance2After.sub(balance2Before);
+                            const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
+                            const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
                             expectAlmostEqual(actualFee1, expectedFee1, '1', '0.000563');
                             expectAlmostEqual(actualFee2, expectedFee2, '1', '0.000563');
@@ -1248,9 +1245,6 @@ describe('StandardPoolConverter', () => {
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
-                            const balance1Before = await reserveToken1.balanceOf(networkFeeWallet);
-                            const balance2Before = await reserveToken2.balanceOf(networkFeeWallet);
-
                             const reserveAmounts = [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n));
                             await addLiquidity(reserveToken1, reserveToken2, converter, reserveAmounts, true);
 
@@ -1260,8 +1254,8 @@ describe('StandardPoolConverter', () => {
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
                             const expectedFee2 = expectedFeeBase;
 
-                            const actualFee1 = balance1After.sub(balance1Before);
-                            const actualFee2 = balance2After.sub(balance2Before);
+                            const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
+                            const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
                             expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000007');
                             expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000007');
@@ -1306,9 +1300,6 @@ describe('StandardPoolConverter', () => {
                             const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
                             const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
 
-                            const balance1Before = await reserveToken1.balanceOf(networkFeeWallet);
-                            const balance2Before = await reserveToken2.balanceOf(networkFeeWallet);
-
                             const supplyAmount = await poolToken.balanceOf(defaultSender);
                             await removeLiquidity(reserveToken1, reserveToken2, converter, supplyAmount, true);
 
@@ -1322,8 +1313,8 @@ describe('StandardPoolConverter', () => {
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
                             const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
-                            const actualFee1 = balance1After.sub(balance1Before);
-                            const actualFee2 = balance2After.sub(balance2Before);
+                            const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
+                            const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
                             expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001367');
                             expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001367');
