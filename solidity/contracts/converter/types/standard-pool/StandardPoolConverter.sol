@@ -220,10 +220,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev transfers reserves to a new converter during an upgrade
+     * @dev transfers reserve balances to a new converter during an upgrade
      * can only be called by the converter upgraded which should be set at its owner
      *
-     * @param _newConverter account to receive the new amount
+     * @param _newConverter address of the converter to receive the new amount
      */
     function transferReservesOnUpgrade(address _newConverter)
         external
