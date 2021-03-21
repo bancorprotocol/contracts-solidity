@@ -276,7 +276,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                             throw new Error('invalid configuration');
                         }
 
-                        it.only(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
+                        it(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
                             await baseToken.approve(converter.address, amounts[0]);
                             await networkToken.approve(converter.address, amounts[1]);
                             await converter['addLiquidity(address[],uint256[],uint256)'](

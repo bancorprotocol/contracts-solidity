@@ -311,7 +311,7 @@ describe('FixedRatePoolConverter', () => {
                 ).to.be.revertedWith('ERR_RETURN_TOO_LOW');
             });
 
-            it.only('verifies that addLiquidity gets the correct reserve balance amounts from the caller', async () => {
+            it('verifies that addLiquidity gets the correct reserve balance amounts from the caller', async () => {
                 const converter = await initConverter(false, isETHReserve);
 
                 await token.transferOwnership(converter.address);
