@@ -13,9 +13,6 @@ const BancorFormula = contract.fromArtifact('BancorFormula');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
-const NETWORK_FEE_WALLET = '0x'.padEnd(42, '1');
-const NETWORK_FEE = 0;
-
 describe('ConverterLiquidity', () => {
     const initLiquidityPool = async (hasETH, ...weights) => {
         const poolToken = await DSToken.new('name', 'symbol', 0);
@@ -48,7 +45,7 @@ describe('ConverterLiquidity', () => {
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
 
-        const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
+        const networkSettings = await NetworkSettings.new(defaultSender, 0);
 
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);

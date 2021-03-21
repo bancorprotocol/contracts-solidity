@@ -28,8 +28,6 @@ const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const INITIAL_AMOUNT = 1000000;
-const NETWORK_FEE_WALLET = '0x'.padEnd(42, '1');
-const NETWORK_FEE = 0;
 
 function decimalToInteger(value, decimals) {
     const parts = [...value.split('.'), ''];
@@ -131,7 +129,7 @@ describe('LiquidityProtectionAverageRate', () => {
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();
 
-                const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
+                const networkSettings = await NetworkSettings.new(defaultSender, 0);
 
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);

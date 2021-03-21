@@ -63,9 +63,6 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
-const NETWORK_FEE_WALLET = '0x'.padEnd(42, '1');
-const NETWORK_FEE = 0;
-
 describe('LiquidityProtectionEdgeCases', () => {
     for (const converterType of [1, 3]) {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
@@ -146,7 +143,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();
 
-                const networkSettings = await NetworkSettings.new(NETWORK_FEE_WALLET, NETWORK_FEE);
+                const networkSettings = await NetworkSettings.new(defaultSender, 0);
 
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
