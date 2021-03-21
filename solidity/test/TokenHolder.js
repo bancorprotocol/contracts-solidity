@@ -12,10 +12,10 @@ const TestStandardToken = contract.fromArtifact('TestStandardToken');
 describe('TokenHolder', () => {
     const getBalance = async (tokenAddress, account) => {
         if (tokenAddress === NATIVE_TOKEN_ADDRESS) {
-            return balance.current(account);
+            return await balance.current(account);
         }
 
-        return (await TestStandardToken.at(tokenAddress)).balanceOf.call(account);
+        return await (await TestStandardToken.at(tokenAddress)).balanceOf.call(account);
     };
 
     const getBalances = async (tokenAddresses, account) => {
