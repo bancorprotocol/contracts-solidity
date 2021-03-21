@@ -1,48 +1,54 @@
-const { contract } = require('@openzeppelin/test-environment');
-const { expectRevert, BN } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
+
+const { BigNumber } = require('ethers');
 
 // We will be using BigNumber in some of formula tests, since it'd be much more convenient to work implicitily with
 // decimal numbers.
-const BigNumber = require('bignumber.js');
+const BigNumberr = require('bignumber.js');
 const Decimal = require('decimal.js');
+
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
+
+const { divRound } = require('./helpers/MathUtils');
 
 const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
 const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctions');
 
-const TestBancorFormula = contract.fromArtifact('TestBancorFormula');
+const TestBancorFormula = ethers.getContractFactory('TestBancorFormula');
 
 describe('BancorFormula', () => {
     let formula;
     before(async () => {
-        formula = await TestBancorFormula.new();
+        formula = await (await TestBancorFormula).deploy();
         await formula.init();
     });
 
-    const ILLEGAL_VAL = new BN(2).pow(new BN(256));
-    const MAX_BASE_N = new BN(2).pow(new BN(256 - MAX_PRECISION)).sub(new BN(1));
-    const MIN_BASE_D = new BN(1);
-    const MAX_EXP = new BN(MAX_WEIGHT);
+    const ILLEGAL_VAL = BigNumber.from(2).pow(BigNumber.from(256));
+    const MAX_BASE_N = BigNumber.from(2)
+        .pow(BigNumber.from(256 - MAX_PRECISION))
+        .sub(BigNumber.from(1));
+    const MIN_BASE_D = BigNumber.from(1);
+    const MAX_EXP = BigNumber.from(MAX_WEIGHT);
 
     for (let percent = 1; percent <= 100; percent++) {
         const baseN = MAX_BASE_N;
-        const baseD = MAX_BASE_N.sub(new BN(1));
+        const baseD = MAX_BASE_N.sub(BigNumber.from(1));
         const expN = (MAX_EXP * percent) / 100;
         const expD = MAX_EXP;
 
-        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
-            await formula.powerTest.call(baseN, baseD, expN, expD);
+        it(`power(${baseN.toHexString()}, ${baseD.toHexString()}, ${expN}, ${expD})`, async () => {
+            await formula.powerTest(baseN, baseD, expN, expD);
         });
     }
 
     for (let percent = 1; percent <= 100; percent++) {
         const baseN = MAX_BASE_N;
-        const baseD = MAX_BASE_N.sub(new BN(1));
+        const baseD = MAX_BASE_N.sub(BigNumber.from(1));
         const expN = MAX_EXP;
         const expD = (MAX_EXP * percent) / 100;
 
-        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
-            await formula.powerTest.call(baseN, baseD, expN, expD);
+        it(`power(${baseN.toHexString()}, ${baseD.toHexString()}, ${expN}, ${expD})`, async () => {
+            await formula.powerTest(baseN, baseD, expN, expD);
         });
     }
 
@@ -52,11 +58,11 @@ describe('BancorFormula', () => {
         const expN = (MAX_EXP * percent) / 100;
         const expD = MAX_EXP;
 
-        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
+        it(`power(${baseN.toHexString()}, ${baseD.toHexString()}, ${expN}, ${expD})`, async () => {
             if (percent < 64) {
-                await formula.powerTest.call(baseN, baseD, expN, expD);
+                await formula.powerTest(baseN, baseD, expN, expD);
             } else {
-                await expectRevert.unspecified(formula.powerTest.call(baseN, baseD, expN, expD));
+                await expect(formula.powerTest(baseN, baseD, expN, expD)).to.be.reverted;
             }
         });
     }
@@ -67,83 +73,100 @@ describe('BancorFormula', () => {
         const expN = MAX_EXP;
         const expD = (MAX_EXP * percent) / 100;
 
-        it(`power(0x${baseN.toString(16)}, 0x${baseD.toString(16)}, ${expN}, ${expD})`, async () => {
-            await expectRevert.unspecified(formula.powerTest.call(baseN, baseD, expN, expD));
+        it(`power(${baseN.toHexString()}, ${baseD.toHexString()}, ${expN}, ${expD})`, async () => {
+            await expect(formula.powerTest(baseN, baseD, expN, expD)).to.be.reverted;
         });
     }
 
     const values = [
-        MAX_BASE_N.divRound(MIN_BASE_D),
-        MAX_BASE_N.divRound(MAX_BASE_N.sub(new BN(1))),
-        MIN_BASE_D.add(new BN(1)).divRound(MIN_BASE_D)
+        divRound(MAX_BASE_N, MIN_BASE_D),
+        divRound(MAX_BASE_N, MAX_BASE_N.sub(BigNumber.from(1))),
+        divRound(MIN_BASE_D.add(BigNumber.from(1)), MIN_BASE_D)
     ];
 
     for (const value of values) {
-        it(`generalLog(0x${value.toString(16)})`, async () => {
-            const retVal = await formula.generalLogTest.call(value);
-            expect(retVal.mul(new BN(MAX_EXP))).be.bignumber.lt(ILLEGAL_VAL);
+        it(`generalLog(${value.toHexString()})`, async () => {
+            const retVal = await formula.generalLogTest(value);
+            expect(retVal.mul(BigNumber.from(MAX_EXP))).be.lt(ILLEGAL_VAL);
         });
     }
 
     for (let precision = MIN_PRECISION; precision <= MAX_PRECISION; precision++) {
-        const maxExp = new BN(maxExpArray[precision].slice(2), 16);
-        const shlVal = new BN(2).pow(new BN(MAX_PRECISION - precision));
+        const maxExp = BigNumber.from(maxExpArray[precision]);
+        const shlVal = BigNumber.from(2).pow(BigNumber.from(MAX_PRECISION - precision));
         const tuples = [
-            { input: maxExp.add(new BN(0)).mul(shlVal).sub(new BN(1)), output: new BN(precision - 0) },
-            { input: maxExp.add(new BN(0)).mul(shlVal).sub(new BN(0)), output: new BN(precision - 0) },
-            { input: maxExp.add(new BN(1)).mul(shlVal).sub(new BN(1)), output: new BN(precision - 0) },
-            { input: maxExp.add(new BN(1)).mul(shlVal).sub(new BN(0)), output: new BN(precision - 1) }
+            {
+                input: maxExp.add(BigNumber.from(0)).mul(shlVal).sub(BigNumber.from(1)),
+                output: BigNumber.from(precision - 0)
+            },
+            {
+                input: maxExp.add(BigNumber.from(0)).mul(shlVal).sub(BigNumber.from(0)),
+                output: BigNumber.from(precision - 0)
+            },
+            {
+                input: maxExp.add(BigNumber.from(1)).mul(shlVal).sub(BigNumber.from(1)),
+                output: BigNumber.from(precision - 0)
+            },
+            {
+                input: maxExp.add(BigNumber.from(1)).mul(shlVal).sub(BigNumber.from(0)),
+                output: BigNumber.from(precision - 1)
+            }
         ];
 
         for (const { input, output } of tuples) {
-            it(`findPositionInMaxExpArray(0x${input.toString(16)})`, async () => {
-                if (precision === MIN_PRECISION && output.lt(new BN(precision))) {
-                    await expectRevert.unspecified(formula.findPositionInMaxExpArrayTest.call(input));
+            it(`findPositionInMaxExpArray(${input.toHexString()})`, async () => {
+                if (precision === MIN_PRECISION && output.lt(BigNumber.from(precision))) {
+                    await expect(formula.findPositionInMaxExpArrayTest(input)).to.be.reverted;
                 } else {
-                    const retVal = await formula.findPositionInMaxExpArrayTest.call(input);
-                    expect(retVal).to.be.bignumber.equal(output);
+                    const retVal = await formula.findPositionInMaxExpArrayTest(input);
+                    expect(retVal).to.be.equal(output);
                 }
             });
         }
     }
 
     for (let precision = MIN_PRECISION; precision <= MAX_PRECISION; precision++) {
-        const maxExp = new BN(maxExpArray[precision].slice(2), 16);
-        const maxVal = new BN(maxValArray[precision].slice(2), 16);
-        const errExp = maxExp.add(new BN(1));
+        const maxExp = BigNumber.from(maxExpArray[precision]);
+        const maxVal = BigNumber.from(maxValArray[precision]);
+        const errExp = maxExp.add(BigNumber.from(1));
 
-        it(`generalExp(0x${maxExp.toString(16)}, ${precision})`, async () => {
-            const retVal = await formula.generalExpTest.call(maxExp, precision);
-            expect(retVal).to.be.bignumber.equal(maxVal);
+        it(`generalExp(${maxExp.toHexString()}, ${precision})`, async () => {
+            const retVal = await formula.generalExpTest(maxExp, precision);
+            expect(retVal).to.be.equal(maxVal);
         });
 
-        it(`generalExp(0x${errExp.toString(16)}, ${precision})`, async () => {
-            const retVal = await formula.generalExpTest.call(errExp, precision);
-            expect(retVal).to.be.bignumber.lt(maxVal);
+        it(`generalExp(${errExp.toHexString()}, ${precision})`, async () => {
+            const retVal = await formula.generalExpTest(errExp, precision);
+            expect(retVal).to.be.lt(maxVal);
         });
     }
 
     for (let precision = MIN_PRECISION; precision <= MAX_PRECISION; precision++) {
-        const minExp = new BN(maxExpArray[precision - 1].slice(2), 16).add(new BN(1));
-        const minVal = new BN(2).pow(new BN(precision));
+        const minExp = BigNumber.from(maxExpArray[precision - 1]).add(BigNumber.from(1));
+        const minVal = BigNumber.from(2).pow(BigNumber.from(precision));
 
-        it(`generalExp(0x${minExp.toString(16)}, ${precision})`, async () => {
-            const retVal = await formula.generalExpTest.call(minExp, precision);
-            expect(retVal).to.be.bignumber.gte(minVal);
+        it(`generalExp(${minExp.toHexString()}, ${precision})`, async () => {
+            const retVal = await formula.generalExpTest(minExp, precision);
+            expect(retVal).to.be.gte(minVal);
         });
     }
 
     for (let n = 1; n <= 255; n++) {
         const tuples = [
-            { input: new BN(2).pow(new BN(n)), output: new BN(n) },
-            { input: new BN(2).pow(new BN(n)).add(new BN(1)), output: new BN(n) },
-            { input: new BN(2).pow(new BN(n + 1)).sub(new BN(1)), output: new BN(n) }
+            { input: BigNumber.from(2).pow(BigNumber.from(n)), output: BigNumber.from(n) },
+            { input: BigNumber.from(2).pow(BigNumber.from(n)).add(BigNumber.from(1)), output: BigNumber.from(n) },
+            {
+                input: BigNumber.from(2)
+                    .pow(BigNumber.from(n + 1))
+                    .sub(BigNumber.from(1)),
+                output: BigNumber.from(n)
+            }
         ];
 
         for (const { input, output } of tuples) {
-            it(`floorLog2(0x${input.toString(16)})`, async () => {
-                const retVal = await formula.floorLog2Test.call(input);
-                expect(retVal).to.be.bignumber.equal(output);
+            it(`floorLog2(${input.toHexString()})`, async () => {
+                const retVal = await formula.floorLog2Test(input);
+                expect(retVal).to.be.equal(output);
             });
         }
     }
@@ -151,59 +174,63 @@ describe('BancorFormula', () => {
     describe('precision tests', async () => {
         const LOG_MIN = 1;
         const EXP_MIN = 0;
-        const LOG_MAX = new BigNumber(Decimal.exp(1).toFixed());
-        const EXP_MAX = new BigNumber(Decimal.pow(2, 4).toFixed());
-        const FIXED_1 = new BigNumber(2).pow(MAX_PRECISION);
-        const MIN_RATIO = new BigNumber('0.99999999999999999999999999999999999');
-        const MAX_RATIO = new BigNumber(1);
+        const LOG_MAX = new BigNumberr(Decimal.exp(1).toFixed());
+        const EXP_MAX = new BigNumberr(Decimal.pow(2, 4).toFixed());
+        const FIXED_1 = new BigNumberr(2).pow(MAX_PRECISION);
+        const MIN_RATIO = new BigNumberr('0.99999999999999999999999999999999999');
+        const MAX_RATIO = new BigNumberr(1);
 
         for (let percent = 0; percent < 100; percent++) {
-            const x = new BigNumber(percent).dividedBy(100).multipliedBy(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
+            const x = new BigNumberr(percent).dividedBy(100).multipliedBy(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
 
             it(`optimalLog(${x.toFixed()})`, async () => {
-                const fixedPoint = new BigNumber(await formula.optimalLogTest(FIXED_1.multipliedBy(x).toFixed(0)));
-                const floatPoint = new BigNumber(Decimal(x.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
+                const fixedPoint = new BigNumberr(
+                    (await formula.optimalLogTest(FIXED_1.multipliedBy(x).toFixed(0))).toString()
+                );
+                const floatPoint = new BigNumberr(Decimal(x.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
-                expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
-                expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+                expect(ratio.gte(MIN_RATIO)).to.be.true;
+                expect(ratio.lte(MAX_RATIO)).to.be.true;
             });
         }
 
         for (let percent = 0; percent < 100; percent++) {
-            const x = new BigNumber(percent)
+            const x = new BigNumberr(percent)
                 .multipliedBy(EXP_MAX.minus(EXP_MIN))
-                .dividedBy(new BigNumber(100))
+                .dividedBy(new BigNumberr(100))
                 .plus(EXP_MIN);
 
             it(`optimalExp(${x.toString()})`, async () => {
-                const fixedPoint = new BigNumber(await formula.optimalExpTest.call(FIXED_1.multipliedBy(x).toFixed(0)));
-                const floatPoint = new BigNumber(Decimal(x.toFixed()).exp().mul(FIXED_1.toFixed()).toFixed());
+                const fixedPoint = new BigNumberr(
+                    (await formula.callStatic.optimalExpTest(FIXED_1.multipliedBy(x).toFixed(0))).toString()
+                );
+                const floatPoint = new BigNumberr(Decimal(x.toFixed()).exp().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
-                expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
-                expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+                expect(ratio.gte(MIN_RATIO)).to.be.true;
+                expect(ratio.lte(MAX_RATIO)).to.be.true;
             });
         }
 
         for (let n = 0; n < 256 - MAX_PRECISION; n++) {
             const values = [
-                new BigNumber(2).pow(new BigNumber(n)),
-                new BigNumber(2).pow(new BigNumber(n)).plus(new BigNumber(1)),
-                new BigNumber(2).pow(new BigNumber(n)).multipliedBy(new BigNumber(1.5)),
-                new BigNumber(2).pow(new BigNumber(n + 1)).minus(new BigNumber(1))
+                new BigNumberr(2).pow(new BigNumberr(n)),
+                new BigNumberr(2).pow(new BigNumberr(n)).plus(new BigNumberr(1)),
+                new BigNumberr(2).pow(new BigNumberr(n)).multipliedBy(new BigNumberr(1.5)),
+                new BigNumberr(2).pow(new BigNumberr(n + 1)).minus(new BigNumberr(1))
             ];
 
             for (const value of values) {
                 it(`generalLog(${value.toString()})`, async () => {
-                    const fixedPoint = new BigNumber(
-                        await formula.generalLogTest.call(FIXED_1.multipliedBy(value).toFixed(0))
+                    const fixedPoint = new BigNumberr(
+                        (await formula.generalLogTest(FIXED_1.multipliedBy(value).toFixed(0))).toString()
                     );
-                    const floatPoint = new BigNumber(Decimal(value.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
+                    const floatPoint = new BigNumberr(Decimal(value.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                     const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
-                    expect(ratio.gte(MIN_RATIO)).to.be.true(`${ratio.toString()} is below MIN_RATIO`);
-                    expect(ratio.lte(MAX_RATIO)).to.be.true(`${ratio.toString()} is above MAX_RATIO`);
+                    expect(ratio.gte(MIN_RATIO)).to.be.true;
+                    expect(ratio.lte(MAX_RATIO)).to.be.true;
                 });
             }
         }
@@ -215,11 +242,11 @@ describe('BancorFormula', () => {
                     const expectedX = expectedWeights[0];
                     const expectedY = expectedWeights[1];
 
-                    const weights = await formula.normalizedWeightsTest.call(new BN(a), new BN(b));
+                    const weights = await formula.normalizedWeightsTest(BigNumber.from(a), BigNumber.from(b));
                     const actualX = weights[0];
                     const actualY = weights[1];
-                    expect(actualX).to.be.bignumber.equal(new BN(expectedX.toFixed()));
-                    expect(actualY).to.be.bignumber.equal(new BN(expectedY.toFixed()));
+                    expect(actualX).to.be.equal(BigNumber.from(expectedX.toFixed()));
+                    expect(actualY).to.be.equal(BigNumber.from(expectedY.toFixed()));
                 });
             }
         }
@@ -233,11 +260,14 @@ describe('BancorFormula', () => {
                     const expectedX = expectedWeights[0];
                     const expectedY = expectedWeights[1];
 
-                    const weights = await formula.normalizedWeightsTest.call(new BN(a.toFixed()), new BN(b.toFixed()));
+                    const weights = await formula.normalizedWeightsTest(
+                        BigNumber.from(a.toFixed()),
+                        BigNumber.from(b.toFixed())
+                    );
                     const actualX = weights[0];
                     const actualY = weights[1];
-                    expect(actualX).to.be.bignumber.equal(new BN(expectedX.toFixed()));
-                    expect(actualY).to.be.bignumber.equal(new BN(expectedY.toFixed()));
+                    expect(actualX).to.be.equal(BigNumber.from(expectedX.toFixed()));
+                    expect(actualY).to.be.equal(BigNumber.from(expectedY.toFixed()));
                 });
             }
         }
@@ -248,11 +278,14 @@ describe('BancorFormula', () => {
                     const expectedX = Math.round((MAX_WEIGHT * a) / (a + b));
                     const expectedY = MAX_WEIGHT - expectedX;
 
-                    const weights = await formula.accurateWeightsTest.call(new BN(a.toFixed()), new BN(b.toFixed()));
+                    const weights = await formula.accurateWeightsTest(
+                        BigNumber.from(a.toFixed()),
+                        BigNumber.from(b.toFixed())
+                    );
                     const actualX = weights[0];
                     const actualY = weights[1];
-                    expect(actualX).to.be.bignumber.equal(new BN(expectedX));
-                    expect(actualY).to.be.bignumber.equal(new BN(expectedY));
+                    expect(actualX).to.be.equal(BigNumber.from(expectedX));
+                    expect(actualY).to.be.equal(BigNumber.from(expectedY));
                 });
             }
         }
@@ -266,11 +299,14 @@ describe('BancorFormula', () => {
                     const expectedX = expectedWeights[0];
                     const expectedY = expectedWeights[1];
 
-                    const weights = await formula.accurateWeightsTest.call(new BN(a.toFixed()), new BN(b.toFixed()));
+                    const weights = await formula.accurateWeightsTest(
+                        BigNumber.from(a.toFixed()),
+                        BigNumber.from(b.toFixed())
+                    );
                     const actualX = weights[0];
                     const actualY = weights[1];
-                    expect(actualX).to.be.bignumber.equal(new BN(expectedX.toFixed()));
-                    expect(actualY).to.be.bignumber.equal(new BN(expectedY.toFixed()));
+                    expect(actualX).to.be.equal(BigNumber.from(expectedX.toFixed()));
+                    expect(actualY).to.be.equal(BigNumber.from(expectedY.toFixed()));
                 });
             }
         }
@@ -279,8 +315,8 @@ describe('BancorFormula', () => {
             for (let d = 1; d <= 10; d++) {
                 it(`roundDiv(${n}, ${d})`, async () => {
                     const expected = Math.round(n / d);
-                    const actual = await formula.roundDivTest.call(new BN(n.toFixed()), new BN(d.toFixed()));
-                    expect(actual).to.be.bignumber.equal(new BN(expected));
+                    const actual = await formula.roundDivTest(BigNumber.from(n.toFixed()), BigNumber.from(d.toFixed()));
+                    expect(actual).to.be.equal(BigNumber.from(expected));
                 });
             }
         }
@@ -291,8 +327,8 @@ describe('BancorFormula', () => {
                 const d = Decimal(ILLEGAL_VAL.toString()).add(j).mod(Decimal(ILLEGAL_VAL.toString()));
                 it(`roundDiv(${n.toFixed()}, ${d.toFixed()})`, async () => {
                     const expected = n.div(d).toFixed(0, Decimal.ROUND_HALF_UP);
-                    const actual = await formula.roundDivTest.call(new BN(n.toFixed()), new BN(d.toFixed()));
-                    expect(actual).to.be.bignumber.equal(new BN(expected));
+                    const actual = await formula.roundDivTest(BigNumber.from(n.toFixed()), BigNumber.from(d.toFixed()));
+                    expect(actual).to.be.equal(BigNumber.from(expected));
                 });
             }
         }
@@ -334,13 +370,9 @@ describe('BancorFormula', () => {
                                 const actual = await balancedWeightsActual(t, s, r, q, p);
                                 if (Array.isArray(actual)) {
                                     const ratio = getRatio(actual[0], actual[1], expected[0], expected[1]);
-                                    expect(ratio.gte('0.932714') && ratio.lte('1.078991')).to.be.true(
-                                        `ratio = ${ratio}`
-                                    );
+                                    expect(ratio.gte('0.932714') && ratio.lte('1.078991')).to.be.true;
                                 } else {
-                                    expect(expected.startsWith(actual.split('revert ')[1])).to.be.true(
-                                        `expected = ${expected}, actual = ${actual}`
-                                    );
+                                    expect(expected.startsWith(actual.split('revert ')[1])).to.be.true;
                                 }
                             });
                         }

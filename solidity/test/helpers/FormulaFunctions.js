@@ -1,6 +1,8 @@
-const { expect } = require('../../../chai-local');
+const { expect } = require('chai');
 const constants = require('./FormulaConstants');
 const Decimal = require('decimal.js');
+
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
 
 const ONE = Decimal(1);
 const MAX_WEIGHT = Decimal(constants.MAX_WEIGHT);
@@ -137,11 +139,11 @@ const balancedWeights = (
     const p = Decimal(reserveRateDenominator.toString());
 
     if (t.eq(s)) {
-        expect(t.gt(0) || r.gt(0)).to.be.true('ERR_INVALID_RESERVE_BALANCE');
+        expect(t.gt(0) || r.gt(0)).to.be.equal(true, 'ERR_INVALID_RESERVE_BALANCE');
     } else {
-        expect(t.gt(0) && s.gt(0) && r.gt(0)).to.be.true('ERR_INVALID_RESERVE_BALANCE');
+        expect(t.gt(0) && s.gt(0) && r.gt(0)).to.be.equal(true, 'ERR_INVALID_RESERVE_BALANCE');
     }
-    expect(q.gt(0) && p.gt(0)).to.be.true('ERR_INVALID_RESERVE_RATE');
+    expect(q.gt(0) && p.gt(0)).to.be.equal(true, 'ERR_INVALID_RESERVE_RATE');
 
     const tq = t.mul(q);
     const rp = r.mul(p);
