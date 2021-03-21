@@ -133,7 +133,7 @@ describe('StandardPoolConverter', () => {
         const factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
-        networkSettings = await NetworkSettings.new(defaultSender, 0);
+        networkSettings = await NetworkSettings.new(networkFeeWallet, 0);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
