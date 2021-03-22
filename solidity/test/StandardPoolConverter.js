@@ -1462,6 +1462,39 @@ describe('StandardPoolConverter', () => {
             }
         }
 
+        for (const initialBalance1 of [100000, 400000]) {
+            for (const initialBalance2 of [100000, 500000]) {
+                for (const conversionFeePercent of [1, 2]) {
+                    for (const networkFeePercent of [5, 10]) {
+                        it(description('processNetworkFees when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
+                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
+                            await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
+
+                            const conversionAmount = ONE_TOKEN.muln(Math.max(initialBalance1, initialBalance2));
+                            const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, conversionAmount);
+                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(conversionAmount);
+                            const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
+
+                            await converter.processNetworkFees();
+
+                            const balance1After = await reserveToken1.balanceOf(networkFeeWallet);
+                            const balance2After = await reserveToken2.balanceOf(networkFeeWallet);
+
+                            const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
+                            const expectedFee2 = expectedFeeBase;
+
+                            const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
+                            const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
+
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.03256');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.03256');
+                        });
+                    }
+                }
+            }
+        }
+
         function description(prefix, initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent) {
             return prefix
                 + ` initial balances = [${initialBalance1}, ${initialBalance2}],`
