@@ -16,8 +16,9 @@ const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctio
 
 const TestBancorFormula = ethers.getContractFactory('TestBancorFormula');
 
+let formula;
+
 describe('BancorFormula', () => {
-    let formula;
     before(async () => {
         formula = await (await TestBancorFormula).deploy();
         await formula.init();
