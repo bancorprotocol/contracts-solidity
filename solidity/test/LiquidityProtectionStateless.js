@@ -3,6 +3,7 @@ const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
 const Decimal = require('decimal.js');
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
 
 const LiquidityProtectionSettings = ethers.getContractFactory('LiquidityProtectionSettings');
 const LiquidityProtectionStore = ethers.getContractFactory('LiquidityProtectionStore');
