@@ -365,18 +365,20 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
         (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
-        if (currPoint > prevPoint) {
-            INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-            (address networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
-            (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
-            uint256 fee0 = reserveBalance0.mul(n).div(d);
-            uint256 fee1 = reserveBalance1.mul(n).div(d);
-            reserveBalance0 -= fee0;
-            reserveBalance1 -= fee1;
-            setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
-            safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
-            safeTransfer(__reserveTokens[1], networkFeeWallet, fee1);
+        if (currPoint <= prevPoint) {
+            return (reserveBalance0, reserveBalance1);
         }
+
+        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
+        (address networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
+        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
+        uint256 fee0 = reserveBalance0.mul(n).div(d);
+        uint256 fee1 = reserveBalance1.mul(n).div(d);
+        reserveBalance0 -= fee0;
+        reserveBalance1 -= fee1;
+        setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
+        safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
+        safeTransfer(__reserveTokens[1], networkFeeWallet, fee1);
 
         return (reserveBalance0, reserveBalance1);
     }
