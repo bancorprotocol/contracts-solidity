@@ -31,7 +31,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     uint256 private __reserveBalances;
     uint256 private __reserveBalancesProd;
-    IERC20[] private __reserveTokens;
+    IERC20[2] private __reserveTokens;
+    uint16 __reserveTokensLength;
     mapping(IERC20 => uint256) private __reserveIds;
 
     IConverterAnchor public override anchor; // converter anchor contract
@@ -274,7 +275,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return number of reserve tokens
      */
     function reserveTokenCount() public view returns (uint16) {
-        return uint16(__reserveTokens.length);
+        return __reserveTokensLength;
     }
 
     /**
@@ -282,7 +283,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return array of reserve tokens
      */
-    function reserveTokens() public view returns (IERC20[] memory) {
+    function reserveTokens() public view returns (IERC20[2] memory) {
         return __reserveTokens;
     }
 
@@ -306,8 +307,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         require(address(_token) != address(anchor) && __reserveIds[_token] == 0, "ERR_INVALID_RESERVE");
         require(reserveTokenCount() < 2, "ERR_INVALID_RESERVE_COUNT");
 
-        __reserveTokens.push(_token);
-        __reserveIds[_token] = __reserveTokens.length;
+        __reserveTokens[__reserveTokensLength++] = _token;
+        __reserveIds[_token] = __reserveTokensLength;
     }
 
     /**
@@ -390,7 +391,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return reserve balances minus their corresponding fees
      */
-    function reserveBalancesMinusFees(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
+    function reserveBalancesMinusFees(IERC20[2] memory _reserveTokens) internal view returns (uint256[2] memory) {
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
@@ -802,7 +803,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 _reserve2Amount,
         uint256 _minReturn
     ) public payable returns (uint256) {
-        uint256[] memory reserveAmounts = new uint256[](2);
+        uint256[2] memory reserveAmounts;
         reserveAmounts[0] = _reserve1Amount;
         reserveAmounts[1] = _reserve2Amount;
         return addLiquidity(__reserveTokens, reserveAmounts, _minReturn);
@@ -818,8 +819,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return amount of pool tokens issued
      */
     function addLiquidity(
-        IERC20[] memory _reserveTokens,
-        uint256[] memory _reserveAmounts,
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveAmounts,
         uint256 _minReturn
     ) public payable protected active returns (uint256) {
         // verify the user input
@@ -855,7 +856,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // calculate the amount of pool tokens to mint for the caller
         // and the amount of reserve tokens to transfer from the caller
         if (totalSupply == 0) {
-            amount = MathEx.geometricMean(_reserveAmounts);
+            amount = geometricMean(_reserveAmounts);
             for (uint256 i = 0; i < 2; i++) {
                 reserveAmounts[i] = _reserveAmounts[i];
             }
@@ -921,8 +922,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return amount of reserve tokens to transfer from the caller
      */
     function addLiquidityAmounts(
-        IERC20[] memory, /* _reserveTokens */
-        uint256[] memory _reserveAmounts,
+        IERC20[2] memory, /* _reserveTokens */
+        uint256[2] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
     ) internal view virtual returns (uint256, uint256[2] memory) {
@@ -956,10 +957,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 _reserve1MinReturn,
         uint256 _reserve2MinReturn
     ) public returns (uint256, uint256) {
-        uint256[] memory minReturnAmounts = new uint256[](2);
+        uint256[2] memory minReturnAmounts;
         minReturnAmounts[0] = _reserve1MinReturn;
         minReturnAmounts[1] = _reserve2MinReturn;
-        uint256[] memory reserveAmounts = removeLiquidity(_amount, __reserveTokens, minReturnAmounts);
+        uint256[2] memory reserveAmounts = removeLiquidity(_amount, __reserveTokens, minReturnAmounts);
         return (reserveAmounts[0], reserveAmounts[1]);
     }
 
@@ -974,9 +975,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     function removeLiquidity(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
-        uint256[] memory _reserveMinReturnAmounts
-    ) public protected active returns (uint256[] memory) {
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveMinReturnAmounts
+    ) public protected active returns (uint256[2] memory) {
         // verify the user input
         bool inputRearranged = verifyLiquidityInput(_reserveTokens, _reserveMinReturnAmounts, _amount);
 
@@ -997,7 +998,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // transfer the fees and sync the balances to ensure no mismatch
         (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFeesAndSyncReserveBalances(0);
 
-        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
+        uint256[2] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
 
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
@@ -1045,11 +1046,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return the required amount of each one of the reserve tokens
      */
     function addLiquidityCost(
-        IERC20[] memory _reserveTokens,
+        IERC20[2] memory _reserveTokens,
         uint256 _reserveTokenIndex,
         uint256 _reserveAmount
-    ) public view returns (uint256[] memory) {
-        uint256[] memory _reserveAmounts = new uint256[](2);
+    ) public view returns (uint256[2] memory) {
+        uint256[2] memory _reserveAmounts;
 
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         uint256[2] memory _reserveBalances = reserveBalancesMinusFees(_reserveTokens);
@@ -1087,10 +1088,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
-    function removeLiquidityReturn(uint256 _amount, IERC20[] memory _reserveTokens)
+    function removeLiquidityReturn(uint256 _amount, IERC20[2] memory _reserveTokens)
         public
         view
-        returns (uint256[] memory)
+        returns (uint256[2] memory)
     {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         uint256[2] memory _reserveBalances = reserveBalancesMinusFees(_reserveTokens);
@@ -1109,8 +1110,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return true if the function has rearranged the input arrays; false otherwise
      */
     function verifyLiquidityInput(
-        IERC20[] memory _reserveTokens,
-        uint256[] memory _reserveAmounts,
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveAmounts,
         uint256 _amount
     ) private view returns (bool) {
         require(validReserveAmounts(_reserveAmounts) && _amount > 0, "ERR_ZERO_AMOUNT");
@@ -1139,7 +1140,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return true if both reserve amounts are larger than zero; false otherwise
      */
-    function validReserveAmounts(uint256[] memory _reserveAmounts) internal pure virtual returns (bool) {
+    function validReserveAmounts(uint256[2] memory _reserveAmounts) internal pure virtual returns (bool) {
         return _reserveAmounts[0] > 0 && _reserveAmounts[1] > 0;
     }
 
@@ -1156,8 +1157,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 _amount,
         uint256 _totalSupply,
         uint256[2] memory _reserveBalances
-    ) private pure returns (uint256[] memory) {
-        uint256[] memory _reserveAmounts = new uint256[](2);
+    ) private pure returns (uint256[2] memory) {
+        uint256[2] memory _reserveAmounts;
         for (uint256 i = 0; i < 2; i++) {
             _reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
         }
@@ -1249,6 +1250,14 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
         return _targetReserveBalance.mul(_amount) / _sourceReserveBalance.add(_amount);
+    }
+
+    function geometricMean(uint256[2] memory _reserveAmounts) private pure returns (uint256) {
+        uint256[] memory reserveAmounts = new uint256[](2);
+        for (uint256 i = 0; i < 2; i++) {
+            reserveAmounts[i] = _reserveAmounts[i];
+        }
+        return MathEx.geometricMean(reserveAmounts);
     }
 
     function crossReserveSourceAmount(
