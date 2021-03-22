@@ -39,7 +39,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return the denominator of the rate between the 1st reserve token and the 2nd reserve token
      */
     function rate() public view returns (uint256, uint256) {
-        IERC20[] memory _reserveTokens = reserveTokens();
+        IERC20[2] memory _reserveTokens = reserveTokens();
         return (_rate[_reserveTokens[0]], _rate[_reserveTokens[1]]);
     }
 
@@ -52,7 +52,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      */
     function setRate(uint256 rateN, uint256 rateD) public ownerOnly {
         require(rateN > 0 && rateD > 0, "ERR_INVALID_RATE");
-        IERC20[] memory _reserveTokens = reserveTokens();
+        IERC20[2] memory _reserveTokens = reserveTokens();
         _rate[_reserveTokens[0]] = rateN;
         _rate[_reserveTokens[1]] = rateD;
     }
@@ -92,7 +92,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256, /* _targetBalance */
         uint256 _amount
     ) internal view override returns (uint256, uint256) {
-        IERC20[] memory _reserveTokens = reserveTokens();
+        IERC20[2] memory _reserveTokens = reserveTokens();
         require(
             (_sourceToken == _reserveTokens[0] && _targetToken == _reserveTokens[1]) ||
                 (_sourceToken == _reserveTokens[1] && _targetToken == _reserveTokens[0]),
@@ -147,8 +147,8 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return amount of reserve tokens to transfer from the caller
      */
     function addLiquidityAmounts(
-        IERC20[] memory _reserveTokens,
-        uint256[] memory _reserveAmounts,
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
     ) internal view override returns (uint256, uint256[2] memory) {
@@ -173,7 +173,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      *
      * @return true if at least one of the reserve amounts is larger than zero; false otherwise
      */
-    function validReserveAmounts(uint256[] memory _reserveAmounts) internal pure override returns (bool) {
+    function validReserveAmounts(uint256[2] memory _reserveAmounts) internal pure override returns (bool) {
         return _reserveAmounts[0] > 0 || _reserveAmounts[1] > 0;
     }
 }
