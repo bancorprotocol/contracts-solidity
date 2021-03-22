@@ -28,6 +28,5 @@ module.exports = {
         timeout: 600000,
         color: true,
         slow: 30000
-        // delay: true // only for LiquidityProtection (#TODO https://github.com/nomiclabs/hardhat/issues/1339)
     }
 };
