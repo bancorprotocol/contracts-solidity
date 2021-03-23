@@ -1,3 +1,7 @@
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
+const { argv } = yargs(hideBin(process.argv));
+
 require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-ethers');
 
@@ -6,7 +10,8 @@ require('solidity-coverage');
 module.exports = {
     networks: {
         hardhat: {
-            gasPrice: 0
+            gasPrice: 20000000000,
+            gas: 9500000
         }
     },
     paths: {
@@ -25,8 +30,11 @@ module.exports = {
         }
     },
     mocha: {
+        spec: argv.spec || 'solidity/test',
+        exit: true,
+        recursive: true,
+        before_timeout: 600000,
         timeout: 600000,
-        color: true,
-        slow: 30000
+        useColors: true
     }
 };
