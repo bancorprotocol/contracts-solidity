@@ -1,8 +1,7 @@
 const { expect } = require('chai');
 
 const { BigNumber } = require('ethers');
-
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
 const BancorNetwork = ethers.getContractFactory('BancorNetwork');
 const BancorFormula = ethers.getContractFactory('BancorFormula');
@@ -103,7 +102,7 @@ describe('LiquidityPoolConverter', () => {
     };
 
     const getReserve1Address = (isETH) => {
-        return isETH ? ETH_RESERVE_ADDRESS : reserveToken.address;
+        return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
     const verifyReserve = (reserve, balance, weight, isSet) => {

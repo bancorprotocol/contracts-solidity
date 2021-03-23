@@ -4,12 +4,13 @@ const { BigNumber } = require('ethers');
 
 const Decimal = require('decimal.js');
 
-const { ETH_RESERVE_ADDRESS, MAX_UINT256, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, MAX_UINT256, registry } = require('./helpers/Constants');
 
 const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
 const DSToken = ethers.getContractFactory('DSToken');
 const TestStandardToken = ethers.getContractFactory('TestStandardToken');
 const BancorFormula = ethers.getContractFactory('BancorFormula');
+const NetworkSettings = ethers.getContractFactory('NetworkSettings');
 const ContractRegistry = ethers.getContractFactory('ContractRegistry');
 
 let contractRegistry;
@@ -24,7 +25,7 @@ describe('ConverterLiquidity', () => {
 
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
-                await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
+                await converter.addReserve(NATIVE_TOKEN_ADDRESS, weights[i] * 10000);
             } else {
                 const erc20Token = await (await TestStandardToken).deploy('name', 'symbol', 0, MAX_UINT256);
                 await converter.addReserve(erc20Token.address, weights[i] * 10000);
@@ -46,7 +47,11 @@ describe('ConverterLiquidity', () => {
         contractRegistry = await (await ContractRegistry).deploy();
         const bancorFormula = await (await BancorFormula).deploy();
         await bancorFormula.init();
+
+        const networkSettings = await (await NetworkSettings).deploy(owner.address, 0);
+
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
     describe('security assertion', () => {
@@ -277,7 +282,7 @@ describe('ConverterLiquidity', () => {
     });
 
     const approve = async (reserveToken, converter, amount) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return;
         }
 
@@ -286,7 +291,7 @@ describe('ConverterLiquidity', () => {
     };
 
     const getAllowance = async (reserveToken, converter) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return BigNumber.from(0);
         }
 
@@ -295,7 +300,7 @@ describe('ConverterLiquidity', () => {
     };
 
     const getBalance = async (reserveToken, converter) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return ethers.provider.getBalance(converter.address);
         }
 

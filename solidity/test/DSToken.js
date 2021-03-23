@@ -1,6 +1,7 @@
 const { expect } = require('chai');
 
 const { BigNumber } = require('ethers');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
 const DSToken = ethers.getContractFactory('DSToken');
 
@@ -53,13 +54,11 @@ describe('DSToken', () => {
     });
 
     it('should revert when the owner attempts to issue tokens to an invalid address', async () => {
-        await expect(token.issue(ethers.constants.AddressZero, BigNumber.from(1))).to.be.revertedWith(
-            'ERR_INVALID_ADDRESS'
-        );
+        await expect(token.issue(ZERO_ADDRESS, BigNumber.from(1))).to.be.revertedWith('ERR_INVALID_EXTERNAL_ADDRESS');
     });
 
     it('should revert when the owner attempts to issue tokens to the token address', async () => {
-        await expect(token.issue(token.address, BigNumber.from(1))).to.be.revertedWith('ERR_ADDRESS_IS_SELF');
+        await expect(token.issue(token.address, BigNumber.from(1))).to.be.revertedWith('ERR_INVALID_EXTERNAL_ADDRESS');
     });
 
     it('should revert when a non owner attempts to issue tokens', async () => {

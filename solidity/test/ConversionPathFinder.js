@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const TestStandardToken = ethers.getContractFactory('TestStandardToken');
 const ContractRegistry = ethers.getContractFactory('ContractRegistry');
@@ -28,7 +28,7 @@ const LAYOUT = {
 /* eslint-enable no-multi-spaces,comma-spacing */
 
 const getSymbol = async (tokenAddress) => {
-    if (tokenAddress === ETH_RESERVE_ADDRESS) {
+    if (tokenAddress === NATIVE_TOKEN_ADDRESS) {
         return 'ETH';
     }
 
@@ -118,7 +118,7 @@ let anchorToken;
 let nonOwner;
 
 describe('ConversionPathFinder', () => {
-    const addresses = { ETH: ETH_RESERVE_ADDRESS };
+    const addresses = { ETH: NATIVE_TOKEN_ADDRESS };
 
     before(async () => {
         accounts = await ethers.getSigners();

@@ -14,6 +14,7 @@ module.exports = {
         CONTRACT_REGISTRY: ethers.utils.formatBytes32String('ContractRegistry'),
         BANCOR_NETWORK: ethers.utils.formatBytes32String('BancorNetwork'),
         BANCOR_FORMULA: ethers.utils.formatBytes32String('BancorFormula'),
+        NETWORK_SETTINGS: ethers.utils.formatBytes32String('NetworkSettings'),
         CONVERTER_FACTORY: ethers.utils.formatBytes32String('ConverterFactory'),
         CONVERSION_PATH_FINDER: ethers.utils.formatBytes32String('ConversionPathFinder'),
         CONVERTER_UPGRADER: ethers.utils.formatBytes32String('BancorConverterUpgrader'),
@@ -31,7 +32,7 @@ module.exports = {
         ROLE_SEEDER: ethers.utils.id('ROLE_SEEDER')
     },
 
-    ETH_RESERVE_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    NATIVE_TOKEN_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     MAX_UINT256: BigNumber.from('2').pow(BigNumber.from('256')).sub(BigNumber.from('1')),
     ZERO_ADDRESS: ethers.constants.AddressZero,
 

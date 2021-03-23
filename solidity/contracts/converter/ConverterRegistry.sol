@@ -27,8 +27,6 @@ import "../token/interfaces/IDSToken.sol";
  * The contract is upgradable.
  */
 contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
-    uint32 private constant PPM_RESOLUTION = 1000000;
-
     /**
      * @dev triggered when a converter anchor is added to the registry
      *
@@ -132,7 +130,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
         anchor.acceptOwnership();
         converter.acceptOwnership();
 
-        for (uint256 i = 0; i < length; i++) converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
+        for (uint256 i = 0; i < length; i++) {
+            converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
+        }
 
         anchor.transferOwnership(address(converter));
         converter.acceptAnchorOwnership();

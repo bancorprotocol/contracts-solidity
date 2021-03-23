@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 
 const { BigNumber } = require('ethers');
-const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, roles } = require('./helpers/Constants');
 
 const BancorFormula = ethers.getContractFactory('BancorFormula');
 const BancorNetwork = ethers.getContractFactory('BancorNetwork');
@@ -28,7 +28,6 @@ let accounts;
 let owner;
 let nonOwner;
 
-// TODO AssertionError: Expected transaction to be reverted
 describe('LiquidityProtectionSettings', () => {
     before(async () => {
         accounts = await ethers.getSigners();
@@ -114,6 +113,16 @@ describe('LiquidityProtectionSettings', () => {
         it('should revert when an owner attempts to remove a whitelisted pool which is not yet whitelisted', async () => {
             await expect(settings.connect(owner).removePoolFromWhitelist(poolToken.address)).to.be.revertedWith(
                 'ERR_POOL_NOT_WHITELISTED'
+            );
+        });
+
+        it('should revert when an owner attempts to whitelist a zero address pool', async () => {
+            await expect(settings.addPoolToWhitelist(ZERO_ADDRESS)).to.be.revertedWith('ERR_INVALID_EXTERNAL_ADDRESS');
+        });
+
+        it('should revert when an owner attempts to whitelist the settings contract itself', async () => {
+            await expect(settings.addPoolToWhitelist(settings.address)).to.be.revertedWith(
+                'ERR_INVALID_EXTERNAL_ADDRESS'
             );
         });
 
@@ -218,7 +227,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, networkToken.address, reserveToken.address],
+                [NATIVE_TOKEN_ADDRESS, networkToken.address, reserveToken.address],
                 [100000, 100000, 100000]
             );
             const anchorCount = await converterRegistry.getAnchorCount();
@@ -235,7 +244,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, reserveToken.address],
+                [NATIVE_TOKEN_ADDRESS, reserveToken.address],
                 [500000, 500000]
             );
             const anchorCount = await converterRegistry.getAnchorCount();
@@ -251,7 +260,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, networkToken.address],
+                [NATIVE_TOKEN_ADDRESS, networkToken.address],
                 [450000, 550000]
             );
             const anchorCount = await converterRegistry.getAnchorCount();

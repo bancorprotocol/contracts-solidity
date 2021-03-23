@@ -2,7 +2,8 @@ const { expect } = require('chai');
 
 const { BigNumber } = require('ethers');
 
-const { ETH_RESERVE_ADDRESS, registry, roles, ZERO_ADDRESS, duration, latest } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry, roles, ZERO_ADDRESS, duration, latest } = require('./helpers/Constants');
+
 const Decimal = require('decimal.js');
 
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
@@ -27,6 +28,7 @@ const LiquidityProtectionEventsSubscriber = ethers.getContractFactory('TestLiqui
 const TokenGovernance = ethers.getContractFactory('TestTokenGovernance');
 const CheckpointStore = ethers.getContractFactory('TestCheckpointStore');
 const LiquidityProtection = ethers.getContractFactory('TestLiquidityProtection');
+const NetworkSettings = ethers.getContractFactory('NetworkSettings');
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
 const RESERVE1_AMOUNT = BigNumber.from(1000000);
@@ -85,7 +87,7 @@ describe('LiquidityProtection', () => {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
             const initPool = async (isETH = false, whitelist = true, standard = true) => {
                 if (isETH) {
-                    baseTokenAddress = ETH_RESERVE_ADDRESS;
+                    baseTokenAddress = NATIVE_TOKEN_ADDRESS;
                 } else {
                     // create a pool with ERC20 as the base token
                     baseToken = await (await DSToken).deploy('RSV1', 'RSV1', 18);
@@ -142,6 +144,162 @@ describe('LiquidityProtection', () => {
                 }
             };
 
+            const addProtectedLiquidity = async (
+                poolTokenAddress,
+                token,
+                tokenAddress,
+                amount,
+                isETH = false,
+                from = owner,
+                recipient = undefined,
+                value = 0
+            ) => {
+                if (isETH) {
+                    value = amount;
+                } else {
+                    await token.connect(from).approve(liquidityProtection.address, amount);
+                }
+
+                if (recipient) {
+                    return liquidityProtection
+                        .connect(from)
+                        .addLiquidityFor(recipient, poolTokenAddress, tokenAddress, amount, {
+                            value: value
+                        });
+                }
+
+                return liquidityProtection
+                    .connect(from)
+                    .addLiquidity(poolTokenAddress, tokenAddress, amount, { value: value });
+            };
+
+            const getProtection = (protection) => {
+                return {
+                    provider: protection[0],
+                    poolToken: protection[1],
+                    reserveToken: protection[2],
+                    poolAmount: protection[3],
+                    reserveAmount: protection[4],
+                    reserveRateN: protection[5],
+                    reserveRateD: protection[6],
+                    timestamp: protection[7]
+                };
+            };
+
+            const getTimestamp = async (protectionLevel) => {
+                switch (protectionLevel) {
+                    case PROTECTION_NO_PROTECTION:
+                        return now.add(duration.days(15));
+                    case PROTECTION_PARTIAL_PROTECTION:
+                        return now.add(duration.days(40));
+                    case PROTECTION_FULL_PROTECTION:
+                        return now.add(duration.days(100));
+                    case PROTECTION_EXCESSIVE_PROTECTION:
+                        return now.add(duration.days(300));
+                }
+            };
+
+            const poolTokenRate = (poolSupply, reserveBalance) => {
+                return { n: reserveBalance.mul(BigNumber.from('2')), d: poolSupply };
+            };
+
+            const getBalance = async (token, address, account) => {
+                if (address === NATIVE_TOKEN_ADDRESS) {
+                    return ethers.provider.getBalance(account);
+                }
+
+                return token.balanceOf(account);
+            };
+
+            const getTransactionCost = async (txResult) => {
+                const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
+                return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
+            };
+
+            const expectAlmostEqual = (amount1, amount2, maxError = '0.01') => {
+                if (!amount1.eq(amount2)) {
+                    const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
+                    expect(error.lte(maxError)).to.be.true;
+                }
+            };
+
+            const convert = async (path, amount, minReturn) => {
+                let token;
+                if (path[0] == baseTokenAddress) {
+                    token = baseToken;
+                } else {
+                    token = networkToken;
+                }
+
+                await token.approve(bancorNetwork.address, amount);
+                return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS);
+            };
+
+            const generateFee = async () => {
+                await converter.setConversionFee(10000);
+
+                // convert back & forth
+                const prevBalance = await networkToken.balanceOf(owner.address);
+
+                let amount = RESERVE1_AMOUNT.div(BigNumber.from(2));
+                await convert([baseTokenAddress, poolToken.address, networkToken.address], amount, 1);
+
+                const balance = await networkToken.balanceOf(owner.address);
+
+                amount = balance.sub(prevBalance);
+                await convert([networkToken.address, poolToken.address, baseTokenAddress], amount, 1);
+
+                await converter.setConversionFee(0);
+            };
+
+            const getRate = async (reserveAddress) => {
+                const reserve1Balance = await converter.reserveBalance(baseTokenAddress);
+                const reserve2Balance = await converter.reserveBalance(networkToken.address);
+                if (reserveAddress == baseTokenAddress) {
+                    return { n: reserve2Balance, d: reserve1Balance };
+                }
+
+                return { n: reserve1Balance, d: reserve2Balance };
+            };
+
+            const increaseRate = async (reserveAddress) => {
+                let sourceAddress;
+                if (reserveAddress == baseTokenAddress) {
+                    sourceAddress = networkToken.address;
+                } else {
+                    sourceAddress = baseTokenAddress;
+                }
+
+                let path = [sourceAddress, poolToken.address, reserveAddress];
+                let amount = await converter.reserveBalance(networkToken.address);
+                amount = Decimal(2).sqrt().sub(1).mul(amount.toString());
+                amount = BigNumber.from(amount.floor().toFixed());
+
+                await convert(path, amount, 1);
+            };
+
+            const getLockedBalance = async (account) => {
+                let lockedBalance = BigNumber.from(0);
+                const lockedCount = await liquidityProtectionStore.lockedBalanceCount(account);
+                for (let i = 0; i < lockedCount; i++) {
+                    const balance = (await liquidityProtectionStore.lockedBalance(account, i))[0];
+                    lockedBalance = lockedBalance.add(balance);
+                }
+
+                return lockedBalance;
+            };
+
+            const setTime = async (time) => {
+                now = time;
+
+                for (const t of [converter, checkpointStore, liquidityProtection]) {
+                    if (t) {
+                        await t.setTime(now);
+                    }
+                }
+            };
+
+            //
             before(async () => {
                 contractRegistry = await (await ContractRegistry).deploy();
                 converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
@@ -157,11 +315,14 @@ describe('LiquidityProtection', () => {
                 const bancorFormula = await (await BancorFormula).deploy();
                 await bancorFormula.init();
 
+                const networkSettings = await (await NetworkSettings).deploy(owner.address, 0);
+
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
                 await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+                await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
                 await converterRegistry.enableTypeChanging(false);
             });
@@ -1853,158 +2014,3 @@ describe('LiquidityProtection', () => {
         });
     }
 });
-
-///////////////////////
-// Utility functions //
-///////////////////////
-
-const addProtectedLiquidity = async (
-    poolTokenAddress,
-    token,
-    tokenAddress,
-    amount,
-    isETH = false,
-    from = owner,
-    recipient = undefined,
-    value = 0
-) => {
-    if (isETH) {
-        value = amount;
-    } else {
-        await token.connect(from).approve(liquidityProtection.address, amount);
-    }
-
-    if (recipient) {
-        return liquidityProtection.connect(from).addLiquidityFor(recipient, poolTokenAddress, tokenAddress, amount, {
-            value: value
-        });
-    }
-
-    return liquidityProtection.connect(from).addLiquidity(poolTokenAddress, tokenAddress, amount, { value: value });
-};
-
-const getProtection = (protection) => {
-    return {
-        provider: protection[0],
-        poolToken: protection[1],
-        reserveToken: protection[2],
-        poolAmount: protection[3],
-        reserveAmount: protection[4],
-        reserveRateN: protection[5],
-        reserveRateD: protection[6],
-        timestamp: protection[7]
-    };
-};
-
-const getTimestamp = async (protectionLevel) => {
-    switch (protectionLevel) {
-        case PROTECTION_NO_PROTECTION:
-            return now.add(duration.days(15));
-        case PROTECTION_PARTIAL_PROTECTION:
-            return now.add(duration.days(40));
-        case PROTECTION_FULL_PROTECTION:
-            return now.add(duration.days(100));
-        case PROTECTION_EXCESSIVE_PROTECTION:
-            return now.add(duration.days(300));
-    }
-};
-
-const poolTokenRate = (poolSupply, reserveBalance) => {
-    return { n: reserveBalance.mul(BigNumber.from('2')), d: poolSupply };
-};
-
-const getBalance = async (token, address, account) => {
-    if (address === ETH_RESERVE_ADDRESS) {
-        return ethers.provider.getBalance(account);
-    }
-
-    return token.balanceOf(account);
-};
-
-const getTransactionCost = async (txResult) => {
-    const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
-    return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
-};
-
-const expectAlmostEqual = (amount1, amount2, maxError = '0.01') => {
-    if (!amount1.eq(amount2)) {
-        const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
-        expect(error.lte(maxError)).to.be.true;
-    }
-};
-
-const convert = async (path, amount, minReturn) => {
-    let token;
-    if (path[0] == baseTokenAddress) {
-        token = baseToken;
-    } else {
-        token = networkToken;
-    }
-
-    await token.approve(bancorNetwork.address, amount);
-    return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS);
-};
-
-const generateFee = async () => {
-    await converter.setConversionFee(10000);
-
-    // convert back & forth
-    const prevBalance = await networkToken.balanceOf(owner.address);
-
-    let amount = RESERVE1_AMOUNT.div(BigNumber.from(2));
-    await convert([baseTokenAddress, poolToken.address, networkToken.address], amount, 1);
-
-    const balance = await networkToken.balanceOf(owner.address);
-
-    amount = balance.sub(prevBalance);
-    await convert([networkToken.address, poolToken.address, baseTokenAddress], amount, 1);
-
-    await converter.setConversionFee(0);
-};
-
-const getRate = async (reserveAddress) => {
-    const reserve1Balance = await converter.reserveBalance(baseTokenAddress);
-    const reserve2Balance = await converter.reserveBalance(networkToken.address);
-    if (reserveAddress == baseTokenAddress) {
-        return { n: reserve2Balance, d: reserve1Balance };
-    }
-
-    return { n: reserve1Balance, d: reserve2Balance };
-};
-
-const increaseRate = async (reserveAddress) => {
-    let sourceAddress;
-    if (reserveAddress == baseTokenAddress) {
-        sourceAddress = networkToken.address;
-    } else {
-        sourceAddress = baseTokenAddress;
-    }
-
-    let path = [sourceAddress, poolToken.address, reserveAddress];
-    let amount = await converter.reserveBalance(networkToken.address);
-    amount = Decimal(2).sqrt().sub(1).mul(amount.toString());
-    amount = BigNumber.from(amount.floor().toFixed());
-
-    await convert(path, amount, 1);
-};
-
-const getLockedBalance = async (account) => {
-    let lockedBalance = BigNumber.from(0);
-    const lockedCount = await liquidityProtectionStore.lockedBalanceCount(account);
-    for (let i = 0; i < lockedCount; i++) {
-        const balance = (await liquidityProtectionStore.lockedBalance(account, i))[0];
-        lockedBalance = lockedBalance.add(balance);
-    }
-
-    return lockedBalance;
-};
-
-const setTime = async (time) => {
-    now = time;
-
-    for (const t of [converter, checkpointStore, liquidityProtection]) {
-        if (t) {
-            await t.setTime(now);
-        }
-    }
-};

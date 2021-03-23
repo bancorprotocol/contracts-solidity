@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { ContractFactory } = require('ethers');
+const { ZERO_ADDRESS } = require('./Constants');
 
 const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
 const StandardPoolConverter = ethers.getContractFactory('StandardPoolConverter');
@@ -19,11 +20,25 @@ module.exports.new = async (
     accounts = await ethers.getSigners();
 
     if (version) {
-        const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
-        const bin = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.bin`));
-        const converter = new ContractFactory(JSON.parse(abi), `0x${bin}`, accounts[0]);
+        let contractName = `../bin/converter_v${version}`;
+        if (version >= 43) {
+            contractName += `_t${type}`;
+        }
 
-        return await converter.deploy(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
+        const abi = fs.readFileSync(path.resolve(__dirname, `${contractName}.abi`));
+        const bin = fs.readFileSync(path.resolve(__dirname, `${contractName}.bin`));
+
+        const Converter = new ContractFactory(JSON.parse(abi), `0x${bin}`, accounts[0]);
+        if (version > 28) {
+            const converter = await Converter.deploy(tokenAddress, registryAddress, maxConversionFee);
+            if (reserveTokenAddress !== ZERO_ADDRESS) {
+                await converter.addReserve(reserveTokenAddress, weight);
+            }
+
+            return converter;
+        }
+
+        return Converter.deploy(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
 
     const converterType = {
@@ -32,7 +47,7 @@ module.exports.new = async (
         4: await FixedRatePoolConverter
     }[type];
     const converter = await converterType.deploy(tokenAddress, registryAddress, maxConversionFee);
-    if (reserveTokenAddress !== ethers.constants.AddressZero) {
+    if (reserveTokenAddress !== ZERO_ADDRESS) {
         await converter.addReserve(reserveTokenAddress, weight);
     }
 

@@ -25,6 +25,7 @@ const TokenHolder = ethers.getContractFactory('TokenHolder');
 const TokenGovernance = ethers.getContractFactory('TestTokenGovernance');
 const CheckpointStore = ethers.getContractFactory('TestCheckpointStore');
 const LiquidityProtection = ethers.getContractFactory('TestLiquidityProtection');
+const NetworkSettings = ethers.getContractFactory('NetworkSettings');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -131,11 +132,14 @@ describe('LiquidityProtectionAverageRate', () => {
                 const bancorFormula = await (await BancorFormula).deploy();
                 await bancorFormula.init();
 
+                const networkSettings = await (await NetworkSettings).deploy(owner.address, 0);
+
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
                 await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+                await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
                 await converterRegistry.enableTypeChanging(false);
 

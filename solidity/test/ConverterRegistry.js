@@ -2,7 +2,7 @@ const { expect } = require('chai');
 
 const { BigNumber } = require('ethers');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
 const TestStandardToken = ethers.getContractFactory('TestStandardToken');
 const DSToken = ethers.getContractFactory('DSToken');
@@ -248,84 +248,84 @@ describe('ConverterRegistry', () => {
                         [token1.address, token4.address],
                         [0x2400, 0x2100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token1.address, token6.address],
                         [0x3600, 0x3100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token1.address, tokenA.address],
                         [0x5a00, 0x5100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token1.address, token8.address],
                         [0x4800, 0x4100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token1.address, tokenC.address],
                         [0x6c00, 0x6100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token2.address, tokenE.address],
                         [0x7e00, 0x7200]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token4.address, token1.address],
                         [0x2100, 0x2400]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token6.address, token1.address],
                         [0x3100, 0x3600]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [token8.address, token1.address],
                         [0x4100, 0x4800]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [tokenA.address, token1.address],
                         [0x5100, 0x5a00]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [tokenC.address, token1.address],
                         [0x6100, 0x6c00]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [tokenE.address, token2.address],
                         [0x7200, 0x7e00]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
@@ -459,168 +459,168 @@ describe('ConverterRegistry', () => {
                             [token1.address, token4.address],
                             [0x2400, 0x2100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, token6.address],
                             [0x3600, 0x3100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, token8.address],
                             [0x4800, 0x4100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, tokenA.address],
                             [0x5a00, 0x5100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, tokenC.address],
                             [0x6c00, 0x6100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token2.address, tokenE.address],
                             [0x7e00, 0x7200]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token4.address, token1.address],
                             [0x2100, 0x2400]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token6.address, token1.address],
                             [0x3100, 0x3600]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token8.address, token1.address],
                             [0x4100, 0x4800]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [tokenA.address, token1.address],
                             [0x5100, 0x5a00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [tokenC.address, token1.address],
                             [0x6100, 0x6c00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [tokenE.address, token2.address],
                             [0x7200, 0x7e00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, token4.address],
                             [0x2100, 0x2400]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, token6.address],
                             [0x3100, 0x3600]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, token8.address],
                             [0x4100, 0x4800]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, tokenA.address],
                             [0x5100, 0x5a00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token1.address, tokenC.address],
                             [0x6100, 0x6c00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token2.address, tokenE.address],
                             [0x7200, 0x7e00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token4.address, token1.address],
                             [0x2400, 0x2100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token6.address, token1.address],
                             [0x3600, 0x3100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [token8.address, token1.address],
                             [0x4800, 0x4100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [tokenA.address, token1.address],
                             [0x5a00, 0x5100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [tokenC.address, token1.address],
                             [0x6c00, 0x6100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [tokenE.address, token2.address],
                             [0x7e00, 0x7200]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                 });
             });
         });
@@ -743,84 +743,84 @@ describe('ConverterRegistry', () => {
                         [anchor1.address, anchor4.address],
                         [0x2400, 0x2100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor1.address, anchor6.address],
                         [0x3600, 0x3100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor1.address, anchorA.address],
                         [0x5a00, 0x5100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor1.address, anchor8.address],
                         [0x4800, 0x4100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor1.address, anchorC.address],
                         [0x6c00, 0x6100]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor2.address, anchorE.address],
                         [0x7e00, 0x7200]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor4.address, anchor1.address],
                         [0x2100, 0x2400]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor6.address, anchor1.address],
                         [0x3100, 0x3600]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchor8.address, anchor1.address],
                         [0x4100, 0x4800]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchorA.address, anchor1.address],
                         [0x5100, 0x5a00]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchorC.address, anchor1.address],
                         [0x6100, 0x6c00]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
                         [anchorE.address, anchor2.address],
                         [0x7200, 0x7e00]
                     )
-                ).to.eql(ethers.constants.AddressZero);
+                ).to.eql(ZERO_ADDRESS);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
@@ -951,168 +951,168 @@ describe('ConverterRegistry', () => {
                             [anchor1.address, anchor4.address],
                             [0x2400, 0x2100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchor6.address],
                             [0x3600, 0x3100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchor8.address],
                             [0x4800, 0x4100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchorA.address],
                             [0x5a00, 0x5100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchorC.address],
                             [0x6c00, 0x6100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor2.address, anchorE.address],
                             [0x7e00, 0x7200]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor4.address, anchor1.address],
                             [0x2100, 0x2400]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor6.address, anchor1.address],
                             [0x3100, 0x3600]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor8.address, anchor1.address],
                             [0x4100, 0x4800]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchorA.address, anchor1.address],
                             [0x5100, 0x5a00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchorC.address, anchor1.address],
                             [0x6100, 0x6c00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchorE.address, anchor2.address],
                             [0x7200, 0x7e00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchor4.address],
                             [0x2100, 0x2400]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchor6.address],
                             [0x3100, 0x3600]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchor8.address],
                             [0x4100, 0x4800]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchorA.address],
                             [0x5100, 0x5a00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor1.address, anchorC.address],
                             [0x6100, 0x6c00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor2.address, anchorE.address],
                             [0x7200, 0x7e00]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor4.address, anchor1.address],
                             [0x2400, 0x2100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor6.address, anchor1.address],
                             [0x3600, 0x3100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchor8.address, anchor1.address],
                             [0x4800, 0x4100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchorA.address, anchor1.address],
                             [0x5a00, 0x5100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchorC.address, anchor1.address],
                             [0x6c00, 0x6100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [anchorE.address, anchor2.address],
                             [0x7e00, 0x7200]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                 });
             });
         });
@@ -1144,12 +1144,12 @@ describe('ConverterRegistry', () => {
         });
 
         const createConverters = async () => {
-            await testCreate(1, 'Pool1', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
+            await testCreate(1, 'Pool1', 'ST4', 18, 0, [NATIVE_TOKEN_ADDRESS, erc20Token1.address], [0x4000, 0x4100]);
             await testCreate(1, 'Pool2', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [0x5100, 0x5200]);
-            await testCreate(1, 'Pool3', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [0x6200, 0x6000]);
-            await testCreate(3, 'Pool7', 'STA', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [500000, 500000]);
+            await testCreate(1, 'Pool3', 'ST6', 18, 0, [erc20Token2.address, NATIVE_TOKEN_ADDRESS], [0x6200, 0x6000]);
+            await testCreate(3, 'Pool7', 'STA', 18, 0, [NATIVE_TOKEN_ADDRESS, erc20Token1.address], [500000, 500000]);
             await testCreate(3, 'Pool8', 'STB', 18, 0, [erc20Token1.address, erc20Token2.address], [500000, 500000]);
-            await testCreate(3, 'Pool9', 'STC', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [500000, 500000]);
+            await testCreate(3, 'Pool9', 'STC', 18, 0, [erc20Token2.address, NATIVE_TOKEN_ADDRESS], [500000, 500000]);
         };
 
         it('should create converters', async () => {
@@ -1191,7 +1191,7 @@ describe('ConverterRegistry', () => {
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
-                        [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                        [NATIVE_TOKEN_ADDRESS, erc20Token1.address],
                         [0x4000, 0x4100]
                     )
                 ).to.eql(anchors[0]);
@@ -1205,14 +1205,14 @@ describe('ConverterRegistry', () => {
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         1,
-                        [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                        [erc20Token2.address, NATIVE_TOKEN_ADDRESS],
                         [0x6200, 0x6000]
                     )
                 ).to.eql(anchors[2]);
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         3,
-                        [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                        [NATIVE_TOKEN_ADDRESS, erc20Token1.address],
                         [500000, 500000]
                     )
                 ).to.eql(anchors[3]);
@@ -1226,7 +1226,7 @@ describe('ConverterRegistry', () => {
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         3,
-                        [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                        [erc20Token2.address, NATIVE_TOKEN_ADDRESS],
                         [500000, 500000]
                     )
                 ).to.eql(anchors[5]);
@@ -1259,66 +1259,66 @@ describe('ConverterRegistry', () => {
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
-                            [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                            [NATIVE_TOKEN_ADDRESS, erc20Token1.address],
                             [0x4000, 0x4100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
                             [erc20Token1.address, erc20Token2.address],
                             [0x5100, 0x5200]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             1,
-                            [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                            [erc20Token2.address, NATIVE_TOKEN_ADDRESS],
                             [0x6200, 0x6000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             2,
-                            [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                            [NATIVE_TOKEN_ADDRESS, erc20Token1.address],
                             [0x4000, 0x4100]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             2,
                             [erc20Token1.address, erc20Token2.address],
                             [0x5100, 0x5200]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             2,
-                            [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                            [erc20Token2.address, NATIVE_TOKEN_ADDRESS],
                             [0x6200, 0x6000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             3,
-                            [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                            [NATIVE_TOKEN_ADDRESS, erc20Token1.address],
                             [500000, 500000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             3,
                             [erc20Token1.address, erc20Token2.address],
                             [500000, 500000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             3,
-                            [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                            [erc20Token2.address, NATIVE_TOKEN_ADDRESS],
                             [500000, 500000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                 });
             });
         });
@@ -1350,9 +1350,9 @@ describe('ConverterRegistry', () => {
         });
 
         const createConverters = async () => {
-            await testCreate(1, 'Pool1', 'ST4', 18, 0, [ETH_RESERVE_ADDRESS, erc20Token1.address], [500000, 500000]);
+            await testCreate(1, 'Pool1', 'ST4', 18, 0, [NATIVE_TOKEN_ADDRESS, erc20Token1.address], [500000, 500000]);
             await testCreate(1, 'Pool2', 'ST5', 18, 0, [erc20Token1.address, erc20Token2.address], [500000, 500000]);
-            await testCreate(1, 'Pool3', 'ST6', 18, 0, [erc20Token2.address, ETH_RESERVE_ADDRESS], [500000, 500000]);
+            await testCreate(1, 'Pool3', 'ST6', 18, 0, [erc20Token2.address, NATIVE_TOKEN_ADDRESS], [500000, 500000]);
         };
 
         it('should create converters', async () => {
@@ -1394,7 +1394,7 @@ describe('ConverterRegistry', () => {
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         3,
-                        [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                        [NATIVE_TOKEN_ADDRESS, erc20Token1.address],
                         [500000, 500000]
                     )
                 ).to.eql(anchors[0]);
@@ -1408,7 +1408,7 @@ describe('ConverterRegistry', () => {
                 expect(
                     await converterRegistry.getLiquidityPoolByConfig(
                         3,
-                        [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                        [erc20Token2.address, NATIVE_TOKEN_ADDRESS],
                         [500000, 500000]
                     )
                 ).to.eql(anchors[2]);
@@ -1441,24 +1441,24 @@ describe('ConverterRegistry', () => {
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             3,
-                            [ETH_RESERVE_ADDRESS, erc20Token1.address],
+                            [NATIVE_TOKEN_ADDRESS, erc20Token1.address],
                             [500000, 500000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             3,
                             [erc20Token1.address, erc20Token2.address],
                             [500000, 500000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                     expect(
                         await converterRegistry.getLiquidityPoolByConfig(
                             3,
-                            [erc20Token2.address, ETH_RESERVE_ADDRESS],
+                            [erc20Token2.address, NATIVE_TOKEN_ADDRESS],
                             [500000, 500000]
                         )
-                    ).to.eql(ethers.constants.AddressZero);
+                    ).to.eql(ZERO_ADDRESS);
                 });
             });
         });

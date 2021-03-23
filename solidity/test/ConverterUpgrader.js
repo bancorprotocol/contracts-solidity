@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const ConverterHelper = require('./helpers/Converter');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
 const BancorFormula = ethers.getContractFactory('BancorFormula');
 const TestStandardToken = ethers.getContractFactory('TestStandardToken');
@@ -21,7 +21,7 @@ const RESERVE1_BALANCE = BigNumber.from(5000);
 const RESERVE2_BALANCE = BigNumber.from(8000);
 const TOKEN_TOTAL_SUPPLY = BigNumber.from(20000);
 
-const VERSIONS = [9, 10, 11, 23];
+const LEGACY_VERSIONS = [9, 10, 11, 23, 45];
 
 let contractRegistry;
 let converterFactory;
@@ -44,7 +44,7 @@ describe('ConverterUpgrader', () => {
         const upgrader = await (await ConverterUpgrader).deploy(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-        if (version) {
+        if (version && version < 45) {
             await converter.addConnector(reserveToken2.address, 500000, false);
         } else {
             await converter.addReserve(reserveToken2.address, 500000);
@@ -87,7 +87,7 @@ describe('ConverterUpgrader', () => {
         const upgrader = await (await ConverterUpgrader).deploy(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-        await converter.addReserve(ETH_RESERVE_ADDRESS, 500000);
+        await converter.addReserve(NATIVE_TOKEN_ADDRESS, 500000);
         await converter.setConversionFee(CONVERSION_FEE);
         await anchor.issue(deployer.address, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
@@ -193,9 +193,9 @@ describe('ConverterUpgrader', () => {
 
     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
-    const product = cartesian(initFuncs, [...VERSIONS, null], [false, true]);
+    const product = cartesian(initFuncs, [...LEGACY_VERSIONS, null], [false, true]);
     const combinations = product.filter(
-        ([init, version, active]) =>
+        ([init, version]) =>
             !(init === initType1WithETHReserve && version) && !(init === initType3WithETHReserve && version)
     );
 
@@ -211,7 +211,7 @@ describe('ConverterUpgrader', () => {
                         break;
                     case initType1WithETHReserve:
                     case initType3WithETHReserve:
-                        reserveTokens = [reserveToken1.address, ETH_RESERVE_ADDRESS];
+                        reserveTokens = [reserveToken1.address, NATIVE_TOKEN_ADDRESS];
                         break;
                 }
 
@@ -231,14 +231,10 @@ describe('ConverterUpgrader', () => {
                     activate ? RESERVE2_BALANCE : BigNumber.from(0)
                 ];
 
-                const stakedBalances = [
-                    activate ? RESERVE1_BALANCE : BigNumber.from(0),
-                    activate ? RESERVE2_BALANCE : BigNumber.from(0)
-                ];
                 const [upgrader, oldConverter] = await init(deployer, version, activate);
                 const oldConverterInitialState = await getConverterState(oldConverter);
                 expect(oldConverterInitialState.owner).to.be.eql(deployer.address);
-                expect(oldConverterInitialState.newOwner).to.be.eql(ethers.constants.AddressZero);
+                expect(oldConverterInitialState.newOwner).to.be.eql(ZERO_ADDRESS);
                 expect(oldConverterInitialState.tokenOwner).to.be.eql(
                     activate ? oldConverter.address : deployer.address
                 );
@@ -254,7 +250,7 @@ describe('ConverterUpgrader', () => {
 
                 const oldConverterCurrentState = await getConverterState(oldConverter);
                 expect(oldConverterCurrentState.owner).to.be.eql(deployer.address);
-                expect(oldConverterCurrentState.newOwner).to.be.eql(ethers.constants.AddressZero);
+                expect(oldConverterCurrentState.newOwner).to.be.eql(ZERO_ADDRESS);
                 expect(oldConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
                 expect(oldConverterCurrentState.tokenOwner).to.be.eql(
                     activate ? newConverter.address : deployer.address
