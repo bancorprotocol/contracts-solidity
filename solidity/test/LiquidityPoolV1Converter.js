@@ -1,8 +1,6 @@
 const { expect } = require('chai');
 
-const { BigNumber, FixedNumber } = require('ethers');
-
-const { BN } = require('bn.js');
+const { BigNumber } = require('ethers');
 
 const { divCeil } = require('./helpers/MathUtils');
 

@@ -3,6 +3,8 @@ const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
 const Decimal = require('decimal.js');
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
+
 const MathUtils = require('./helpers/MathUtils');
 
 const MathContract = ethers.getContractFactory('TestMathEx');
@@ -219,9 +221,7 @@ describe('MathEx', () => {
         if (!x.eq(y)) {
             const absoluteError = x.sub(y).abs();
             const relativeError = x.div(y).sub(1).abs();
-            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true(
-                `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
-            );
+            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true;
         }
     }
 });
