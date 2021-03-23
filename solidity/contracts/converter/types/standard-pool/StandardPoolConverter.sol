@@ -363,7 +363,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         syncReserveBalances(_value);
 
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
-        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
+        (uint256 currPoint, uint256 prevPoint) =
+            networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
         if (currPoint <= prevPoint) {
             return (reserveBalance0, reserveBalance1);
@@ -394,7 +395,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
-        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
+        (uint256 currPoint, uint256 prevPoint) =
+            networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
         if (currPoint > prevPoint) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
@@ -418,7 +420,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
         uint256 reserveId = __reserveIds[_reserveToken];
         (uint256 thisReserveBalance, uint256 otherReserveBalance) = reserveBalances(reserveId, 3 - reserveId);
-        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(thisReserveBalance * otherReserveBalance, __reserveBalancesProd);
+        (uint256 currPoint, uint256 prevPoint) =
+            networkFeePoints(thisReserveBalance * otherReserveBalance, __reserveBalancesProd);
 
         if (currPoint > prevPoint) {
             uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
@@ -1333,14 +1336,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return the square root of the current product of the balances
      * @return the square root of the previous product of the balances
      */
-    function networkFeePoints(
-        uint256 currProd,
-        uint256 prevProd
-    ) private pure returns (uint256, uint256) {
-        return (
-            currProd > 0 ? MathEx.floorSqrt(currProd) : 0,
-            prevProd > 0 ? MathEx.floorSqrt(prevProd) : 0
-        );
+    function networkFeePoints(uint256 currProd, uint256 prevProd) private pure returns (uint256, uint256) {
+        return (currProd > 0 ? MathEx.floorSqrt(currProd) : 0, prevProd > 0 ? MathEx.floorSqrt(prevProd) : 0);
     }
 
     /**
