@@ -1457,7 +1457,7 @@ describe('StandardPoolConverter', () => {
             for (const initialBalance2 of [100000, 500000]) {
                 for (const conversionFeePercent of [1, 2]) {
                     for (const networkFeePercent of [5, 10]) {
-                        it(description('processNetworkFees when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
+                        it(description('removeLiquidity when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
                             const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
@@ -1467,7 +1467,8 @@ describe('StandardPoolConverter', () => {
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(conversionAmount);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
-                            await converter.processNetworkFees();
+                            const supplyAmount = await poolToken.balanceOf(defaultSender);
+                            await removeLiquidity(reserveToken1, reserveToken2, converter, supplyAmount, true);
 
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
                             const expectedFee2 = expectedFeeBase;
