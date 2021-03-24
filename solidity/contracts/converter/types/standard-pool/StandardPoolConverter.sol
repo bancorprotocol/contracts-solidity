@@ -396,16 +396,16 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
         (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, _reserveBalancesProduct);
 
-        if (currPoint > prevPoint) {
-            uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-            (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
-            return [
-                reserveBalance0.sub(reserveBalance0.mul(n).div(d)),
-                reserveBalance1.sub(reserveBalance1.mul(n).div(d))
-            ];
+        if (currPoint <= prevPoint) {
+            return [reserveBalance0, reserveBalance1];
         }
 
-        return [reserveBalance0, reserveBalance1];
+        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
+        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
+        return [
+            reserveBalance0.sub(reserveBalance0.mul(n).div(d)),
+            reserveBalance1.sub(reserveBalance1.mul(n).div(d))
+        ];
     }
 
     /**
@@ -420,13 +420,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (uint256 thisReserveBalance, uint256 otherReserveBalance) = reserveBalances(reserveId, 3 - reserveId);
         (uint256 currPoint, uint256 prevPoint) = networkFeePoints(thisReserveBalance * otherReserveBalance, _reserveBalancesProduct);
 
-        if (currPoint > prevPoint) {
-            uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-            (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
-            return thisReserveBalance.sub(thisReserveBalance.mul(n).div(d));
+        if (currPoint <= prevPoint) {
+            return thisReserveBalance;
         }
 
-        return thisReserveBalance;
+        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
+        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
+        return thisReserveBalance.sub(thisReserveBalance.mul(n).div(d));
     }
 
     /**
