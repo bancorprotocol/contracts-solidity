@@ -1,20 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const TestNonStandardToken = ethers.getContractFactory('TestNonStandardToken');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const ConverterUpgrader = ethers.getContractFactory('ConverterUpgrader');
-const Whitelist = ethers.getContractFactory('Whitelist');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
-const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('LiquidityPoolV1ConverterFactory');
-const DSToken = ethers.getContractFactory('DSToken');
+const Contracts = require('./helpers/Contracts');
 
 let bancorNetwork;
 let anchor;
@@ -43,14 +32,18 @@ describe('LiquidityPoolConverter', () => {
     ) => {
         switch (type) {
             case 1:
-                return await (await LiquidityPoolV1Converter).deploy(anchorAddress, registryAddress, maxConversionFee);
+                return await Contracts.LiquidityPoolV1Converter.deploy(
+                    anchorAddress,
+                    registryAddress,
+                    maxConversionFee
+                );
         }
     };
 
     const createAnchor = async (type) => {
         switch (type) {
             case 1:
-                return await (await DSToken).deploy('Pool1', 'POOL1', 2);
+                return await Contracts.DSToken.deploy('Pool1', 'POOL1', 2);
         }
     };
 
@@ -134,28 +127,28 @@ describe('LiquidityPoolConverter', () => {
         beneficiary = accounts[2];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        const bancorFormula = await (await BancorFormula).deploy();
+        const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
-        contractRegistry = await (await ContractRegistry).deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
 
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
 
-        const factory = await (await ConverterFactory).deploy();
+        const factory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
-        await factory.registerTypedConverterFactory((await (await LiquidityPoolV1ConverterFactory).deploy()).address);
+        await factory.registerTypedConverterFactory((await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address);
     });
 
     beforeEach(async () => {
-        bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+        bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        upgrader = await (await ConverterUpgrader).deploy(contractRegistry.address);
+        upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        reserveToken = await (await TestStandardToken).deploy('ERC Token 1', 'ERC1', 18, 1000000000);
-        reserveToken2 = await (await TestNonStandardToken).deploy('ERC Token 2', 'ERC2', 18, 2000000000);
-        reserveToken3 = await (await TestStandardToken).deploy('ERC Token 3', 'ERC3', 18, 1500000000);
+        reserveToken = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken2 = await Contracts.TestNonStandardToken.deploy('ERC Token 2', 'ERC2', 18, 2000000000);
+        reserveToken3 = await Contracts.TestStandardToken.deploy('ERC Token 3', 'ERC3', 18, 1500000000);
     });
     for (const type of CONVERTER_TYPES) {
         for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
@@ -312,7 +305,7 @@ describe('LiquidityPoolConverter', () => {
                 it('verifies that convert is allowed for a whitelisted account', async () => {
                     const converter = await initConverter(type, true, true, isETHReserve);
 
-                    const whitelist = await (await Whitelist).deploy();
+                    const whitelist = await Contracts.Whitelist.deploy();
                     await whitelist.addAddress(converter.address);
                     await whitelist.addAddress(whitelisted.address);
                     await converter.setConversionWhitelist(whitelist.address);
@@ -338,7 +331,7 @@ describe('LiquidityPoolConverter', () => {
                 it('should revert when calling convert from a non whitelisted account', async () => {
                     const converter = await initConverter(type, true, true, isETHReserve);
 
-                    const whitelist = await (await Whitelist).deploy();
+                    const whitelist = await Contracts.Whitelist.deploy();
                     await whitelist.addAddress(converter.address);
                     await converter.setConversionWhitelist(whitelist.address);
 
@@ -364,7 +357,7 @@ describe('LiquidityPoolConverter', () => {
 
                 it('should revert when calling convert while the beneficiary is not whitelisted', async () => {
                     const converter = await initConverter(type, true, true, isETHReserve);
-                    const whitelist = await (await Whitelist).deploy();
+                    const whitelist = await Contracts.Whitelist.deploy();
                     await whitelist.addAddress(whitelisted.address);
                     await converter.setConversionWhitelist(whitelist.address);
 

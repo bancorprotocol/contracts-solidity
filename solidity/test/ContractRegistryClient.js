@@ -4,9 +4,6 @@ const { registry } = require('./helpers/Constants');
 
 const Contracts = require('./helpers/Contracts');
 
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const ContractRegistryClient = ethers.getContractFactory('TestContractRegistryClient');
-
 let accounts;
 let owner;
 let nonOwner;

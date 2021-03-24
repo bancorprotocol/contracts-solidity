@@ -4,9 +4,7 @@ const path = require('path');
 const { ContractFactory } = require('ethers');
 const { ZERO_ADDRESS } = require('./Constants');
 
-const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
-const StandardPoolConverter = ethers.getContractFactory('StandardPoolConverter');
-const FixedRatePoolConverter = ethers.getContractFactory('FixedRatePoolConverter');
+const Contracts = require('./Contracts');
 
 module.exports.new = async (
     type,
@@ -42,11 +40,11 @@ module.exports.new = async (
     }
 
     const converterType = {
-        1: await LiquidityPoolV1Converter,
-        3: await StandardPoolConverter,
-        4: await FixedRatePoolConverter
+        1: 'LiquidityPoolV1Converter',
+        3: 'StandardPoolConverter',
+        4: 'FixedRatePoolConverter'
     }[type];
-    const converter = await converterType.deploy(tokenAddress, registryAddress, maxConversionFee);
+    const converter = await Contracts[converterType].deploy(tokenAddress, registryAddress, maxConversionFee);
     if (reserveTokenAddress !== ZERO_ADDRESS) {
         await converter.addReserve(reserveTokenAddress, weight);
     }

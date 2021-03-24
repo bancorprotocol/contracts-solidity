@@ -5,16 +5,7 @@ const { Decimal, divCeil } = require('./helpers/MathUtils.js');
 const { latest, duration } = require('./helpers/Time');
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, MAX_UINT256 } = require('./helpers/Constants');
 
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const StandardPoolConverter = ethers.getContractFactory('TestStandardPoolConverter');
-const StandardPoolConverterFactory = ethers.getContractFactory('StandardPoolConverterFactory');
-const DSToken = ethers.getContractFactory('DSToken');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const TestNonStandardToken = ethers.getContractFactory('TestNonStandardToken');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const ConverterUpgrader = ethers.getContractFactory('ConverterUpgrader');
-const NetworkSettings = ethers.getContractFactory('NetworkSettings');
+const Contracts = require('./helpers/Contracts');
 
 let now;
 let bancorNetwork;
@@ -32,11 +23,11 @@ const MIN_RETURN = BigNumber.from(1);
 
 describe('StandardPoolConverter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
-        return await (await StandardPoolConverter).deploy(tokenAddress, registryAddress, maxConversionFee);
+        return await Contracts.TestStandardPoolConverter.deploy(tokenAddress, registryAddress, maxConversionFee);
     };
 
     const initConverter = async (activate, isETHReserve, maxConversionFee = 0) => {
-        token = await (await DSToken).deploy('Token1', 'TKN1', 2);
+        token = await Contracts.DSToken.deploy('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
         const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
@@ -119,29 +110,29 @@ describe('StandardPoolConverter', () => {
         networkFeeWallet = accounts[1];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        contractRegistry = await (await ContractRegistry).deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        const factory = await (await ConverterFactory).deploy();
+        const factory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
-        networkSettings = await (await NetworkSettings).deploy(networkFeeWallet.address, 0);
+        networkSettings = await Contracts.NetworkSettings.deploy(networkFeeWallet.address, 0);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
-        await factory.registerTypedConverterFactory((await (await StandardPoolConverterFactory).deploy()).address);
+        await factory.registerTypedConverterFactory((await Contracts.StandardPoolConverterFactory.deploy()).address);
     });
 
     beforeEach(async () => {
-        bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+        bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        upgrader = await (await ConverterUpgrader).deploy(contractRegistry.address);
+        upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        const token = await (await DSToken).deploy('Token1', 'TKN1', 2);
+        const token = await Contracts.DSToken.deploy('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        reserveToken = await (await TestStandardToken).deploy('ERC Token 1', 'ERC1', 18, 1000000000);
-        reserveToken2 = await (await TestNonStandardToken).deploy('ERC Token 2', 'ERC2', 18, 2000000000);
+        reserveToken = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken2 = await Contracts.TestNonStandardToken.deploy('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
     it('verifies the Activation event after converter activation', async () => {
@@ -730,10 +721,10 @@ describe('StandardPoolConverter', () => {
         ];
 
         beforeEach(async () => {
-            const token = await (await DSToken).deploy('Token', 'TKN', 0);
-            converter = await (await StandardPoolConverter).deploy(token.address, contractRegistry.address, 0);
-            reserveToken1 = await (await TestStandardToken).deploy('ERC Token 1', 'ERC1', 18, 1000000000);
-            reserveToken2 = await (await TestStandardToken).deploy('ERC Token 2', 'ERC2', 18, 1000000000);
+            const token = await Contracts.DSToken.deploy('Token', 'TKN', 0);
+            converter = await Contracts.TestStandardPoolConverter.deploy(token.address, contractRegistry.address, 0);
+            reserveToken1 = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', 18, 1000000000);
+            reserveToken2 = await Contracts.TestStandardToken.deploy('ERC Token 2', 'ERC2', 18, 1000000000);
             await converter.addReserve(reserveToken1.address, 500000);
             await converter.addReserve(reserveToken2.address, 500000);
             await token.transferOwnership(converter.address);
@@ -775,14 +766,24 @@ describe('StandardPoolConverter', () => {
         for (const amounts of addAmounts) {
             for (const percents of removePercents) {
                 it(`(amounts = ${amounts}, percents = ${percents})`, async () => {
-                    const token = await (await DSToken).deploy('Token', 'TKN', 0);
-                    const converter = await (await StandardPoolConverter).deploy(
+                    const token = await Contracts.DSToken.deploy('Token', 'TKN', 0);
+                    const converter = await Contracts.TestStandardPoolConverter.deploy(
                         token.address,
                         contractRegistry.address,
                         0
                     );
-                    const reserveToken1 = await (await TestStandardToken).deploy('ERC Token 1', 'ERC1', 18, 1000000000);
-                    const reserveToken2 = await (await TestStandardToken).deploy('ERC Token 2', 'ERC2', 18, 1000000000);
+                    const reserveToken1 = await Contracts.TestStandardToken.deploy(
+                        'ERC Token 1',
+                        'ERC1',
+                        18,
+                        1000000000
+                    );
+                    const reserveToken2 = await Contracts.TestStandardToken.deploy(
+                        'ERC Token 2',
+                        'ERC2',
+                        18,
+                        1000000000
+                    );
                     await converter.addReserve(reserveToken1.address, 500000);
                     await converter.addReserve(reserveToken2.address, 500000);
                     await token.transferOwnership(converter.address);
@@ -1026,18 +1027,18 @@ describe('StandardPoolConverter', () => {
 
     describe('add/remove liquidity', () => {
         const initLiquidityPool = async (hasETH) => {
-            const poolToken = await (await DSToken).deploy('name', 'symbol', 0);
-            const converter = await (await StandardPoolConverter).deploy(
+            const poolToken = await Contracts.DSToken.deploy('name', 'symbol', 0);
+            const converter = await Contracts.TestStandardPoolConverter.deploy(
                 poolToken.address,
                 contractRegistry.address,
                 0
             );
 
             const reserveTokens = [
-                (await (await TestStandardToken).deploy('name', 'symbol', 0, MAX_UINT256)).address,
+                (await Contracts.TestStandardToken.deploy('name', 'symbol', 0, MAX_UINT256)).address,
                 hasETH
                     ? NATIVE_TOKEN_ADDRESS
-                    : (await (await TestStandardToken).deploy('name', 'symbol', 0, MAX_UINT256)).address
+                    : (await Contracts.TestStandardToken.deploy('name', 'symbol', 0, MAX_UINT256)).address
             ];
 
             for (const reserveToken of reserveTokens) {
@@ -1055,7 +1056,7 @@ describe('StandardPoolConverter', () => {
                 return;
             }
 
-            const token = await (await TestStandardToken).attach(reserveToken);
+            const token = await Contracts.TestStandardToken.attach(reserveToken);
             return token.approve(converter.address, amount);
         };
 
@@ -1064,7 +1065,7 @@ describe('StandardPoolConverter', () => {
                 return BigNumber.from(0);
             }
 
-            const token = await (await TestStandardToken).attach(reserveToken);
+            const token = await Contracts.TestStandardToken.attach(reserveToken);
             return token.allowance(sender.address, converter.address);
         };
 
@@ -1073,7 +1074,7 @@ describe('StandardPoolConverter', () => {
                 return ethers.provider.getBalance(converter.address);
             }
 
-            const token = await (await TestStandardToken).attach(reserveToken);
+            const token = await Contracts.TestStandardToken.attach(reserveToken);
             return await token.balanceOf(converter.address);
         };
 
@@ -1786,20 +1787,20 @@ describe('StandardPoolConverter', () => {
         }
 
         async function createPool(networkFeePercent, conversionFeePercent) {
-            const poolToken = await (await DSToken).deploy('poolToken', 'poolToken', 18);
-            const reserveToken1 = await (await TestStandardToken).deploy(
+            const poolToken = await Contracts.DSToken.deploy('poolToken', 'poolToken', 18);
+            const reserveToken1 = await Contracts.TestStandardToken.deploy(
                 'reserveToken1',
                 'reserveToken1',
                 18,
                 TOTAL_SUPPLY
             );
-            const reserveToken2 = await (await TestStandardToken).deploy(
+            const reserveToken2 = await Contracts.TestStandardToken.deploy(
                 'reserveToken2',
                 'reserveToken2',
                 18,
                 TOTAL_SUPPLY
             );
-            const converter = await (await StandardPoolConverter).deploy(
+            const converter = await Contracts.TestStandardPoolConverter.deploy(
                 poolToken.address,
                 contractRegistry.address,
                 1000000

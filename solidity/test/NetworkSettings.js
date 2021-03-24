@@ -1,9 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
+
 const { ZERO_ADDRESS } = require('./helpers/Constants');
 
-const NetworkSettings = ethers.getContractFactory('NetworkSettings');
+const Contracts = require('./helpers/Contracts');
 
 const portion1 = BigNumber.from(111);
 const portion2 = BigNumber.from(222);
@@ -28,13 +28,13 @@ describe('NetworkSettings', () => {
 
     describe('construction', () => {
         it('should revert when creating a contract with an invalid network fee wallet', async () => {
-            await expect((await NetworkSettings).deploy(ZERO_ADDRESS, portion1)).to.be.revertedWith(
+            await expect(Contracts.NetworkSettings.deploy(ZERO_ADDRESS, portion1)).to.be.revertedWith(
                 'ERR_INVALID_ADDRESS'
             );
         });
 
         it('should revert when creating a contract with an invalid network fee', async () => {
-            await expect((await NetworkSettings).deploy(address1.address, invalidPortion)).to.be.revertedWith(
+            await expect(Contracts.NetworkSettings.deploy(address1.address, invalidPortion)).to.be.revertedWith(
                 'ERR_INVALID_FEE'
             );
         });
@@ -44,7 +44,7 @@ describe('NetworkSettings', () => {
         let networkSettings;
 
         beforeEach(async () => {
-            networkSettings = await (await NetworkSettings).deploy(address1.address, portion1);
+            networkSettings = await Contracts.NetworkSettings.deploy(address1.address, portion1);
         });
 
         it('should revert when setting an invalid network fee wallet', async () => {

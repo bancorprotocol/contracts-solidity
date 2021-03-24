@@ -3,8 +3,7 @@ const { roles } = require('./helpers/Constants');
 
 const rlp = require('rlp');
 
-const LiquidityProtectionSettings = ethers.getContractFactory('LiquidityProtectionSettings');
-const LiquidityProtectionSettingsMigrator = ethers.getContractFactory('LiquidityProtectionSettingsMigrator');
+const Contracts = require('./helpers/Contracts');
 
 let networkToken;
 let registry;
@@ -20,7 +19,10 @@ describe('LiquidityProtectionSettingsMigrator', () => {
     });
 
     it('deploy', async () => {
-        const sourceSettings = await (await LiquidityProtectionSettings).deploy(networkToken.address, registry.address);
+        const sourceSettings = await Contracts.LiquidityProtectionSettings.deploy(
+            networkToken.address,
+            registry.address
+        );
 
         for (let i = 0; i < accounts.length; i++) {
             await sourceSettings.addPoolToWhitelist(accounts[i].address);
@@ -29,7 +31,7 @@ describe('LiquidityProtectionSettingsMigrator', () => {
 
         const sourceState = await readState(sourceSettings);
 
-        const migrator = await (await LiquidityProtectionSettingsMigrator).deploy(
+        const migrator = await Contracts.LiquidityProtectionSettingsMigrator.deploy(
             sourceState.networkToken,
             sourceState.registry,
             sourceState.pools,
@@ -38,7 +40,7 @@ describe('LiquidityProtectionSettingsMigrator', () => {
         );
 
         const targetAddress = '0x' + ethers.utils.keccak256(rlp.encode([migrator.address, 1])).slice(26);
-        const targetSettings = await (await LiquidityProtectionSettings).attach(targetAddress);
+        const targetSettings = await Contracts.LiquidityProtectionSettings.attach(targetAddress);
         const targetState = await readState(targetSettings);
 
         expect(targetState).to.be.deep.equal(sourceState);

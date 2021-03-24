@@ -1,17 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { Decimal } = require('./helpers/MathUtils.js');
 
-const LiquidityProtectionSettings = ethers.getContractFactory('LiquidityProtectionSettings');
-const LiquidityProtectionStore = ethers.getContractFactory('LiquidityProtectionStore');
-const LiquidityProtectionStats = ethers.getContractFactory('LiquidityProtectionStats');
-const LiquidityProtectionSystemStore = ethers.getContractFactory('LiquidityProtectionSystemStore');
-const TokenHolder = ethers.getContractFactory('TokenHolder');
-const TokenGovernance = ethers.getContractFactory('TestTokenGovernance');
-const CheckpointStore = ethers.getContractFactory('TestCheckpointStore');
-const LiquidityProtection = ethers.getContractFactory('TestLiquidityProtection');
+const Contracts = require('./helpers/Contracts');
 
 const MIN_AMOUNT = Decimal(2).pow(0);
 const MAX_AMOUNT = Decimal(2).pow(127);
@@ -25,26 +17,25 @@ const MAX_DURATION = 100 * 24 * 60 * 60;
 let liquidityProtection;
 let owner;
 
-// TODO Error: missing argument: passed to contract
 describe('LiquidityProtectionStateless', () => {
     before(async () => {
         accounts = await ethers.getSigners();
 
         owner = accounts[0];
 
-        const liquidityProtectionSettings = await (await LiquidityProtectionSettings).deploy(
+        const liquidityProtectionSettings = await Contracts.LiquidityProtectionSettings.deploy(
             owner.address,
             owner.address
         );
-        const liquidityProtectionStore = await (await LiquidityProtectionStore).deploy();
-        const liquidityProtectionStats = await (await LiquidityProtectionStats).deploy();
-        const liquidityProtectionSystemStore = await (await LiquidityProtectionSystemStore).deploy();
-        const liquidityProtectionWallet = await (await TokenHolder).deploy();
-        const networkTokenGovernance = await (await TokenGovernance).deploy(owner.address);
-        const govTokenGovernance = await (await TokenGovernance).deploy(owner.address);
-        const checkpointStore = await (await CheckpointStore).deploy();
+        const liquidityProtectionStore = await Contracts.LiquidityProtectionStore.deploy();
+        const liquidityProtectionStats = await Contracts.LiquidityProtectionStats.deploy();
+        const liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
+        const liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
+        const networkTokenGovernance = await Contracts.TestTokenGovernance.deploy(owner.address);
+        const govTokenGovernance = await Contracts.TestTokenGovernance.deploy(owner.address);
+        const checkpointStore = await Contracts.TestCheckpointStore.deploy();
 
-        liquidityProtection = await (await LiquidityProtection).deploy([
+        liquidityProtection = await Contracts.TestLiquidityProtection.deploy([
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             liquidityProtectionStats.address,

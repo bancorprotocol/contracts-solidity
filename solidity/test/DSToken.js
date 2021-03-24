@@ -1,9 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
-const DSToken = ethers.getContractFactory('DSToken');
+const { ZERO_ADDRESS } = require('./helpers/Constants');
+
+const Contracts = require('./helpers/Contracts');
 
 const name = 'Token1';
 const symbol = 'TKN1';
@@ -25,7 +25,7 @@ describe('DSToken', () => {
     });
 
     beforeEach(async () => {
-        token = await (await DSToken).deploy(name, symbol, decimals);
+        token = await Contracts.DSToken.deploy(name, symbol, decimals);
     });
 
     it('verifies the token name, symbol and decimal units after construction', async () => {

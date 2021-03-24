@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 
-const Owned = ethers.getContractFactory('Owned');
+const Contracts = require('./helpers/Contracts');
 
 let contract;
 let owner;
@@ -15,7 +15,7 @@ describe('Owned', () => {
     });
 
     beforeEach(async () => {
-        contract = await (await Owned).deploy();
+        contract = await Contracts.Owned.deploy();
     });
 
     it('verifies the owner after construction', async () => {

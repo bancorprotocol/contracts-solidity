@@ -1,11 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS } = require('./helpers/Constants');
 
-const TokenHolder = ethers.getContractFactory('TokenHolder');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
+const Contracts = require('./helpers/Contracts');
 
 let holder;
 let token;
@@ -26,7 +24,7 @@ describe('TokenHolder', () => {
             return ethers.provider.getBalance(account);
         }
 
-        return await (await TestStandardToken).attach(tokenAddress).balanceOf(account);
+        return await (await Contracts.TestStandardToken.attach(tokenAddress)).balanceOf(account);
     };
 
     const getBalances = async (tokenAddresses, account) => {
@@ -39,10 +37,10 @@ describe('TokenHolder', () => {
     };
 
     beforeEach(async () => {
-        holder = await (await TokenHolder).deploy();
+        holder = await Contracts.TokenHolder.deploy();
 
-        token = await (await TestStandardToken).deploy('ERC', 'ERC1', 18, 100000);
-        token2 = await (await TestStandardToken).deploy('ERC', 'ERC2', 18, 100000);
+        token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', 18, 100000);
+        token2 = await Contracts.TestStandardToken.deploy('ERC', 'ERC2', 18, 100000);
 
         await accounts[0].sendTransaction({ to: holder.address, value: 5000 });
         await token.transfer(holder.address, BigNumber.from(1000));

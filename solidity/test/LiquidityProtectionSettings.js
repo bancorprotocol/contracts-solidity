@@ -1,19 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
+
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, roles } = require('./helpers/Constants');
 
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const ConverterRegistry = ethers.getContractFactory('ConverterRegistry');
-const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const DSToken = ethers.getContractFactory('DSToken');
-const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('TestLiquidityPoolV1ConverterFactory');
-const StandardPoolConverterFactory = ethers.getContractFactory('TestStandardPoolConverterFactory');
-const LiquidityProtectionEventsSubscriber = ethers.getContractFactory('TestLiquidityProtectionEventsSubscriber');
-const LiquidityProtectionSettings = ethers.getContractFactory('LiquidityProtectionSettings');
+const Contracts = require('./helpers/Contracts');
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
 
@@ -35,23 +25,23 @@ describe('LiquidityProtectionSettings', () => {
         owner = accounts[0];
         nonOwner = accounts[1];
 
-        contractRegistry = await (await ContractRegistry).deploy();
-        networkToken = await (await DSToken).deploy('BNT', 'BNT', 18);
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        networkToken = await Contracts.DSToken.deploy('BNT', 'BNT', 18);
 
-        const baseToken = await (await DSToken).deploy('RSV1', 'RSV1', 18);
+        const baseToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
         const weights = [500000, 500000];
 
-        converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
-        const converterRegistryData = await (await ConverterRegistryData).deploy(contractRegistry.address);
-        const bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+        converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
+        const converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
+        const bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
 
-        const liquidityPoolV1ConverterFactory = await (await LiquidityPoolV1ConverterFactory).deploy();
-        const standardPoolConverterFactory = await (await StandardPoolConverterFactory).deploy();
-        const converterFactory = await (await ConverterFactory).deploy();
+        const liquidityPoolV1ConverterFactory = await Contracts.LiquidityPoolV1ConverterFactory.deploy();
+        const standardPoolConverterFactory = await Contracts.StandardPoolConverterFactory.deploy();
+        const converterFactory = await Contracts.ConverterFactory.deploy();
         await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
         await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
-        const bancorFormula = await (await BancorFormula).deploy();
+        const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
@@ -71,12 +61,12 @@ describe('LiquidityProtectionSettings', () => {
         );
         const anchorCount = await converterRegistry.getAnchorCount();
         const poolTokenAddress = await converterRegistry.getAnchor(anchorCount - 1);
-        poolToken = await (await DSToken).attach(poolTokenAddress);
-        subscriber = await (await LiquidityProtectionEventsSubscriber).deploy();
+        poolToken = await Contracts.DSToken.attach(poolTokenAddress);
+        subscriber = await Contracts.TestLiquidityProtectionEventsSubscriber.deploy();
     });
 
     beforeEach(async () => {
-        settings = await (await LiquidityProtectionSettings).deploy(networkToken.address, contractRegistry.address);
+        settings = await Contracts.LiquidityProtectionSettings.deploy(networkToken.address, contractRegistry.address);
     });
 
     it('should properly initialize roles', async () => {
@@ -220,7 +210,7 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('verifies that isPoolSupported returns false for a pool with 3 reserves', async () => {
-            const reserveToken = await (await DSToken).deploy('RSV1', 'RSV1', 18);
+            const reserveToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
             await converterRegistry.newConverter(
                 1,
                 'PT',
@@ -237,7 +227,7 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('verifies that isPoolSupported returns false for a pool that does not have the network token as reserve', async () => {
-            const reserveToken = await (await DSToken).deploy('RSV1', 'RSV1', 18);
+            const reserveToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
             await converterRegistry.newConverter(
                 1,
                 'PT',

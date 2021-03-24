@@ -1,9 +1,7 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-const LiquidityProtectionStore = ethers.getContractFactory('LiquidityProtectionStore');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
+const Contracts = require('./helpers/Contracts');
 
 const DUMMY_ADDRESS = '0x'.padEnd(42, 'f');
 
@@ -15,7 +13,6 @@ let provider;
 let poolToken;
 let reserveToken;
 
-// TODO AssertionError: Expected "4" to be equal 3
 describe('LiquidityProtectionStore', () => {
     before(async () => {
         accounts = await ethers.getSigners();
@@ -28,12 +25,12 @@ describe('LiquidityProtectionStore', () => {
     });
 
     beforeEach(async () => {
-        liquidityProtectionStore = await (await LiquidityProtectionStore).deploy();
+        liquidityProtectionStore = await Contracts.LiquidityProtectionStore.deploy();
     });
 
     describe('general verification', () => {
         it('should revert when a non owner attempts to withdraw tokens', async () => {
-            const erc20Token = await (await TestStandardToken).deploy('name', 'symbol', 0, 1);
+            const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await expect(
                 liquidityProtectionStore.connect(nonOwner).withdrawTokens(erc20Token.address, owner.address, 1)
@@ -58,7 +55,7 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should succeed when the owner attempts to withdraw tokens', async () => {
-            const erc20Token = await (await TestStandardToken).deploy('name', 'symbol', 0, 1);
+            const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await liquidityProtectionStore.connect(owner).withdrawTokens(erc20Token.address, owner.address, 1);
             expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.equal('0');

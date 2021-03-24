@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 
-const Whitelist = ethers.getContractFactory('Whitelist');
+const Contracts = require('./helpers/Contracts');
 
 let whitelist;
 
@@ -21,7 +21,7 @@ describe('Whitelist', () => {
     });
 
     beforeEach(async () => {
-        whitelist = await (await Whitelist).deploy();
+        whitelist = await Contracts.Whitelist.deploy();
     });
 
     it('verifies that a given address is not whitelisted after construction', async () => {

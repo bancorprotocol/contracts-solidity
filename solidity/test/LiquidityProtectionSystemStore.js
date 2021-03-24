@@ -2,7 +2,7 @@ const { expect } = require('chai');
 
 const { roles } = require('./helpers/Constants');
 
-const LiquidityProtectionSystemStore = ethers.getContractFactory('LiquidityProtectionSystemStore');
+const Contracts = require('./helpers/Contracts');
 
 let liquidityProtectionSystemStore;
 
@@ -20,7 +20,7 @@ describe('LiquidityProtectionSystemStore', () => {
     });
 
     beforeEach(async () => {
-        liquidityProtectionSystemStore = await (await LiquidityProtectionSystemStore).deploy();
+        liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
         await liquidityProtectionSystemStore.grantRole(roles.ROLE_OWNER, owner.address);
     });
 

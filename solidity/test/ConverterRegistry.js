@@ -1,19 +1,11 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const DSToken = ethers.getContractFactory('DSToken');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
-const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('LiquidityPoolV1ConverterFactory');
-const StandardPoolConverterFactory = ethers.getContractFactory('StandardPoolConverterFactory');
-const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
-const ConverterRegistry = ethers.getContractFactory('TestConverterRegistry');
 const ConverterHelper = require('./helpers/Converter');
+
+const Contracts = require('./helpers/Contracts');
 
 let contractRegistry;
 let converterFactory;
@@ -23,19 +15,19 @@ let converterRegistryData;
 describe('ConverterRegistry', () => {
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        converterFactory = await (await ConverterFactory).deploy();
+        converterFactory = await Contracts.ConverterFactory.deploy();
         await converterFactory.registerTypedConverterFactory(
-            (await (await LiquidityPoolV1ConverterFactory).deploy()).address
+            (await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address
         );
         await converterFactory.registerTypedConverterFactory(
-            (await (await StandardPoolConverterFactory).deploy()).address
+            (await Contracts.StandardPoolConverterFactory.deploy()).address
         );
     });
 
     beforeEach(async () => {
-        contractRegistry = await (await ContractRegistry).deploy();
-        converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
-        converterRegistryData = await (await ConverterRegistryData).deploy(contractRegistry.address);
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        converterRegistry = await Contracts.TestConverterRegistry.deploy(contractRegistry.address);
+        converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
@@ -93,18 +85,18 @@ describe('ConverterRegistry', () => {
         let tokenE;
 
         beforeEach(async () => {
-            token0 = await (await DSToken).deploy('Token0', 'TKN0', 18);
-            token1 = await (await DSToken).deploy('Token1', 'TKN1', 18);
-            token2 = await (await DSToken).deploy('Token2', 'TKN2', 18);
-            token3 = await (await DSToken).deploy('Token3', 'TKN3', 18);
-            token4 = await (await DSToken).deploy('Token4', 'TKN4', 18);
-            token5 = await (await DSToken).deploy('Token5', 'TKN5', 18);
-            token6 = await (await DSToken).deploy('Token6', 'TKN6', 18);
-            token7 = await (await DSToken).deploy('Token7', 'TKN7', 18);
-            token8 = await (await DSToken).deploy('Token8', 'TKN8', 18);
-            tokenA = await (await DSToken).deploy('TokenA', 'TKNA', 18);
-            tokenC = await (await DSToken).deploy('TokenC', 'TKNC', 18);
-            tokenE = await (await DSToken).deploy('TokenE', 'TKNE', 18);
+            token0 = await Contracts.DSToken.deploy('Token0', 'TKN0', 18);
+            token1 = await Contracts.DSToken.deploy('Token1', 'TKN1', 18);
+            token2 = await Contracts.DSToken.deploy('Token2', 'TKN2', 18);
+            token3 = await Contracts.DSToken.deploy('Token3', 'TKN3', 18);
+            token4 = await Contracts.DSToken.deploy('Token4', 'TKN4', 18);
+            token5 = await Contracts.DSToken.deploy('Token5', 'TKN5', 18);
+            token6 = await Contracts.DSToken.deploy('Token6', 'TKN6', 18);
+            token7 = await Contracts.DSToken.deploy('Token7', 'TKN7', 18);
+            token8 = await Contracts.DSToken.deploy('Token8', 'TKN8', 18);
+            tokenA = await Contracts.DSToken.deploy('TokenA', 'TKNA', 18);
+            tokenC = await Contracts.DSToken.deploy('TokenC', 'TKNC', 18);
+            tokenE = await Contracts.DSToken.deploy('TokenE', 'TKNE', 18);
 
             converter1 = await ConverterHelper.new(
                 0,
@@ -652,24 +644,24 @@ describe('ConverterRegistry', () => {
         let anchorE;
 
         beforeEach(async () => {
-            anchor1 = await (await DSToken).deploy('Token1', 'TKN1', 18);
-            anchor2 = await (await DSToken).deploy('Token2', 'TKN2', 18);
-            anchor3 = await (await DSToken).deploy('Token3', 'TKN3', 18);
-            anchor4 = await (await DSToken).deploy('Token4', 'TKN4', 18);
-            anchor5 = await (await DSToken).deploy('Token5', 'TKN5', 18);
-            anchor6 = await (await DSToken).deploy('Token6', 'TKN6', 18);
-            anchor7 = await (await DSToken).deploy('Token7', 'TKN7', 18);
-            anchor8 = await (await DSToken).deploy('Token8', 'TKN8', 18);
-            anchorA = await (await DSToken).deploy('TokenA', 'TKNA', 18);
-            anchorC = await (await DSToken).deploy('TokenC', 'TKNC', 18);
-            anchorE = await (await DSToken).deploy('TokenE', 'TKNE', 18);
+            anchor1 = await Contracts.DSToken.deploy('Token1', 'TKN1', 18);
+            anchor2 = await Contracts.DSToken.deploy('Token2', 'TKN2', 18);
+            anchor3 = await Contracts.DSToken.deploy('Token3', 'TKN3', 18);
+            anchor4 = await Contracts.DSToken.deploy('Token4', 'TKN4', 18);
+            anchor5 = await Contracts.DSToken.deploy('Token5', 'TKN5', 18);
+            anchor6 = await Contracts.DSToken.deploy('Token6', 'TKN6', 18);
+            anchor7 = await Contracts.DSToken.deploy('Token7', 'TKN7', 18);
+            anchor8 = await Contracts.DSToken.deploy('Token8', 'TKN8', 18);
+            anchorA = await Contracts.DSToken.deploy('TokenA', 'TKNA', 18);
+            anchorC = await Contracts.DSToken.deploy('TokenC', 'TKNC', 18);
+            anchorE = await Contracts.DSToken.deploy('TokenE', 'TKNE', 18);
 
-            converter1 = await (await LiquidityPoolV1Converter).deploy(anchor2.address, contractRegistry.address, 0);
-            converter2 = await (await LiquidityPoolV1Converter).deploy(anchor3.address, contractRegistry.address, 0);
-            converter3 = await (await LiquidityPoolV1Converter).deploy(anchor4.address, contractRegistry.address, 0);
-            converter4 = await (await LiquidityPoolV1Converter).deploy(anchor5.address, contractRegistry.address, 0);
-            converter5 = await (await LiquidityPoolV1Converter).deploy(anchor6.address, contractRegistry.address, 0);
-            converter6 = await (await LiquidityPoolV1Converter).deploy(anchor7.address, contractRegistry.address, 0);
+            converter1 = await Contracts.LiquidityPoolV1Converter.deploy(anchor2.address, contractRegistry.address, 0);
+            converter2 = await Contracts.LiquidityPoolV1Converter.deploy(anchor3.address, contractRegistry.address, 0);
+            converter3 = await Contracts.LiquidityPoolV1Converter.deploy(anchor4.address, contractRegistry.address, 0);
+            converter4 = await Contracts.LiquidityPoolV1Converter.deploy(anchor5.address, contractRegistry.address, 0);
+            converter5 = await Contracts.LiquidityPoolV1Converter.deploy(anchor6.address, contractRegistry.address, 0);
+            converter6 = await Contracts.LiquidityPoolV1Converter.deploy(anchor7.address, contractRegistry.address, 0);
 
             await converter1.addReserve(anchor4.address, 0x2400);
             await converter2.addReserve(anchor6.address, 0x3600);
@@ -1139,8 +1131,8 @@ describe('ConverterRegistry', () => {
         let erc20Token2;
 
         beforeEach(async () => {
-            erc20Token1 = await (await TestStandardToken).deploy('TKN1', 'ET1', 18, 1000000000);
-            erc20Token2 = await (await TestStandardToken).deploy('TKN2', 'ET2', 18, 1000000000);
+            erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ET1', 18, 1000000000);
+            erc20Token2 = await Contracts.TestStandardToken.deploy('TKN2', 'ET2', 18, 1000000000);
         });
 
         const createConverters = async () => {
@@ -1345,8 +1337,8 @@ describe('ConverterRegistry', () => {
         let erc20Token2;
 
         beforeEach(async () => {
-            erc20Token1 = await (await TestStandardToken).deploy('TKN1', 'ET1', 18, 1000000000);
-            erc20Token2 = await (await TestStandardToken).deploy('TKN2', 'ET2', 18, 1000000000);
+            erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ET1', 18, 1000000000);
+            erc20Token2 = await Contracts.TestStandardToken.deploy('TKN2', 'ET2', 18, 1000000000);
         });
 
         const createConverters = async () => {

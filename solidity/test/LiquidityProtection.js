@@ -1,34 +1,13 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-const { NATIVE_TOKEN_ADDRESS, registry, roles, ZERO_ADDRESS, duration, latest } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry, roles, ZERO_ADDRESS } = require('./helpers/Constants');
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { duration, latest } = require('./helpers/Time');
 
 const { Decimal } = require('./helpers/MathUtils.js');
 
-const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
-
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const DSToken = ethers.getContractFactory('DSToken');
-const ConverterRegistry = ethers.getContractFactory('TestConverterRegistry');
-const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = ethers.getContractFactory('TestLiquidityPoolV1Converter');
-const StandardPoolConverterFactory = ethers.getContractFactory('TestStandardPoolConverterFactory');
-const StandardPoolConverter = ethers.getContractFactory('TestStandardPoolConverter');
-const LiquidityProtectionSettings = ethers.getContractFactory('LiquidityProtectionSettings');
-const LiquidityProtectionStore = ethers.getContractFactory('LiquidityProtectionStore');
-const LiquidityProtectionStats = ethers.getContractFactory('LiquidityProtectionStats');
-const LiquidityProtectionSystemStore = ethers.getContractFactory('LiquidityProtectionSystemStore');
-const TokenHolder = ethers.getContractFactory('TokenHolder');
-const LiquidityProtectionEventsSubscriber = ethers.getContractFactory('TestLiquidityProtectionEventsSubscriber');
-const TokenGovernance = ethers.getContractFactory('TestTokenGovernance');
-const CheckpointStore = ethers.getContractFactory('TestCheckpointStore');
-const LiquidityProtection = ethers.getContractFactory('TestLiquidityProtection');
-const NetworkSettings = ethers.getContractFactory('NetworkSettings');
+const Contracts = require('./helpers/Contracts');
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
 const RESERVE1_AMOUNT = BigNumber.from(1000000);
@@ -90,7 +69,7 @@ describe('LiquidityProtection', () => {
                     baseTokenAddress = NATIVE_TOKEN_ADDRESS;
                 } else {
                     // create a pool with ERC20 as the base token
-                    baseToken = await (await DSToken).deploy('RSV1', 'RSV1', 18);
+                    baseToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
                     await baseToken.issue(owner.address, TOTAL_SUPPLY);
                     baseTokenAddress = baseToken.address;
                 }
@@ -111,12 +90,12 @@ describe('LiquidityProtection', () => {
                 );
                 const anchorCount = await converterRegistry.getAnchorCount();
                 const poolTokenAddress = await converterRegistry.getAnchor(anchorCount - 1);
-                poolToken = await (await DSToken).attach(poolTokenAddress);
+                poolToken = await Contracts.DSToken.attach(poolTokenAddress);
                 const converterAddress = await poolToken.owner();
                 if (converterType === 1) {
-                    converter = await (await LiquidityPoolV1Converter).attach(converterAddress);
+                    converter = await Contracts.TestLiquidityPoolV1Converter.attach(converterAddress);
                 } else {
-                    converter = await (await StandardPoolConverter).attach(converterAddress);
+                    converter = await Contracts.TestStandardPoolConverter.attach(converterAddress);
                 }
                 await setTime(now);
                 await converter.acceptOwnership();
@@ -301,21 +280,21 @@ describe('LiquidityProtection', () => {
 
             //
             before(async () => {
-                contractRegistry = await (await ContractRegistry).deploy();
-                converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
-                converterRegistryData = await (await ConverterRegistryData).deploy(contractRegistry.address);
-                bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+                contractRegistry = await Contracts.ContractRegistry.deploy();
+                converterRegistry = await Contracts.TestConverterRegistry.deploy(contractRegistry.address);
+                converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
+                bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
 
-                const liquidityPoolV1ConverterFactory = await (await LiquidityPoolV1ConverterFactory).deploy();
-                const standardPoolConverterFactory = await (await StandardPoolConverterFactory).deploy();
-                const converterFactory = await (await ConverterFactory).deploy();
+                const liquidityPoolV1ConverterFactory = await Contracts.TestLiquidityPoolV1ConverterFactory.deploy();
+                const standardPoolConverterFactory = await Contracts.TestStandardPoolConverterFactory.deploy();
+                const converterFactory = await Contracts.ConverterFactory.deploy();
                 await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
-                const bancorFormula = await (await BancorFormula).deploy();
+                const bancorFormula = await Contracts.BancorFormula.deploy();
                 await bancorFormula.init();
 
-                const networkSettings = await (await NetworkSettings).deploy(owner.address, 0);
+                const networkSettings = await Contracts.NetworkSettings.deploy(owner.address, 0);
 
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
@@ -328,33 +307,34 @@ describe('LiquidityProtection', () => {
             });
 
             beforeEach(async () => {
-                networkToken = await (await DSToken).deploy('BNT', 'BNT', 18);
+                networkToken = await Contracts.DSToken.deploy('BNT', 'BNT', 18);
                 await networkToken.issue(owner.address, TOTAL_SUPPLY);
-                networkTokenGovernance = await (await TokenGovernance).deploy(networkToken.address);
+                networkTokenGovernance = await Contracts.TestTokenGovernance.deploy(networkToken.address);
                 await networkTokenGovernance.grantRole(ROLE_GOVERNOR, governor.address);
                 await networkToken.transferOwnership(networkTokenGovernance.address);
                 await networkTokenGovernance.acceptTokenOwnership();
 
-                govToken = await (await DSToken).deploy('vBNT', 'vBNT', 18);
-                govTokenGovernance = await (await TokenGovernance).deploy(govToken.address);
+                govToken = await Contracts.DSToken.deploy('vBNT', 'vBNT', 18);
+                govTokenGovernance = await Contracts.TestTokenGovernance.deploy(govToken.address);
                 await govTokenGovernance.grantRole(ROLE_GOVERNOR, governor.address);
                 await govToken.transferOwnership(govTokenGovernance.address);
                 await govTokenGovernance.acceptTokenOwnership();
 
                 // initialize liquidity protection
-                checkpointStore = await (await CheckpointStore).deploy();
-                liquidityProtectionSettings = await (await LiquidityProtectionSettings).deploy(
+                checkpointStore = await Contracts.TestCheckpointStore.deploy();
+                liquidityProtectionSettings = await Contracts.LiquidityProtectionSettings.deploy(
                     networkToken.address,
                     contractRegistry.address
                 );
+
                 await liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(BigNumber.from(100));
                 await liquidityProtectionSettings.setMinNetworkCompensation(BigNumber.from(3));
 
-                liquidityProtectionStore = await (await LiquidityProtectionStore).deploy();
-                liquidityProtectionStats = await (await LiquidityProtectionStats).deploy();
-                liquidityProtectionSystemStore = await (await LiquidityProtectionSystemStore).deploy();
-                liquidityProtectionWallet = await (await TokenHolder).deploy();
-                liquidityProtection = await (await LiquidityProtection).deploy([
+                liquidityProtectionStore = await Contracts.LiquidityProtectionStore.deploy();
+                liquidityProtectionStats = await Contracts.LiquidityProtectionStats.deploy();
+                liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
+                liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
+                liquidityProtection = await Contracts.TestLiquidityProtection.deploy([
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
@@ -1867,7 +1847,7 @@ describe('LiquidityProtection', () => {
                 let eventsSubscriber;
 
                 beforeEach(async () => {
-                    eventsSubscriber = await (await LiquidityProtectionEventsSubscriber).deploy();
+                    eventsSubscriber = await Contracts.TestLiquidityProtectionEventsSubscriber.deploy();
                 });
 
                 // test both addLiquidity and addLiquidityFor

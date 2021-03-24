@@ -1,12 +1,10 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { Decimal } = require('./helpers/MathUtils.js');
-
 const MathUtils = require('./helpers/MathUtils');
 
-const MathContract = ethers.getContractFactory('TestMathEx');
+const Contracts = require('./helpers/Contracts');
 
 const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);
@@ -16,7 +14,7 @@ describe('MathEx', () => {
     let mathContract;
 
     before(async () => {
-        mathContract = await (await MathContract).deploy();
+        mathContract = await Contracts.TestMathEx.deploy();
     });
 
     for (let n = 1; n <= 256; n++) {

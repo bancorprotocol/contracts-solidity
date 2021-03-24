@@ -1,10 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { registry } = require('./helpers/Constants');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
+
+const Contracts = require('./helpers/Contracts');
 
 let contractRegistry;
 let converterRegistry;
@@ -30,8 +29,8 @@ describe('ConverterRegistryData', () => {
     });
 
     beforeEach(async () => {
-        contractRegistry = await (await ContractRegistry).deploy();
-        converterRegistry = await (await ConverterRegistryData).deploy(contractRegistry.address);
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        converterRegistry = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
 
         // Allow the owner to manipulate the contract registry data.
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, owner.address);

@@ -1,17 +1,15 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-const TestReentrancyGuard = ethers.getContractFactory('TestReentrancyGuard');
-const TestReentrancyGuardAttacker = ethers.getContractFactory('TestReentrancyGuardAttacker');
+const Contracts = require('./helpers/Contracts');
 
 describe('ReentrancyGuard', () => {
     let guard;
     let attacker;
 
     beforeEach(async () => {
-        guard = await (await TestReentrancyGuard).deploy();
-        attacker = await (await TestReentrancyGuardAttacker).deploy(guard.address);
+        guard = await Contracts.TestReentrancyGuard.deploy();
+        attacker = await Contracts.TestReentrancyGuardAttacker.deploy(guard.address);
     });
 
     context('safe caller', async () => {

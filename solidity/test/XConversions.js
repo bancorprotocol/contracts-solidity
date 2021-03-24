@@ -1,16 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
-const BancorX = ethers.getContractFactory('BancorX');
-const DSToken = ethers.getContractFactory('DSToken');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
+const Contracts = require('./helpers/Contracts');
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
@@ -45,7 +38,6 @@ let reporter3;
 let sender;
 let sender2;
 
-// TODO investigate about "revert SafeMath: subtraction overflow"
 describe('XConversions', () => {
     before(async () => {
         accounts = await ethers.getSigners();
@@ -58,16 +50,16 @@ describe('XConversions', () => {
         sender2 = accounts[6];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        bancorFormula = await (await BancorFormula).deploy();
-        contractRegistry = await (await ContractRegistry).deploy();
+        bancorFormula = await Contracts.BancorFormula.deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
 
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     beforeEach(async () => {
-        bntToken = await (await TestStandardToken).deploy('Bancor', 'BNT', 18, BNT_AMOUNT);
+        bntToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', 18, BNT_AMOUNT);
 
-        bancorX = await (await BancorX).deploy(
+        bancorX = await Contracts.BancorX.deploy(
             MAX_LOCK_LIMIT,
             MAX_RELEASE_LIMIT,
             MIN_LIMIT,
@@ -81,27 +73,27 @@ describe('XConversions', () => {
         await bancorX.setReporter(reporter2.address, true);
         await bancorX.setReporter(reporter3.address, true);
 
-        bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+        bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
         await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
 
-        erc20Token = await (await TestStandardToken).deploy('Test Token', 'TST', 18, ethers.utils.parseEther('100'));
+        erc20Token = await Contracts.TestStandardToken.deploy('Test Token', 'TST', 18, ethers.utils.parseEther('100'));
 
         // Create some converters.
-        const poolToken1 = await (await DSToken).deploy('Pool Token 1', 'POOL1', 18);
-        const poolToken2 = await (await DSToken).deploy('Pool Token 2', 'POOL2', 18);
+        const poolToken1 = await Contracts.DSToken.deploy('Pool Token 1', 'POOL1', 18);
+        const poolToken2 = await Contracts.DSToken.deploy('Pool Token 2', 'POOL2', 18);
         await poolToken2.issue(owner.address, ethers.utils.parseEther('200'));
         await poolToken2.issue(owner.address, ethers.utils.parseEther('200'));
 
-        erc20TokenConverter1 = await (await LiquidityPoolV1Converter).deploy(
+        erc20TokenConverter1 = await Contracts.LiquidityPoolV1Converter.deploy(
             poolToken1.address,
             contractRegistry.address,
             30000
         );
-        erc20TokenConverter2 = await (await LiquidityPoolV1Converter).deploy(
+        erc20TokenConverter2 = await Contracts.LiquidityPoolV1Converter.deploy(
             poolToken2.address,
             contractRegistry.address,
             30000
