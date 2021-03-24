@@ -210,7 +210,7 @@ describe('LiquidityProtectionAverageRate', () => {
                                     'ERR_INVALID_RATE'
                                 );
                             }
-                            await converter.removeLiquidity(
+                            await converter.methods['removeLiquidity(uint256,address[2],uint256[2])'](
                                 await poolToken.balanceOf(defaultSender),
                                 [reserveToken1.address, reserveToken2.address],
                                 [1, 1]
