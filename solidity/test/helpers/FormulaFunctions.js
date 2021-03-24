@@ -1,8 +1,6 @@
 const { expect } = require('chai');
 const constants = require('./FormulaConstants');
-const Decimal = require('decimal.js');
-
-Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
+const { Decimal } = require('./MathUtils.js');
 
 const ONE = Decimal(1);
 const MAX_WEIGHT = Decimal(constants.MAX_WEIGHT);

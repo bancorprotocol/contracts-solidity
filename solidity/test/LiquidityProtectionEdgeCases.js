@@ -3,7 +3,7 @@ const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
 const { registry, roles, MAX_UINT256, ZERO_ADDRESS } = require('./helpers/Constants');
-const Decimal = require('decimal.js');
+const { Decimal } = require('./helpers/MathUtils.js');
 
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 

@@ -1,11 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-const Decimal = require('decimal.js');
-
-const { divCeil } = require('./helpers/MathUtils');
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, MAX_UINT256, latest, duration } = require('./helpers/Constants');
+const { Decimal, divCeil } = require('./helpers/MathUtils.js');
+const { latest, duration } = require('./helpers/Time');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, MAX_UINT256 } = require('./helpers/Constants');
 
 const BancorNetwork = ethers.getContractFactory('BancorNetwork');
 const StandardPoolConverter = ethers.getContractFactory('TestStandardPoolConverter');

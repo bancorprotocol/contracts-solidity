@@ -1,27 +1,10 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const ConverterHelper = require('./helpers/Converter');
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const NetworkSettings = ethers.getContractFactory('NetworkSettings');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const ConverterRegistry = ethers.getContractFactory('ConverterRegistry');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
-const ConversionPathFinder = ethers.getContractFactory('ConversionPathFinder');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const TestNonStandardToken = ethers.getContractFactory('TestNonStandardToken');
-const TestBancorNetwork = ethers.getContractFactory('TestBancorNetwork');
-const ConverterV27OrLowerWithoutFallback = ethers.getContractFactory('ConverterV27OrLowerWithoutFallback');
-const ConverterV27OrLowerWithFallback = ethers.getContractFactory('ConverterV27OrLowerWithFallback');
-const ConverterV28OrHigherWithoutFallback = ethers.getContractFactory('ConverterV28OrHigherWithoutFallback');
-const ConverterV28OrHigherWithFallback = ethers.getContractFactory('ConverterV28OrHigherWithFallback');
-const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
-const DSToken = ethers.getContractFactory('DSToken');
+const Contracts = require('./helpers/Contracts');
 
 let network;
 let bntToken;
@@ -148,58 +131,58 @@ describe('BancorNetwork', () => {
         sender2 = accounts[2];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        contractRegistry = await (await ContractRegistry).deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        const bancorFormula = await (await BancorFormula).deploy();
+        const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
 
-        const converterFactory = await (await ConverterFactory).deploy();
+        const converterFactory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
 
-        const networkSettings = await (await NetworkSettings).deploy(sender.address, 0);
+        const networkSettings = await Contracts.NetworkSettings.deploy(sender.address, 0);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
     describe('Conversions', () => {
         beforeEach(async () => {
-            network = await (await TestBancorNetwork).deploy(0, 0);
+            network = await Contracts.TestBancorNetwork.deploy(0, 0);
 
-            bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+            bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-            const converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
-            const converterRegistryData = await (await ConverterRegistryData).deploy(contractRegistry.address);
+            const converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
+            const converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
-            const pathFinder = await (await ConversionPathFinder).deploy(contractRegistry.address);
+            const pathFinder = await Contracts.ConversionPathFinder.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERSION_PATH_FINDER, pathFinder.address);
 
-            bntToken = await (await TestStandardToken).deploy('BNT', 'BNT', 2, BigNumber.from(10000000));
-            erc20Token1 = await (await TestStandardToken).deploy('TKN1', 'ERC1', 2, BigNumber.from(1000000));
-            erc20Token2 = await (await TestNonStandardToken).deploy('TKN2', 'ERC2', 2, BigNumber.from(2000000));
-            erc20Token3 = await (await TestStandardToken).deploy('TKN3', 'ERC3', 2, BigNumber.from(3000000));
+            bntToken = await Contracts.TestStandardToken.deploy('BNT', 'BNT', 2, BigNumber.from(10000000));
+            erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ERC1', 2, BigNumber.from(1000000));
+            erc20Token2 = await Contracts.TestNonStandardToken.deploy('TKN2', 'ERC2', 2, BigNumber.from(2000000));
+            erc20Token3 = await Contracts.TestStandardToken.deploy('TKN3', 'ERC3', 2, BigNumber.from(3000000));
 
-            anchor1 = await (await DSToken).deploy('Anchor1', 'ANCR1', 2);
+            anchor1 = await Contracts.DSToken.deploy('Anchor1', 'ANCR1', 2);
             await anchor1.issue(sender.address, BigNumber.from(1000000));
 
-            anchor2 = await (await DSToken).deploy('Anchor2', 'ANCR2', 2);
+            anchor2 = await Contracts.DSToken.deploy('Anchor2', 'ANCR2', 2);
             await anchor2.issue(sender.address, BigNumber.from(2000000));
 
-            anchor3 = await (await DSToken).deploy('Anchor3', 'ANCR3', 2);
+            anchor3 = await Contracts.DSToken.deploy('Anchor3', 'ANCR3', 2);
             await anchor3.issue(sender.address, BigNumber.from(3000000));
 
-            anchor4 = await (await DSToken).deploy('Anchor4', 'ERC3', 2);
+            anchor4 = await Contracts.DSToken.deploy('Anchor4', 'ERC3', 2);
             await anchor4.issue(sender.address, BigNumber.from(2500000));
 
             await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
 
-            converter1 = await (await LiquidityPoolV1Converter).deploy(anchor1.address, contractRegistry.address, 0);
+            converter1 = await Contracts.LiquidityPoolV1Converter.deploy(anchor1.address, contractRegistry.address, 0);
             await converter1.addReserve(bntToken.address, BigNumber.from(500000));
             await converter1.addReserve(NATIVE_TOKEN_ADDRESS, BigNumber.from(500000));
 
-            converter2 = await (await LiquidityPoolV1Converter).deploy(anchor2.address, contractRegistry.address, 0);
+            converter2 = await Contracts.LiquidityPoolV1Converter.deploy(anchor2.address, contractRegistry.address, 0);
             await converter2.addReserve(bntToken.address, BigNumber.from(300000));
             await converter2.addReserve(erc20Token1.address, BigNumber.from(150000));
 
@@ -214,7 +197,7 @@ describe('BancorNetwork', () => {
             );
             await converter3.addConnector(erc20Token2.address, BigNumber.from(100000), false);
 
-            converter4 = await (await LiquidityPoolV1Converter).deploy(anchor4.address, contractRegistry.address, 0);
+            converter4 = await Contracts.LiquidityPoolV1Converter.deploy(anchor4.address, contractRegistry.address, 0);
             await converter4.addReserve(bntToken.address, BigNumber.from(220000));
             await converter4.addReserve(erc20Token3.address, BigNumber.from(220000));
 
@@ -251,22 +234,22 @@ describe('BancorNetwork', () => {
         });
 
         it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithoutFallback', async () => {
-            const converter = await (await ConverterV27OrLowerWithoutFallback).deploy();
+            const converter = await Contracts.ConverterV27OrLowerWithoutFallback.deploy();
             expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.false;
         });
 
         it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithFallback', async () => {
-            const converter = await (await ConverterV27OrLowerWithFallback).deploy();
+            const converter = await Contracts.ConverterV27OrLowerWithFallback.deploy();
             expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.false;
         });
 
         it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithoutFallback', async () => {
-            const converter = await (await ConverterV28OrHigherWithoutFallback).deploy();
+            const converter = await Contracts.ConverterV28OrHigherWithoutFallback.deploy();
             expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.true;
         });
 
         it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithFallback', async () => {
-            const converter = await (await ConverterV28OrHigherWithFallback).deploy();
+            const converter = await Contracts.ConverterV28OrHigherWithFallback.deploy();
             expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.true;
         });
 

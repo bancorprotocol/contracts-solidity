@@ -1,22 +1,7 @@
-module.exports = {
-    floorSqrt,
-    ceilSqrt,
-    poweredRatio,
-    reducedRatio,
-    normalizedRatio,
-    accurateRatio,
-    roundDiv,
-    compareRatios,
-    weightedAverageForIntegers,
-    weightedAverageForFractions,
-
-    divCeil,
-    divRound
-};
-
 const { BigNumber } = require('ethers');
 const { BN } = require('bn.js');
 const Decimal = require('decimal.js');
+Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
 
 function floorSqrt(n) {
     return Decimal(n).sqrt().floor().toFixed();
@@ -170,3 +155,20 @@ function toHex(value) {
 function toBigNumber(value) {
     return BigNumber.from(toHex(value));
 }
+
+module.exports = {
+    floorSqrt,
+    ceilSqrt,
+    poweredRatio,
+    reducedRatio,
+    normalizedRatio,
+    accurateRatio,
+    roundDiv,
+    compareRatios,
+    weightedAverageForIntegers,
+    weightedAverageForFractions,
+
+    divCeil,
+    divRound,
+    Decimal
+};

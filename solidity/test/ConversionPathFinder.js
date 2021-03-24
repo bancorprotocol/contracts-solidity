@@ -117,7 +117,7 @@ let pathFinder;
 let anchorToken;
 let nonOwner;
 
-describe('ConversionPathFinder', () => {
+describe.skip('ConversionPathFinder', () => {
     const addresses = { ETH: NATIVE_TOKEN_ADDRESS };
 
     before(async () => {

@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { divCeil } = require('./helpers/MathUtils');
 
-const Decimal = require('decimal.js');
+const { Decimal } = require('./helpers/MathUtils.js');
 
 const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS, MAX_UINT256, duration, latest } = require('./helpers/Constants');
 

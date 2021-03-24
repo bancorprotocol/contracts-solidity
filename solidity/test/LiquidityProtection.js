@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, registry, roles, ZERO_ADDRESS, duration, latest } = require('./helpers/Constants');
 
-const Decimal = require('decimal.js');
+const { Decimal } = require('./helpers/MathUtils.js');
 
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 

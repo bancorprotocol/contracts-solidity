@@ -1,26 +1,18 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-// We will be using BigNumber in some of formula tests, since it'd be much more convenient to work implicitily with
-// decimal numbers.
-const BigNumberr = require('bignumber.js');
-const Decimal = require('decimal.js');
+const Bignumber = require('bignumber.js');
 
-Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
-
-const { divRound } = require('./helpers/MathUtils');
-
-const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
+const { TestBancorFormula } = require('./helpers/Contracts');
+const { Decimal, divRound } = require('./helpers/MathUtils.js');
 const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctions');
-
-const TestBancorFormula = ethers.getContractFactory('TestBancorFormula');
+const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
 
 let formula;
 
 describe('BancorFormula', () => {
     before(async () => {
-        formula = await (await TestBancorFormula).deploy();
+        formula = await TestBancorFormula.deploy();
         await formula.init();
     });
 
@@ -175,20 +167,20 @@ describe('BancorFormula', () => {
     describe('precision tests', async () => {
         const LOG_MIN = 1;
         const EXP_MIN = 0;
-        const LOG_MAX = new BigNumberr(Decimal.exp(1).toFixed());
-        const EXP_MAX = new BigNumberr(Decimal.pow(2, 4).toFixed());
-        const FIXED_1 = new BigNumberr(2).pow(MAX_PRECISION);
-        const MIN_RATIO = new BigNumberr('0.99999999999999999999999999999999999');
-        const MAX_RATIO = new BigNumberr(1);
+        const LOG_MAX = new Bignumber(Decimal.exp(1).toFixed());
+        const EXP_MAX = new Bignumber(Decimal.pow(2, 4).toFixed());
+        const FIXED_1 = new Bignumber(2).pow(MAX_PRECISION);
+        const MIN_RATIO = new Bignumber('0.99999999999999999999999999999999999');
+        const MAX_RATIO = new Bignumber(1);
 
         for (let percent = 0; percent < 100; percent++) {
-            const x = new BigNumberr(percent).dividedBy(100).multipliedBy(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
+            const x = new Bignumber(percent).dividedBy(100).multipliedBy(LOG_MAX.minus(LOG_MIN)).plus(LOG_MIN);
 
             it(`optimalLog(${x.toFixed()})`, async () => {
-                const fixedPoint = new BigNumberr(
+                const fixedPoint = new Bignumber(
                     (await formula.optimalLogTest(FIXED_1.multipliedBy(x).toFixed(0))).toString()
                 );
-                const floatPoint = new BigNumberr(Decimal(x.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
+                const floatPoint = new Bignumber(Decimal(x.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
                 expect(ratio.gte(MIN_RATIO)).to.be.true;
@@ -197,16 +189,16 @@ describe('BancorFormula', () => {
         }
 
         for (let percent = 0; percent < 100; percent++) {
-            const x = new BigNumberr(percent)
+            const x = new Bignumber(percent)
                 .multipliedBy(EXP_MAX.minus(EXP_MIN))
-                .dividedBy(new BigNumberr(100))
+                .dividedBy(new Bignumber(100))
                 .plus(EXP_MIN);
 
             it(`optimalExp(${x.toString()})`, async () => {
-                const fixedPoint = new BigNumberr(
+                const fixedPoint = new Bignumber(
                     (await formula.callStatic.optimalExpTest(FIXED_1.multipliedBy(x).toFixed(0))).toString()
                 );
-                const floatPoint = new BigNumberr(Decimal(x.toFixed()).exp().mul(FIXED_1.toFixed()).toFixed());
+                const floatPoint = new Bignumber(Decimal(x.toFixed()).exp().mul(FIXED_1.toFixed()).toFixed());
 
                 const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
                 expect(ratio.gte(MIN_RATIO)).to.be.true;
@@ -216,18 +208,18 @@ describe('BancorFormula', () => {
 
         for (let n = 0; n < 256 - MAX_PRECISION; n++) {
             const values = [
-                new BigNumberr(2).pow(new BigNumberr(n)),
-                new BigNumberr(2).pow(new BigNumberr(n)).plus(new BigNumberr(1)),
-                new BigNumberr(2).pow(new BigNumberr(n)).multipliedBy(new BigNumberr(1.5)),
-                new BigNumberr(2).pow(new BigNumberr(n + 1)).minus(new BigNumberr(1))
+                new Bignumber(2).pow(new Bignumber(n)),
+                new Bignumber(2).pow(new Bignumber(n)).plus(new Bignumber(1)),
+                new Bignumber(2).pow(new Bignumber(n)).multipliedBy(new Bignumber(1.5)),
+                new Bignumber(2).pow(new Bignumber(n + 1)).minus(new Bignumber(1))
             ];
 
             for (const value of values) {
                 it(`generalLog(${value.toString()})`, async () => {
-                    const fixedPoint = new BigNumberr(
+                    const fixedPoint = new Bignumber(
                         (await formula.generalLogTest(FIXED_1.multipliedBy(value).toFixed(0))).toString()
                     );
-                    const floatPoint = new BigNumberr(Decimal(value.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
+                    const floatPoint = new Bignumber(Decimal(value.toFixed()).ln().mul(FIXED_1.toFixed()).toFixed());
 
                     const ratio = fixedPoint.eq(floatPoint) ? MAX_RATIO : fixedPoint.dividedBy(floatPoint);
                     expect(ratio.gte(MIN_RATIO)).to.be.true;

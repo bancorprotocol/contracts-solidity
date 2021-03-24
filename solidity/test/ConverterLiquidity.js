@@ -2,7 +2,7 @@ const { expect } = require('chai');
 
 const { BigNumber } = require('ethers');
 
-const Decimal = require('decimal.js');
+const { Decimal } = require('./helpers/MathUtils.js');
 
 const { NATIVE_TOKEN_ADDRESS, MAX_UINT256, registry } = require('./helpers/Constants');
 
