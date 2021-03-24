@@ -439,20 +439,22 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
     }
 
     /**
-     * @dev given the amount of one of the reserve tokens to add liquidity of,
-     * returns the amount of pool tokens entitled for it
+     * @dev returns the amount of pool tokens entitled for given amounts of reserve tokens
      * since an empty pool can be funded with any list of non-zero input amounts,
      * this function assumes that the pool is not empty (has already been funded)
      *
-     * @param _reserveToken    address of the reserve token
-     * @param _reserveAmount   amount of the reserve token
+     * @param _reserveTokens   address of each reserve token
+     * @param _reserveAmounts  amount of each reserve token
      *
-     * @return the amount of pool tokens entitled
+     * @return the amount of pool tokens entitled for the given amounts of reserve tokens
      */
-    function addLiquidityReturn(IERC20 _reserveToken, uint256 _reserveAmount) public view returns (uint256) {
+    function addLiquidityReturn(
+        IERC20[] memory _reserveTokens,
+        uint256[] memory _reserveAmounts
+    ) public view returns (uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        return formula.fundSupplyAmount(totalSupply, reserves[_reserveToken].balance, reserveRatio, _reserveAmount);
+        return getMinShare(formula, totalSupply, _reserveTokens, _reserveAmounts);
     }
 
     /**

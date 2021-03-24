@@ -410,27 +410,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev returns the reserve balances of the given reserve token minus its corresponding fee
-     *
-     * @param _reserveToken reserve token
-     *
-     * @return reserve balance minus its corresponding fee
-     */
-    function baseReserveBalance(IERC20 _reserveToken) internal view returns (uint256) {
-        uint256 reserveId = __reserveIds[_reserveToken];
-        (uint256 thisReserveBalance, uint256 otherReserveBalance) = reserveBalances(reserveId, 3 - reserveId);
-        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(thisReserveBalance * otherReserveBalance, _reserveBalancesProduct);
-
-        if (currPoint <= prevPoint) {
-            return thisReserveBalance;
-        }
-
-        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
-        return thisReserveBalance.sub(thisReserveBalance.mul(n).div(d));
-    }
-
-    /**
      * @dev converts a specific amount of source tokens to target tokens
      * can only be called by the bancor network contract
      *
@@ -1064,20 +1043,23 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev given the amount of one of the reserve tokens to add liquidity of,
-     * returns the amount of pool tokens entitled for it
+     * @dev returns the amount of pool tokens entitled for given amounts of reserve tokens
      * since an empty pool can be funded with any list of non-zero input amounts,
      * this function assumes that the pool is not empty (has already been funded)
      *
-     * @param _reserveToken    address of the reserve token
-     * @param _reserveAmount   amount of the reserve token
+     * @param _reserveTokens   address of each reserve token
+     * @param _reserveAmounts  amount of each reserve token
      *
-     * @return the amount of pool tokens entitled
+     * @return the amount of pool tokens entitled for the given amounts of reserve tokens
      */
-    function addLiquidityReturn(IERC20 _reserveToken, uint256 _reserveAmount) public view returns (uint256) {
+    function addLiquidityReturn(
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveAmounts
+    ) public view returns (uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256 _reserveBalance = baseReserveBalance(_reserveToken);
-        return fundSupplyAmount(totalSupply, _reserveBalance, _reserveAmount);
+        uint256[2] memory _reserveBalances = baseReserveBalances(_reserveTokens);
+        (uint256 amount, ) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, _reserveBalances, totalSupply);
+        return amount;
     }
 
     /**
