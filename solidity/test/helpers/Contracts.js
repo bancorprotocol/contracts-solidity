@@ -37,8 +37,8 @@ const deployOrAttach = (contractName) => {
         deploy: (...args) => {
             return deployContract(contractName, ...args);
         },
-        attach: () => {
-            return attachContract(contractName);
+        attach: (address) => {
+            return attachContract(contractName, address);
         }
     };
 };
@@ -61,5 +61,18 @@ module.exports = {
     ConverterV28OrHigherWithoutFallback: deployOrAttach('ConverterV28OrHigherWithoutFallback'),
     ConverterV28OrHigherWithFallback: deployOrAttach('ConverterV28OrHigherWithFallback'),
     LiquidityPoolV1Converter: deployOrAttach('LiquidityPoolV1Converter'),
-    DSToken: deployOrAttach('DSToken')
+    TestCheckpointStore: deployOrAttach('TestCheckpointStore'),
+    DSToken: deployOrAttach('DSToken'),
+    BancorX: deployOrAttach('BancorX'),
+    TestContractRegistryClient: deployOrAttach('TestContractRegistryClient'),
+    ConversionPathFinder: deployOrAttach('ConversionPathFinder'),
+    ConverterRegistryData: deployOrAttach('ConverterRegistryData'),
+    LiquidityPoolV1ConverterFactory: deployOrAttach('LiquidityPoolV1ConverterFactory'),
+    ConverterUpgrader: deployOrAttach('ConverterUpgrader'),
+    StandardPoolConverter: deployOrAttach('StandardPoolConverter'),
+    FixedRatePoolConverter: deployOrAttach('FixedRatePoolConverter'),
+    StandardPoolConverterFactory: deployOrAttach('StandardPoolConverterFactory'),
+    FixedRatePoolConverterFactory: deployOrAttach('FixedRatePoolConverterFactory'),
+    TestTypedConverterAnchorFactory: deployOrAttach('TestTypedConverterAnchorFactory'),
+    TestConverterFactory: deployOrAttach('TestConverterFactory')
 };

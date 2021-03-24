@@ -1,27 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const TestNonStandardToken = ethers.getContractFactory('TestNonStandardToken');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const ConverterUpgrader = ethers.getContractFactory('ConverterUpgrader');
-const ConverterRegistry = ethers.getContractFactory('ConverterRegistry');
-const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
-const NetworkSettings = ethers.getContractFactory('NetworkSettings');
-
-const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
-const StandardPoolConverter = ethers.getContractFactory('StandardPoolConverter');
-const FixedRatePoolConverter = ethers.getContractFactory('FixedRatePoolConverter');
-const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('LiquidityPoolV1ConverterFactory');
-const StandardPoolConverterFactory = ethers.getContractFactory('StandardPoolConverterFactory');
-const FixedRatePoolConverterFactory = ethers.getContractFactory('FixedRatePoolConverterFactory');
-const DSToken = ethers.getContractFactory('DSToken');
+const Contracts = require('./helpers/Contracts');
 
 let bancorNetwork;
 let factory;
@@ -46,11 +28,15 @@ describe('Converter', () => {
     ) => {
         switch (type) {
             case 1:
-                return await (await LiquidityPoolV1Converter).deploy(anchorAddress, registryAddress, maxConversionFee);
+                return await Contracts.LiquidityPoolV1Converter.deploy(
+                    anchorAddress,
+                    registryAddress,
+                    maxConversionFee
+                );
             case 3:
-                return await (await StandardPoolConverter).deploy(anchorAddress, registryAddress, maxConversionFee);
+                return await Contracts.StandardPoolConverter.deploy(anchorAddress, registryAddress, maxConversionFee);
             case 4:
-                return await (await FixedRatePoolConverter).deploy(anchorAddress, registryAddress, maxConversionFee);
+                return await Contracts.FixedRatePoolConverter.deploy(anchorAddress, registryAddress, maxConversionFee);
         }
     };
 
@@ -136,7 +122,7 @@ describe('Converter', () => {
     };
 
     const createAnchor = async () => {
-        anchor = await (await DSToken).deploy('Pool1', 'POOL1', 2);
+        anchor = await Contracts.DSToken.deploy('Pool1', 'POOL1', 2);
         anchorAddress = anchor.address;
     };
 
@@ -171,32 +157,32 @@ describe('Converter', () => {
         receiver = accounts[3];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        contractRegistry = await (await ContractRegistry).deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        const bancorFormula = await (await BancorFormula).deploy();
+        const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
 
-        factory = await (await ConverterFactory).deploy();
+        factory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
-        const networkSettings = await (await NetworkSettings).deploy(owner.address, 0);
+        const networkSettings = await Contracts.NetworkSettings.deploy(owner.address, 0);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
-        await factory.registerTypedConverterFactory((await (await LiquidityPoolV1ConverterFactory).deploy()).address);
-        await factory.registerTypedConverterFactory((await (await StandardPoolConverterFactory).deploy()).address);
-        await factory.registerTypedConverterFactory((await (await FixedRatePoolConverterFactory).deploy()).address);
+        await factory.registerTypedConverterFactory((await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address);
+        await factory.registerTypedConverterFactory((await Contracts.StandardPoolConverterFactory.deploy()).address);
+        await factory.registerTypedConverterFactory((await Contracts.FixedRatePoolConverterFactory.deploy()).address);
     });
 
     beforeEach(async () => {
-        bancorNetwork = await (await BancorNetwork).deploy(contractRegistry.address);
+        bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-        upgrader = await (await ConverterUpgrader).deploy(contractRegistry.address);
+        upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
 
-        reserveToken = await (await TestStandardToken).deploy('ERC Token 1', 'ERC1', 18, 1000000000);
-        reserveToken2 = await (await TestNonStandardToken).deploy('ERC Token 2', 'ERC2', 18, 2000000000);
+        reserveToken = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', 18, 1000000000);
+        reserveToken2 = await Contracts.TestNonStandardToken.deploy('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
     for (const type of [1, 3, 4]) {
@@ -249,8 +235,10 @@ describe('Converter', () => {
                 });
 
                 it('verifies that the converter registry can create a new converter', async () => {
-                    const converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
-                    const converterRegistryData = await (await ConverterRegistryData).deploy(contractRegistry.address);
+                    const converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
+                    const converterRegistryData = await Contracts.ConverterRegistryData.deploy(
+                        contractRegistry.address
+                    );
 
                     await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
                     await contractRegistry.registerAddress(
@@ -445,7 +433,7 @@ describe('Converter', () => {
 
                     await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
                     const anchorAddress = await converter.anchor();
-                    const token = await (await DSToken).attach(anchorAddress);
+                    const token = await Contracts.DSToken.attach(anchorAddress);
                     const newOwner = await token.newOwner();
                     expect(newOwner).to.eql(nonOwner.address);
                 });

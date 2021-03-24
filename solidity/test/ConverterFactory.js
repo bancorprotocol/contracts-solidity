@@ -1,19 +1,12 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const ConverterFactory = ethers.getContractFactory('TestConverterFactory');
-const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('LiquidityPoolV1ConverterFactory');
-const StandardPoolConverterFactory = ethers.getContractFactory('StandardPoolConverterFactory');
-const FixedRatePoolConverterFactory = ethers.getContractFactory('FixedRatePoolConverterFactory');
-const TypedConverterAnchorFactory = ethers.getContractFactory('TestTypedConverterAnchorFactory');
-const DSToken = ethers.getContractFactory('DSToken');
+const Contracts = require('./helpers/Contracts');
 
 const Factories = {
-    LiquidityPoolV1ConverterFactory,
-    StandardPoolConverterFactory,
-    FixedRatePoolConverterFactory
+    LiquidityPoolV1ConverterFactory: 'LiquidityPoolV1ConverterFactory',
+    StandardPoolConverterFactory: 'StandardPoolConverterFactory',
+    FixedRatePoolConverterFactory: 'FixedRatePoolConverterFactory'
 };
 
 let contractRegistry;
@@ -38,13 +31,13 @@ describe('ConverterFactory', () => {
         describe(contractName, () => {
             before(async () => {
                 // The following contracts are unaffected by the underlying tests, this can be shared.
-                contractRegistry = await (await ContractRegistry).deploy();
+                contractRegistry = await Contracts.ContractRegistry.deploy();
             });
 
             beforeEach(async () => {
-                converterFactory = await (await ConverterFactory).deploy();
-                anchorFactory = await (await TypedConverterAnchorFactory).deploy('TypedAnchor');
-                factory = await (await Factories[contractName]).deploy();
+                converterFactory = await Contracts.TestConverterFactory.deploy();
+                anchorFactory = await Contracts.TestTypedConverterAnchorFactory.deploy('TypedAnchor');
+                factory = await Contracts[contractName].deploy();
             });
 
             it('should allow the owner to register a typed converter anchor factory', async () => {
@@ -57,7 +50,7 @@ describe('ConverterFactory', () => {
             it('should allow the owner to reregister a typed converter anchor factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
 
-                const anchorFactory2 = await (await TypedConverterAnchorFactory).deploy('TypedAnchor2');
+                const anchorFactory2 = await Contracts.TestTypedConverterAnchorFactory.deploy('TypedAnchor2');
                 expect(await anchorFactory.converterType()).to.be.equal(await anchorFactory.converterType());
 
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory2.address);
@@ -82,7 +75,7 @@ describe('ConverterFactory', () => {
             it('should allow the owner to reregister a typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
 
-                const factory2 = await (await Factories[contractName]).deploy();
+                const factory2 = await Contracts[contractName].deploy();
                 expect(await factory.converterType()).to.be.equal(await factory2.converterType());
 
                 await converterFactory.registerTypedConverterFactory(factory2.address);
@@ -104,7 +97,7 @@ describe('ConverterFactory', () => {
                 await converterFactory.createAnchor(await anchorFactory.converterType(), name, 'ANCHOR1', 2);
 
                 const anchorAddress = await converterFactory.createdAnchor();
-                const anchor = (await DSToken).attach(anchorAddress);
+                const anchor = await Contracts.DSToken.attach(anchorAddress);
 
                 expect(await anchor.name()).to.not.be.eql(name);
                 expect(await anchor.name()).to.be.eql(await anchorFactory.name());
@@ -117,7 +110,7 @@ describe('ConverterFactory', () => {
                 await converterFactory.createAnchor(11, name, 'ANCHOR1', 2);
 
                 const anchorAddress = await converterFactory.createdAnchor();
-                const anchor = (await DSToken).attach(anchorAddress);
+                const anchor = await Contracts.DSToken.attach(anchorAddress);
 
                 expect(await anchor.name()).to.be.eql(name);
                 expect(await anchor.name()).not.to.be.eql(await anchorFactory.name());
@@ -128,7 +121,7 @@ describe('ConverterFactory', () => {
             it('should create converter', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
 
-                const anchor = await (await DSToken).deploy('Token1', 'TKN1', 2);
+                const anchor = await Contracts.DSToken.deploy('Token1', 'TKN1', 2);
 
                 const converterType = await factory.converterType();
 

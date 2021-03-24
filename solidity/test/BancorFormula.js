@@ -3,16 +3,17 @@ const { BigNumber } = require('ethers');
 
 const Bignumber = require('bignumber.js');
 
-const { TestBancorFormula } = require('./helpers/Contracts');
 const { Decimal, divRound } = require('./helpers/MathUtils.js');
 const { normalizedWeights, balancedWeights } = require('./helpers/FormulaFunctions');
 const { MIN_PRECISION, MAX_PRECISION, MAX_WEIGHT, maxExpArray, maxValArray } = require('./helpers/FormulaConstants');
+
+const Contracts = require('./helpers/Contracts');
 
 let formula;
 
 describe('BancorFormula', () => {
     before(async () => {
-        formula = await TestBancorFormula.deploy();
+        formula = await Contracts.TestBancorFormula.deploy();
         await formula.init();
     });
 

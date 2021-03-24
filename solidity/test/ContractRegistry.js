@@ -1,17 +1,17 @@
 const { expect } = require('chai');
-const { registry } = require('./helpers/Constants');
-
 const { BigNumber } = require('ethers');
 
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
+const { registry } = require('./helpers/Constants');
+const Contracts = require('./helpers/Contracts');
 
-let contractRegistry;
 const contractName1 = 'red';
 const contractName2 = 'blue';
 const contractName3 = 'black';
 const contractName1bytes = ethers.utils.formatBytes32String(contractName1);
 const contractName2bytes = ethers.utils.formatBytes32String(contractName2);
 const contractName3bytes = ethers.utils.formatBytes32String(contractName3);
+
+let contractRegistry;
 
 let accounts;
 let address1;
@@ -35,7 +35,7 @@ describe('ContractRegistry', () => {
     });
 
     beforeEach(async () => {
-        contractRegistry = await (await ContractRegistry).deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
     });
 
     it('verifies that a given contract address is not set after construction', async () => {

@@ -2,13 +2,7 @@ const { expect } = require('chai');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
-const ConverterFactory = ethers.getContractFactory('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = ethers.getContractFactory('LiquidityPoolV1ConverterFactory');
-const ConverterRegistry = ethers.getContractFactory('ConverterRegistry');
-const ConverterRegistryData = ethers.getContractFactory('ConverterRegistryData');
-const ConversionPathFinder = ethers.getContractFactory('ConversionPathFinder');
+const Contracts = require('./helpers/Contracts');
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
@@ -32,7 +26,7 @@ const getSymbol = async (tokenAddress) => {
         return 'ETH';
     }
 
-    const token = await (await TestStandardToken).attach(tokenAddress);
+    const token = await Contracts.TestStandardToken.attach(tokenAddress);
     return token.symbol();
 };
 
@@ -117,7 +111,7 @@ let pathFinder;
 let anchorToken;
 let nonOwner;
 
-describe.skip('ConversionPathFinder', () => {
+describe('ConversionPathFinder', () => {
     const addresses = { ETH: NATIVE_TOKEN_ADDRESS };
 
     before(async () => {
@@ -126,15 +120,15 @@ describe.skip('ConversionPathFinder', () => {
         nonOwner = accounts[1];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        contractRegistry = await (await ContractRegistry).deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        converterFactory = await (await ConverterFactory).deploy();
-        converterRegistry = await (await ConverterRegistry).deploy(contractRegistry.address);
-        converterRegistryData = await (await ConverterRegistryData).deploy(contractRegistry.address);
-        pathFinder = await (await ConversionPathFinder).deploy(contractRegistry.address);
+        converterFactory = await Contracts.ConverterFactory.deploy();
+        converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
+        converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
+        pathFinder = await Contracts.ConversionPathFinder.deploy(contractRegistry.address);
 
         await converterFactory.registerTypedConverterFactory(
-            (await (await LiquidityPoolV1ConverterFactory).deploy()).address
+            (await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address
         );
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
@@ -144,7 +138,7 @@ describe.skip('ConversionPathFinder', () => {
 
     beforeEach(async () => {
         for (const reserve of LAYOUT.reserves) {
-            const erc20Token = await (await TestStandardToken).deploy('name', reserve.symbol, 18, 0);
+            const erc20Token = await Contracts.TestStandardToken.deploy('name', reserve.symbol, 18, 0);
             addresses[reserve.symbol] = erc20Token.address;
         }
 

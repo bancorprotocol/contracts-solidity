@@ -1,12 +1,11 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-const { roles, duration } = require('./helpers/Constants');
-
+const { duration } = require('./helpers/Time');
+const { roles } = require('./helpers/Constants');
 const { ROLE_OWNER, ROLE_SEEDER } = roles;
 
-const CheckpointStore = ethers.getContractFactory('TestCheckpointStore');
+const Contracts = require('./helpers/Contracts');
 
 let checkpointStore;
 
@@ -35,7 +34,7 @@ describe('CheckpointStore', () => {
     });
 
     beforeEach(async () => {
-        checkpointStore = await (await CheckpointStore).deploy();
+        checkpointStore = await Contracts.TestCheckpointStore.deploy();
         await checkpointStore.setTime(now);
     });
 

@@ -1,17 +1,10 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { registry } = require('./helpers/Constants');
 const ConverterHelper = require('./helpers/Converter');
 
 const Contracts = require('./helpers/Contracts');
-
-const BancorNetwork = ethers.getContractFactory('BancorNetwork');
-const TestBancorNetwork = ethers.getContractFactory('TestBancorNetwork');
-const DSToken = ethers.getContractFactory('DSToken');
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
 
 /*
 Token network structure:

@@ -1,12 +1,9 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
-const { advanceBlock } = require('./helpers/Constants');
+const { advanceBlock } = require('./helpers/Time');
 
-const BancorX = ethers.getContractFactory('BancorX');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
+const Contracts = require('./helpers/Contracts');
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
@@ -41,10 +38,10 @@ describe('BancorX', () => {
     });
 
     beforeEach(async () => {
-        const contractRegistry = await (await ContractRegistry).deploy();
-        const bancorXToken = await (await TestStandardToken).deploy('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
+        const contractRegistry = await Contracts.ContractRegistry.deploy();
+        const bancorXToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
 
-        bancorX = await (await BancorX).deploy(
+        bancorX = await Contracts.BancorX.deploy(
             MAX_LOCK_LIMIT,
             MAX_RELEASE_LIMIT,
             MIN_LIMIT,

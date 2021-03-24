@@ -1,17 +1,11 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const { Decimal } = require('./helpers/MathUtils.js');
 
 const { NATIVE_TOKEN_ADDRESS, MAX_UINT256, registry } = require('./helpers/Constants');
 
-const LiquidityPoolV1Converter = ethers.getContractFactory('LiquidityPoolV1Converter');
-const DSToken = ethers.getContractFactory('DSToken');
-const TestStandardToken = ethers.getContractFactory('TestStandardToken');
-const BancorFormula = ethers.getContractFactory('BancorFormula');
-const NetworkSettings = ethers.getContractFactory('NetworkSettings');
-const ContractRegistry = ethers.getContractFactory('ContractRegistry');
+const Contracts = require('./helpers/Contracts');
 
 let contractRegistry;
 let owner;
@@ -20,14 +14,18 @@ const MIN_RETURN = BigNumber.from(1);
 
 describe('ConverterLiquidity', () => {
     const initLiquidityPool = async (hasETH, ...weights) => {
-        const poolToken = await (await DSToken).deploy('name', 'symbol', 0);
-        const converter = await (await LiquidityPoolV1Converter).deploy(poolToken.address, contractRegistry.address, 0);
+        const poolToken = await Contracts.DSToken.deploy('name', 'symbol', 0);
+        const converter = await Contracts.LiquidityPoolV1Converter.deploy(
+            poolToken.address,
+            contractRegistry.address,
+            0
+        );
 
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
                 await converter.addReserve(NATIVE_TOKEN_ADDRESS, weights[i] * 10000);
             } else {
-                const erc20Token = await (await TestStandardToken).deploy('name', 'symbol', 0, MAX_UINT256);
+                const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, MAX_UINT256);
                 await converter.addReserve(erc20Token.address, weights[i] * 10000);
             }
         }
@@ -44,11 +42,11 @@ describe('ConverterLiquidity', () => {
         owner = accounts[0];
 
         // The following contracts are unaffected by the underlying tests, thus can be shared
-        contractRegistry = await (await ContractRegistry).deploy();
-        const bancorFormula = await (await BancorFormula).deploy();
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
 
-        const networkSettings = await (await NetworkSettings).deploy(owner.address, 0);
+        const networkSettings = await Contracts.NetworkSettings.deploy(owner.address, 0);
 
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
@@ -286,7 +284,7 @@ describe('ConverterLiquidity', () => {
             return;
         }
 
-        const token = await (await TestStandardToken).attach(reserveToken);
+        const token = await Contracts.TestStandardToken.attach(reserveToken);
         return token.approve(converter.address, amount);
     };
 
@@ -295,7 +293,7 @@ describe('ConverterLiquidity', () => {
             return BigNumber.from(0);
         }
 
-        const token = await (await TestStandardToken).attach(reserveToken);
+        const token = await Contracts.TestStandardToken.attach(reserveToken);
         return token.allowance(owner.address, converter.address);
     };
 
@@ -304,7 +302,7 @@ describe('ConverterLiquidity', () => {
             return ethers.provider.getBalance(converter.address);
         }
 
-        const token = await (await TestStandardToken).attach(reserveToken);
+        const token = await Contracts.TestStandardToken.attach(reserveToken);
         return await token.balanceOf(converter.address);
     };
 
