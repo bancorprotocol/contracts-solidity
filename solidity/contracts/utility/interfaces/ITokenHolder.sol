@@ -13,13 +13,13 @@ interface ITokenHolder is IOwned {
 
     function withdrawTokens(
         IERC20 token,
-        address to,
+        address payable to,
         uint256 amount
     ) external;
 
     function withdrawTokensMultiple(
         IERC20[] calldata tokens,
-        address to,
+        address payable to,
         uint256[] calldata amounts
     ) external;
 }

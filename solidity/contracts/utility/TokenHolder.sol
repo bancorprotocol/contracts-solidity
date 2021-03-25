@@ -30,7 +30,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
      */
     function withdrawTokens(
         IERC20 token,
-        address to,
+        address payable to,
         uint256 amount
     ) public virtual override ownerOnly validAddress(to) {
         safeTransfer(token, to, amount);
@@ -46,7 +46,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
      */
     function withdrawTokensMultiple(
         IERC20[] calldata tokens,
-        address to,
+        address payable to,
         uint256[] calldata amounts
     ) public virtual override ownerOnly validAddress(to) {
         uint256 length = tokens.length;
@@ -66,7 +66,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
      */
     function safeTransfer(
         IERC20 token,
-        address to,
+        address payable to,
         uint256 amount
     ) internal {
         if (amount == 0) {
@@ -74,7 +74,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
         }
 
         if (token == NATIVE_TOKEN_ADDRESS) {
-            payable(to).transfer(amount);
+            to.transfer(amount);
         } else {
             token.safeTransfer(to, amount);
         }
