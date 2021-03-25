@@ -251,13 +251,14 @@ describe('LiquidityProtectionStore', () => {
 
     describe('locked balances advanced verification', () => {
         const removeAllOneByOne = async (direction) => {
-            console.log(`adding ${accounts.length} items...`);
-            for (const account of accounts) {
+            const acc = accounts.slice(1); // removing the first account
+            console.log(`adding ${acc.length} items...`);
+            for (const account of acc) {
                 await liquidityProtectionStore
                     .connect(owner)
                     .addLockedBalance(provider.address, await account.getBalance(), 1);
             }
-            for (let items = accounts.slice(); items.length > 0; items.length--) {
+            for (let items = acc.slice(); items.length > 0; items.length--) {
                 const bgnIndex = ((items.length - 1) * (1 - direction)) / 2;
                 const endIndex = ((items.length - 1) * (1 + direction)) / 2;
                 const item = (await liquidityProtectionStore.lockedBalance(provider.address, bgnIndex))[0];

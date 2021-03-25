@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-
 const { BigNumber } = require('ethers');
 
 const ConverterHelper = require('./helpers/Converter');
