@@ -99,7 +99,7 @@ describe('LiquidityProtection', () => {
                     await baseToken.approve(converter.address, RESERVE1_AMOUNT);
                 }
 
-                await converter.addLiquidityByOrder(
+                await converter.methods['addLiquidity(address[2],uint256[2],uint256)'](
                     [baseTokenAddress, networkToken.address],
                     [RESERVE1_AMOUNT, RESERVE2_AMOUNT],
                     1,
@@ -482,7 +482,7 @@ describe('LiquidityProtection', () => {
                 it(`pool available space with additional balances of ${baseBalance} and ${networkBalance}`, async () => {
                     await baseToken.approve(converter.address, baseBalance);
                     await networkToken.approve(converter.address, networkBalance);
-                    await converter.addLiquidityByOrder(
+                    await converter.methods['addLiquidity(address[2],uint256[2],uint256)'](
                         [baseToken.address, networkToken.address],
                         [baseBalance, networkBalance],
                         1

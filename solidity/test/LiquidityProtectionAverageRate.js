@@ -174,7 +174,7 @@ describe('LiquidityProtectionAverageRate', () => {
                             );
                             await reserveToken1.approve(converter.address, INITIAL_AMOUNT);
                             await reserveToken2.approve(converter.address, INITIAL_AMOUNT);
-                            await converter.addLiquidityByOrder(
+                            await converter.methods['addLiquidity(address[2],uint256[2],uint256)'](
                                 [reserveToken1.address, reserveToken2.address],
                                 [INITIAL_AMOUNT, INITIAL_AMOUNT],
                                 1
@@ -210,7 +210,7 @@ describe('LiquidityProtectionAverageRate', () => {
                                     'ERR_INVALID_RATE'
                                 );
                             }
-                            await converter.removeLiquidityByOrder(
+                            await converter.methods['removeLiquidity(uint256,address[2],uint256[2])'](
                                 await poolToken.balanceOf(defaultSender),
                                 [reserveToken1.address, reserveToken2.address],
                                 [1, 1]
