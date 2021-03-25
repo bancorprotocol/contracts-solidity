@@ -438,9 +438,9 @@ describe('VortexBurner', () => {
 
         describe('successful vortex', () => {
             for (const feeAmount of [
-                // new BN(1_000).mul(TKN),
-                // new BN(10_000).mul(TKN),
-                // new BN(100_000).mul(TKN),
+                new BN(1_000).mul(TKN),
+                new BN(10_000).mul(TKN),
+                new BN(100_000).mul(TKN),
                 new BN(1_000_000).mul(TKN)
             ]) {
                 context(`with ${feeAmount.toString()} network fee balance per token`, () => {
@@ -449,15 +449,15 @@ describe('VortexBurner', () => {
                     });
 
                     for (const testTokens of [
-                        // ['ETH'],
+                        ['ETH'],
                         ['ETH', 'GOV', 'BNT'],
                         ['ETH', 'GOV', 'BNT', 'TKN1', 'TKN2', 'TKN3', 'TKN4', 'TKN5']
                     ]) {
                         context(`with tokens: ${testTokens.join(',')}`, () => {
                             for (const burnIncentiveFeeParams of [
-                                // [new BN(0), new BN(0)], // No incentives
-                                [new BN(200_000), new BN(0)] // 20%, capped at 0
-                                // [new BN(500_000), new BN(1_000).mul(TKN)] // 50%, capped at 10000 tokens
+                                [new BN(0), new BN(0)], // No incentives
+                                [new BN(200_000), new BN(0)], // 20%, capped at 0
+                                [new BN(500_000), new BN(1_000).mul(TKN)] // 50%, capped at 1000 tokens
                             ]) {
                                 const [burnIncentiveFee, maxBurnIncentiveFeeAmount] = burnIncentiveFeeParams;
 
