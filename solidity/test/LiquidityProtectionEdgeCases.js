@@ -282,7 +282,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                         it(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
                             await baseToken.approve(converter.address, amounts[0]);
                             await networkToken.approve(converter.address, amounts[1]);
-                            await converter.methods['addLiquidity(address[2],uint256[2],uint256)'](
+                            await converter.addLiquidityByOrder(
                                 [baseToken.address, networkToken.address],
                                 [amounts[0], amounts[1]],
                                 1
@@ -356,7 +356,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                         it(`network token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
                             await baseToken.approve(converter.address, amounts[0]);
                             await networkToken.approve(converter.address, amounts[1]);
-                            await converter.methods['addLiquidity(address[2],uint256[2],uint256)'](
+                            await converter.addLiquidityByOrder(
                                 [baseToken.address, networkToken.address],
                                 [amounts[0], amounts[1]],
                                 1
