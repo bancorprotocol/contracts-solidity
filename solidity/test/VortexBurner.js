@@ -1,5 +1,5 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, BN, constants, balance, time } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, BN, constants, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 const {
     NATIVE_TOKEN_ADDRESS,
@@ -14,7 +14,6 @@ const {
 } = require('./helpers/Constants');
 
 const { ZERO_ADDRESS } = constants;
-const { latest } = time;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
@@ -28,7 +27,6 @@ const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter')
 const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
-const VortexStats = contract.fromArtifact('VortexStats');
 const VortexBurner = contract.fromArtifact('VortexBurner');
 
 const PPM_RESOLUTION = new BN(1_000_000);
@@ -39,7 +37,7 @@ const RESERVE2_AMOUNT = new BN(1_000_000).mul(TKN);
 const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
 const TOTAL_SUPPLY = new BN(1_000_000_000).mul(TKN);
 
-describe('VortexBurner', () => {
+describe.only('VortexBurner', () => {
     let contractRegistry;
     let bancorNetwork;
     let networkToken;
@@ -49,7 +47,6 @@ describe('VortexBurner', () => {
     let converterRegistryData;
     let networkSettings;
     let networkFeeWallet;
-    let stats;
     let vortex;
 
     const owner = defaultSender;
@@ -95,19 +92,13 @@ describe('VortexBurner', () => {
 
         await networkToken.issue(owner, TOTAL_SUPPLY);
 
-        stats = await VortexStats.new();
-
         vortex = await VortexBurner.new(
             networkToken.address,
             govTokenGovernance.address,
-            stats.address,
             new BN(0),
             new BN(0),
             contractRegistry.address
         );
-
-        await stats.transferOwnership(vortex.address);
-        await vortex.acceptStatsOwnership();
 
         await networkFeeWallet.transferOwnership(vortex.address);
         await vortex.acceptNetworkFeeOwnership();
@@ -115,13 +106,13 @@ describe('VortexBurner', () => {
 
     describe('construction', () => {
         it('should be properly initialized', async () => {
-            expect(await vortex.stats.call()).to.eql(stats.address);
-
             const burnIncentiveFee = await vortex.burnIncentiveFee.call();
             const incentiveFee = burnIncentiveFee[0];
             const maxIncentiveFeeAmount = burnIncentiveFee[1];
             expect(incentiveFee).to.be.bignumber.equal(new BN(0));
             expect(maxIncentiveFeeAmount).to.be.bignumber.equal(new BN(0));
+
+            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(new BN(0));
         });
 
         it('should revert if initialized with an invalid network token address', async () => {
@@ -129,7 +120,6 @@ describe('VortexBurner', () => {
                 VortexBurner.new(
                     ZERO_ADDRESS,
                     govTokenGovernance.address,
-                    stats.address,
                     new BN(0),
                     new BN(0),
                     contractRegistry.address
@@ -140,28 +130,7 @@ describe('VortexBurner', () => {
 
         it('should revert if initialized with an invalid governance token governance address', async () => {
             await expectRevert(
-                VortexBurner.new(
-                    networkToken.address,
-                    ZERO_ADDRESS,
-                    stats.address,
-                    new BN(0),
-                    new BN(0),
-                    contractRegistry.address
-                ),
-                'ERR_INVALID_ADDRESS'
-            );
-        });
-
-        it('should revert if initialized with an invalid stats address', async () => {
-            await expectRevert(
-                VortexBurner.new(
-                    networkToken.address,
-                    govTokenGovernance.address,
-                    ZERO_ADDRESS,
-                    new BN(0),
-                    new BN(0),
-                    contractRegistry.address
-                ),
+                VortexBurner.new(networkToken.address, ZERO_ADDRESS, new BN(0), new BN(0), contractRegistry.address),
                 'ERR_INVALID_ADDRESS'
             );
         });
@@ -171,7 +140,6 @@ describe('VortexBurner', () => {
                 VortexBurner.new(
                     networkToken.address,
                     govTokenGovernance.address,
-                    stats.address,
                     PPM_RESOLUTION.add(new BN(1)),
                     new BN(0),
                     contractRegistry.address
@@ -182,14 +150,7 @@ describe('VortexBurner', () => {
 
         it('should revert if initialized with an invalid contract registry address', async () => {
             await expectRevert(
-                VortexBurner.new(
-                    networkToken.address,
-                    govTokenGovernance.address,
-                    stats.address,
-                    new BN(0),
-                    new BN(0),
-                    ZERO_ADDRESS
-                ),
+                VortexBurner.new(networkToken.address, govTokenGovernance.address, new BN(0), new BN(0), ZERO_ADDRESS),
                 'ERR_INVALID_ADDRESS'
             );
         });
@@ -202,40 +163,6 @@ describe('VortexBurner', () => {
             const value = new BN(1);
             await vortex.send(value);
             expect(await balance.current(vortex.address)).to.be.bignumber.equal(prevBalance.add(value));
-        });
-    });
-
-    describe('stats ownership', () => {
-        const newOwner = accounts[1];
-
-        it('should allow the owner to transfer the stats ownership', async () => {
-            await vortex.transferStatsOwnership(newOwner);
-            await stats.acceptOwnership({ from: newOwner });
-            expect(await stats.owner.call()).to.be.eql(newOwner);
-        });
-
-        it('should revert when a non owner attempts to transfer the stats ownership', async () => {
-            await expectRevert(
-                vortex.transferStatsOwnership(newOwner, {
-                    from: nonOwner
-                }),
-                'ERR_ACCESS_DENIED'
-            );
-        });
-
-        it('should allow the vortex to accept the stats ownership', async () => {
-            const newVortex = await VortexBurner.new(
-                networkToken.address,
-                govTokenGovernance.address,
-                stats.address,
-                new BN(0),
-                new BN(0),
-                contractRegistry.address
-            );
-
-            await vortex.transferStatsOwnership(newVortex.address);
-            await newVortex.acceptStatsOwnership();
-            expect(await stats.owner.call()).to.be.eql(newVortex.address);
         });
     });
 
@@ -261,7 +188,6 @@ describe('VortexBurner', () => {
             const newVortex = await VortexBurner.new(
                 networkToken.address,
                 govTokenGovernance.address,
-                stats.address,
                 new BN(0),
                 new BN(0),
                 contractRegistry.address
@@ -574,9 +500,6 @@ describe('VortexBurner', () => {
                                                 ).to.be.bignumber.equal(feeAmount);
                                             }
 
-                                            // Check that the time of the last vortex hasn't been set.
-                                            expect(await stats.lastVortexTime.call()).to.be.bignumber.equal(new BN(0));
-
                                             const {
                                                 tokens,
                                                 amounts,
@@ -659,13 +582,9 @@ describe('VortexBurner', () => {
                                             );
 
                                             // Check that the total burned stat has been increment.
-                                            expect(await stats.totalBurnedAmount.call()).to.be.bignumber.equal(
+                                            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(
                                                 totalBurnedAmount
                                             );
-
-                                            // Check that the time of the last vortex was set to now.
-                                            const now = await latest();
-                                            expect(await stats.lastVortexTime.call()).to.be.bignumber.equal(now);
                                         });
                                     }
                                 );

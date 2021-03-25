@@ -19,8 +19,6 @@ import "../utility/ReentrancyGuard.sol";
 import "../INetworkSettings.sol";
 import "../BancorNetwork.sol";
 
-import "./interfaces/IVortexStats.sol";
-
 /**
  * @dev This contract provides any user to perform a vortex
  */
@@ -44,14 +42,14 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     // the address of the governance token security module
     ITokenGovernance public immutable _govTokenGovernance;
 
-    // the address of the vortex stats contract
-    IVortexStats private immutable _stats;
-
     // the percentage of the converted network tokens to be sent to the caller of the vortex (in units of PPM)
     uint32 private _burnIncentiveFee;
 
     // the maximum incentive fee to be sent to the caller of the vortex
     uint256 private _maxBurnIncentiveFeeAmount;
+
+    // stores the total amount of the burned governance tokens
+    uint256 private _totalBurnedAmount;
 
     /**
      * @dev triggered when the burn incentive fee has been changed
@@ -83,7 +81,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @param networkToken the address of the network token
      * @param govTokenGovernance the address of the governance token security module
-     * @param stats the address of the vortex stats contract
      * @param burnIncentiveFee the percentage of the converted network tokens to be sent to the caller of the vortex (in units of PPM)
      * @param maxBurnIncentiveFeeAmount the maximum incentive fee to be sent to the caller of the vortex
      * @param registry the address of the contract registry
@@ -91,7 +88,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     constructor(
         IERC20 networkToken,
         ITokenGovernance govTokenGovernance,
-        IVortexStats stats,
         uint32 burnIncentiveFee,
         uint256 maxBurnIncentiveFeeAmount,
         IContractRegistry registry
@@ -99,14 +95,12 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         public
         validAddress(address(networkToken))
         validAddress(address(govTokenGovernance))
-        validAddress(address(stats))
         validFee(burnIncentiveFee)
         ContractRegistryClient(registry)
     {
         _networkToken = networkToken;
         _govTokenGovernance = govTokenGovernance;
         _govToken = govTokenGovernance.token();
-        _stats = stats;
 
         _burnIncentiveFee = burnIncentiveFee;
         _maxBurnIncentiveFeeAmount = maxBurnIncentiveFeeAmount;
@@ -127,15 +121,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      * @dev ETH receive callback
      */
     receive() external payable {}
-
-    /**
-     * @dev returns the address of the vortex stats contract
-     *
-     * @return the address of the vortex stats contract
-     */
-    function stats() external view returns (IVortexStats) {
-        return _stats;
-    }
 
     /**
      * @dev returns the burn incentive fee and its maximum amount
@@ -166,6 +151,15 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
         _burnIncentiveFee = newBurnIncentiveNetworkFee;
         _maxBurnIncentiveFeeAmount = newMaxBurnIncentiveFeeAmount;
+    }
+
+    /**
+     * @dev returns the total amount of the burned governance tokens
+     *
+     * @return total amount of the burned governance tokens
+     */
+    function totalBurnedAmount() external view returns (uint256) {
+        return _totalBurnedAmount;
     }
 
     /**
@@ -245,8 +239,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         );
 
         // update the stats of the vortex
-        _stats.setLastVortexTime(block.timestamp);
-        _stats.incTotalBurnedAmount(totalGovTokenAmountToBurn);
+        _totalBurnedAmount = _totalBurnedAmount.add(totalGovTokenAmountToBurn);
 
         // burn all the converter governance tokens
         _govTokenGovernance.burn(totalGovTokenAmountToBurn);
@@ -333,22 +326,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         require(totalGovTokenAmountToBurn > 0, "ERR_ZERO_TARGET_AMOUNT");
 
         return (amounts, networkTokenConversionAmounts, totalGovTokenAmountToBurn, incentiveFeeAmount);
-    }
-
-    /**
-     * @dev transfers the ownership of the stats
-     *
-     * @param newOwner the new owner of the stats
-     */
-    function transferStatsOwnership(address newOwner) external ownerOnly {
-        _stats.transferOwnership(newOwner);
-    }
-
-    /**
-     * @dev accepts the ownership of the stats
-     */
-    function acceptStatsOwnership() external ownerOnly {
-        _stats.acceptOwnership();
     }
 
     /**

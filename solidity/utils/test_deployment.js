@@ -419,18 +419,13 @@ const run = async () => {
         await execute(liquidityProtectionSettings.methods.addPoolToWhitelist(reserves[converter].address));
     }
 
-    const vortexStats = await web3Func(deploy, 'vortexStats', 'VortexStats', []);
     const vortexBurner = await web3Func(deploy, 'vortexBurner', 'VortexBurner', [
         reserves.BNT.address,
         vbntTokenGovernance._address,
-        vortexStats._address,
         0,
         0,
         contractRegistry._address
     ]);
-
-    await execute(vortexStats.methods.transferOwnership(vortexBurner._address));
-    await execute(vortexBurner.methods.acceptStatsOwnership());
 
     await execute(networkFeeWallet.methods.transferOwnership(vortexBurner._address));
     await execute(vortexBurner.methods.acceptNetworkFeeOwnership());
