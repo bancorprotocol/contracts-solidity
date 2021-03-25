@@ -998,7 +998,7 @@ describe('LiquidityPoolV1Converter', () => {
                     reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length /
                         reserveAmounts.length
                 );
-                return new BN('1'.padEnd(length, '0'));
+                return new BN(10).pow(new BN(length - 1));
             }
 
             return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);

@@ -1007,17 +1007,17 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 _reserveTokenIndex,
         uint256 _reserveAmount
     ) public view returns (uint256[2] memory) {
-        uint256[2] memory _reserveAmounts;
+        uint256[2] memory reserveAmounts;
 
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory _reserveBalances = baseReserveBalances(_reserveTokens);
-        uint256 amount = fundSupplyAmount(totalSupply, _reserveBalances[_reserveTokenIndex], _reserveAmount);
+        uint256[2] memory balancesMinusFees = baseReserveBalances(_reserveTokens);
+        uint256 amount = fundSupplyAmount(totalSupply, balancesMinusFees[_reserveTokenIndex], _reserveAmount);
 
         for (uint256 i = 0; i < 2; i++) {
-            _reserveAmounts[i] = fundCost(totalSupply, _reserveBalances[i], amount);
+            reserveAmounts[i] = fundCost(totalSupply, balancesMinusFees[i], amount);
         }
 
-        return _reserveAmounts;
+        return reserveAmounts;
     }
 
     /**
@@ -1035,8 +1035,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[2] memory _reserveAmounts
     ) public view returns (uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory _reserveBalances = baseReserveBalances(_reserveTokens);
-        (uint256 amount, ) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, _reserveBalances, totalSupply);
+        uint256[2] memory balancesMinusFees = baseReserveBalances(_reserveTokens);
+        (uint256 amount, ) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, balancesMinusFees, totalSupply);
         return amount;
     }
 
@@ -1054,8 +1054,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         returns (uint256[2] memory)
     {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory _reserveBalances = baseReserveBalances(_reserveTokens);
-        return removeLiquidityReserveAmounts(_amount, totalSupply, _reserveBalances);
+        uint256[2] memory balancesMinusFees = baseReserveBalances(_reserveTokens);
+        return removeLiquidityReserveAmounts(_amount, totalSupply, balancesMinusFees);
     }
 
     /**
@@ -1118,11 +1118,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 _totalSupply,
         uint256[2] memory _reserveBalances
     ) private pure returns (uint256[2] memory) {
-        uint256[2] memory _reserveAmounts;
+        uint256[2] memory reserveAmounts;
         for (uint256 i = 0; i < 2; i++) {
-            _reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
+            reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
         }
-        return _reserveAmounts;
+        return reserveAmounts;
     }
 
     /**
