@@ -1201,6 +1201,32 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         return _averageRateInfo & MAX_UINT112;
     }
 
+    /**
+     * @dev returns the largest integer smaller than or equal to the square root of a given value
+     *
+     * @param _num the given value
+     *
+     * @return the largest integer smaller than or equal to the square root of the given value
+     */
+    function floorSqrt(uint256 x) private pure returns (uint256) {
+        return x > 0 ? MathEx.floorSqrt(x) : 0;
+    }
+
+    /**
+     * @dev returns the average number of decimal digits in a given list of positive integers
+     *
+     * @param _values  list of positive integers
+     *
+     * @return the average number of decimal digits in the given list of positive integers
+     */
+    function geometricMean(uint256[2] memory _reserveAmounts) private pure returns (uint256) {
+        uint256[] memory reserveAmounts = new uint256[](2);
+        for (uint256 i = 0; i < 2; i++) {
+            reserveAmounts[i] = _reserveAmounts[i];
+        }
+        return MathEx.geometricMean(reserveAmounts);
+    }
+
     function crossReserveTargetAmount(
         uint256 _sourceReserveBalance,
         uint256 _targetReserveBalance,
@@ -1210,18 +1236,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         require(_sourceReserveBalance > 0 && _targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
         return _targetReserveBalance.mul(_amount) / _sourceReserveBalance.add(_amount);
-    }
-
-    function geometricMean(uint256[2] memory _reserveAmounts) private pure returns (uint256) {
-        uint256[] memory reserveAmounts = new uint256[](2);
-        for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = _reserveAmounts[i];
-        }
-        return MathEx.geometricMean(reserveAmounts);
-    }
-
-    function floorSqrt(uint256 x) private pure returns (uint256) {
-        return x > 0 ? MathEx.floorSqrt(x) : 0;
     }
 
     function crossReserveSourceAmount(
