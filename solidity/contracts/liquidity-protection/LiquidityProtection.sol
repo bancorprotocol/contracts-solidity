@@ -1082,7 +1082,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         amounts[1] = _reserveAmount2;
         _converter.addLiquidity{ value: _value }(reserveTokens, amounts, 1);
 
-        // ensure that the contract can receive ETH
+        // ensure that the contract can no longer receive ETH
         updatingLiquidity = false;
     }
 
