@@ -28,7 +28,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     using SafeERC20 for IERC20;
 
     // the vortex is only designed to work with 50/50 standard pool converters
-    uint32 private constant STANDARD_POOL_RESERVE_WEIGHT = 500000;
+    uint32 private constant STANDARD_POOL_RESERVE_WEIGHT = PPM_RESOLUTION / 2;
 
     // the type of the standard pool converter
     uint16 private constant STANDARD_POOL_CONVERTER_TYPE = 3;
