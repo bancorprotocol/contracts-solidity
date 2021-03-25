@@ -1216,9 +1216,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     function geometricMean(uint256[2] memory list) private pure returns (uint256) {
         uint256[] memory tempList = new uint256[](2);
-        for (uint256 i = 0; i < 2; i++) {
-            tempList[i] = list[i];
-        }
+        tempList[0] = list[0];
+        tempList[1] = list[1];
         return MathEx.geometricMean(tempList);
     }
 
