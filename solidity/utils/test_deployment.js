@@ -293,13 +293,12 @@ const run = async () => {
                 weights
             )
         );
-        console.log('BBB');
+
         const converterAnchor = deployed(
             web3,
             'IConverterAnchor',
             await converterRegistry.methods.getAnchor(index).call()
         );
-        console.log('CCC');
 
         const converterBase = deployed(web3, 'ConverterBase', await converterAnchor.methods.owner().call());
         await execute(converterBase.methods.acceptOwnership());
