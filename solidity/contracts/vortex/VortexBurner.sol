@@ -106,17 +106,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         _maxBurnIncentiveFeeAmount = maxBurnIncentiveFeeAmount;
     }
 
-    // ensures that the fee is valid
-    modifier validFee(uint32 fee) {
-        _validFee(fee);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validFee(uint32 fee) internal pure {
-        require(fee <= PPM_RESOLUTION, "ERR_INVALID_FEE");
-    }
-
     /**
      * @dev ETH receive callback
      */

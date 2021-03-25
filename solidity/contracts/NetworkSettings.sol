@@ -15,17 +15,6 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     address payable private _networkFeeWallet;
     uint32 private _networkFee;
 
-    // ensures that the fee is valid
-    modifier validFee(uint32 fee) {
-        _validFee(fee);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validFee(uint32 fee) internal pure {
-        require(fee <= PPM_RESOLUTION, "ERR_INVALID_FEE");
-    }
-
     /**
      * @dev triggered when the network fee wallet is updated
      *
