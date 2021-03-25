@@ -432,7 +432,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      */
     function applyIncentiveFee(uint256 amount) private view returns (uint256, uint256) {
         uint256 fee = _burnIncentiveFee;
-
         if (fee == 0) {
             return (amount, 0);
         }
