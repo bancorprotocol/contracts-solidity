@@ -32,6 +32,9 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     // the vortex is only designed to work with 50/50 standard pool converters
     uint32 private constant STANDARD_POOL_RESERVE_WEIGHT = 500000;
 
+    // the type of the standard pool converter
+    uint16 private constant STANDARD_POOL_CONVERTER_TYPE = 3;
+
     // the address of the network token
     IERC20 private immutable _networkToken;
 
@@ -465,7 +468,12 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         standardReserveWeights[1] = STANDARD_POOL_RESERVE_WEIGHT;
 
         // find the standard pool converter between the specified token and the network token
-        IConverterAnchor anchor = converterRegistry.getLiquidityPoolByConfig(3, reserveTokens, standardReserveWeights);
+        IConverterAnchor anchor =
+            converterRegistry.getLiquidityPoolByConfig(
+                STANDARD_POOL_CONVERTER_TYPE,
+                reserveTokens,
+                standardReserveWeights
+            );
         require(address(anchor) != address(0), "ERR_INVALID_RESERVE_TOKEN");
 
         return anchor;
