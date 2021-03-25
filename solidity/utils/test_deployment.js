@@ -169,6 +169,13 @@ const run = async () => {
     const converterRegistryData = await web3Func(deploy, 'converterRegistryData', 'ConverterRegistryData', [
         contractRegistry._address
     ]);
+
+    const networkFeeWallet = await web3Func(deploy, 'networkFeeWallet', 'TokenHolder', []);
+    const networkSettings = await web3Func(deploy, 'networkSettings', 'NetworkSettings', [
+        networkFeeWallet._address,
+        0
+    ]);
+
     const liquidityPoolV1ConverterFactory = await web3Func(
         deploy,
         'liquidityPoolV1ConverterFactory',
@@ -209,6 +216,10 @@ const run = async () => {
     await execute(
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorNetwork'), bancorNetwork._address)
     );
+    await execute(
+        contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('NetworkSettings'), networkSettings._address)
+    );
+
     await execute(
         contractRegistry.methods.registerAddress(
             Web3.utils.asciiToHex('ConversionPathFinder'),
@@ -282,11 +293,14 @@ const run = async () => {
                 weights
             )
         );
+        console.log('BBB');
         const converterAnchor = deployed(
             web3,
             'IConverterAnchor',
             await converterRegistry.methods.getAnchor(index).call()
         );
+        console.log('CCC');
+
         const converterBase = deployed(web3, 'ConverterBase', await converterAnchor.methods.owner().call());
         await execute(converterBase.methods.acceptOwnership());
         await execute(converterBase.methods.setConversionFee(fee));
@@ -404,6 +418,22 @@ const run = async () => {
     for (const converter of params.converters) {
         await execute(liquidityProtectionSettings.methods.addPoolToWhitelist(reserves[converter].address));
     }
+
+    const vortexStats = await web3Func(deploy, 'vortexStats', 'VortexStats', []);
+    const vortexBurner = await web3Func(deploy, 'vortexBurner', 'VortexBurner', [
+        reserves.BNT.address,
+        vbntTokenGovernance._address,
+        vortexStats._address,
+        0,
+        0,
+        contractRegistry._address
+    ]);
+
+    await execute(vortexStats.methods.transferOwnership(vortexBurner._address));
+    await execute(vortexBurner.methods.acceptStatsOwnership());
+
+    await execute(networkFeeWallet.methods.transferOwnership(vortexBurner._address));
+    await execute(vortexBurner.methods.acceptNetworkFeeOwnership());
 
     web3.currentProvider.disconnect();
 };
