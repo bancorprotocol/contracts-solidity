@@ -653,6 +653,11 @@ describe('VortexBurner', () => {
                                                 await getBalance(networkToken, vortex.address)
                                             ).to.be.bignumber.equal(new BN(0));
 
+                                            // Check that no governance tokens have left in the contract.
+                                            expect(await getBalance(govToken, vortex.address)).to.be.bignumber.equal(
+                                                new BN(0)
+                                            );
+
                                             // Check that the total burned stat has been increment.
                                             expect(await stats.totalBurnedAmount.call()).to.be.bignumber.equal(
                                                 totalBurnedAmount
