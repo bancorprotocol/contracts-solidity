@@ -1328,14 +1328,14 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 prevPoint = floorSqrt(_reserveBalancesProduct);
         uint256 currPoint = floorSqrt(reserveBalance0 * reserveBalance1);
 
-        if (currPoint > prevPoint) {
-            (address networkFeeWallet, uint32 networkFee) = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFeeParams();
-            uint256 n = (currPoint - prevPoint) * networkFee;
-            uint256 d = (currPoint * (PPM_RESOLUTION - networkFee)).add(prevPoint * networkFee * 2);
-            return (networkFeeWallet, reserveBalance0.mul(n).div(d), reserveBalance1.mul(n).div(d));
+        if (prevPoint >= currPoint) {
+            return (address(0), 0, 0);
         }
 
-        return (address(0), 0, 0);
+        (address networkFeeWallet, uint32 networkFee) = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFeeParams();
+        uint256 n = (currPoint - prevPoint) * networkFee;
+        uint256 d = (currPoint * (PPM_RESOLUTION - networkFee)).add(prevPoint * networkFee * 2);
+        return (networkFeeWallet, reserveBalance0.mul(n).div(d), reserveBalance1.mul(n).div(d));
     }
 
     /**
