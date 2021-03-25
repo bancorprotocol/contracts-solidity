@@ -402,9 +402,9 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             return (amount, 0);
         }
 
-        uint256 incentiveAmount = Math.min(amount.mul(fee).div(PPM_RESOLUTION), _maxBurnIncentiveFeeAmount);
+        uint256 incentiveAmount = Math.min(amount.mul(fee) / PPM_RESOLUTION, _maxBurnIncentiveFeeAmount);
 
-        return (amount.sub(incentiveAmount), incentiveAmount);
+        return (amount - incentiveAmount, incentiveAmount);
     }
 
     /**
