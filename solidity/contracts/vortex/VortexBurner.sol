@@ -174,9 +174,14 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         uint256 totalGovTokenAmountToBurn = 0;
 
         for (uint256 i = 0; i < paths.length; ++i) {
+            // avoid empty conversions
+            uint256 amount = amounts[i];
+            if (amount == 0) {
+                continue;
+            }
+
             address[] memory path = paths[i];
             IERC20 token = IERC20(path[0]);
-            uint256 amount = amounts[i];
             uint256 value = 0;
 
             if (token == _govToken) {
@@ -269,10 +274,14 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         uint256 totalGovTokenAmountToBurn = 0;
 
         for (uint256 i = 0; i < paths.length; ++i) {
+            // avoid empty conversions
+            uint256 amount = amounts[i];
+            if (amount == 0) {
+                continue;
+            }
+
             address[] memory path = paths[i];
             IERC20 token = IERC20(path[0]);
-            uint256 amount = amounts[i];
-
             if (token == _govToken) {
                 // if the source token is the governance token, don't try to convert it either, but rather include it in
                 // the amount to burn
@@ -351,21 +360,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         for (uint256 i = 0; i < tokens.length; ++i) {
             IERC20 token = tokens[i];
 
-            // make sure to retrieve the balance of either an ERC20 or an ETH reserve
-            uint256 amount;
-            if (token == NATIVE_TOKEN_ADDRESS) {
-                amount = address(feeWallet).balance;
-            } else {
-                amount = token.balanceOf(address(feeWallet));
-            }
-
-            // avoid empty conversions
-            if (amount == 0) {
-                continue;
-            }
-
-            amounts[i] = amount;
-
             address[] memory path = new address[](3);
             path[0] = address(token);
 
@@ -377,6 +371,13 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             }
 
             paths[i] = path;
+
+            // make sure to retrieve the balance of either an ERC20 or an ETH reserve
+            if (token == NATIVE_TOKEN_ADDRESS) {
+                amounts[i] = address(feeWallet).balance;
+            } else {
+                amounts[i] = token.balanceOf(address(feeWallet));
+            }
         }
 
         // get the governance token converter path
