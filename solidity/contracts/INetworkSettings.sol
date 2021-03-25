@@ -3,6 +3,8 @@ pragma solidity 0.6.12;
 
 interface INetworkSettings {
     function networkFeeParams() external view returns (address, uint32);
-    function networkFeeWallet() external view returns (address);
+
+    function networkFeeWallet() external view returns (address payable);
+
     function networkFee() external view returns (uint32);
 }

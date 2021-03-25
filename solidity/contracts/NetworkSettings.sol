@@ -12,7 +12,7 @@ import "./utility/Utils.sol";
  * (in PPM units) taken from all conversion fees accumulated in the network.
  */
 contract NetworkSettings is INetworkSettings, Owned, Utils {
-    address private _networkFeeWallet;
+    address payable private _networkFeeWallet;
     uint32 private _networkFee;
 
     // ensures that the fee is valid
@@ -48,7 +48,11 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @param initialNetworkFeeWallet initial network fee wallet
      * @param initialNetworkFee initial network fee in ppm units
      */
-    constructor(address initialNetworkFeeWallet, uint32 initialNetworkFee) validAddress(initialNetworkFeeWallet) validFee(initialNetworkFee) public {
+    constructor(address payable initialNetworkFeeWallet, uint32 initialNetworkFee)
+        public
+        validAddress(initialNetworkFeeWallet)
+        validFee(initialNetworkFee)
+    {
         _networkFeeWallet = initialNetworkFeeWallet;
         _networkFee = initialNetworkFee;
     }
@@ -68,7 +72,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      *
      * @return network fee wallet
      */
-    function networkFeeWallet() external view override returns (address) {
+    function networkFeeWallet() external view override returns (address payable) {
         return _networkFeeWallet;
     }
 
@@ -87,7 +91,11 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      *
      * @param newNetworkFeeWallet new network fee wallet
      */
-    function setNetworkFeeWallet(address newNetworkFeeWallet) external ownerOnly validAddress(newNetworkFeeWallet) {
+    function setNetworkFeeWallet(address payable newNetworkFeeWallet)
+        external
+        ownerOnly
+        validAddress(newNetworkFeeWallet)
+    {
         emit NetworkFeeWalletUpdated(_networkFeeWallet, newNetworkFeeWallet);
         _networkFeeWallet = newNetworkFeeWallet;
     }
