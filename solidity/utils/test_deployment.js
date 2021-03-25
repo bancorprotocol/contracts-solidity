@@ -244,8 +244,7 @@ const run = async () => {
             const symbol = await token.methods.symbol().call();
             const decimals = await token.methods.symbol().call();
             reserves[symbol] = { address: token._address, decimals: decimals };
-        }
-        else {
+        } else {
             const name = reserve.symbol + ' DS Token';
             const symbol = reserve.symbol;
             const decimals = reserve.decimals;
@@ -301,9 +300,12 @@ const run = async () => {
                 }
             }
 
-            const deployedConverterType = {1: 'LiquidityPoolV1Converter', 3: 'StandardPoolConverter'}[type];
+            const deployedConverterType = { 1: 'LiquidityPoolV1Converter', 3: 'StandardPoolConverter' }[type];
             const deployedConverter = deployed(web3, deployedConverterType, converterBase._address);
-            await execute(deployedConverter.methods['addLiquidity(address[],uint256[],uint256)'](tokens, amounts, 1), value);
+            await execute(
+                deployedConverter.methods['addLiquidity(address[],uint256[],uint256)'](tokens, amounts, 1),
+                value
+            );
         }
 
         reserves[converter.symbol] = {
