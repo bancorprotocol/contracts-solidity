@@ -166,7 +166,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     }
 
     /**
-     * @dev converts the provided tokens to the governance token and burns it
+     * @dev converts the provided tokens to governance tokens and burns them
      *
      * @param tokens the tokens to convert
      */
