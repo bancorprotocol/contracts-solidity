@@ -362,25 +362,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     function processNetworkFees(uint256 _value) internal returns (uint256, uint256) {
         syncReserveBalances(_value);
-
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
-        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, _reserveBalancesProduct);
-
-        if (currPoint <= prevPoint) {
-            return (reserveBalance0, reserveBalance1);
-        }
-
-        INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        (address networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
-        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
-        uint256 fee0 = reserveBalance0.mul(n).div(d);
-        uint256 fee1 = reserveBalance1.mul(n).div(d);
+        (address wallet, uint256 fee0, uint256 fee1) = networkWalletAndFees(reserveBalance0, reserveBalance1);
         reserveBalance0 -= fee0;
         reserveBalance1 -= fee1;
         setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
-        safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
-        safeTransfer(__reserveTokens[1], networkFeeWallet, fee1);
-
+        safeTransfer(__reserveTokens[0], wallet, fee0);
+        safeTransfer(__reserveTokens[1], wallet, fee1);
         return (reserveBalance0, reserveBalance1);
     }
 
@@ -395,18 +383,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
-        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, _reserveBalancesProduct);
-
-        if (currPoint <= prevPoint) {
-            return [reserveBalance0, reserveBalance1];
-        }
-
-        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
-        return [
-            reserveBalance0.sub(reserveBalance0.mul(n).div(d)),
-            reserveBalance1.sub(reserveBalance1.mul(n).div(d))
-        ];
+        (, uint256 fee0, uint256 fee1) = networkWalletAndFees(reserveBalance0, reserveBalance1);
+        return [reserveBalance0 - fee0, reserveBalance1 - fee1];
     }
 
     /**
@@ -1242,6 +1220,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         return MathEx.geometricMean(reserveAmounts);
     }
 
+    function floorSqrt(uint256 x) private pure returns (uint256) {
+        return x > 0 ? MathEx.floorSqrt(x) : 0;
+    }
+
     function crossReserveSourceAmount(
         uint256 _sourceReserveBalance,
         uint256 _targetReserveBalance,
@@ -1316,44 +1298,30 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev returns two samples required for calculating the network fee
+     * @dev returns the network wallet and fees
      *
-     * @param currProd  the current product of the balances
-     * @param prevProd  the previous product of the balances
+     * @param reserveBalance0 1st reserve balance
+     * @param reserveBalance1 2nd reserve balance
      *
-     * @return the square root of the current product of the balances
-     * @return the square root of the previous product of the balances
+     * @return the network wallet
+     * @return the network fee on the 1st reserve
+     * @return the network fee on the 2nd reserve
      */
-    function networkFeePoints(
-        uint256 currProd,
-        uint256 prevProd
-    ) private pure returns (uint256, uint256) {
-        return (
-            currProd > 0 ? MathEx.floorSqrt(currProd) : 0,
-            prevProd > 0 ? MathEx.floorSqrt(prevProd) : 0
-        );
-    }
+    function networkWalletAndFees(
+        uint256 reserveBalance0,
+        uint256 reserveBalance1
+    ) private view returns (address, uint256, uint256) {
+        uint256 prevPoint = floorSqrt(_reserveBalancesProduct);
+        uint256 currPoint = floorSqrt(reserveBalance0 * reserveBalance1);
 
-    /**
-     * @dev returns the network fee ratio
-     *
-     * @param currPoint     the current product of the balances
-     * @param prevPoint     the previous product of the balances
-     * @param networkFee    the relative portion (in PPM units) that
-     * should be taken from the conversion fees accumulated in this pool
-     *
-     * @return numerator of the portion that should be taken from the balances of this pool
-     * @return denominator of the portion that should be taken from the balances of this pool
-     */
-    function networkFeeRatio(
-        uint256 currPoint,
-        uint256 prevPoint,
-        uint32 networkFee
-    ) private pure returns (uint256, uint256) {
-        return (
-            (currPoint - prevPoint) * networkFee,
-            (currPoint * (PPM_RESOLUTION - networkFee)).add(prevPoint * networkFee * 2)
-        );
+        if (currPoint > prevPoint) {
+            (address networkFeeWallet, uint32 networkFee) = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFeeParams();
+            uint256 n = (currPoint - prevPoint) * networkFee;
+            uint256 d = (currPoint * (PPM_RESOLUTION - networkFee)).add(prevPoint * networkFee * 2);
+            return (networkFeeWallet, reserveBalance0.mul(n).div(d), reserveBalance1.mul(n).div(d));
+        }
+
+        return (address(0), 0, 0);
     }
 
     /**
