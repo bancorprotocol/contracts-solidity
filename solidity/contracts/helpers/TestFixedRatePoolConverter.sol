@@ -13,6 +13,22 @@ contract TestFixedRatePoolConverter is FixedRatePoolConverter, TestTime {
         uint32 _maxConversionFee
     ) public FixedRatePoolConverter(_token, _registry, _maxConversionFee) {}
 
+    function addLiquidityByOrder(
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveAmounts,
+        uint256 _minReturn
+    ) public payable returns (uint256) {
+        return addLiquidity(_reserveTokens, _reserveAmounts, _minReturn);
+    }
+
+    function removeLiquidityByOrder(
+        uint256 _amount,
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveMinReturnAmounts
+    ) public returns (uint256[2] memory) {
+        return removeLiquidity(_amount, _reserveTokens, _reserveMinReturnAmounts);
+    }
+
     function removeLiquidityTest(
         uint256 _amount,
         IERC20[2] memory _reserveTokens,
