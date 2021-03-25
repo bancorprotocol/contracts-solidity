@@ -93,10 +93,10 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         IContractRegistry registry
     )
         public
+        ContractRegistryClient(registry)
         validAddress(address(networkToken))
         validAddress(address(govTokenGovernance))
         validFee(burnIncentiveFee)
-        ContractRegistryClient(registry)
     {
         _networkToken = networkToken;
         _govTokenGovernance = govTokenGovernance;
