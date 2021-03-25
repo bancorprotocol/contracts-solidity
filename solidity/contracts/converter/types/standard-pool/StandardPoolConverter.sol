@@ -1215,11 +1215,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return the average number of decimal digits in the given list of positive integers
      */
     function geometricMean(uint256[2] memory list) private pure returns (uint256) {
-        uint256[] memory dynamicArr = new uint256[](2);
+        uint256[] memory tempList = new uint256[](2);
         for (uint256 i = 0; i < 2; i++) {
-            dynamicArr[i] = list[i];
+            tempList[i] = list[i];
         }
-        return MathEx.geometricMean(dynamicArr);
+        return MathEx.geometricMean(tempList);
     }
 
     function crossReserveTargetAmount(
