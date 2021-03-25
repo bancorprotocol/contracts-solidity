@@ -808,17 +808,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFees(msg.value);
 
         uint256 amount;
-        uint256[2] memory reserveAmounts;
 
         // calculate the amount of pool tokens to mint for the caller
         // and the amount of reserve tokens to transfer from the caller
         if (totalSupply == 0) {
             amount = geometricMean(_reserveAmounts);
-            for (uint256 i = 0; i < 2; i++) {
-                reserveAmounts[i] = _reserveAmounts[i];
-            }
         } else {
-            (amount, reserveAmounts) = addLiquidityAmounts(
+            (amount, _reserveAmounts) = addLiquidityAmounts(
                 _reserveTokens,
                 _reserveAmounts,
                 oldReserveBalances,
@@ -829,9 +825,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 newPoolTokenSupply = totalSupply.add(amount);
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
-            uint256 reserveAmount = reserveAmounts[i];
+            uint256 reserveAmount = _reserveAmounts[i];
             require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
-            assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
             if (reserveToken != NATIVE_TOKEN_ADDRESS) {
@@ -1204,7 +1199,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a given value
      *
-     * @param _num the given value
+     * @param x the given value
      *
      * @return the largest integer smaller than or equal to the square root of the given value
      */
@@ -1215,16 +1210,16 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev returns the average number of decimal digits in a given list of positive integers
      *
-     * @param _values  list of positive integers
+     * @param list list of positive integers
      *
      * @return the average number of decimal digits in the given list of positive integers
      */
-    function geometricMean(uint256[2] memory _reserveAmounts) private pure returns (uint256) {
-        uint256[] memory reserveAmounts = new uint256[](2);
+    function geometricMean(uint256[2] memory list) private pure returns (uint256) {
+        uint256[] memory dynamicArr = new uint256[](2);
         for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = _reserveAmounts[i];
+            dynamicArr[i] = list[i];
         }
-        return MathEx.geometricMean(reserveAmounts);
+        return MathEx.geometricMean(dynamicArr);
     }
 
     function crossReserveTargetAmount(
