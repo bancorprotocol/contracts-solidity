@@ -592,7 +592,7 @@ describe('VortexBurner', () => {
                                             );
 
                                             // Check that available vortex query returns the correct results.
-                                            const availableVortex = await vortex.availableVortex(tokenAddresses);
+                                            const availableVortex = await vortex.availableVortex.call(tokenAddresses);
                                             const vortexAmounts = availableVortex[0];
                                             const vortexConversionAmounts = availableVortex[1];
                                             const vortexTotalBurnedAmount = availableVortex[2];
@@ -635,7 +635,7 @@ describe('VortexBurner', () => {
                                                 _amount: totalBurnedAmount
                                             });
 
-                                            // Check that the network wallet fee balances have been depleted.
+                                            // Check that the network fee wallet balances have been depleted.
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
                                                 expect(
@@ -686,7 +686,10 @@ describe('VortexBurner', () => {
                             it('should revert when attempting to burn the network fees', async () => {
                                 const tokenAddresses = getTokenAddresses(testTokens);
 
-                                await expectRevert(vortex.availableVortex(tokenAddresses), 'ERR_ZERO_TARGET_AMOUNT');
+                                await expectRevert(
+                                    vortex.availableVortex.call(tokenAddresses),
+                                    'ERR_ZERO_TARGET_AMOUNT'
+                                );
                                 await expectRevert(vortex.vortex(tokenAddresses), 'ERR_ZERO_TARGET_AMOUNT');
                             });
                         });
@@ -710,7 +713,7 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableVortex(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
+                        await expectRevert(vortex.availableVortex.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
                         await expectRevert(vortex.vortex(tokenAddresses), 'ERC20: transfer amount exceeds balance');
                     });
                 });
@@ -724,7 +727,7 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableVortex(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
+                        await expectRevert(vortex.availableVortex.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
                         await expectRevert.unspecified(vortex.vortex(tokenAddresses));
                     });
                 });
@@ -754,7 +757,7 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableVortex(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
+                        await expectRevert(vortex.availableVortex.call(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
                         await expectRevert(vortex.vortex(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
                     });
                 });
