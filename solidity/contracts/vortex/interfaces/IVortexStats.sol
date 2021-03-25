@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../../utility/interfaces/IOwned.sol";
 
+/*
+    VortexStats Protection interface
+*/
 interface IVortexStats is IOwned {
     function totalBurnedAmount() external view returns (uint256);
 
