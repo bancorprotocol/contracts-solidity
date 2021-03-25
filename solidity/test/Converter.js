@@ -18,7 +18,7 @@ let owner;
 let nonOwner;
 let receiver;
 
-// TODO AssertionError: Expected transaction to be reverted with
+// TODO hardhat error
 describe('Converter', () => {
     const createConverter = async (
         type,

@@ -18,6 +18,7 @@ let accounts;
 let owner;
 let nonOwner;
 
+// TODO hardhat error
 describe('LiquidityProtectionSettings', () => {
     before(async () => {
         accounts = await ethers.getSigners();

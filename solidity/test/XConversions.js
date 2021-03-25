@@ -108,9 +108,8 @@ describe('XConversions', () => {
         await bntToken.transfer(erc20TokenConverter1.address, ethers.utils.parseEther('100'));
         await bntToken.transfer(erc20TokenConverter2.address, ethers.utils.parseEther('100'));
 
-        // TODO
         await owner.sendTransaction({ to: erc20TokenConverter1.address, value: ethers.utils.parseEther('1') });
-        //
+
         await erc20Token.transfer(erc20TokenConverter2.address, ethers.utils.parseEther('50'));
 
         await erc20Token.transfer(sender.address, ethers.utils.parseEther('50'));
