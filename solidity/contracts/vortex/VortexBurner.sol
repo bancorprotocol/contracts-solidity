@@ -365,9 +365,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
             // don't look up for a converter for either the network or the governance token, since they are going to be
             // handled in a special way during the burn itself
-            if (token == _networkToken || token == _govToken) {
-                path[1] = address(0);
-            } else {
+            if (token != _networkToken && token != _govToken) {
                 path[1] = address(networkTokenConverterAnchor(token, registry));
                 path[2] = address(_networkToken);
             }
