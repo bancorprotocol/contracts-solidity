@@ -160,7 +160,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         ITokenHolder feeWallet = networkFeeWallet();
 
         // retrieve conversion paths and the amounts to burn
-        (address[][] memory paths, uint256[] memory amounts, address[] memory govPath, uint256 count) =
+        (address[][] memory paths, uint256[] memory amounts, address[] memory govPath) =
             vortexStrategy(tokens, feeWallet);
 
         // withdraw all token/ETH amounts to the contract
@@ -173,9 +173,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         uint256 grossNetworkTokenConversionAmount = 0;
         uint256 totalGovTokenAmountToBurn = 0;
 
-        for (uint256 i = 0; i < count; ++i) {
+        for (uint256 i = 0; i < paths.length; ++i) {
             address[] memory path = paths[i];
-
             IERC20 token = IERC20(path[0]);
             uint256 amount = amounts[i];
             uint256 value = 0;
@@ -259,7 +258,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         require(!hasDuplicates(tokens), "ERR_INVALID_TOKEN_LIST");
 
         // retrieve conversion paths and the amounts to burn
-        (address[][] memory paths, uint256[] memory amounts, address[] memory govPath, uint256 count) =
+        (address[][] memory paths, uint256[] memory amounts, address[] memory govPath) =
             vortexStrategy(tokens, networkFeeWallet());
 
         // get all network token conversion amounts
@@ -269,7 +268,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         uint256 grossNetworkTokenConversionAmount = 0;
         uint256 totalGovTokenAmountToBurn = 0;
 
-        for (uint256 i = 0; i < count; ++i) {
+        for (uint256 i = 0; i < paths.length; ++i) {
             address[] memory path = paths[i];
             IERC20 token = IERC20(path[0]);
             uint256 amount = amounts[i];
@@ -333,7 +332,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      * @return the conversion paths for each of tokens to convert
      * @return the conversion amounts for each of tokens to convert
      * @return the conversion path for the last network to governance tokens conversion
-     * @return the count of the elements in the strategy
      */
     function vortexStrategy(IERC20[] calldata tokens, ITokenHolder feeWallet)
         private
@@ -341,8 +339,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         returns (
             address[][] memory,
             uint256[] memory,
-            address[] memory,
-            uint256
+            address[] memory
         )
     {
         IConverterRegistry registry = converterRegistry();
@@ -351,7 +348,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         address[][] memory paths = new address[][](tokens.length);
         uint256[] memory amounts = new uint256[](tokens.length);
 
-        uint256 count = 0;
         for (uint256 i = 0; i < tokens.length; ++i) {
             IERC20 token = tokens[i];
 
@@ -367,9 +363,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             if (amount == 0) {
                 continue;
             }
-
-            // increment the count of the elements in the strategy
-            count++;
 
             amounts[i] = amount;
 
@@ -392,7 +385,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         govPath[1] = address(networkTokenConverterAnchor(_govToken, registry));
         govPath[2] = address(_govToken);
 
-        return (paths, amounts, govPath, count);
+        return (paths, amounts, govPath);
     }
 
     /**
