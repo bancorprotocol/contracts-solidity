@@ -37,7 +37,7 @@ const RESERVE2_AMOUNT = new BN(1_000_000).mul(TKN);
 const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
 const TOTAL_SUPPLY = new BN(1_000_000_000).mul(TKN);
 
-describe.only('VortexBurner', () => {
+describe('VortexBurner', () => {
     let contractRegistry;
     let bancorNetwork;
     let networkToken;
