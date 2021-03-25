@@ -25,6 +25,7 @@ const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const INITIAL_AMOUNT = 1000000;
 
@@ -128,11 +129,14 @@ describe('LiquidityProtectionAverageRate', () => {
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();
 
+                const networkSettings = await NetworkSettings.new(defaultSender, 0);
+
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
                 await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+                await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
                 await converterRegistry.enableTypeChanging(false);
 

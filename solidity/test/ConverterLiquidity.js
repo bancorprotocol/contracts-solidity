@@ -10,6 +10,7 @@ const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter
 const DSToken = contract.fromArtifact('DSToken');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const BancorFormula = contract.fromArtifact('BancorFormula');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
 describe('ConverterLiquidity', () => {
@@ -40,9 +41,14 @@ describe('ConverterLiquidity', () => {
     before(async () => {
         // The following contracts are unaffected by the underlying tests, thus can be shared
         contractRegistry = await ContractRegistry.new();
+
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
+
+        const networkSettings = await NetworkSettings.new(defaultSender, 0);
+
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
     describe('security assertion', () => {

@@ -17,6 +17,7 @@ const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 describe('FixedRatePoolConverter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
@@ -123,6 +124,9 @@ describe('FixedRatePoolConverter', () => {
 
         const factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
+
+        const networkSettings = await NetworkSettings.new(defaultSender, 0);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
         await factory.registerTypedConverterFactory((await FixedRatePoolConverterFactory.new()).address);
     });
