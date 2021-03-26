@@ -1429,4 +1429,38 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     ) public view returns (uint256, uint256) {
         return targetAmountAndFee(_sourceToken, _targetToken, _amount);
     }
+
+    /**
+     * @dev deprecated, backward compatibility
+     */
+    function addLiquidity(
+        IERC20[] memory _reserveTokens,
+        uint256[] memory _reserveAmounts,
+        uint256 _minReturn
+    ) public payable returns (uint256) {
+        return addLiquidity(
+            [_reserveTokens[0], _reserveTokens[1]],
+            [_reserveAmounts[0], _reserveAmounts[1]],
+            _minReturn
+        );
+    }
+
+    /**
+     * @dev deprecated, backward compatibility
+     */
+    function removeLiquidity(
+        uint256 _amount,
+        IERC20[] memory _reserveTokens,
+        uint256[] memory _reserveMinReturnAmounts
+    ) public returns (uint256[] memory) {
+        uint256[2] memory tempAmounts = removeLiquidity(
+            _amount,
+            [_reserveTokens[0], _reserveTokens[1]],
+            [_reserveMinReturnAmounts[0], _reserveMinReturnAmounts[1]]
+        );
+        uint256[] memory reserveAmounts = new uint256[](2);
+        reserveAmounts[0] = tempAmounts[0];
+        reserveAmounts[1] = tempAmounts[1];
+        return reserveAmounts;
+    }
 }
