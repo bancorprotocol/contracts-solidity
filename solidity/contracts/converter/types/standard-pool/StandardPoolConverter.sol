@@ -32,7 +32,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     uint256 private __reserveBalances;
     uint256 private _reserveBalancesProduct;
     IERC20[2] private __reserveTokens;
-    uint16 _reserveTokensLength;
+    uint16 _reserveTokensCount;
     mapping(IERC20 => uint256) private __reserveIds;
 
     IConverterAnchor public override anchor; // converter anchor contract
@@ -275,7 +275,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return number of reserve tokens
      */
     function reserveTokenCount() public view returns (uint16) {
-        return _reserveTokensLength;
+        return _reserveTokensCount;
     }
 
     /**
@@ -307,8 +307,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         require(address(_token) != address(anchor) && __reserveIds[_token] == 0, "ERR_INVALID_RESERVE");
         require(reserveTokenCount() < 2, "ERR_INVALID_RESERVE_COUNT");
 
-        __reserveTokens[_reserveTokensLength++] = _token;
-        __reserveIds[_token] = _reserveTokensLength;
+        __reserveTokens[_reserveTokensCount++] = _token;
+        __reserveIds[_token] = _reserveTokensCount;
     }
 
     /**
