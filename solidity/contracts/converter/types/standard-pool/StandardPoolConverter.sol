@@ -846,8 +846,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // get the total supply
         uint256 totalSupply = poolToken.totalSupply();
 
-        uint256[] memory oldReserveBalances = new uint256[](2);
-        uint256[] memory newReserveBalances = new uint256[](2);
+        uint256[2] memory oldReserveBalances;
+        uint256[2] memory newReserveBalances;
 
         // transfer the fees and sync the balances to ensure no mismatch
         (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFees(msg.value);
@@ -989,8 +989,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         uint256 newPoolTokenSupply = totalSupply.sub(_amount);
 
-        uint256[] memory oldReserveBalances = new uint256[](2);
-        uint256[] memory newReserveBalances = new uint256[](2);
+        uint256[2] memory oldReserveBalances;
+        uint256[2] memory newReserveBalances;
 
         // transfer the fees and sync the balances to ensure no mismatch
         (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFees(0);
