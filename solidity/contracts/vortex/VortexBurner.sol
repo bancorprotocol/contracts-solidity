@@ -27,6 +27,17 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
+    struct Strategy {
+        address[][] paths;
+        uint256[] amounts;
+        address[] govPath;
+    }
+
+    struct NetNetworkTokenConversionAmounts {
+        uint256 amount;
+        uint256 incentiveFeeAmount;
+    }
+
     // the vortex is only designed to work with 50/50 standard pool converters
     uint32 private constant STANDARD_POOL_RESERVE_WEIGHT = PPM_RESOLUTION / 2;
 
@@ -159,12 +170,11 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     function vortex(IERC20[] calldata tokens) external protected {
         ITokenHolder feeWallet = networkFeeWallet();
 
-        // retrieve conversion paths and the amounts to burn
-        (address[][] memory paths, uint256[] memory amounts, address[] memory govPath) =
-            vortexStrategy(tokens, feeWallet);
+        // retrieve conversion strategy
+        Strategy memory strategy = vortexStrategy(tokens, feeWallet);
 
         // withdraw all token/ETH amounts to the contract
-        feeWallet.withdrawTokensMultiple(tokens, address(this), amounts);
+        feeWallet.withdrawTokensMultiple(tokens, address(this), strategy.amounts);
 
         // convert all amounts to the network token and record conversion amounts
         BancorNetwork network = bancorNetwork();
@@ -173,14 +183,14 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         uint256 grossNetworkTokenConversionAmount = 0;
         uint256 totalGovTokenAmountToBurn = 0;
 
-        for (uint256 i = 0; i < paths.length; ++i) {
+        for (uint256 i = 0; i < strategy.paths.length; ++i) {
             // avoid empty conversions
-            uint256 amount = amounts[i];
+            uint256 amount = strategy.amounts[i];
             if (amount == 0) {
                 continue;
             }
 
-            address[] memory path = paths[i];
+            address[] memory path = strategy.paths[i];
             IERC20 token = IERC20(path[0]);
             uint256 value = 0;
 
@@ -216,15 +226,15 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         }
 
         // calculate the burn incentive fee and reduce it from the total amount to convert
-        (uint256 netNetworkTokenConversionAmount, uint256 incentiveFeeAmount) =
-            applyIncentiveFee(grossNetworkTokenConversionAmount);
+        NetNetworkTokenConversionAmounts memory netNetworkTokenConversionAmounts =
+            netNetworkConversionAmounts(grossNetworkTokenConversionAmount);
 
         // approve the governance token converter to withdraw the network token amount
-        ensureAllowance(_networkToken, network, netNetworkTokenConversionAmount);
+        ensureAllowance(_networkToken, network, netNetworkTokenConversionAmounts.amount);
 
         // convert all network token amounts to the governance token
         totalGovTokenAmountToBurn = totalGovTokenAmountToBurn.add(
-            network.convertByPath2(govPath, netNetworkTokenConversionAmount, 1, address(this))
+            network.convertByPath2(strategy.govPath, netNetworkTokenConversionAmounts.amount, 1, address(this))
         );
 
         // update the stats of the vortex
@@ -234,9 +244,9 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         _govTokenGovernance.burn(totalGovTokenAmountToBurn);
 
         // transfer the incentive fee to the caller
-        _networkToken.transfer(msg.sender, incentiveFeeAmount);
+        _networkToken.transfer(msg.sender, netNetworkTokenConversionAmounts.incentiveFeeAmount);
 
-        emit Burned(tokens, amounts, networkTokenConversionAmounts, totalGovTokenAmountToBurn);
+        emit Burned(tokens, strategy.amounts, networkTokenConversionAmounts, totalGovTokenAmountToBurn);
     }
 
     /**
@@ -262,25 +272,23 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // check for duplicates in order to behave similarly to the vortex function
         require(!hasDuplicates(tokens), "ERR_INVALID_TOKEN_LIST");
 
-        // retrieve conversion paths and the amounts to burn
-        (address[][] memory paths, uint256[] memory amounts, address[] memory govPath) =
-            vortexStrategy(tokens, networkFeeWallet());
+        // retrieve conversion strategy
+        Strategy memory strategy = vortexStrategy(tokens, networkFeeWallet());
 
-        // get all network token conversion amounts
         BancorNetwork network = bancorNetwork();
 
         uint256[] memory networkTokenConversionAmounts = new uint256[](tokens.length);
         uint256 grossNetworkTokenConversionAmount = 0;
         uint256 totalGovTokenAmountToBurn = 0;
 
-        for (uint256 i = 0; i < paths.length; ++i) {
+        for (uint256 i = 0; i < strategy.paths.length; ++i) {
             // avoid empty conversions
-            uint256 amount = amounts[i];
+            uint256 amount = strategy.amounts[i];
             if (amount == 0) {
                 continue;
             }
 
-            address[] memory path = paths[i];
+            address[] memory path = strategy.paths[i];
             IERC20 token = IERC20(path[0]);
             if (token == _govToken) {
                 // if the source token is the governance token, don't try to convert it either, but rather include it in
@@ -305,16 +313,21 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         }
 
         // calculate the burn incentive fee and reduce it from the total amount to convert
-        (uint256 netNetworkTokenConversionAmount, uint256 incentiveFeeAmount) =
-            applyIncentiveFee(grossNetworkTokenConversionAmount);
+        NetNetworkTokenConversionAmounts memory netNetworkTokenConversionAmounts =
+            netNetworkConversionAmounts(grossNetworkTokenConversionAmount);
 
         // convert all network token amounts to the governance token
         totalGovTokenAmountToBurn = totalGovTokenAmountToBurn.add(
-            network.rateByPath(govPath, netNetworkTokenConversionAmount)
+            network.rateByPath(strategy.govPath, netNetworkTokenConversionAmounts.amount)
         );
         require(totalGovTokenAmountToBurn > 0, "ERR_ZERO_TARGET_AMOUNT");
 
-        return (amounts, networkTokenConversionAmounts, totalGovTokenAmountToBurn, incentiveFeeAmount);
+        return (
+            strategy.amounts,
+            networkTokenConversionAmounts,
+            totalGovTokenAmountToBurn,
+            netNetworkTokenConversionAmounts.incentiveFeeAmount
+        );
     }
 
     /**
@@ -338,24 +351,17 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @param tokens the tokens to convert
      *
-     * @return the conversion paths for each of tokens to convert
-     * @return the conversion amounts for each of tokens to convert
-     * @return the conversion path for the last network to governance tokens conversion
+     * @return the the vortex conversion strategy for the specified tokens
      */
-    function vortexStrategy(IERC20[] calldata tokens, ITokenHolder feeWallet)
-        private
-        view
-        returns (
-            address[][] memory,
-            uint256[] memory,
-            address[] memory
-        )
-    {
+    function vortexStrategy(IERC20[] calldata tokens, ITokenHolder feeWallet) private view returns (Strategy memory) {
         IConverterRegistry registry = converterRegistry();
 
-        // create conversion paths and collect available token amounts
-        address[][] memory paths = new address[][](tokens.length);
-        uint256[] memory amounts = new uint256[](tokens.length);
+        Strategy memory strategy =
+            Strategy({
+                paths: new address[][](tokens.length),
+                amounts: new uint256[](tokens.length),
+                govPath: new address[](3)
+            });
 
         for (uint256 i = 0; i < tokens.length; ++i) {
             IERC20 token = tokens[i];
@@ -370,23 +376,22 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
                 path[2] = address(_networkToken);
             }
 
-            paths[i] = path;
+            strategy.paths[i] = path;
 
             // make sure to retrieve the balance of either an ERC20 or an ETH reserve
             if (token == NATIVE_TOKEN_ADDRESS) {
-                amounts[i] = address(feeWallet).balance;
+                strategy.amounts[i] = address(feeWallet).balance;
             } else {
-                amounts[i] = token.balanceOf(address(feeWallet));
+                strategy.amounts[i] = token.balanceOf(address(feeWallet));
             }
         }
 
         // get the governance token converter path
-        address[] memory govPath = new address[](3);
-        govPath[0] = address(_networkToken);
-        govPath[1] = address(networkTokenConverterAnchor(_govToken, registry));
-        govPath[2] = address(_govToken);
+        strategy.govPath[0] = address(_networkToken);
+        strategy.govPath[1] = address(networkTokenConverterAnchor(_govToken, registry));
+        strategy.govPath[2] = address(_govToken);
 
-        return (paths, amounts, govPath);
+        return strategy;
     }
 
     /**
@@ -394,13 +399,21 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @param amount the network tokens amount
      *
-     * @return the net amount
-     * @return the fee amount
+     * @return the network token conversion and incentive fee amounts
      */
-    function applyIncentiveFee(uint256 amount) private view returns (uint256, uint256) {
-        uint256 incentiveAmount = Math.min(amount.mul(_burnIncentiveFee) / PPM_RESOLUTION, _maxBurnIncentiveFeeAmount);
+    function netNetworkConversionAmounts(uint256 amount)
+        private
+        view
+        returns (NetNetworkTokenConversionAmounts memory)
+    {
+        uint256 incentiveFeeAmount =
+            Math.min(amount.mul(_burnIncentiveFee) / PPM_RESOLUTION, _maxBurnIncentiveFeeAmount);
 
-        return (amount - incentiveAmount, incentiveAmount);
+        return
+            NetNetworkTokenConversionAmounts({
+                amount: amount - incentiveFeeAmount,
+                incentiveFeeAmount: incentiveFeeAmount
+            });
     }
 
     /**
