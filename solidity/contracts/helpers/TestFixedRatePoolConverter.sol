@@ -5,7 +5,7 @@ import "../converter/types/fixed-rate-pool/FixedRatePoolConverter.sol";
 import "./TestTime.sol";
 
 contract TestFixedRatePoolConverter is FixedRatePoolConverter, TestTime {
-    uint256[] public reserveAmountsRemoved;
+    uint256[2] public reserveAmountsRemoved;
 
     constructor(
         IDSToken _token,
@@ -15,8 +15,8 @@ contract TestFixedRatePoolConverter is FixedRatePoolConverter, TestTime {
 
     function removeLiquidityTest(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
-        uint256[] memory _reserveMinReturnAmounts
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveMinReturnAmounts
     ) public {
         reserveAmountsRemoved = removeLiquidity(_amount, _reserveTokens, _reserveMinReturnAmounts);
     }
