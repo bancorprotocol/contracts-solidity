@@ -17,7 +17,7 @@ import "../utility/TokenHolder.sol";
 import "../utility/ReentrancyGuard.sol";
 
 import "../INetworkSettings.sol";
-import "../BancorNetwork.sol";
+import "../IBancorNetwork.sol";
 
 /**
  * @dev This contract provides any user to trigger a network fee burning event
@@ -169,7 +169,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         feeWallet.withdrawTokensMultiple(tokens, address(this), strategy.amounts);
 
         // convert all amounts to the network token and record conversion amounts
-        BancorNetwork network = bancorNetwork();
+        IBancorNetwork network = bancorNetwork();
 
         uint256[] memory networkTokenConversionAmounts = new uint256[](tokens.length);
         uint256 grossNetworkTokenConversionAmount = 0;
@@ -209,7 +209,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
                 // perform the actual conversion and optionally send ETH to the network
                 uint256 networkTokenConversionAmount =
-                    network.convertByPath2{ value: value }(path, amount, 1, address(this));
+                    network.convertByPath{ value: value }(path, amount, 1, address(this), address(0), 0);
 
                 // update network conversion amounts
                 networkTokenConversionAmounts[i] = networkTokenConversionAmount;
@@ -226,7 +226,14 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
         // convert all network token amounts to the governance token
         totalGovTokenAmountToBurn = totalGovTokenAmountToBurn.add(
-            network.convertByPath2(strategy.govPath, netNetworkTokenConversionAmounts.amount, 1, address(this))
+            network.convertByPath(
+                strategy.govPath,
+                netNetworkTokenConversionAmounts.amount,
+                1,
+                address(this),
+                address(0),
+                0
+            )
         );
 
         // update the stats of the burning event
@@ -267,7 +274,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // retrieve conversion strategy
         Strategy memory strategy = vortexStrategy(tokens, networkFeeWallet());
 
-        BancorNetwork network = bancorNetwork();
+        IBancorNetwork network = bancorNetwork();
 
         uint256[] memory networkTokenConversionAmounts = new uint256[](tokens.length);
         uint256 grossNetworkTokenConversionAmount = 0;
@@ -452,7 +459,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      */
     function ensureAllowance(
         IERC20 token,
-        BancorNetwork network,
+        IBancorNetwork network,
         uint256 amount
     ) private {
         address networkAddress = address(network);
@@ -479,8 +486,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @return the network contract
      */
-    function bancorNetwork() private view returns (BancorNetwork) {
-        return BancorNetwork(payable(addressOf(BANCOR_NETWORK)));
+    function bancorNetwork() private view returns (IBancorNetwork) {
+        return IBancorNetwork(payable(addressOf(BANCOR_NETWORK)));
     }
 
     /**
