@@ -1032,11 +1032,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[2] memory reserveAmounts;
 
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory balancesMinusFees = baseReserveBalances(_reserveTokens);
-        uint256 amount = fundSupplyAmount(totalSupply, balancesMinusFees[_reserveTokenIndex], _reserveAmount);
+        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
+        uint256 amount = fundSupplyAmount(totalSupply, baseBalances[_reserveTokenIndex], _reserveAmount);
 
         for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = fundCost(totalSupply, balancesMinusFees[i], amount);
+            reserveAmounts[i] = fundCost(totalSupply, baseBalances[i], amount);
         }
 
         return reserveAmounts;
@@ -1057,8 +1057,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[2] memory _reserveAmounts
     ) public view returns (uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory balancesMinusFees = baseReserveBalances(_reserveTokens);
-        (uint256 amount, ) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, balancesMinusFees, totalSupply);
+        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
+        (uint256 amount, ) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, baseBalances, totalSupply);
         return amount;
     }
 
@@ -1076,8 +1076,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         returns (uint256[2] memory)
     {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory balancesMinusFees = baseReserveBalances(_reserveTokens);
-        return removeLiquidityReserveAmounts(_amount, totalSupply, balancesMinusFees);
+        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
+        return removeLiquidityReserveAmounts(_amount, totalSupply, baseBalances);
     }
 
     /**
