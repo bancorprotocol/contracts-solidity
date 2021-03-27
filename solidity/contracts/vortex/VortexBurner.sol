@@ -88,7 +88,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     event Burned(IERC20[] tokens, uint256[] amounts, uint256[] conversionAmounts, uint256 totalBurnedAmount);
 
     /**
-     * @dev initializes a new VortexContract contract
+     * @dev initializes a new VortexBurner contract
      *
      * @param networkToken the address of the network token
      * @param govTokenGovernance the address of the governance token security module
