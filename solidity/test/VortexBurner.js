@@ -487,15 +487,17 @@ describe('VortexBurner', () => {
                                                 defaultSender
                                             );
 
-                                            // Check that available vortex query returns the correct results.
-                                            const availableVortex = await vortex.availableVortex.call(tokenAddresses);
+                                            // Check that available for burning query returns the correct results.
+                                            const availableVortex = await vortex.availableForBurning.call(
+                                                tokenAddresses
+                                            );
                                             const vortexAmounts = availableVortex[0];
                                             const vortexConversionAmounts = availableVortex[1];
                                             const vortexTotalBurnedAmount = availableVortex[2];
                                             const vortexIncentiveFeeAmount = availableVortex[3];
 
                                             // Perform the actual burn.
-                                            const res = await vortex.vortex(tokenAddresses);
+                                            const res = await vortex.burn(tokenAddresses);
 
                                             expectEvent(res, 'Burned', {
                                                 tokens,
@@ -584,10 +586,10 @@ describe('VortexBurner', () => {
                                 const tokenAddresses = getTokenAddresses(testTokens);
 
                                 await expectRevert(
-                                    vortex.availableVortex.call(tokenAddresses),
+                                    vortex.availableForBurning.call(tokenAddresses),
                                     'ERR_ZERO_TARGET_AMOUNT'
                                 );
-                                await expectRevert(vortex.vortex(tokenAddresses), 'ERR_ZERO_TARGET_AMOUNT');
+                                await expectRevert(vortex.burn(tokenAddresses), 'ERR_ZERO_TARGET_AMOUNT');
                             });
                         });
                     }
@@ -610,8 +612,8 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableVortex.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
-                        await expectRevert(vortex.vortex(tokenAddresses), 'ERC20: transfer amount exceeds balance');
+                        await expectRevert(vortex.availableForBurning.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
+                        await expectRevert(vortex.burn(tokenAddresses), 'ERC20: transfer amount exceeds balance');
                     });
                 });
             }
@@ -624,8 +626,8 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableVortex.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
-                        await expectRevert.unspecified(vortex.vortex(tokenAddresses));
+                        await expectRevert(vortex.availableForBurning.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
+                        await expectRevert.unspecified(vortex.burn(tokenAddresses));
                     });
                 });
             }
@@ -654,8 +656,11 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableVortex.call(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
-                        await expectRevert(vortex.vortex(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
+                        await expectRevert(
+                            vortex.availableForBurning.call(tokenAddresses),
+                            'ERR_INVALID_RESERVE_TOKEN'
+                        );
+                        await expectRevert(vortex.burn(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
                     });
                 });
             }

@@ -38,7 +38,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         uint256 incentiveFeeAmount;
     }
 
-    // the vortex is only designed to work with 50/50 standard pool converters
+    // the mechanism is only designed to work with 50/50 standard pool converters
     uint32 private constant STANDARD_POOL_RESERVE_WEIGHT = PPM_RESOLUTION / 2;
 
     // the type of the standard pool converter
@@ -159,11 +159,11 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @param tokens the tokens to convert
      */
-    function vortex(IERC20[] calldata tokens) external protected {
+    function burn(IERC20[] calldata tokens) external protected {
         ITokenHolder feeWallet = networkFeeWallet();
 
-        // retrieve conversion strategy
-        Strategy memory strategy = vortexStrategy(tokens, feeWallet);
+        // retrieve the burning strategy
+        Strategy memory strategy = burnStrategy(tokens, feeWallet);
 
         // withdraw all token/ETH amounts to the contract
         feeWallet.withdrawTokensMultiple(tokens, address(this), strategy.amounts);
@@ -258,7 +258,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      * @return the total burned amount in this burning event
      * @return the incentive fee resulting from this burning event
      */
-    function availableVortex(IERC20[] calldata tokens)
+    function availableForBurning(IERC20[] calldata tokens)
         external
         view
         returns (
@@ -268,11 +268,11 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             uint256
         )
     {
-        // check for duplicates in order to behave similarly to the vortex function
+        // check for duplicates in order to behave similarly to the burn function
         require(!hasDuplicates(tokens), "ERR_INVALID_TOKEN_LIST");
 
-        // retrieve conversion strategy
-        Strategy memory strategy = vortexStrategy(tokens, networkFeeWallet());
+        // retrieve the burning strategy
+        Strategy memory strategy = burnStrategy(tokens, networkFeeWallet());
 
         IBancorNetwork network = bancorNetwork();
 
@@ -346,13 +346,13 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     }
 
     /**
-     * @dev returns the vortex conversion strategy for the specified tokens
+     * @dev returns the burning strategy for the specified tokens
      *
      * @param tokens the tokens to convert
      *
-     * @return the the vortex conversion strategy for the specified tokens
+     * @return the the burning strategy for the specified tokens
      */
-    function vortexStrategy(IERC20[] calldata tokens, ITokenHolder feeWallet) private view returns (Strategy memory) {
+    function burnStrategy(IERC20[] calldata tokens, ITokenHolder feeWallet) private view returns (Strategy memory) {
         IConverterRegistry registry = converterRegistry();
 
         Strategy memory strategy =
