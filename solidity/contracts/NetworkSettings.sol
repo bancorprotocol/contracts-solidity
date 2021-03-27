@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "./INetworkSettings.sol";
+
 import "./utility/Owned.sol";
 import "./utility/Utils.sol";
 
@@ -12,7 +13,7 @@ import "./utility/Utils.sol";
  * (in PPM units) taken from all conversion fees accumulated in the network.
  */
 contract NetworkSettings is INetworkSettings, Owned, Utils {
-    address payable private _networkFeeWallet;
+    ITokenHolder private _networkFeeWallet;
     uint32 private _networkFee;
 
     /**
@@ -21,7 +22,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @param prevNetworkFeeWallet  previous network fee wallet
      * @param newNetworkFeeWallet   new network fee wallet
      */
-    event NetworkFeeWalletUpdated(address prevNetworkFeeWallet, address newNetworkFeeWallet);
+    event NetworkFeeWalletUpdated(ITokenHolder prevNetworkFeeWallet, ITokenHolder newNetworkFeeWallet);
 
     /**
      * @dev triggered when the network fee is updated
@@ -37,9 +38,9 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @param initialNetworkFeeWallet initial network fee wallet
      * @param initialNetworkFee initial network fee in ppm units
      */
-    constructor(address payable initialNetworkFeeWallet, uint32 initialNetworkFee)
+    constructor(ITokenHolder initialNetworkFeeWallet, uint32 initialNetworkFee)
         public
-        validAddress(initialNetworkFeeWallet)
+        validAddress(address(initialNetworkFeeWallet))
         validFee(initialNetworkFee)
     {
         _networkFeeWallet = initialNetworkFeeWallet;
@@ -52,7 +53,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @return network fee wallet
      * @return network fee in ppm units
      */
-    function networkFeeParams() external view override returns (address, uint32) {
+    function networkFeeParams() external view override returns (ITokenHolder, uint32) {
         return (_networkFeeWallet, _networkFee);
     }
 
@@ -61,7 +62,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      *
      * @return network fee wallet
      */
-    function networkFeeWallet() external view override returns (address payable) {
+    function networkFeeWallet() external view override returns (ITokenHolder) {
         return _networkFeeWallet;
     }
 
@@ -80,10 +81,10 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      *
      * @param newNetworkFeeWallet new network fee wallet
      */
-    function setNetworkFeeWallet(address payable newNetworkFeeWallet)
+    function setNetworkFeeWallet(ITokenHolder newNetworkFeeWallet)
         external
         ownerOnly
-        validAddress(newNetworkFeeWallet)
+        validAddress(address(newNetworkFeeWallet))
     {
         emit NetworkFeeWalletUpdated(_networkFeeWallet, newNetworkFeeWallet);
         _networkFeeWallet = newNetworkFeeWallet;

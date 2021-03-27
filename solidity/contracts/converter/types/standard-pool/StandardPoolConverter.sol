@@ -370,15 +370,15 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         }
 
         INetworkSettings networkSettings = INetworkSettings(addressOf(NETWORK_SETTINGS));
-        (address networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
+        (ITokenHolder networkFeeWallet, uint32 networkFee) = networkSettings.networkFeeParams();
         (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
         uint256 fee0 = reserveBalance0.mul(n).div(d);
         uint256 fee1 = reserveBalance1.mul(n).div(d);
         reserveBalance0 -= fee0;
         reserveBalance1 -= fee1;
         setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
-        safeTransfer(__reserveTokens[0], networkFeeWallet, fee0);
-        safeTransfer(__reserveTokens[1], networkFeeWallet, fee1);
+        safeTransfer(__reserveTokens[0], address(networkFeeWallet), fee0);
+        safeTransfer(__reserveTokens[1], address(networkFeeWallet), fee1);
 
         return (reserveBalance0, reserveBalance1);
     }
