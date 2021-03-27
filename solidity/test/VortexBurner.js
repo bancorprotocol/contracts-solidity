@@ -241,7 +241,7 @@ describe('VortexBurner', () => {
         });
     });
 
-    describe('burn', () => {
+    describe('burning event', () => {
         const TOKEN_CONVERTERS_COUNT = 5;
         const EXTERNAL_TOKENS = ['ETH', 'GOV', 'BNT'];
 

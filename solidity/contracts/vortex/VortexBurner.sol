@@ -20,7 +20,7 @@ import "../INetworkSettings.sol";
 import "../BancorNetwork.sol";
 
 /**
- * @dev This contract provides any user to perform a vortex
+ * @dev This contract provides any user to trigger a network fee burning event
  */
 contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     using SafeMath for uint256;
@@ -53,10 +53,10 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     // the address of the governance token security module
     ITokenGovernance public immutable _govTokenGovernance;
 
-    // the percentage of the converted network tokens to be sent to the caller of the vortex (in units of PPM)
+    // the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
     uint32 private _burnIncentiveFee;
 
-    // the maximum incentive fee to be sent to the caller of the vortex
+    // the maximum incentive fee to be sent to the caller of the burning event
     uint256 private _maxBurnIncentiveFeeAmount;
 
     // stores the total amount of the burned governance tokens
@@ -78,12 +78,12 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     );
 
     /**
-     * @dev triggered after a completed vortex
+     * @dev triggered after a completed burning event
      *
      * @param tokens the converted tokens
      * @param amounts the amounts of the converted tokens
      * @param conversionAmounts the network token amounts the tokens were converted to
-     * @param totalBurnedAmount the total burned amount in this vortex
+     * @param totalBurnedAmount the total burned amount in this burning event
      */
     event Burned(IERC20[] tokens, uint256[] amounts, uint256[] conversionAmounts, uint256 totalBurnedAmount);
 
@@ -92,8 +92,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @param networkToken the address of the network token
      * @param govTokenGovernance the address of the governance token security module
-     * @param burnIncentiveFee the percentage of the converted network tokens to be sent to the caller of the vortex (in units of PPM)
-     * @param maxBurnIncentiveFeeAmount the maximum incentive fee to be sent to the caller of the vortex
+     * @param burnIncentiveFee the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
+     * @param maxBurnIncentiveFeeAmount the maximum incentive fee to be sent to the caller of the burning event
      * @param registry the address of the contract registry
      */
     constructor(
@@ -134,8 +134,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev allows the owner to set the burn incentive fee and its maximum amount
      *
-     * @param newBurnIncentiveNetworkFee the percentage of the converted network tokens to be sent to the caller of the vortex (in units of PPM)
-     * @param newMaxBurnIncentiveFeeAmount the maximum incentive fee to be sent to the caller of the vortex
+     * @param newBurnIncentiveNetworkFee the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
+     * @param newMaxBurnIncentiveFeeAmount the maximum incentive fee to be sent to the caller of the burning event
      */
     function setBurnIncentiveFee(uint32 newBurnIncentiveNetworkFee, uint256 newMaxBurnIncentiveFeeAmount)
         external
@@ -237,7 +237,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             network.convertByPath2(strategy.govPath, netNetworkTokenConversionAmounts.amount, 1, address(this))
         );
 
-        // update the stats of the vortex
+        // update the stats of the burning event
         _totalBurnedAmount = _totalBurnedAmount.add(totalGovTokenAmountToBurn);
 
         // burn all the converter governance tokens
@@ -256,8 +256,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @return the amounts of the converted tokens
      * @return the network token amounts the tokens were converted to
-     * @return the total burned amount in this vortex
-     * @return the incentive fee resulting from this vortex
+     * @return the total burned amount in this burning event
+     * @return the incentive fee resulting from this burning event
      */
     function availableVortex(IERC20[] calldata tokens)
         external
