@@ -92,29 +92,21 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @param networkToken the address of the network token
      * @param govTokenGovernance the address of the governance token security module
-     * @param burnIncentiveFee the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
-     * @param maxBurnIncentiveFeeAmount the maximum incentive fee to be sent to the caller of the burning event
      * @param registry the address of the contract registry
      */
     constructor(
         IERC20 networkToken,
         ITokenGovernance govTokenGovernance,
-        uint32 burnIncentiveFee,
-        uint256 maxBurnIncentiveFeeAmount,
         IContractRegistry registry
     )
         public
         ContractRegistryClient(registry)
         validAddress(address(networkToken))
         validAddress(address(govTokenGovernance))
-        validFee(burnIncentiveFee)
     {
         _networkToken = networkToken;
         _govTokenGovernance = govTokenGovernance;
         _govToken = govTokenGovernance.token();
-
-        _burnIncentiveFee = burnIncentiveFee;
-        _maxBurnIncentiveFeeAmount = maxBurnIncentiveFeeAmount;
     }
 
     /**

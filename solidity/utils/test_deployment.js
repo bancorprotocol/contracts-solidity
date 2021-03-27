@@ -421,8 +421,6 @@ const run = async () => {
     const vortexBurner = await web3Func(deploy, 'vortexBurner', 'VortexBurner', [
         reserves.BNT.address,
         vbntTokenGovernance._address,
-        0,
-        0,
         contractRegistry._address
     ]);
 

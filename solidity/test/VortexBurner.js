@@ -92,13 +92,7 @@ describe('VortexBurner', () => {
 
         await networkToken.issue(owner, TOTAL_SUPPLY);
 
-        vortex = await VortexBurner.new(
-            networkToken.address,
-            govTokenGovernance.address,
-            new BN(0),
-            new BN(0),
-            contractRegistry.address
-        );
+        vortex = await VortexBurner.new(networkToken.address, govTokenGovernance.address, contractRegistry.address);
 
         await networkFeeWallet.transferOwnership(vortex.address);
         await vortex.acceptNetworkFeeOwnership();
@@ -117,40 +111,21 @@ describe('VortexBurner', () => {
 
         it('should revert if initialized with an invalid network token address', async () => {
             await expectRevert(
-                VortexBurner.new(
-                    ZERO_ADDRESS,
-                    govTokenGovernance.address,
-                    new BN(0),
-                    new BN(0),
-                    contractRegistry.address
-                ),
+                VortexBurner.new(ZERO_ADDRESS, govTokenGovernance.address, contractRegistry.address),
                 'ERR_INVALID_ADDRESS'
             );
         });
 
         it('should revert if initialized with an invalid governance token governance address', async () => {
             await expectRevert(
-                VortexBurner.new(networkToken.address, ZERO_ADDRESS, new BN(0), new BN(0), contractRegistry.address),
+                VortexBurner.new(networkToken.address, ZERO_ADDRESS, contractRegistry.address),
                 'ERR_INVALID_ADDRESS'
-            );
-        });
-
-        it('should revert if initialized with an invalid burn incentive fee', async () => {
-            await expectRevert(
-                VortexBurner.new(
-                    networkToken.address,
-                    govTokenGovernance.address,
-                    PPM_RESOLUTION.add(new BN(1)),
-                    new BN(0),
-                    contractRegistry.address
-                ),
-                'ERR_INVALID_FEE'
             );
         });
 
         it('should revert if initialized with an invalid contract registry address', async () => {
             await expectRevert(
-                VortexBurner.new(networkToken.address, govTokenGovernance.address, new BN(0), new BN(0), ZERO_ADDRESS),
+                VortexBurner.new(networkToken.address, govTokenGovernance.address, ZERO_ADDRESS),
                 'ERR_INVALID_ADDRESS'
             );
         });
@@ -188,8 +163,6 @@ describe('VortexBurner', () => {
             const newVortex = await VortexBurner.new(
                 networkToken.address,
                 govTokenGovernance.address,
-                new BN(0),
-                new BN(0),
                 contractRegistry.address
             );
 
