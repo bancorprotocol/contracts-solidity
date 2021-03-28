@@ -106,7 +106,7 @@ describe('VortexBurner', () => {
             expect(incentiveFee).to.be.bignumber.equal(new BN(0));
             expect(maxIncentiveFeeAmount).to.be.bignumber.equal(new BN(0));
 
-            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await vortex.totalBurntAmount.call()).to.be.bignumber.equal(new BN(0));
         });
 
         it('should revert if initialized with an invalid network token address', async () => {
@@ -335,7 +335,7 @@ describe('VortexBurner', () => {
             }
         });
 
-        describe('successful vortex', () => {
+        describe('successful burn', () => {
             for (const feeAmount of [
                 new BN(1_000).mul(TKN),
                 new BN(10_000).mul(TKN),
@@ -365,19 +365,18 @@ describe('VortexBurner', () => {
                                     () => {
                                         const getExpectedResults = async () => {
                                             const selectedTokens = testTokens.map((symbol) => data[symbol]);
-                                            const tokens = [];
+                                            const convertibleTokens = [];
                                             const amounts = [];
                                             const networkTokenConversionAmounts = [];
 
                                             let grossNetworkTokenConversionAmount = new BN(0);
-                                            let totalBurnedAmount = new BN(0);
+                                            let totalBurntAmount = new BN(0);
 
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
                                                 const poolToken = tokenData.poolToken;
 
                                                 const tokenAddress = token.address || token;
-                                                tokens.push(tokenAddress);
 
                                                 const amount = await getBalance(token, networkFeeWallet.address);
                                                 amounts.push(amount);
@@ -393,10 +392,11 @@ describe('VortexBurner', () => {
                                                 } else if (tokenAddress === govToken.address) {
                                                     // if the source token is the governance token, don't try to convert it
                                                     // either, but rather include it in the amount to burn.
-                                                    totalBurnedAmount = totalBurnedAmount.add(amount);
+                                                    totalBurntAmount = totalBurntAmount.add(amount);
 
                                                     networkTokenConversionAmounts.push(new BN(0));
                                                 } else {
+                                                    convertibleTokens.push(tokenAddress);
                                                     if (tokenAddress !== NATIVE_TOKEN_ADDRESS) {
                                                         await token.approve(bancorNetwork.address, amount);
                                                     }
@@ -431,7 +431,7 @@ describe('VortexBurner', () => {
                                             // take into account that if one of the source tokens is the governance token -
                                             // we won't be able to use rateByPath explicitly, since it wouldn't take into
                                             // account a previous conversion.
-                                            totalBurnedAmount = totalBurnedAmount.add(
+                                            totalBurntAmount = totalBurntAmount.add(
                                                 await bancorNetwork.rateByPath.call(
                                                     [
                                                         networkToken.address,
@@ -443,10 +443,11 @@ describe('VortexBurner', () => {
                                             );
 
                                             return {
-                                                tokens,
+                                                convertibleTokens,
                                                 amounts,
                                                 networkTokenConversionAmounts,
-                                                totalBurnedAmount,
+                                                grossNetworkTokenConversionAmount,
+                                                totalBurntAmount,
                                                 incentiveFeeAmount
                                             };
                                         };
@@ -474,10 +475,11 @@ describe('VortexBurner', () => {
                                             }
 
                                             const {
-                                                tokens,
+                                                convertibleTokens,
                                                 amounts,
                                                 networkTokenConversionAmounts,
-                                                totalBurnedAmount,
+                                                grossNetworkTokenConversionAmount,
+                                                totalBurntAmount,
                                                 incentiveFeeAmount
                                             } = await getExpectedResults();
 
@@ -487,41 +489,24 @@ describe('VortexBurner', () => {
                                                 defaultSender
                                             );
 
-                                            // Check that available for burning query returns the correct results.
-                                            const availableVortex = await vortex.availableForBurning.call(
-                                                tokenAddresses
-                                            );
-                                            const vortexAmounts = availableVortex[0];
-                                            const vortexConversionAmounts = availableVortex[1];
-                                            const vortexTotalBurnedAmount = availableVortex[2];
-                                            const vortexIncentiveFeeAmount = availableVortex[3];
-
                                             // Perform the actual burn.
                                             const res = await vortex.burn(tokenAddresses);
 
                                             expectEvent(res, 'Burned', {
-                                                tokens,
-                                                totalBurnedAmount
+                                                tokens: tokenAddresses,
+                                                conversionAmount: grossNetworkTokenConversionAmount,
+                                                burntAmount: totalBurntAmount
                                             });
 
-                                            // Currently, there is a weird bn.js issue with the parsed return amounts, so
-                                            // we'll make this check manually, for the time being.
-                                            for (let i = 0; i < amounts.length; ++i) {
-                                                expect(amounts[i]).to.be.bignumber.equal(res.logs[0].args.amounts[i]);
-                                                expect(networkTokenConversionAmounts[i]).to.be.bignumber.equal(
-                                                    vortexConversionAmounts[i]
-                                                );
-                                            }
+                                            for (let i = 0; i < convertibleTokens.length; ++i) {
+                                                const log = res.logs[i];
 
-                                            // Check available vortex data
-                                            for (let i = 0; i < amounts.length; ++i) {
-                                                expect(amounts[i]).to.be.bignumber.equal(vortexAmounts[i]);
-                                                expect(networkTokenConversionAmounts[i]).to.be.bignumber.equal(
-                                                    res.logs[0].args.conversionAmounts[i]
-                                                );
+                                                expectEvent({ logs: [log] }, 'Converted', {
+                                                    token: convertibleTokens[i],
+                                                    amount: amounts[i],
+                                                    conversionAmount: networkTokenConversionAmounts[i]
+                                                });
                                             }
-                                            expect(totalBurnedAmount).to.be.bignumber.equal(vortexTotalBurnedAmount);
-                                            expect(incentiveFeeAmount).to.be.bignumber.equal(vortexIncentiveFeeAmount);
 
                                             // Check that governance tokens were actually burnt.
                                             const blockNumber = res.receipt.blockNumber;
@@ -530,7 +515,7 @@ describe('VortexBurner', () => {
                                                 toBlock: blockNumber
                                             });
                                             expectEvent({ logs: events }, 'Destruction', {
-                                                _amount: totalBurnedAmount
+                                                _amount: totalBurntAmount
                                             });
 
                                             // Check that the network fee wallet balances have been depleted.
@@ -557,8 +542,8 @@ describe('VortexBurner', () => {
                                             );
 
                                             // Check that the total burned stat has been increment.
-                                            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(
-                                                totalBurnedAmount
+                                            expect(await vortex.totalBurntAmount.call()).to.be.bignumber.equal(
+                                                totalBurntAmount
                                             );
                                         });
                                     }
@@ -570,7 +555,7 @@ describe('VortexBurner', () => {
             }
         });
 
-        describe('failing vortex: 0 conversion result', () => {
+        describe('failing burn: 0 conversion result', () => {
             for (const feeAmount of [new BN(0), new BN(1), new BN(100)]) {
                 context(`with ${feeAmount.toString()} network fee balance per token`, () => {
                     beforeEach(async () => {
@@ -585,10 +570,6 @@ describe('VortexBurner', () => {
                             it('should revert when attempting to burn the network fees', async () => {
                                 const tokenAddresses = getTokenAddresses(testTokens);
 
-                                await expectRevert(
-                                    vortex.availableForBurning.call(tokenAddresses),
-                                    'ERR_ZERO_TARGET_AMOUNT'
-                                );
                                 await expectRevert(vortex.burn(tokenAddresses), 'ERR_ZERO_TARGET_AMOUNT');
                             });
                         });
@@ -597,7 +578,7 @@ describe('VortexBurner', () => {
             }
         });
 
-        describe('failing vortex: duplicate tokens', () => {
+        describe('failing burn: duplicate tokens', () => {
             const FEE_AMOUNT = new BN(100_000).mul(TKN);
 
             beforeEach(async () => {
@@ -612,7 +593,6 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableForBurning.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
                         await expectRevert(vortex.burn(tokenAddresses), 'ERC20: transfer amount exceeds balance');
                     });
                 });
@@ -626,14 +606,13 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.availableForBurning.call(tokenAddresses), 'ERR_INVALID_TOKEN_LIST');
                         await expectRevert.unspecified(vortex.burn(tokenAddresses));
                     });
                 });
             }
         });
 
-        describe('failing vortex: unsupported tokens', () => {
+        describe('failing burn: unsupported tokens', () => {
             const FEE_AMOUNT = new BN(100_000).mul(TKN);
             const UNSUPPORTED = 'TKN100';
 
@@ -656,10 +635,6 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(
-                            vortex.availableForBurning.call(tokenAddresses),
-                            'ERR_INVALID_RESERVE_TOKEN'
-                        );
                         await expectRevert(vortex.burn(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
                     });
                 });
