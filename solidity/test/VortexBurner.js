@@ -490,7 +490,7 @@ describe('VortexBurner', () => {
 
                                             expectEvent(res, 'Burned', {
                                                 tokens: tokenAddresses,
-                                                conversionAmount: grossNetworkTokenConversionAmount,
+                                                sourceAmount: grossNetworkTokenConversionAmount,
                                                 burntAmount: totalBurntAmount
                                             });
 
@@ -499,8 +499,8 @@ describe('VortexBurner', () => {
 
                                                 expectEvent({ logs: [log] }, 'Converted', {
                                                     token: convertibleTokens[i],
-                                                    amount: amounts[i],
-                                                    conversionAmount: networkTokenConversionAmounts[i]
+                                                    sourceAmount: amounts[i],
+                                                    targetAmount: networkTokenConversionAmounts[i]
                                                 });
                                             }
 
