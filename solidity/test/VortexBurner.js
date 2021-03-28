@@ -387,14 +387,10 @@ describe('VortexBurner', () => {
                                                     grossNetworkTokenConversionAmount = grossNetworkTokenConversionAmount.add(
                                                         amount
                                                     );
-
-                                                    networkTokenConversionAmounts.push(amount);
                                                 } else if (tokenAddress === govToken.address) {
                                                     // if the source token is the governance token, don't try to convert it
                                                     // either, but rather include it in the amount to burn.
                                                     totalBurntAmount = totalBurntAmount.add(amount);
-
-                                                    networkTokenConversionAmounts.push(new BN(0));
                                                 } else {
                                                     convertibleTokens.push(tokenAddress);
                                                     if (tokenAddress !== NATIVE_TOKEN_ADDRESS) {
