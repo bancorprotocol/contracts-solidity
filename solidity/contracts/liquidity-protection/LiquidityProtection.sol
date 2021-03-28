@@ -114,7 +114,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         govToken = IERC20(address(ITokenGovernance(_contractAddresses[6]).token()));
     }
 
-    // ensures that the contract is currently removing liquidity from a converter and can accept ETH
+    // ensures that the contract is currently adding or removing liquidity from a converter and can accept ETH
     modifier updatingLiquidityOnly() {
         require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
         _;
