@@ -1,15 +1,18 @@
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
+import { ContractRegistry, TestContractRegistryClient } from '../typechain';
 
 import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
 
 let accounts;
-let owner;
-let nonOwner;
+let owner: SignerWithAddress;
+let nonOwner: SignerWithAddress;
 
-let contractRegistry;
-let contractRegistryClient;
+let contractRegistry: ContractRegistry;
+let contractRegistryClient: TestContractRegistryClient;
 
 describe('ContractRegistryClient', () => {
     before(async () => {
@@ -29,14 +32,14 @@ describe('ContractRegistryClient', () => {
     });
 
     it('should revert when attempting to update the registry when it points to the current registry', async () => {
-        await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, contractRegistry.address);
+        await contractRegistry.registerAddress(Constants.registry.CONTRACT_REGISTRY, contractRegistry.address);
 
         await expect(contractRegistryClient.updateRegistry()).to.be.revertedWith('ERR_INVALID_REGISTRY');
     });
 
     it('should revert when attempting to update the registry when it points to a new registry which points to the zero address', async () => {
         const newRegistry = await Contracts.ContractRegistry.deploy();
-        await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
+        await contractRegistry.registerAddress(Constants.registry.CONTRACT_REGISTRY, newRegistry.address);
 
         await expect(contractRegistryClient.updateRegistry()).to.be.revertedWith('ERR_INVALID_REGISTRY');
     });
@@ -44,8 +47,8 @@ describe('ContractRegistryClient', () => {
     it('should allow anyone to update the registry address', async () => {
         const newRegistry = await Contracts.ContractRegistry.deploy();
 
-        await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
-        await newRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
+        await contractRegistry.registerAddress(Constants.registry.CONTRACT_REGISTRY, newRegistry.address);
+        await newRegistry.registerAddress(Constants.registry.CONTRACT_REGISTRY, newRegistry.address);
 
         await contractRegistryClient.connect(nonOwner).updateRegistry();
 
@@ -56,8 +59,8 @@ describe('ContractRegistryClient', () => {
     it('should allow the owner to restore the previous registry and disable updates', async () => {
         const newRegistry = await Contracts.ContractRegistry.deploy();
 
-        await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
-        await newRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
+        await contractRegistry.registerAddress(Constants.registry.CONTRACT_REGISTRY, newRegistry.address);
+        await newRegistry.registerAddress(Constants.registry.CONTRACT_REGISTRY, newRegistry.address);
         await contractRegistryClient.connect(nonOwner).updateRegistry();
 
         await contractRegistryClient.connect(owner).restoreRegistry();

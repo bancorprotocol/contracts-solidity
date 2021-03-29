@@ -1,19 +1,23 @@
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { DSToken } from '../typechain';
 
-const { ZERO_ADDRESS } = require('./helpers/Constants');
-
+import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 
 const name = 'Token1';
 const symbol = 'TKN1';
 const decimals = BigNumber.from(18);
 
-let token;
+let token: DSToken;
 
-let owner;
-let receiver;
-let nonOwner;
+let owner: SignerWithAddress;
+let receiver: SignerWithAddress;
+let nonOwner: SignerWithAddress;
+
+let accounts: SignerWithAddress[];
 
 describe('DSToken', () => {
     before(async () => {
@@ -54,7 +58,9 @@ describe('DSToken', () => {
     });
 
     it('should revert when the owner attempts to issue tokens to an invalid address', async () => {
-        await expect(token.issue(ZERO_ADDRESS, BigNumber.from(1))).to.be.revertedWith('ERR_INVALID_EXTERNAL_ADDRESS');
+        await expect(token.issue(Constants.ZERO_ADDRESS, BigNumber.from(1))).to.be.revertedWith(
+            'ERR_INVALID_EXTERNAL_ADDRESS'
+        );
     });
 
     it('should revert when the owner attempts to issue tokens to the token address', async () => {

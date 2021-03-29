@@ -1,13 +1,14 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
-const { roles } = require('./helpers/Constants');
 
-const rlp = require('rlp');
-
+import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
+import { encode } from 'rlp';
 
-let networkToken;
-let registry;
-let admin;
+let networkToken: any;
+let registry: any;
+let admin: any;
+let accounts: any;
 
 describe('LiquidityProtectionSettingsMigrator', () => {
     before(async () => {
@@ -39,20 +40,20 @@ describe('LiquidityProtectionSettingsMigrator', () => {
             admin.address
         );
 
-        const targetAddress = '0x' + ethers.utils.keccak256(rlp.encode([migrator.address, 1])).slice(26);
+        const targetAddress = '0x' + ethers.utils.keccak256(encode([migrator.address, 1])).slice(26);
         const targetSettings = await Contracts.LiquidityProtectionSettings.attach(targetAddress);
         const targetState = await readState(targetSettings);
 
         expect(targetState).to.be.deep.equal(sourceState);
-        expect(await targetSettings.hasRole(roles.ROLE_OWNER, admin.address)).to.be.true;
-        expect(await targetSettings.hasRole(roles.ROLE_OWNER, migrator.address)).to.be.false;
+        expect(await targetSettings.hasRole(Constants.roles.ROLE_OWNER, admin.address)).to.be.true;
+        expect(await targetSettings.hasRole(Constants.roles.ROLE_OWNER, migrator.address)).to.be.false;
     });
 
-    async function readState(settings) {
+    async function readState(settings: any) {
         const networkToken = await settings.networkToken();
         const registry = await settings.registry();
         const pools = await settings.poolWhitelist();
-        const limits = await Promise.all(pools.map((pool) => settings.networkTokenMintingLimits(pool)));
+        const limits = await Promise.all(pools.map((pool: any) => settings.networkTokenMintingLimits(pool)));
         return { networkToken, registry, pools, limits };
     }
 });

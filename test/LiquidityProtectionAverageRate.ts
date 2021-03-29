@@ -1,46 +1,58 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { Decimal } = require('./helpers/MathUtils.js');
-const { registry, roles } = require('./helpers/Constants');
-const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+import MathUtils from './helpers/MathUtils';
+import Constants from './helpers/Constants';
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = Constants.roles;
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { BancorNetwork } from '../typechain/BancorNetwork.js';
+import { DSToken } from '../typechain/DSToken.js';
+import { LiquidityProtectionSettings } from '../typechain/LiquidityProtectionSettings.js';
+import { LiquidityProtectionStore } from '../typechain/LiquidityProtectionStore.js';
+import { LiquidityProtectionStats } from '../typechain/LiquidityProtectionStats.js';
+import { LiquidityProtectionSystemStore } from '../typechain/LiquidityProtectionSystemStore.js';
+import { TokenHolder } from '../typechain/TokenHolder.js';
+import { TestLiquidityProtection } from '../typechain/TestLiquidityProtection.js';
 
 const INITIAL_AMOUNT = 1000000;
 
-function decimalToInteger(value, decimals) {
+function decimalToInteger(value: any, decimals: any) {
     const parts = [...value.split('.'), ''];
     return parts[0] + parts[1].padEnd(decimals, '0');
 }
 
-function percentageToPPM(value) {
+function percentageToPPM(value: any) {
     return decimalToInteger(value.replace('%', ''), 4);
 }
 
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
-let bancorNetwork;
-let liquidityProtectionSettings;
-let liquidityProtectionStore;
-let liquidityProtectionStats;
-let liquidityProtectionSystemStore;
-let liquidityProtectionWallet;
-let liquidityProtection;
-let reserveToken1;
-let reserveToken2;
-let poolToken;
-let converter;
-let time;
+let bancorNetwork: BancorNetwork;
+let liquidityProtectionSettings: LiquidityProtectionSettings;
+let liquidityProtectionStore: LiquidityProtectionStore;
+let liquidityProtectionStats: LiquidityProtectionStats;
+let liquidityProtectionSystemStore: LiquidityProtectionSystemStore;
+let liquidityProtectionWallet: TokenHolder;
+let liquidityProtection: TestLiquidityProtection;
 
-let owner;
-let governor;
+let reserveToken1: DSToken;
+let reserveToken2: DSToken;
+let poolToken: DSToken;
+let converter: any;
+let time: BigNumber;
+
+let owner: SignerWithAddress;
+let governor: SignerWithAddress;
+let accounts: SignerWithAddress[];
 
 describe('LiquidityProtectionAverageRate', () => {
     for (const converterType of [1, 3]) {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
-            const convert = async (sourceToken, targetToken, amount) => {
+            const convert = async (sourceToken: any, targetToken: any, amount: any) => {
                 await sourceToken.approve(bancorNetwork.address, amount);
                 const path = [sourceToken.address, poolToken.address, targetToken.address];
                 await bancorNetwork.convertByPath2(path, amount, 1, ethers.constants.AddressZero);
@@ -114,12 +126,18 @@ describe('LiquidityProtectionAverageRate', () => {
 
                 const networkSettings = await Contracts.NetworkSettings.deploy(owner.address, 0);
 
-                await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
-                await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
-                await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
-                await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
-                await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
-                await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
+                await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
+                await contractRegistry.registerAddress(
+                    Constants.registry.CONVERTER_REGISTRY,
+                    converterRegistry.address
+                );
+                await contractRegistry.registerAddress(
+                    Constants.registry.CONVERTER_REGISTRY_DATA,
+                    converterRegistryData.address
+                );
+                await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
+                await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
+                await contractRegistry.registerAddress(Constants.registry.NETWORK_SETTINGS, networkSettings.address);
 
                 await converterRegistry.enableTypeChanging(false);
 
@@ -180,15 +198,15 @@ describe('LiquidityProtectionAverageRate', () => {
                                     reserveToken.balanceOf(converter.address)
                                 )
                             );
-                            const min = Decimal(actualRate[0].toString())
+                            const min = new MathUtils.Decimal(actualRate[0].toString())
                                 .div(actualRate[1].toString())
                                 .mul(100 - maxDeviation)
                                 .div(100);
-                            const max = Decimal(actualRate[0].toString())
+                            const max = new MathUtils.Decimal(actualRate[0].toString())
                                 .div(actualRate[1].toString())
                                 .mul(100)
                                 .div(100 - maxDeviation);
-                            const mid = Decimal(averageRate[0].toString()).div(averageRate[1].toString());
+                            const mid = new MathUtils.Decimal(averageRate[0].toString()).div(averageRate[1].toString());
                             if (min.lte(mid) && mid.lte(max)) {
                                 const reserveTokenRate = await liquidityProtection.averageRateTest(
                                     poolToken.address,

@@ -1,15 +1,17 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
-const { roles } = require('./helpers/Constants');
+import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
 
-let liquidityProtectionStats;
+let liquidityProtectionStats: any;
 
-let owner;
-let seeder;
-let provider;
-let poolToken;
-let reserveToken;
+let owner: any;
+let seeder: any;
+let provider: any;
+let poolToken: any;
+let reserveToken: any;
+let accounts: any;
 
 describe('LiquidityProtectionStats', () => {
     before(async () => {
@@ -24,8 +26,8 @@ describe('LiquidityProtectionStats', () => {
 
     beforeEach(async () => {
         liquidityProtectionStats = await Contracts.LiquidityProtectionStats.deploy();
-        await liquidityProtectionStats.grantRole(roles.ROLE_OWNER, owner.address);
-        await liquidityProtectionStats.grantRole(roles.ROLE_SEEDER, seeder.address);
+        await liquidityProtectionStats.grantRole(Constants.roles.ROLE_OWNER, owner.address);
+        await liquidityProtectionStats.grantRole(Constants.roles.ROLE_SEEDER, seeder.address);
     });
 
     it('should revert when a non owner attempts to increase total amounts', async () => {

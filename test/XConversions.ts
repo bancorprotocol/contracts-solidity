@@ -1,8 +1,8 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
-
+import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
@@ -17,26 +17,27 @@ const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c00000000000000
 const MIN_RETURN = BigNumber.from(1);
 const TX_ID = BigNumber.from(0);
 
-let bancorFormula;
-let contractRegistry;
+let bancorFormula: any;
+let contractRegistry: any;
 
-let bancorX;
-let bancorNetwork;
-let bntToken;
-let erc20Token;
-let erc20TokenConverter1;
-let erc20TokenConverter2;
-let ethBntPath;
-let bntEthPath;
-let erc20TokenBntPath;
-let bntErc20Path;
+let bancorX: any;
+let bancorNetwork: any;
+let bntToken: any;
+let erc20Token: any;
+let erc20TokenConverter1: any;
+let erc20TokenConverter2: any;
+let ethBntPath: any;
+let bntEthPath: any;
+let erc20TokenBntPath: any;
+let bntErc20Path: any;
 
-let owner;
-let reporter1;
-let reporter2;
-let reporter3;
-let sender;
-let sender2;
+let owner: any;
+let reporter1: any;
+let reporter2: any;
+let reporter3: any;
+let sender: any;
+let sender2: any;
+let accounts: any;
 
 describe('XConversions', () => {
     before(async () => {
@@ -53,7 +54,7 @@ describe('XConversions', () => {
         bancorFormula = await Contracts.BancorFormula.deploy();
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     beforeEach(async () => {
@@ -75,10 +76,10 @@ describe('XConversions', () => {
 
         bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
 
-        await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
-        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
-        await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
+        await contractRegistry.registerAddress(Constants.registry.BNT_TOKEN, bntToken.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_X, bancorX.address);
 
         erc20Token = await Contracts.TestStandardToken.deploy('Test Token', 'TST', 18, ethers.utils.parseEther('100'));
 
@@ -100,7 +101,7 @@ describe('XConversions', () => {
         );
 
         await erc20TokenConverter1.addReserve(bntToken.address, 500000);
-        await erc20TokenConverter1.addReserve(NATIVE_TOKEN_ADDRESS, 500000);
+        await erc20TokenConverter1.addReserve(Constants.NATIVE_TOKEN_ADDRESS, 500000);
 
         await erc20TokenConverter2.addReserve(bntToken.address, 500000);
         await erc20TokenConverter2.addReserve(erc20Token.address, 500000);
@@ -121,14 +122,20 @@ describe('XConversions', () => {
         await erc20TokenConverter2.acceptTokenOwnership();
 
         // Set paths for easer use.
-        ethBntPath = [NATIVE_TOKEN_ADDRESS, poolToken1.address, bntToken.address];
-        bntEthPath = [bntToken.address, poolToken1.address, NATIVE_TOKEN_ADDRESS];
+        ethBntPath = [Constants.NATIVE_TOKEN_ADDRESS, poolToken1.address, bntToken.address];
+        bntEthPath = [bntToken.address, poolToken1.address, Constants.NATIVE_TOKEN_ADDRESS];
         erc20TokenBntPath = [erc20Token.address, poolToken2.address, bntToken.address];
         bntErc20Path = [bntToken.address, poolToken2.address, erc20Token.address];
     });
 
     describe('basic tests', () => {
-        const reportAndRelease = async (to, amount, txId, blockchainType, xTransferId = 0) => {
+        const reportAndRelease = async (
+            to: any,
+            amount: any,
+            txId: any,
+            blockchainType: any,
+            xTransferId = BigNumber.from(0)
+        ) => {
             const reporters = [reporter1, reporter2, reporter3];
 
             for (let i = 0; i < reporters.length; ++i) {

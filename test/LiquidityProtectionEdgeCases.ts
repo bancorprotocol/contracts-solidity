@@ -1,28 +1,29 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { registry, roles, MAX_UINT256, ZERO_ADDRESS } = require('./helpers/Constants');
-const { Decimal } = require('./helpers/MathUtils.js');
+import Constants from './helpers/Constants';
+import MathUtils from './helpers/MathUtils';
 
-const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
+const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = Constants.roles;
 
 import Contracts from './helpers/Contracts';
 
-const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
-const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
+const f = (a: any, b: any) => [].concat(...a.map((d: any) => b.map((e: any) => [].concat(d, e))));
+const cartesian = (a: any, b: any, ...c: any): any => (b ? cartesian(f(a, b), c) : a);
 
-function decimalToInteger(value, decimals) {
+function decimalToInteger(value: any, decimals: any) {
     const parts = [...value.split('.'), ''];
     return parts[0] + parts[1].padEnd(decimals, '0');
 }
 
-function percentageToPPM(value) {
+function percentageToPPM(value: any) {
     return decimalToInteger(value.replace('%', ''), 4);
 }
 
-function condOrAlmostEqual(cond, actual, expected, maxError) {
+function condOrAlmostEqual(cond: any, actual: any, expected: any, maxError: any) {
     if (!cond) {
-        const error = Decimal(actual.toString()).div(expected.toString()).sub(1).abs();
+        const error = new MathUtils.Decimal(actual.toString()).div(expected.toString()).sub(1).abs();
         if (error.gt(maxError)) {
             return `error = ${error.toFixed(maxError.length)}`;
         }
@@ -43,44 +44,47 @@ const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 const FEE_PPM = percentageToPPM('1%');
 
-let contractRegistry;
-let converterRegistry;
-let bancorNetwork;
-let baseToken;
-let networkToken;
-let govToken;
-let checkpointStore;
-let poolToken;
-let converter;
-let liquidityProtectionSettings;
-let liquidityProtectionStore;
-let liquidityProtectionStats;
-let liquidityProtectionSystemStore;
-let liquidityProtectionWallet;
-let liquidityProtection;
+let contractRegistry: any;
+let converterRegistry: any;
+let bancorNetwork: any;
+let baseToken: any;
+let networkToken: any;
+let govToken: any;
+let checkpointStore: any;
+let poolToken: any;
+let converter: any;
+let liquidityProtectionSettings: any;
+let liquidityProtectionStore: any;
+let liquidityProtectionStats: any;
+let liquidityProtectionSystemStore: any;
+let liquidityProtectionWallet: any;
+let liquidityProtection: any;
+let now: any;
 
-let owner;
+let owner: any;
+let governor: any;
+let accounts: any;
 
 describe('LiquidityProtectionEdgeCases', () => {
     for (const converterType of [1, 3]) {
         describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
-            const addProtectedLiquidity = async (token, amount) => {
+            const addProtectedLiquidity = async (token: any, amount: any) => {
                 await token.approve(liquidityProtection.address, amount);
                 await liquidityProtection.addLiquidity(poolToken.address, token.address, amount);
             };
 
-            const convert = async (sourceToken, targetToken, amount) => {
+            const convert = async (sourceToken: any, targetToken: any, amount: any) => {
                 await sourceToken.approve(bancorNetwork.address, amount);
                 const path = [sourceToken.address, poolToken.address, targetToken.address];
-                await bancorNetwork.convertByPath2(path, amount, 1, ZERO_ADDRESS);
+                await bancorNetwork.convertByPath2(path, amount, 1, Constants.ZERO_ADDRESS);
             };
 
-            const increaseRate = async (sourceToken, targetToken) => {
+            const increaseRate = async (sourceToken: any, targetToken: any) => {
                 const sourceBalance = await converter.reserveBalance(sourceToken.address);
                 await convert(sourceToken, targetToken, sourceBalance.div(BigNumber.from(100)));
             };
 
-            const generateFee = async (conversionFee, sourceToken, targetToken) => {
+            const generateFee = async (conversionFee: any, sourceToken: any, targetToken: any) => {
                 await converter.setConversionFee(conversionFee);
                 const prevBalance = await targetToken.balanceOf(owner.address);
                 const sourceBalance = await converter.reserveBalance(sourceToken.address);
@@ -97,7 +101,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                 return systemBalance.mul(reserveBalance).div(totalSupply);
             };
 
-            const setTime = async (time) => {
+            const setTime = async (time: any) => {
                 now = time;
 
                 for (const t of [converter, checkpointStore, liquidityProtection]) {
@@ -130,12 +134,18 @@ describe('LiquidityProtectionEdgeCases', () => {
 
                 const networkSettings = await Contracts.NetworkSettings.deploy(owner.address, 0);
 
-                await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
-                await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
-                await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
-                await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
-                await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
-                await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
+                await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
+                await contractRegistry.registerAddress(
+                    Constants.registry.CONVERTER_REGISTRY,
+                    converterRegistry.address
+                );
+                await contractRegistry.registerAddress(
+                    Constants.registry.CONVERTER_REGISTRY_DATA,
+                    converterRegistryData.address
+                );
+                await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
+                await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
+                await contractRegistry.registerAddress(Constants.registry.NETWORK_SETTINGS, networkSettings.address);
 
                 await converterRegistry.enableTypeChanging(false);
             });
@@ -214,18 +224,18 @@ describe('LiquidityProtectionEdgeCases', () => {
 
                 await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
                 await liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(0);
-                await liquidityProtectionSettings.setNetworkTokenMintingLimit(poolToken.address, MAX_UINT256);
+                await liquidityProtectionSettings.setNetworkTokenMintingLimit(poolToken.address, Constants.MAX_UINT256);
             });
 
             for (const config of CONFIGURATIONS) {
                 for (const numOfDays of NUM_OF_DAYS) {
                     const timestamp = numOfDays * 24 * 60 * 60 + 1;
                     for (const decimals of DECIMAL_COMBINATIONS) {
-                        const amounts = decimals.map((n) => BigNumber.from(10).pow(BigNumber.from(n)));
+                        const amounts = decimals.map((n: any) => BigNumber.from(10).pow(BigNumber.from(n)));
 
-                        let test;
+                        let test: any;
                         if (!config.increaseRate && !config.generateFee) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.eq(expected),
                                     actual,
@@ -233,7 +243,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                                     { 1: '0.0', 3: '0.00000004' }[converterType]
                                 );
                         } else if (!config.increaseRate && config.generateFee) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.gt(expected),
                                     actual,
@@ -241,7 +251,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                                     { 1: '0.0', 3: '0.0' }[converterType]
                                 );
                         } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.lt(expected),
                                     actual,
@@ -249,7 +259,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                                     { 1: '0.0', 3: '0.0' }[converterType]
                                 );
                         } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.eq(expected),
                                     actual,
@@ -295,11 +305,11 @@ describe('LiquidityProtectionEdgeCases', () => {
                 for (const numOfDays of NUM_OF_DAYS) {
                     const timestamp = numOfDays * 24 * 60 * 60 + 1;
                     for (const decimals of DECIMAL_COMBINATIONS) {
-                        const amounts = decimals.map((n) => BigNumber.from(10).pow(BigNumber.from(n)));
+                        const amounts = decimals.map((n: any) => BigNumber.from(10).pow(BigNumber.from(n)));
 
-                        let test;
+                        let test: any;
                         if (!config.increaseRate && !config.generateFee) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.eq(expected),
                                     actual,
@@ -307,7 +317,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                                     { 1: '0.0', 3: '0.00000004' }[converterType]
                                 );
                         } else if (!config.increaseRate && config.generateFee) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.gt(expected),
                                     actual,
@@ -315,7 +325,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                                     { 1: '0.002', 3: '0.002' }[converterType]
                                 );
                         } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.lt(expected),
                                     actual,
@@ -323,7 +333,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                                     { 1: '0.0', 3: '0.0' }[converterType]
                                 );
                         } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                            test = (actual, expected) =>
+                            test = (actual: any, expected: any) =>
                                 condOrAlmostEqual(
                                     actual.eq(expected),
                                     actual,

@@ -1,3 +1,4 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
@@ -5,13 +6,14 @@ import Contracts from './helpers/Contracts';
 
 const DUMMY_ADDRESS = '0x'.padEnd(42, 'f');
 
-let liquidityProtectionStore;
+let liquidityProtectionStore: any;
 
-let owner;
-let nonOwner;
-let provider;
-let poolToken;
-let reserveToken;
+let owner: any;
+let nonOwner: any;
+let provider: any;
+let poolToken: any;
+let reserveToken: any;
+let accounts: any;
 
 describe('LiquidityProtectionStore', () => {
     before(async () => {
@@ -220,7 +222,7 @@ describe('LiquidityProtectionStore', () => {
     });
 
     describe('protected liquidities advanced verification', () => {
-        const removeAllOneByOne = async (direction) => {
+        const removeAllOneByOne = async (direction: any) => {
             console.log(`adding ${accounts.length} items...`);
             for (const account of accounts) {
                 await liquidityProtectionStore
@@ -250,7 +252,7 @@ describe('LiquidityProtectionStore', () => {
     });
 
     describe('locked balances advanced verification', () => {
-        const removeAllOneByOne = async (direction) => {
+        const removeAllOneByOne = async (direction: any) => {
             const acc = accounts.slice(1); // removing the first account
             console.log(`adding ${acc.length} items...`);
             for (const account of acc) {

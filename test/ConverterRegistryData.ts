@@ -1,20 +1,24 @@
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { ContractRegistry, ConverterRegistryData } from '../typechain';
 
 import Constants from './helpers/Constants';
-
 import Contracts from './helpers/Contracts';
 
-let contractRegistry;
-let converterRegistry;
+let contractRegistry: ContractRegistry;
+let converterRegistry: ConverterRegistryData;
 
-let accounts;
-let owner;
-let nonOwner;
-let address1;
-let address2;
-let keyAccounts;
-let valAccounts;
+let accounts: SignerWithAddress[];
+
+let owner: SignerWithAddress;
+let nonOwner: SignerWithAddress;
+
+let address1: SignerWithAddress;
+let address2: SignerWithAddress;
+let keyAccounts: SignerWithAddress[];
+let valAccounts: SignerWithAddress[];
 
 describe('ConverterRegistryData', () => {
     before(async () => {
@@ -33,7 +37,7 @@ describe('ConverterRegistryData', () => {
         converterRegistry = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
 
         // Allow the owner to manipulate the contract registry data.
-        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, owner.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_REGISTRY, owner.address);
     });
 
     describe('security assertions', () => {
@@ -209,7 +213,7 @@ describe('ConverterRegistryData', () => {
     });
 
     describe('anchors advanced verification', () => {
-        const removeAllOneByOne = async (direction) => {
+        const removeAllOneByOne = async (direction: any) => {
             for (const account of accounts) {
                 await converterRegistry.addSmartToken(account.address);
             }
@@ -235,7 +239,7 @@ describe('ConverterRegistryData', () => {
     });
 
     describe('liquidity pools advanced verification', () => {
-        const removeAllOneByOne = async (direction) => {
+        const removeAllOneByOne = async (direction: any) => {
             for (const account of accounts) {
                 await converterRegistry.addLiquidityPool(account.address);
             }
@@ -261,7 +265,7 @@ describe('ConverterRegistryData', () => {
     });
 
     describe('convertible tokens advanced verification', () => {
-        const test = async (convertibleToken, anchor, func, currentState) => {
+        const test = async (convertibleToken: any, anchor: any, func: any, currentState: any) => {
             await func(convertibleToken, anchor, currentState);
             const convertibleTokens = await converterRegistry.getConvertibleTokens();
             const anchors = await Promise.all(
@@ -270,10 +274,10 @@ describe('ConverterRegistryData', () => {
                 )
             );
 
-            expect({ convertibleTokens, anchors }).to.deep.eql(currentState);
+            expect({ convertibleTokens, anchors }).to.deep.equal(currentState);
         };
 
-        const add = async (convertibleToken, anchor, currentState) => {
+        const add = async (convertibleToken: any, anchor: any, currentState: any) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
             if (index === -1) {
                 currentState.convertibleTokens.push(convertibleToken);
@@ -285,12 +289,12 @@ describe('ConverterRegistryData', () => {
             return converterRegistry.addConvertibleToken(convertibleToken, anchor);
         };
 
-        const swapLast = (array, item) => {
+        const swapLast = (array: any, item: any) => {
             array[array.indexOf(item)] = array[array.length - 1];
             array.length -= 1;
         };
 
-        const remove = async (convertibleToken, anchor, currentState) => {
+        const remove = async (convertibleToken: any, anchor: any, currentState: any) => {
             const index = currentState.convertibleTokens.indexOf(convertibleToken);
             if (currentState.anchors[index].length === 1) {
                 currentState.anchors.splice(index, 1);
@@ -302,21 +306,25 @@ describe('ConverterRegistryData', () => {
             return converterRegistry.removeConvertibleToken(convertibleToken, anchor);
         };
 
-        const reorder = (tokens, reverse) => {
+        const reorder = (tokens: any, reverse: any) => {
             return reverse ? tokens.slice().reverse() : tokens;
         };
 
-        const rows = (reverseKeys, reverseVals) => {
+        const rows = (reverseKeys: any, reverseVals: any): any => {
             return [].concat.apply(
                 [],
-                reorder(keyAccounts, reverseKeys).map((x) => reorder(valAccounts, reverseVals).map((y) => [x, y]))
+                reorder(keyAccounts, reverseKeys).map((x: any) =>
+                    reorder(valAccounts, reverseVals).map((y: any) => [x, y])
+                )
             );
         };
 
-        const cols = (reverseKeys, reverseVals) => {
+        const cols = (reverseKeys: any, reverseVals: any): any => {
             return [].concat.apply(
                 [],
-                reorder(valAccounts, reverseVals).map((x) => reorder(keyAccounts, reverseKeys).map((y) => [y, x]))
+                reorder(valAccounts, reverseVals).map((x: any) =>
+                    reorder(keyAccounts, reverseKeys).map((y: any) => [y, x])
+                )
             );
         };
 

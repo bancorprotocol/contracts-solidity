@@ -1,10 +1,12 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 
 import Contracts from './helpers/Contracts';
 
-let contract;
-let owner;
-let newOwner;
+let contract: any;
+let owner: any;
+let newOwner: any;
+let accounts: any;
 
 describe('Owned', () => {
     before(async () => {

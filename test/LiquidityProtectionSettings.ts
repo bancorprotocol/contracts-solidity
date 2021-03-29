@@ -1,22 +1,23 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, roles } = require('./helpers/Constants');
+import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
 
-let contractRegistry;
-let converterRegistry;
-let networkToken;
-let poolToken;
-let subscriber;
-let settings;
+let contractRegistry: any;
+let converterRegistry: any;
+let networkToken: any;
+let poolToken: any;
+let subscriber: any;
+let settings: any;
 
-let accounts;
-let owner;
-let nonOwner;
+let accounts: any;
+let owner: any;
+let nonOwner: any;
 
 // TODO hardhat error
 describe('LiquidityProtectionSettings', () => {
@@ -45,11 +46,14 @@ describe('LiquidityProtectionSettings', () => {
         const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
 
-        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
-        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_REGISTRY, converterRegistry.address);
+        await contractRegistry.registerAddress(
+            Constants.registry.CONVERTER_REGISTRY_DATA,
+            converterRegistryData.address
+        );
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
 
         await converterRegistry.newConverter(
             1,
@@ -71,11 +75,11 @@ describe('LiquidityProtectionSettings', () => {
     });
 
     it('should properly initialize roles', async () => {
-        expect(await settings.getRoleMemberCount(roles.ROLE_OWNER)).to.be.equal(BigNumber.from(1));
+        expect(await settings.getRoleMemberCount(Constants.roles.ROLE_OWNER)).to.be.equal(BigNumber.from(1));
 
-        expect(await settings.getRoleAdmin(roles.ROLE_OWNER)).to.eql(roles.ROLE_OWNER);
+        expect(await settings.getRoleAdmin(Constants.roles.ROLE_OWNER)).to.eql(Constants.roles.ROLE_OWNER);
 
-        expect(await settings.hasRole(roles.ROLE_OWNER, owner.address)).to.be.true;
+        expect(await settings.hasRole(Constants.roles.ROLE_OWNER, owner.address)).to.be.true;
     });
 
     describe('whitelisted pools', () => {
@@ -108,7 +112,9 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should revert when an owner attempts to whitelist a zero address pool', async () => {
-            await expect(settings.addPoolToWhitelist(ZERO_ADDRESS)).to.be.revertedWith('ERR_INVALID_EXTERNAL_ADDRESS');
+            await expect(settings.addPoolToWhitelist(Constants.ZERO_ADDRESS)).to.be.revertedWith(
+                'ERR_INVALID_EXTERNAL_ADDRESS'
+            );
         });
 
         it('should revert when an owner attempts to whitelist the settings contract itself', async () => {
@@ -218,7 +224,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [NATIVE_TOKEN_ADDRESS, networkToken.address, reserveToken.address],
+                [Constants.NATIVE_TOKEN_ADDRESS, networkToken.address, reserveToken.address],
                 [100000, 100000, 100000]
             );
             const anchorCount = await converterRegistry.getAnchorCount();
@@ -235,7 +241,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [NATIVE_TOKEN_ADDRESS, reserveToken.address],
+                [Constants.NATIVE_TOKEN_ADDRESS, reserveToken.address],
                 [500000, 500000]
             );
             const anchorCount = await converterRegistry.getAnchorCount();
@@ -251,7 +257,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [NATIVE_TOKEN_ADDRESS, networkToken.address],
+                [Constants.NATIVE_TOKEN_ADDRESS, networkToken.address],
                 [450000, 550000]
             );
             const anchorCount = await converterRegistry.getAnchorCount();

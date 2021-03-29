@@ -1,7 +1,9 @@
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { ContractRegistry, ConverterFactory, ConverterRegistry, ConverterRegistryData } from '../typechain';
 
-const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
-
+import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
@@ -21,8 +23,8 @@ const LAYOUT = {
 };
 /* eslint-enable no-multi-spaces,comma-spacing */
 
-const getSymbol = async (tokenAddress) => {
-    if (tokenAddress === NATIVE_TOKEN_ADDRESS) {
+const getSymbol = async (tokenAddress: string) => {
+    if (tokenAddress === Constants.NATIVE_TOKEN_ADDRESS) {
         return 'ETH';
     }
 
@@ -30,21 +32,21 @@ const getSymbol = async (tokenAddress) => {
     return token.symbol();
 };
 
-const printPath = async (sourceToken, targetToken, path) => {
+const printPath = async (sourceToken: any, targetToken: any, path: any) => {
     const sourceSymbol = await getSymbol(sourceToken);
     const targetSymbol = await getSymbol(targetToken);
-    const symbols = await Promise.all(path.map((token) => getSymbol(token)));
+    const symbols = await Promise.all(path.map((token: any) => getSymbol(token)));
     console.log(`path from ${sourceSymbol} to ${targetSymbol} = [${symbols}]`);
 };
 
-const findPath = async (sourceToken, targetToken, anchorToken, converterRegistry) => {
+const findPath = async (sourceToken: any, targetToken: any, anchorToken: any, converterRegistry: any) => {
     const sourcePath = await getPath(sourceToken, anchorToken, converterRegistry);
     const targetPath = await getPath(targetToken, anchorToken, converterRegistry);
 
     return getShortestPath(sourcePath, targetPath);
 };
 
-const getPath = async (token, anchorToken, converterRegistry) => {
+const getPath = async (token: any, anchorToken: any, converterRegistry: any): Promise<any> => {
     if (token === anchorToken) {
         return [token];
     }
@@ -70,7 +72,7 @@ const getPath = async (token, anchorToken, converterRegistry) => {
     return [];
 };
 
-const getShortestPath = (sourcePath, targetPath) => {
+const getShortestPath = (sourcePath: any, targetPath: any) => {
     if (sourcePath.length === 0 || targetPath.length === 0) {
         return [];
     }
@@ -103,16 +105,17 @@ const getShortestPath = (sourcePath, targetPath) => {
     return path.slice(0, length);
 };
 
-let contractRegistry;
-let converterFactory;
-let converterRegistry;
-let converterRegistryData;
-let pathFinder;
-let anchorToken;
-let nonOwner;
+let accounts: SignerWithAddress[];
+let contractRegistry: ContractRegistry;
+let converterFactory: ConverterFactory;
+let converterRegistry: ConverterRegistry;
+let converterRegistryData: ConverterRegistryData;
+let pathFinder: any;
+let anchorToken: string;
+let nonOwner: SignerWithAddress;
 
 describe('ConversionPathFinder', () => {
-    const addresses = { ETH: NATIVE_TOKEN_ADDRESS };
+    let addresses = { ETH: Constants.NATIVE_TOKEN_ADDRESS } as any;
 
     before(async () => {
         accounts = await ethers.getSigners();
@@ -131,9 +134,12 @@ describe('ConversionPathFinder', () => {
             (await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address
         );
 
-        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_REGISTRY, converterRegistry.address);
+        await contractRegistry.registerAddress(
+            Constants.registry.CONVERTER_REGISTRY_DATA,
+            converterRegistryData.address
+        );
     });
 
     beforeEach(async () => {

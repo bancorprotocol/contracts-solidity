@@ -1,7 +1,8 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { ZERO_ADDRESS } = require('./helpers/Constants');
+import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
 
@@ -9,9 +10,10 @@ const portion1 = BigNumber.from(111);
 const portion2 = BigNumber.from(222);
 const invalidPortion = BigNumber.from(1000001);
 
-let nonOwner;
-let address1;
-let address2;
+let nonOwner: any;
+let address1: any;
+let address2: any;
+let accounts: any;
 
 describe('NetworkSettings', () => {
     before(async () => {
@@ -22,13 +24,13 @@ describe('NetworkSettings', () => {
         address2 = accounts[3];
     });
 
-    const expectReturn = async (method, object) => {
+    const expectReturn = async (method: any, object: any) => {
         expect(JSON.stringify(await method)).to.be.equal(JSON.stringify(object));
     };
 
     describe('construction', () => {
         it('should revert when creating a contract with an invalid network fee wallet', async () => {
-            await expect(Contracts.NetworkSettings.deploy(ZERO_ADDRESS, portion1)).to.be.revertedWith(
+            await expect(Contracts.NetworkSettings.deploy(Constants.ZERO_ADDRESS, portion1)).to.be.revertedWith(
                 'ERR_INVALID_ADDRESS'
             );
         });
@@ -41,14 +43,16 @@ describe('NetworkSettings', () => {
     });
 
     describe('configuration', () => {
-        let networkSettings;
+        let networkSettings: any;
 
         beforeEach(async () => {
             networkSettings = await Contracts.NetworkSettings.deploy(address1.address, portion1);
         });
 
         it('should revert when setting an invalid network fee wallet', async () => {
-            await expect(networkSettings.setNetworkFeeWallet(ZERO_ADDRESS)).to.be.revertedWith('ERR_INVALID_ADDRESS');
+            await expect(networkSettings.setNetworkFeeWallet(Constants.ZERO_ADDRESS)).to.be.revertedWith(
+                'ERR_INVALID_ADDRESS'
+            );
             await expectReturn(networkSettings.networkFeeParams(), [address1.address, Number(portion1)]);
         });
 

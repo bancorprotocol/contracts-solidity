@@ -1,21 +1,25 @@
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-import Contracts from './helpers/Contracts';
+import Contracts, { ContractsType } from './helpers/Contracts';
+import { ContractRegistry, TestConverterFactory, TestTypedConverterAnchorFactory } from '../typechain';
 
-const Factories = {
+const Factories: { [key: string]: ContractsType } = {
     LiquidityPoolV1ConverterFactory: 'LiquidityPoolV1ConverterFactory',
     StandardPoolConverterFactory: 'StandardPoolConverterFactory',
     FixedRatePoolConverterFactory: 'FixedRatePoolConverterFactory'
 };
 
-let contractRegistry;
-let converterFactory;
-let anchorFactory;
-let factory;
+let contractRegistry: ContractRegistry;
+let converterFactory: TestConverterFactory;
+let anchorFactory: TestTypedConverterAnchorFactory;
+let factory: any;
 
-let owner;
-let nonOwner;
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
+let nonOwner: SignerWithAddress;
 
 describe('ConverterFactory', () => {
     before(async () => {
@@ -37,7 +41,7 @@ describe('ConverterFactory', () => {
             beforeEach(async () => {
                 converterFactory = await Contracts.TestConverterFactory.deploy();
                 anchorFactory = await Contracts.TestTypedConverterAnchorFactory.deploy('TypedAnchor');
-                factory = await Contracts[contractName].deploy();
+                factory = await Contracts[contractName as ContractsType].deploy();
             });
 
             it('should allow the owner to register a typed converter anchor factory', async () => {
@@ -75,7 +79,7 @@ describe('ConverterFactory', () => {
             it('should allow the owner to reregister a typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
 
-                const factory2 = await Contracts[contractName].deploy();
+                const factory2 = await Contracts[contractName as ContractsType].deploy();
                 expect(await factory.converterType()).to.be.equal(await factory2.converterType());
 
                 await converterFactory.registerTypedConverterFactory(factory2.address);

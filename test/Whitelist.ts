@@ -1,14 +1,15 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 
 import Contracts from './helpers/Contracts';
 
-let whitelist;
+let whitelist: any;
 
-let accounts;
-let address1;
-let address2;
-let address3;
-let nonOwner;
+let accounts: any;
+let address1: any;
+let address2: any;
+let address3: any;
+let nonOwner: any;
 
 describe('Whitelist', () => {
     before(async () => {

@@ -1,8 +1,11 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
+import Constants from './helpers/Constants';
+import { ContractRegistry } from '../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 const contractName1 = 'red';
 const contractName2 = 'blue';
@@ -11,15 +14,15 @@ const contractName1bytes = ethers.utils.formatBytes32String(contractName1);
 const contractName2bytes = ethers.utils.formatBytes32String(contractName2);
 const contractName3bytes = ethers.utils.formatBytes32String(contractName3);
 
-let contractRegistry;
+let contractRegistry: ContractRegistry;
 
-let accounts;
-let address1;
-let address2;
-let address3;
-let nonOwner;
+let accounts: SignerWithAddress[];
+let address1: SignerWithAddress;
+let address2: SignerWithAddress;
+let address3: SignerWithAddress;
+let nonOwner: SignerWithAddress;
 
-const trimNull = (str) => {
+const trimNull = (str: string) => {
     // eslint-disable-next-line no-control-regex
     return str.replace(/\u0000*$/, '');
 };
@@ -52,7 +55,7 @@ describe('ContractRegistry', () => {
 
     it('should revert when attempting to register the registry to the zero address', async () => {
         await expect(
-            contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, ethers.constants.AddressZero)
+            contractRegistry.registerAddress(Constants.registry.CONTRACT_REGISTRY, ethers.constants.AddressZero)
         ).to.be.revertedWith('ERR_INVALID_ADDRESS');
     });
 

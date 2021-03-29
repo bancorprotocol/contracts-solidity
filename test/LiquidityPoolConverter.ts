@@ -1,21 +1,31 @@
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
-
+import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
+import {
+    BancorNetwork,
+    ContractRegistry,
+    ConverterUpgrader,
+    TestNonStandardToken,
+    TestStandardToken
+} from '../typechain';
 
-let bancorNetwork;
+let bancorNetwork: BancorNetwork;
+let upgrader: ConverterUpgrader;
 let anchor;
-let anchorAddress;
-let contractRegistry;
-let reserveToken;
-let reserveToken2;
-let reserveToken3;
-let upgrader;
-let sender;
-let whitelisted;
-let beneficiary;
+let anchorAddress: string;
+let contractRegistry: ContractRegistry;
+let reserveToken: TestStandardToken;
+let reserveToken2: TestNonStandardToken;
+let reserveToken3: TestStandardToken;
+
+let accounts: SignerWithAddress[];
+let sender: SignerWithAddress;
+let whitelisted: SignerWithAddress;
+let beneficiary: SignerWithAddress;
 
 const CONVERTER_TYPES = [1];
 const MIN_RETURN = BigNumber.from(1);
@@ -25,11 +35,11 @@ const WEIGHT_50_PERCENT = BigNumber.from(500000);
 
 describe('LiquidityPoolConverter', () => {
     const createConverter = async (
-        type,
-        anchorAddress,
+        type: any,
+        anchorAddress: string,
         registryAddress = contractRegistry.address,
         maxConversionFee = 0
-    ) => {
+    ): Promise<any> => {
         switch (type) {
             case 1:
                 return await Contracts.LiquidityPoolV1Converter.deploy(
@@ -40,14 +50,20 @@ describe('LiquidityPoolConverter', () => {
         }
     };
 
-    const createAnchor = async (type) => {
+    const createAnchor = async (type: any): Promise<any> => {
         switch (type) {
             case 1:
                 return await Contracts.DSToken.deploy('Pool1', 'POOL1', 2);
         }
     };
 
-    const initConverter = async (type, activate, addLiquidity, isETHReserve, maxConversionFee = 0) => {
+    const initConverter = async (
+        type: any,
+        activate: any,
+        addLiquidity: any,
+        isETHReserve: any,
+        maxConversionFee = 0
+    ) => {
         anchor = await createAnchor(type);
         anchorAddress = anchor.address;
 
@@ -85,7 +101,7 @@ describe('LiquidityPoolConverter', () => {
         return converter;
     };
 
-    const getConverterName = (type) => {
+    const getConverterName = (type: any) => {
         switch (type) {
             case 1:
                 return 'LiquidityPoolV1Converter';
@@ -94,18 +110,18 @@ describe('LiquidityPoolConverter', () => {
         return 'Unknown';
     };
 
-    const getReserve1Address = (isETH) => {
-        return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
+    const getReserve1Address = (isETH: any) => {
+        return isETH ? Constants.NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
-    const verifyReserve = (reserve, balance, weight, isSet) => {
+    const verifyReserve = (reserve: any, balance: any, weight: any, isSet: any) => {
         expect(reserve[0]).to.be.equal(balance);
         expect(reserve[1]).to.be.equal(weight);
         expect(reserve[4]).to.be.eql(isSet);
     };
 
-    const convert = async (path, amount, minReturn, options = {}, from = null) => {
-        if (from != null) {
+    const convert = async (path: any, amount: any, minReturn: any, options = {}, from?: any) => {
+        if (from) {
             return bancorNetwork
                 .connect(from)
                 .convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
@@ -113,7 +129,7 @@ describe('LiquidityPoolConverter', () => {
         return bancorNetwork.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
     };
 
-    const convertCall = async (path, amount, minReturn, options = {}) => {
+    const convertCall = async (path: any, amount: any, minReturn: any, options = {}) => {
         // This is a static call
         // https://docs.ethers.io/v5/api/contract/contract/#contract-callStatic
         return bancorNetwork.callStatic.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
@@ -131,20 +147,20 @@ describe('LiquidityPoolConverter', () => {
         await bancorFormula.init();
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
 
         const factory = await Contracts.ConverterFactory.deploy();
-        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, factory.address);
 
         await factory.registerTypedConverterFactory((await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address);
     });
 
     beforeEach(async () => {
         bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
 
         upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_UPGRADER, upgrader.address);
 
         reserveToken = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', 18, 1000000000);
         reserveToken2 = await Contracts.TestNonStandardToken.deploy('ERC Token 2', 'ERC2', 18, 2000000000);
@@ -267,7 +283,7 @@ describe('LiquidityPoolConverter', () => {
                     await initConverter(type, true, true, isETHReserve);
 
                     const amount = BigNumber.from(500);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (isETHReserve) {
                         value = amount;
                     } else {
@@ -285,7 +301,7 @@ describe('LiquidityPoolConverter', () => {
                     await initConverter(type, true, true, isETHReserve);
 
                     const amount = BigNumber.from(500);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (isETHReserve) {
                         value = amount;
                     } else {
@@ -311,7 +327,7 @@ describe('LiquidityPoolConverter', () => {
                     await converter.setConversionWhitelist(whitelist.address);
 
                     const amount = BigNumber.from(500);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (isETHReserve) {
                         value = amount;
                     } else {
@@ -336,7 +352,7 @@ describe('LiquidityPoolConverter', () => {
                     await converter.setConversionWhitelist(whitelist.address);
 
                     const amount = BigNumber.from(500);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (isETHReserve) {
                         value = amount;
                     } else {
@@ -362,7 +378,7 @@ describe('LiquidityPoolConverter', () => {
                     await converter.setConversionWhitelist(whitelist.address);
 
                     const amount = BigNumber.from(500);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (isETHReserve) {
                         value = amount;
                     } else {
@@ -395,7 +411,7 @@ describe('LiquidityPoolConverter', () => {
                         )
                     )[0];
 
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (isETHReserve) {
                         value = amount;
                     } else {

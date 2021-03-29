@@ -7,14 +7,16 @@ import Constants from './Constants';
 
 import Contracts, { ContractsType } from './Contracts';
 
+export type ConverterType = 1 | 3 | 4;
+
 const deploy = async (
-    type: 1 | 3 | 4,
+    type: ConverterType,
     tokenAddress: any,
     registryAddress: any,
     maxConversionFee: any,
     reserveTokenAddress: any,
     weight: any,
-    version: any
+    version?: any
 ) => {
     let accounts = await ethers.getSigners();
 
@@ -53,7 +55,7 @@ const deploy = async (
     return converter;
 };
 
-const at = async (address: any, version: any) => {
+const at = async (address: any, version?: any) => {
     if (version) {
         const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
         return await ethers.getContractAt(JSON.parse(abi.toString()), address);

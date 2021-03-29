@@ -1,14 +1,16 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 
-const { roles } = require('./helpers/Constants');
+import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
 
-let liquidityProtectionSystemStore;
+let liquidityProtectionSystemStore: any;
 
-let owner;
-let token;
-let anchor;
+let owner: any;
+let token: any;
+let anchor: any;
+let accounts: any;
 
 describe('LiquidityProtectionSystemStore', () => {
     before(async () => {
@@ -21,7 +23,7 @@ describe('LiquidityProtectionSystemStore', () => {
 
     beforeEach(async () => {
         liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
-        await liquidityProtectionSystemStore.grantRole(roles.ROLE_OWNER, owner.address);
+        await liquidityProtectionSystemStore.grantRole(Constants.roles.ROLE_OWNER, owner.address);
     });
 
     it('should revert when a non owner attempts to increase system balance', async () => {

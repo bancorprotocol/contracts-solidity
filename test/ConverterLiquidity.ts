@@ -1,19 +1,26 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { Decimal } = require('./helpers/MathUtils.js');
-
-const { NATIVE_TOKEN_ADDRESS, MAX_UINT256, registry } = require('./helpers/Constants');
-
+import MathUtils from './helpers/MathUtils';
+import Decimal from 'decimal.js';
+import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
+import { ContractRegistry, DSToken, LiquidityPoolV1Converter } from '../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
-let contractRegistry;
-let owner;
+let contractRegistry: ContractRegistry;
+
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
 
 const MIN_RETURN = BigNumber.from(1);
 
 describe('ConverterLiquidity', () => {
-    const initLiquidityPool = async (hasETH, ...weights) => {
+    const initLiquidityPool = async (
+        hasETH: boolean,
+        ...weights: number[]
+    ): Promise<[LiquidityPoolV1Converter, DSToken]> => {
         const poolToken = await Contracts.DSToken.deploy('name', 'symbol', 0);
         const converter = await Contracts.LiquidityPoolV1Converter.deploy(
             poolToken.address,
@@ -23,9 +30,9 @@ describe('ConverterLiquidity', () => {
 
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
-                await converter.addReserve(NATIVE_TOKEN_ADDRESS, weights[i] * 10000);
+                await converter.addReserve(Constants.NATIVE_TOKEN_ADDRESS, weights[i] * 10000);
             } else {
-                const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, MAX_UINT256);
+                const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, Constants.MAX_UINT256);
                 await converter.addReserve(erc20Token.address, weights[i] * 10000);
             }
         }
@@ -48,17 +55,17 @@ describe('ConverterLiquidity', () => {
 
         const networkSettings = await Contracts.NetworkSettings.deploy(owner.address, 0);
 
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
-        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
     describe('security assertion', () => {
-        let converter;
-        let poolToken;
-        let reserveTokens;
+        let converter: LiquidityPoolV1Converter;
+        let poolToken: DSToken;
+        let reserveTokens: string[];
 
         const weights = [1, 2, 3, 4, 5];
-        const reserveAmounts = weights.map((weight) => 1);
+        const reserveAmounts = weights.map((weight) => BigNumber.from(1));
 
         context('without ether reserve', async () => {
             beforeEach(async () => {
@@ -108,9 +115,9 @@ describe('ConverterLiquidity', () => {
                 await Promise.all(
                     reserveTokens.map((reserveToken, i) => approve(reserveToken, converter, reserveAmounts[i]))
                 );
-                await expect(converter.addLiquidity(reserveTokens, reserveAmounts, MAX_UINT256)).to.be.revertedWith(
-                    'ERR_RETURN_TOO_LOW'
-                );
+                await expect(
+                    converter.addLiquidity(reserveTokens, reserveAmounts, Constants.MAX_UINT256)
+                ).to.be.revertedWith('ERR_RETURN_TOO_LOW');
             });
 
             it('should revert if any of the input reserve amounts is not larger than zero', async () => {
@@ -137,7 +144,7 @@ describe('ConverterLiquidity', () => {
             it('should revert if the input value is not equal to the input amount of ether', async () => {
                 await expect(
                     converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, {
-                        value: reserveAmounts.slice(-1)[0] + 1
+                        value: reserveAmounts.slice(-1)[0].add(1)
                     })
                 ).to.be.revertedWith('ERR_ETH_AMOUNT_MISMATCH');
             });
@@ -145,13 +152,13 @@ describe('ConverterLiquidity', () => {
     });
 
     describe('functionality assertion', () => {
-        const test = (hasETH, ...weights) => {
+        const test = (hasETH: boolean, ...weights: number[]) => {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
                 const [converter, poolToken] = await initLiquidityPool(hasETH, ...weights);
                 const reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens(i)));
 
                 const state = [];
-                let expected = [];
+                let expected: Decimal[] = [];
                 let prevSupply = BigNumber.from(0);
                 let prevBalances = reserveTokens.map((reserveToken) => BigNumber.from(0));
 
@@ -198,11 +205,13 @@ describe('ConverterLiquidity', () => {
                     state.push({ supply: supply, balances: balances });
 
                     for (let i = 0; i < allowances.length; i++) {
-                        const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
+                        const diff = new MathUtils.Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
                         expect(diff.gte('0') && diff.lte('0.0000005')).to.be.true;
                     }
 
-                    const actual = balances.map((balance) => Decimal(balance.toString()).div(supply.toString()));
+                    const actual = balances.map((balance) =>
+                        new MathUtils.Decimal(balance.toString()).div(supply.toString())
+                    );
                     for (let i = 0; i < expected.length; i++) {
                         const diff = expected[i].div(actual[i]);
                         expect(diff.gte('0.996') && diff.lte('1')).to.be.true;
@@ -232,7 +241,9 @@ describe('ConverterLiquidity', () => {
                         reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
                     );
                     for (let i = 0; i < balances.length; i++) {
-                        const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
+                        const diff = new MathUtils.Decimal(state[n - 1].balances[i].toString()).div(
+                            new MathUtils.Decimal(balances[i].toString())
+                        );
                         expect(diff.gte('0.999999996') && diff.lte('1')).to.be.true;
                         expect(prevBalances[i].sub(balances[i])).to.be.equal(reserveAmounts[i]);
                     }
@@ -279,8 +290,8 @@ describe('ConverterLiquidity', () => {
         }
     });
 
-    const approve = async (reserveToken, converter, amount) => {
-        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
+    const approve = async (reserveToken: string, converter: LiquidityPoolV1Converter, amount: BigNumber) => {
+        if (reserveToken === Constants.NATIVE_TOKEN_ADDRESS) {
             return;
         }
 
@@ -288,8 +299,8 @@ describe('ConverterLiquidity', () => {
         return token.approve(converter.address, amount);
     };
 
-    const getAllowance = async (reserveToken, converter) => {
-        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
+    const getAllowance = async (reserveToken: string, converter: LiquidityPoolV1Converter) => {
+        if (reserveToken === Constants.NATIVE_TOKEN_ADDRESS) {
             return BigNumber.from(0);
         }
 
@@ -297,8 +308,8 @@ describe('ConverterLiquidity', () => {
         return token.allowance(owner.address, converter.address);
     };
 
-    const getBalance = async (reserveToken, converter) => {
-        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
+    const getBalance = async (reserveToken: string, converter: LiquidityPoolV1Converter) => {
+        if (reserveToken === Constants.NATIVE_TOKEN_ADDRESS) {
             return ethers.provider.getBalance(converter.address);
         }
 
@@ -306,7 +317,12 @@ describe('ConverterLiquidity', () => {
         return await token.balanceOf(converter.address);
     };
 
-    const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+    const getLiquidityCosts = async (
+        firstTime: Boolean,
+        converter: LiquidityPoolV1Converter,
+        reserveTokens: string[],
+        reserveAmounts: BigNumber[]
+    ) => {
         if (firstTime) {
             return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
         }
@@ -316,7 +332,12 @@ describe('ConverterLiquidity', () => {
         );
     };
 
-    const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+    const getLiquidityReturns = async (
+        firstTime: Boolean,
+        converter: LiquidityPoolV1Converter,
+        reserveTokens: string[],
+        reserveAmounts: BigNumber[]
+    ) => {
         if (firstTime) {
             const length = Math.round(
                 reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length / reserveAmounts.length

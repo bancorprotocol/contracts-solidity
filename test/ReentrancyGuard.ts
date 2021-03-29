@@ -3,10 +3,10 @@ import { BigNumber } from 'ethers';
 
 import Contracts from './helpers/Contracts';
 
-describe('ReentrancyGuard', () => {
-    let guard;
-    let attacker;
+let guard: any;
+let attacker: any;
 
+describe('ReentrancyGuard', () => {
     beforeEach(async () => {
         guard = await Contracts.TestReentrancyGuard.deploy();
         attacker = await Contracts.TestReentrancyGuardAttacker.deploy(guard.address);

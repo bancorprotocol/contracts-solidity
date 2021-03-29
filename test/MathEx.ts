@@ -1,17 +1,16 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { Decimal } = require('./helpers/MathUtils.js');
-const MathUtils = require('./helpers/MathUtils');
+import MathUtils from './helpers/MathUtils';
 
 import Contracts from './helpers/Contracts';
 
-const MAX_UINT128 = Decimal(2).pow(128).sub(1);
-const MAX_UINT256 = Decimal(2).pow(256).sub(1);
-const SCALES = [6, 18, 30].map((n) => Decimal(10).pow(n)).concat(MAX_UINT128);
+const MAX_UINT128 = new MathUtils.Decimal(2).pow(128).sub(1);
+const MAX_UINT256 = new MathUtils.Decimal(2).pow(256).sub(1);
+const SCALES = [6, 18, 30].map((n) => new MathUtils.Decimal(10).pow(n)).concat(MAX_UINT128);
 
 describe('MathEx', () => {
-    let mathContract;
+    let mathContract: any;
 
     before(async () => {
         mathContract = await Contracts.TestMathEx.deploy();
@@ -81,9 +80,9 @@ describe('MathEx', () => {
     }
 
     for (const scale of SCALES) {
-        for (let i = Decimal(1); i.lte(scale); i = i.mul(10)) {
+        for (let i = new MathUtils.Decimal(1); i.lte(scale); i = i.mul(10)) {
             const a = MAX_UINT256.divToInt(scale).mul(i).add(1);
-            for (let j = Decimal(1); j.lte(scale); j = j.mul(10)) {
+            for (let j = new MathUtils.Decimal(1); j.lte(scale); j = j.mul(10)) {
                 const b = MAX_UINT256.divToInt(scale).mul(j).add(1);
                 it(`reducedRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
                     const expected = MathUtils.reducedRatio(a, b, scale);
@@ -107,9 +106,9 @@ describe('MathEx', () => {
     }
 
     for (const scale of SCALES) {
-        for (let i = Decimal(1); i.lte(scale); i = i.mul(10)) {
+        for (let i = new MathUtils.Decimal(1); i.lte(scale); i = i.mul(10)) {
             const a = MAX_UINT256.divToInt(scale).mul(i).add(1);
-            for (let j = Decimal(1); j.lte(scale); j = j.mul(10)) {
+            for (let j = new MathUtils.Decimal(1); j.lte(scale); j = j.mul(10)) {
                 const b = MAX_UINT256.divToInt(scale).mul(j).add(1);
                 it(`normalizedRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
                     const expected = MathUtils.normalizedRatio(a, b, scale);
@@ -133,9 +132,9 @@ describe('MathEx', () => {
     }
 
     for (const scale of SCALES) {
-        for (let i = Decimal(1); i.lte(scale); i = i.mul(10)) {
+        for (let i = new MathUtils.Decimal(1); i.lte(scale); i = i.mul(10)) {
             const a = MAX_UINT256.divToInt(scale).mul(i).add(1);
-            for (let j = Decimal(i); j.lte(scale); j = j.mul(10)) {
+            for (let j = new MathUtils.Decimal(i); j.lte(scale); j = j.mul(10)) {
                 const b = MAX_UINT256.divToInt(scale).mul(j).add(1);
                 it(`accurateRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
                     const expected = MathUtils.accurateRatio(a, b, scale);
@@ -146,7 +145,7 @@ describe('MathEx', () => {
         }
     }
 
-    for (const scale of [1, 2, 3, 4].map((x) => Decimal(x))) {
+    for (const scale of [1, 2, 3, 4].map((x) => new MathUtils.Decimal(x))) {
         for (const a of [
             MAX_UINT256.div(3).floor(),
             MAX_UINT256.div(3).ceil(),
@@ -212,9 +211,9 @@ describe('MathEx', () => {
         }
     }
 
-    function expectAlmostEqual(actual, expected, range) {
-        const x = Decimal(expected[0]).mul(actual[1].toString());
-        const y = Decimal(expected[1]).mul(actual[0].toString());
+    function expectAlmostEqual(actual: any, expected: any, range: any) {
+        const x = new MathUtils.Decimal(expected[0]).mul(actual[1].toString());
+        const y = new MathUtils.Decimal(expected[1]).mul(actual[0].toString());
         if (!x.eq(y)) {
             const absoluteError = x.sub(y).abs();
             const relativeError = x.div(y).sub(1).abs();

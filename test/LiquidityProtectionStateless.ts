@@ -1,21 +1,23 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { Decimal } = require('./helpers/MathUtils.js');
+import MathUtils from './helpers/MathUtils';
 
 import Contracts from './helpers/Contracts';
 
-const MIN_AMOUNT = Decimal(2).pow(0);
-const MAX_AMOUNT = Decimal(2).pow(127);
+const MIN_AMOUNT = new MathUtils.Decimal(2).pow(0);
+const MAX_AMOUNT = new MathUtils.Decimal(2).pow(127);
 
-const MIN_RATIO = Decimal(2).pow(256 / 4);
-const MAX_RATIO = Decimal(2).pow(256 / 3);
+const MIN_RATIO = new MathUtils.Decimal(2).pow(256 / 4);
+const MAX_RATIO = new MathUtils.Decimal(2).pow(256 / 3);
 
 const MIN_DURATION = 30 * 24 * 60 * 60;
 const MAX_DURATION = 100 * 24 * 60 * 60;
 
-let liquidityProtection;
-let owner;
+let liquidityProtection: any;
+let owner: any;
+let accounts: any;
 
 describe('LiquidityProtectionStateless', () => {
     before(async () => {
@@ -177,7 +179,7 @@ describe('LiquidityProtectionStateless', () => {
         compensationAmountTest(amounts, fees, lossNs, lossDs, levelNs, levelDs, range);
     });
 
-    function removeLiquidityTargetAmountTest(amounts, durations, deviation, range) {
+    function removeLiquidityTargetAmountTest(amounts: any, durations: any, deviation: any, range: any) {
         let testNum = 0;
         const numOfTest = amounts.length ** 10 * durations.length ** 1;
 
@@ -187,16 +189,16 @@ describe('LiquidityProtectionStateless', () => {
                     for (const reserveAmount of amounts) {
                         for (const addSpotRateN of amounts) {
                             for (const addSpotRateD of amounts) {
-                                for (const removeSpotRateN of amounts.map((amount) =>
+                                for (const removeSpotRateN of amounts.map((amount: any) =>
                                     fixedDev(amount, addSpotRateN, deviation)
                                 )) {
-                                    for (const removeSpotRateD of amounts.map((amount) =>
+                                    for (const removeSpotRateD of amounts.map((amount: any) =>
                                         fixedDev(amount, addSpotRateD, deviation)
                                     )) {
-                                        for (const removeAverageRateN of amounts.map((amount) =>
+                                        for (const removeAverageRateN of amounts.map((amount: any) =>
                                             fixedDev(amount, removeSpotRateN, deviation)
                                         )) {
-                                            for (const removeAverageRateD of amounts.map((amount) =>
+                                            for (const removeAverageRateD of amounts.map((amount: any) =>
                                                 fixedDev(amount, removeSpotRateD, deviation)
                                             )) {
                                                 for (const timeElapsed of durations) {
@@ -245,7 +247,11 @@ describe('LiquidityProtectionStateless', () => {
                                                             removeAverageRateD,
                                                             timeElapsed
                                                         );
-                                                        expectAlmostEqual(Decimal(actual.toString()), expected, range);
+                                                        expectAlmostEqual(
+                                                            new MathUtils.Decimal(actual.toString()),
+                                                            expected,
+                                                            range
+                                                        );
                                                     });
                                                 }
                                             }
@@ -261,14 +267,14 @@ describe('LiquidityProtectionStateless', () => {
     }
 
     function protectedAmountPlusFeeTest(
-        poolAmounts,
-        poolRateNs,
-        poolRateDs,
-        addRateNs,
-        addRateDs,
-        removeRateNs,
-        removeRateDs,
-        range
+        poolAmounts: any,
+        poolRateNs: any,
+        poolRateDs: any,
+        addRateNs: any,
+        addRateDs: any,
+        removeRateNs: any,
+        removeRateDs: any,
+        range: any
     ) {
         let testNum = 0;
         const numOfTest = [
@@ -309,7 +315,7 @@ describe('LiquidityProtectionStateless', () => {
                                             removeRateN,
                                             removeRateD
                                         );
-                                        expectAlmostEqual(Decimal(actual.toString()), expected, range);
+                                        expectAlmostEqual(new MathUtils.Decimal(actual.toString()), expected, range);
                                     });
                                 }
                             }
@@ -320,7 +326,7 @@ describe('LiquidityProtectionStateless', () => {
         }
     }
 
-    function impLossTest(initialRateNs, initialRateDs, currentRateNs, currentRateDs, range) {
+    function impLossTest(initialRateNs: any, initialRateDs: any, currentRateNs: any, currentRateDs: any, range: any) {
         let testNum = 0;
         const numOfTest = [initialRateNs, initialRateDs, currentRateNs, currentRateDs].reduce(
             (a, b) => a * b.length,
@@ -341,7 +347,11 @@ describe('LiquidityProtectionStateless', () => {
                                 currentRateN,
                                 currentRateD
                             );
-                            expectAlmostEqual(Decimal(actual[0].toString()).div(actual[1].toString()), expected, range);
+                            expectAlmostEqual(
+                                new MathUtils.Decimal(actual[0].toString()).div(actual[1].toString()),
+                                expected,
+                                range
+                            );
                         });
                     }
                 }
@@ -349,7 +359,15 @@ describe('LiquidityProtectionStateless', () => {
         }
     }
 
-    function compensationAmountTest(amounts, fees, lossNs, lossDs, levelNs, levelDs, range) {
+    function compensationAmountTest(
+        amounts: any,
+        fees: any,
+        lossNs: any,
+        lossDs: any,
+        levelNs: any,
+        levelDs: any,
+        range: any
+    ) {
         let testNum = 0;
         const numOfTest = [amounts, fees, lossNs, lossDs, levelNs, levelDs].reduce((a, b) => a * b.length, 1);
 
@@ -372,7 +390,7 @@ describe('LiquidityProtectionStateless', () => {
                                         levelN,
                                         levelD
                                     );
-                                    expectAlmostEqual(Decimal(actual.toString()), expected, range);
+                                    expectAlmostEqual(new MathUtils.Decimal(actual.toString()), expected, range);
                                 });
                             }
                         }
@@ -383,24 +401,26 @@ describe('LiquidityProtectionStateless', () => {
     }
 
     function removeLiquidityTargetAmount(
-        poolTokenRateN,
-        poolTokenRateD,
-        poolAmount,
-        reserveAmount,
-        addSpotRateN,
-        addSpotRateD,
-        removeSpotRateN,
-        removeSpotRateD,
-        removeAverageRateN,
-        removeAverageRateD,
-        timeElapsed
+        poolTokenRateN: any,
+        poolTokenRateD: any,
+        poolAmount: any,
+        reserveAmount: any,
+        addSpotRateN: any,
+        addSpotRateD: any,
+        removeSpotRateN: any,
+        removeSpotRateD: any,
+        removeAverageRateN: any,
+        removeAverageRateD: any,
+        timeElapsed: any
     ) {
-        const poolTokenRate = Decimal(poolTokenRateN.toString()).div(poolTokenRateD.toString());
-        const addSpotRate = Decimal(addSpotRateN.toString()).div(addSpotRateD.toString());
-        const removeSpotRate = Decimal(removeSpotRateN.toString()).div(removeSpotRateD.toString());
-        const removeAverageRate = Decimal(removeAverageRateN.toString()).div(removeAverageRateD.toString());
-        poolAmount = Decimal(poolAmount.toString());
-        reserveAmount = Decimal(reserveAmount.toString());
+        const poolTokenRate = new MathUtils.Decimal(poolTokenRateN.toString()).div(poolTokenRateD.toString());
+        const addSpotRate = new MathUtils.Decimal(addSpotRateN.toString()).div(addSpotRateD.toString());
+        const removeSpotRate = new MathUtils.Decimal(removeSpotRateN.toString()).div(removeSpotRateD.toString());
+        const removeAverageRate = new MathUtils.Decimal(removeAverageRateN.toString()).div(
+            removeAverageRateD.toString()
+        );
+        poolAmount = new MathUtils.Decimal(poolAmount.toString());
+        reserveAmount = new MathUtils.Decimal(reserveAmount.toString());
 
         // calculate the protected amount of reserve tokens plus accumulated fee before compensation
         const reserveAmountPlusFee = removeSpotRate.div(addSpotRate).sqrt().mul(poolTokenRate).mul(poolAmount);
@@ -412,15 +432,23 @@ describe('LiquidityProtectionStateless', () => {
 
         // calculate the protection level
         const delay = timeElapsed < MIN_DURATION ? 0 : timeElapsed;
-        const level = Decimal(Math.min(delay, MAX_DURATION)).div(MAX_DURATION);
+        const level = new MathUtils.Decimal(Math.min(delay, MAX_DURATION)).div(MAX_DURATION);
 
         // calculate the compensation amount
-        return total.mul(Decimal(1).sub(loss)).add(reserveAmount.mul(loss).mul(level));
+        return total.mul(new MathUtils.Decimal(1).sub(loss)).add(reserveAmount.mul(loss).mul(level));
     }
 
-    function protectedAmountPlusFee(poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD) {
+    function protectedAmountPlusFee(
+        poolAmount: any,
+        poolRateN: any,
+        poolRateD: any,
+        addRateN: any,
+        addRateD: any,
+        removeRateN: any,
+        removeRateD: any
+    ) {
         [poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD] = [...arguments].map(
-            (x) => new Decimal(x.toString())
+            (x) => new MathUtils.Decimal(x.toString())
         );
         return removeRateN
             .div(removeRateD)
@@ -432,35 +460,35 @@ describe('LiquidityProtectionStateless', () => {
             .mul(poolAmount);
     }
 
-    function impLoss(initialRateN, initialRateD, currentRateN, currentRateD) {
+    function impLoss(initialRateN: any, initialRateD: any, currentRateN: any, currentRateD: any) {
         const ratioN = currentRateN.mul(initialRateD);
         const ratioD = currentRateD.mul(initialRateN);
-        const ratio = Decimal(ratioN.toString()).div(ratioD.toString());
+        const ratio = new MathUtils.Decimal(ratioN.toString()).div(ratioD.toString());
         return ratio.sqrt().mul(2).div(ratio.add(1)).sub(1).neg();
     }
 
-    function compensationAmount(amount, total, lossN, lossD, levelN, levelD) {
-        [amount, total, lossN, lossD, levelN, levelD] = [...arguments].map((x) => new Decimal(x.toString()));
+    function compensationAmount(amount: any, total: any, lossN: any, lossD: any, levelN: any, levelD: any) {
+        [amount, total, lossN, lossD, levelN, levelD] = [...arguments].map((x) => new MathUtils.Decimal(x.toString()));
         return total
             .mul(lossD.sub(lossN))
             .div(lossD)
             .add(lossN.mul(levelN).mul(amount).div(lossD.mul(levelD)));
     }
 
-    function fixedDev(a, b, p) {
-        const x = Decimal(a.toString());
-        const y = Decimal(b.toString());
-        const q = Decimal(1).sub(p);
+    function fixedDev(a: any, b: any, p: any) {
+        const x = new MathUtils.Decimal(a.toString());
+        const y = new MathUtils.Decimal(b.toString());
+        const q = new MathUtils.Decimal(1).sub(p);
         if (x.lt(y.mul(q))) {
-            return BigNumber.from(y.mul(q).toFixed(0, Decimal.ROUND_UP));
+            return BigNumber.from(y.mul(q).toFixed(0, MathUtils.Decimal.ROUND_UP));
         }
         if (x.gt(y.div(q))) {
-            return BigNumber.from(y.div(q).toFixed(0, Decimal.ROUND_DOWN));
+            return BigNumber.from(y.div(q).toFixed(0, MathUtils.Decimal.ROUND_DOWN));
         }
         return a;
     }
 
-    function expectAlmostEqual(actual, expected, range) {
+    function expectAlmostEqual(actual: any, expected: any, range: any) {
         if (!actual.eq(expected)) {
             const absoluteError = actual.sub(expected).abs();
             const relativeError = actual.div(expected).sub(1).abs();

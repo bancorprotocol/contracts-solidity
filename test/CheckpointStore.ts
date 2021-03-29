@@ -1,23 +1,26 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { duration } = require('./helpers/Time');
-const { roles } = require('./helpers/Constants');
-const { ROLE_OWNER, ROLE_SEEDER } = roles;
+import Constants from './helpers/Constants';
+const { ROLE_OWNER, ROLE_SEEDER } = Constants.roles;
 
+import Utils from './helpers/Utils';
 import Contracts from './helpers/Contracts';
+import { TestCheckpointStore } from '../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
-let checkpointStore;
+let checkpointStore: TestCheckpointStore;
 
-let now;
+let now: BigNumber;
 
-let accounts;
-let owner;
-let seeder;
-let nonSeeder;
-let nonOwner;
-let user;
-let user2;
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
+let seeder: SignerWithAddress;
+let nonSeeder: SignerWithAddress;
+let nonOwner: SignerWithAddress;
+let user: SignerWithAddress;
+let user2: SignerWithAddress;
 
 describe('CheckpointStore', () => {
     before(async () => {
@@ -52,7 +55,7 @@ describe('CheckpointStore', () => {
     });
 
     describe('adding checkpoints', () => {
-        const testCheckpoint = async (user) => {
+        const testCheckpoint = async (user: string) => {
             const res = await checkpointStore.connect(owner).addCheckpoint(user);
 
             expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, now);
@@ -60,7 +63,7 @@ describe('CheckpointStore', () => {
             expect(await checkpointStore.checkpoint(user)).to.be.equal(now);
         };
 
-        const testPastCheckpoint = async (user, time) => {
+        const testPastCheckpoint = async (user: string, time: BigNumber) => {
             const res = await checkpointStore.connect(seeder).addPastCheckpoint(user, time);
 
             expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, time);
@@ -68,7 +71,7 @@ describe('CheckpointStore', () => {
             expect(await checkpointStore.checkpoint(user)).to.be.equal(time);
         };
 
-        const testPastCheckpoints = async (users, times) => {
+        const testPastCheckpoints = async (users: string[], times: BigNumber[]) => {
             const res = await checkpointStore.connect(seeder).addPastCheckpoints(users, times);
 
             for (let i = 0; i < users.length; i++) {
@@ -82,13 +85,13 @@ describe('CheckpointStore', () => {
             it('should allow an owner to add checkpoints', async () => {
                 await testCheckpoint(user.address);
 
-                now = now.add(duration.days(1));
+                now = now.add(Utils.duration.days(1));
                 await checkpointStore.setTime(now);
                 await testCheckpoint(user.address);
 
                 await testCheckpoint(user2.address);
 
-                now = now.add(duration.days(5));
+                now = now.add(Utils.duration.days(5));
                 await checkpointStore.setTime(now);
                 await testCheckpoint(user2.address);
             });
@@ -108,7 +111,7 @@ describe('CheckpointStore', () => {
             it('should revert when an owner attempts to add checkpoints in an incorrect order', async () => {
                 await testCheckpoint(user.address);
 
-                now = now.sub(duration.days(1));
+                now = now.sub(Utils.duration.days(1));
                 await checkpointStore.setTime(now);
 
                 await expect(checkpointStore.connect(owner).addCheckpoint(user.address)).to.be.revertedWith(
@@ -191,7 +194,7 @@ describe('CheckpointStore', () => {
                 await expect(
                     checkpointStore
                         .connect(seeder)
-                        .addPastCheckpoints([user.address, user.address], [now.sub(duration.seconds(1)), future])
+                        .addPastCheckpoints([user.address, user.address], [now.sub(Utils.duration.seconds(1)), future])
                 ).to.be.revertedWith('ERR_INVALID_TIME');
             });
 
