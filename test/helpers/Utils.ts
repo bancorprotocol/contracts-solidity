@@ -1,5 +1,7 @@
-import { BigNumber } from 'ethers';
+import { BigNumber, ContractTransaction } from 'ethers';
 import { ethers } from 'hardhat';
+import { TestStandardToken } from '../../typechain';
+import Constants from './Constants';
 
 const advanceBlock = async () => {
     return await ethers.provider.send('evm_mine', [new Date().getTime()]);
@@ -10,10 +12,26 @@ const latest = async () => {
     return BigNumber.from(block.timestamp);
 };
 
+const getBalance = async (token: TestStandardToken, address: string, account: string) => {
+    if (address === Constants.NATIVE_TOKEN_ADDRESS) {
+        return ethers.provider.getBalance(account);
+    }
+
+    return token.balanceOf(account);
+};
+
+const getTransactionCost = async (txResult: ContractTransaction) => {
+    const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
+    return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
+};
+
 export default {
+    // General
+    getBalance,
+    getTransactionCost,
+    // Time
     advanceBlock,
     latest,
-    //
     duration: {
         seconds: function (val: any) {
             return BigNumber.from(val);

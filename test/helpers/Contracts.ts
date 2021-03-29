@@ -1,7 +1,15 @@
 import { Contract, ContractFactory } from '@ethersproject/contracts';
 import { ethers } from 'hardhat';
 
-import { TestBancorFormula } from '../../typechain';
+import {
+    BancorNetwork,
+    ContractRegistry,
+    DSToken,
+    TestBancorFormula,
+    TestBancorNetwork,
+    TestNonStandardToken,
+    TestStandardToken
+} from '../../typechain';
 
 let contractStore: { [key: string]: ContractFactory } = {};
 
@@ -53,24 +61,31 @@ const deployOrAttach = <T extends Contract>(contractName: string) => {
     };
 };
 
+export type ContractsType =
+    | 'TestBancorFormula'
+    | 'BancorNetwork'
+    | 'LiquidityPoolV1Converter'
+    | 'StandardPoolConverter'
+    | 'FixedRatePoolConverter';
+
 export default {
     TestBancorFormula: deployOrAttach<TestBancorFormula>('TestBancorFormula'),
-    BancorNetwork: deployOrAttach('BancorNetwork'),
+    BancorNetwork: deployOrAttach<BancorNetwork>('BancorNetwork'),
     BancorFormula: deployOrAttach('BancorFormula'),
     NetworkSettings: deployOrAttach('NetworkSettings'),
-    ContractRegistry: deployOrAttach('ContractRegistry'),
+    ContractRegistry: deployOrAttach<ContractRegistry>('ContractRegistry'),
     ConverterRegistry: deployOrAttach('ConverterRegistry'),
     ConverterFactory: deployOrAttach('ConverterFactory'),
-    TestStandardToken: deployOrAttach('TestStandardToken'),
-    TestNonStandardToken: deployOrAttach('TestNonStandardToken'),
-    TestBancorNetwork: deployOrAttach('TestBancorNetwork'),
+    TestStandardToken: deployOrAttach<TestStandardToken>('TestStandardToken'),
+    TestNonStandardToken: deployOrAttach<TestNonStandardToken>('TestNonStandardToken'),
+    TestBancorNetwork: deployOrAttach<TestBancorNetwork>('TestBancorNetwork'),
     ConverterV27OrLowerWithoutFallback: deployOrAttach('ConverterV27OrLowerWithoutFallback'),
     ConverterV27OrLowerWithFallback: deployOrAttach('ConverterV27OrLowerWithFallback'),
     ConverterV28OrHigherWithoutFallback: deployOrAttach('ConverterV28OrHigherWithoutFallback'),
     ConverterV28OrHigherWithFallback: deployOrAttach('ConverterV28OrHigherWithFallback'),
     LiquidityPoolV1Converter: deployOrAttach('LiquidityPoolV1Converter'),
     TestCheckpointStore: deployOrAttach('TestCheckpointStore'),
-    DSToken: deployOrAttach('DSToken'),
+    DSToken: deployOrAttach<DSToken>('DSToken'),
     BancorX: deployOrAttach('BancorX'),
     TestContractRegistryClient: deployOrAttach('TestContractRegistryClient'),
     ConversionPathFinder: deployOrAttach('ConversionPathFinder'),

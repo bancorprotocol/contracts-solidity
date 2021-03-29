@@ -1,31 +1,43 @@
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
+import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
+import {
+    BancorNetwork,
+    ContractRegistry,
+    DSToken,
+    TestBancorNetwork,
+    TestNonStandardToken,
+    TestStandardToken
+} from '../typechain';
 
-const ConverterHelper = require('./helpers/Converter');
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
+import Utils from './helpers/Utils';
 
-const Contracts = require('./helpers/Contracts');
+import ConverterHelper from './helpers/Converter';
+import Constants from './helpers/Constants';
+import Contracts from './helpers/Contracts';
 
-let network;
-let bntToken;
-let erc20Token1;
-let erc20Token2;
-let erc20Token3;
-let anchor1;
-let anchor2;
-let anchor3;
-let anchor4;
+let network: TestBancorNetwork;
+let bntToken: TestStandardToken;
+let erc20Token1: TestStandardToken;
+let erc20Token2: TestNonStandardToken;
+let erc20Token3: TestStandardToken;
+let anchor1: DSToken;
+let anchor2: DSToken;
+let anchor3: DSToken;
+let anchor4: DSToken;
 let converter1;
 let converter2;
 let converter3;
 let converter4;
-let bancorNetwork;
-let contractRegistry;
-let pathsTokens;
-let paths;
+let bancorNetwork: BancorNetwork;
+let contractRegistry: ContractRegistry;
+let pathsTokens: any;
+let paths: any;
 
-let sender;
-let sender2;
+let accounts: SignerWithAddress[];
+let sender: SignerWithAddress;
+let sender2: SignerWithAddress;
 
 const OLD_CONVERTER_VERSION = 9;
 const MIN_RETURN = BigNumber.from(1);
@@ -44,7 +56,7 @@ Token network structure:
 
 // Error: invalid BigNumber value
 describe('BancorNetwork', () => {
-    const initPaths = (tokens) => {
+    const initPaths = (tokens: any) => {
         const bntToken = tokens[0];
         const erc20Token1 = tokens[1];
         const erc20Token2 = tokens[2];
@@ -102,26 +114,13 @@ describe('BancorNetwork', () => {
                 const pathTokens = pathsTokens[sourceSymbol][targetSymbol];
                 for (let i = 0; i < pathTokens.length; i++) {
                     if (pathTokens[i] === '') {
-                        path[i] = NATIVE_TOKEN_ADDRESS;
+                        path[i] = Constants.NATIVE_TOKEN_ADDRESS;
                     } else {
                         path[i] = pathTokens[i].address;
                     }
                 }
             }
         }
-    };
-
-    const getBalance = async (token, address, account) => {
-        if (address === NATIVE_TOKEN_ADDRESS) {
-            return balance.current(account);
-        }
-
-        return token.balanceOf(account);
-    };
-
-    const getTransactionCost = async (txResult) => {
-        const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
-        return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
     };
 
     before(async () => {
@@ -135,13 +134,13 @@ describe('BancorNetwork', () => {
 
         const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
 
         const converterFactory = await Contracts.ConverterFactory.deploy();
-        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
 
         const networkSettings = await Contracts.NetworkSettings.deploy(sender.address, 0);
-        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
+        await contractRegistry.registerAddress(Constants.registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
     describe('Conversions', () => {
@@ -149,15 +148,18 @@ describe('BancorNetwork', () => {
             network = await Contracts.TestBancorNetwork.deploy(0, 0);
 
             bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
-            await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+            await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
 
             const converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
             const converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
-            await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
-            await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+            await contractRegistry.registerAddress(Constants.registry.CONVERTER_REGISTRY, converterRegistry.address);
+            await contractRegistry.registerAddress(
+                Constants.registry.CONVERTER_REGISTRY_DATA,
+                converterRegistryData.address
+            );
 
             const pathFinder = await Contracts.ConversionPathFinder.deploy(contractRegistry.address);
-            await contractRegistry.registerAddress(registry.CONVERSION_PATH_FINDER, pathFinder.address);
+            await contractRegistry.registerAddress(Constants.registry.CONVERSION_PATH_FINDER, pathFinder.address);
 
             bntToken = await Contracts.TestStandardToken.deploy('BNT', 'BNT', 2, BigNumber.from(10000000));
             erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ERC1', 2, BigNumber.from(1000000));
@@ -176,17 +178,17 @@ describe('BancorNetwork', () => {
             anchor4 = await Contracts.DSToken.deploy('Anchor4', 'ERC3', 2);
             await anchor4.issue(sender.address, BigNumber.from(2500000));
 
-            await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
+            await contractRegistry.registerAddress(Constants.registry.BNT_TOKEN, bntToken.address);
 
             converter1 = await Contracts.LiquidityPoolV1Converter.deploy(anchor1.address, contractRegistry.address, 0);
             await converter1.addReserve(bntToken.address, BigNumber.from(500000));
-            await converter1.addReserve(NATIVE_TOKEN_ADDRESS, BigNumber.from(500000));
+            await converter1.addReserve(Constants.NATIVE_TOKEN_ADDRESS, BigNumber.from(500000));
 
             converter2 = await Contracts.LiquidityPoolV1Converter.deploy(anchor2.address, contractRegistry.address, 0);
             await converter2.addReserve(bntToken.address, BigNumber.from(300000));
             await converter2.addReserve(erc20Token1.address, BigNumber.from(150000));
 
-            converter3 = await ConverterHelper.new(
+            converter3 = await ConverterHelper.deploy(
                 1,
                 anchor3.address,
                 contractRegistry.address,
@@ -261,33 +263,33 @@ describe('BancorNetwork', () => {
                     const targetToken = pathTokens[pathTokens.length - 1];
 
                     const amount = BigNumber.from(1000);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (sourceSymbol === 'ETH') {
                         value = amount;
                     } else {
                         await sourceToken.connect(sender).approve(bancorNetwork.address, amount);
                     }
 
-                    const prevBalance = await getBalance(targetToken, targetSymbol, sender.address);
-                    const returnAmount = await bancorNetwork.convertByPath2(
+                    const prevBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
+                    const returnAmount = await bancorNetwork.callStatic.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
-                        ZERO_ADDRESS,
+                        Constants.ZERO_ADDRESS,
                         { value: value }
                     );
                     const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
-                        ZERO_ADDRESS,
+                        Constants.ZERO_ADDRESS,
                         { value: value }
                     );
-                    const postBalance = await getBalance(targetToken, targetSymbol, sender.address);
+                    const postBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
 
                     let transactionCost = BigNumber.from(0);
                     if (targetSymbol === 'ETH') {
-                        transactionCost = await getTransactionCost(res);
+                        transactionCost = await Utils.getTransactionCost(res);
                     }
 
                     expect(postBalance).to.be.equal(prevBalance.add(returnAmount).sub(transactionCost));
@@ -299,7 +301,7 @@ describe('BancorNetwork', () => {
                     const targetToken = pathTokens[pathTokens.length - 1];
 
                     const amount = BigNumber.from(1000);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (sourceSymbol === 'ETH') {
                         value = amount;
                     } else {
@@ -307,26 +309,26 @@ describe('BancorNetwork', () => {
                     }
 
                     const beneficiary = accounts[2];
-                    const prevBalance = await getBalance(targetToken, targetSymbol, beneficiary.address);
-                    const returnAmount = await bancorNetwork.convertByPath2(
+                    const prevBalance = await Utils.getBalance(targetToken, targetSymbol, beneficiary.address);
+                    const returnAmount = await bancorNetwork.callStatic.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
-                        beneficiary,
+                        beneficiary.address,
                         { value: value }
                     );
                     const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
-                        beneficiary,
+                        beneficiary.address,
                         { value: value }
                     );
-                    const postBalance = await getBalance(targetToken, targetSymbol, beneficiary.address);
+                    const postBalance = await Utils.getBalance(targetToken, targetSymbol, beneficiary.address);
 
                     let transactionCost = BigNumber.from(0);
                     if (targetSymbol === 'ETH') {
-                        transactionCost = await getTransactionCost(res);
+                        transactionCost = await Utils.getTransactionCost(res);
                     }
 
                     expect(postBalance).to.be.equal(prevBalance.add(returnAmount).sub(transactionCost));
@@ -338,7 +340,7 @@ describe('BancorNetwork', () => {
                     const targetToken = pathTokens[pathTokens.length - 1];
 
                     const amount = BigNumber.from(1000);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (sourceSymbol === 'ETH') {
                         value = amount;
                     } else {
@@ -346,19 +348,19 @@ describe('BancorNetwork', () => {
                     }
 
                     const expectedReturn = await bancorNetwork.rateByPath(paths[sourceSymbol][targetSymbol], amount);
-                    const prevBalance = await getBalance(targetToken, targetSymbol, sender.address);
+                    const prevBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
                     const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
-                        ZERO_ADDRESS,
+                        Constants.ZERO_ADDRESS,
                         { value: value }
                     );
-                    const postBalance = await getBalance(targetToken, targetSymbol, sender.address);
+                    const postBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
 
                     let transactionCost = BigNumber.from(0);
                     if (targetSymbol === 'ETH') {
-                        transactionCost = await getTransactionCost(res);
+                        transactionCost = await Utils.getTransactionCost(res);
                     }
 
                     expect(expectedReturn).to.be.equal(postBalance.sub(prevBalance.sub(transactionCost)));
@@ -370,7 +372,7 @@ describe('BancorNetwork', () => {
                     const sourceToken = pathTokens[0];
 
                     const amount = BigNumber.from(1000);
-                    let value = 0;
+                    let value = BigNumber.from(0);
                     if (sourceSymbol === 'ETH') {
                         value = amount;
                     } else {
@@ -383,7 +385,7 @@ describe('BancorNetwork', () => {
                             paths[sourceSymbol][targetSymbol],
                             amount,
                             expectedReturn.add(BigNumber.from(1)),
-                            ZERO_ADDRESS,
+                            Constants.ZERO_ADDRESS,
                             { value: value }
                         )
                     ).to.be.revertedWith('ERR_RETURN_TOO_LOW');
@@ -392,7 +394,10 @@ describe('BancorNetwork', () => {
         }
 
         it('verifies that conversionPath returns the correct path', async () => {
-            const conversionPath = await bancorNetwork.conversionPath(erc20Token2.address, NATIVE_TOKEN_ADDRESS);
+            const conversionPath = await bancorNetwork.conversionPath(
+                erc20Token2.address,
+                Constants.NATIVE_TOKEN_ADDRESS
+            );
             const expectedPath = paths.ERC2.ETH;
             expect(conversionPath).not.to.be.empty;
             expect(conversionPath).to.have.lengthOf(expectedPath.length);
@@ -409,7 +414,7 @@ describe('BancorNetwork', () => {
             await expect(
                 bancorNetwork
                     .connect(sender)
-                    .convertByPath2(path, value.add(BigNumber.from(1)), MIN_RETURN, ZERO_ADDRESS, {
+                    .convertByPath2(path, value.add(BigNumber.from(1)), MIN_RETURN, Constants.ZERO_ADDRESS, {
                         value: value
                     })
             ).to.be.revertedWith('ERR_ETH_AMOUNT_MISMATCH');
@@ -419,7 +424,7 @@ describe('BancorNetwork', () => {
             const path = paths.ETH.ERC3;
             const value = BigNumber.from(10000);
 
-            await expect(bancorNetwork.convertFor(path, value, MIN_RETURN, sender)).to.be.reverted;
+            await expect(bancorNetwork.convertFor(path, value, MIN_RETURN, sender.address)).to.be.reverted;
         });
 
         it('should revert when calling convertFor with ether amount lower than the ETH amount sent with the request', async () => {
@@ -434,7 +439,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor with too-short path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor4.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor4.address];
             const value = BigNumber.from(1000);
 
             await expect(
@@ -443,7 +448,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor with even-length path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
             const value = BigNumber.from(1000);
 
             await expect(
@@ -468,7 +473,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convert with too-short path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor4.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor4.address];
             const value = BigNumber.from(1000);
 
             await expect(
@@ -477,7 +482,7 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convert with even-length path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor4.address];
             const value = BigNumber.from(1000);
 
             await expect(
@@ -553,14 +558,14 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when attempting to call rateByPath on a path with fewer than 3 elements', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address];
             const value = BigNumber.from(1000);
 
             await expect(bancorNetwork.rateByPath(invalidPath, value)).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
         it('should revert when attempting to call rateByPath on a path with an even number of elements', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = BigNumber.from(1000);
 
             await expect(bancorNetwork.rateByPath(invalidPath, value)).to.be.revertedWith('ERR_INVALID_PATH');
@@ -576,11 +581,11 @@ describe('BancorNetwork', () => {
                 value,
                 MIN_RETURN,
                 sender2.address,
-                ZERO_ADDRESS,
+                Constants.ZERO_ADDRESS,
                 0,
                 { value: value }
             );
-            await bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0, {
+            await bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2.address, Constants.ZERO_ADDRESS, 0, {
                 value: value
             });
 
@@ -595,10 +600,10 @@ describe('BancorNetwork', () => {
             const path = paths.ETH.ERC3;
             const returnAmount = await bancorNetwork
                 .connect(sender2)
-                .callStatic.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, {
+                .callStatic.convert2(path, value, MIN_RETURN, Constants.ZERO_ADDRESS, 0, {
                     value: value
                 });
-            await bancorNetwork.connect(sender2).convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, {
+            await bancorNetwork.connect(sender2).convert2(path, value, MIN_RETURN, Constants.ZERO_ADDRESS, 0, {
                 value: value
             });
 
@@ -610,8 +615,8 @@ describe('BancorNetwork', () => {
             const path = paths.ETH.ERC2;
             const value = BigNumber.from(1000);
 
-            await expect(bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0)).to.be
-                .reverted;
+            await expect(bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2.address, Constants.ZERO_ADDRESS, 0))
+                .to.be.reverted;
         });
 
         it('should revert when calling convertFor2 with ether amount different than the amount sent', async () => {
@@ -624,7 +629,7 @@ describe('BancorNetwork', () => {
                     value.add(BigNumber.from(1)),
                     MIN_RETURN,
                     sender2.address,
-                    ZERO_ADDRESS,
+                    Constants.ZERO_ADDRESS,
                     0,
                     {
                         value
@@ -634,22 +639,22 @@ describe('BancorNetwork', () => {
         });
 
         it('should revert when calling convertFor2 with too-short path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address];
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.convertFor2(invalidPath, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0, {
+                bancorNetwork.convertFor2(invalidPath, value, MIN_RETURN, sender2.address, Constants.ZERO_ADDRESS, 0, {
                     value: value
                 })
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
         it('should revert when calling convertFor2 with even-length path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.convertFor2(invalidPath, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0, {
+                bancorNetwork.convertFor2(invalidPath, value, MIN_RETURN, sender2.address, Constants.ZERO_ADDRESS, 0, {
                     value: value
                 })
             ).to.be.revertedWith('ERR_INVALID_PATH');
@@ -659,8 +664,8 @@ describe('BancorNetwork', () => {
             const path = paths.ETH.BNT;
             const value = BigNumber.from(1000);
 
-            await expect(bancorNetwork.connect(sender).convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0)).to.be
-                .reverted;
+            await expect(bancorNetwork.connect(sender).convert2(path, value, MIN_RETURN, Constants.ZERO_ADDRESS, 0)).to
+                .be.reverted;
         });
 
         it('should revert when calling convert2 with ether amount different than the amount sent', async () => {
@@ -670,29 +675,29 @@ describe('BancorNetwork', () => {
             await expect(
                 bancorNetwork
                     .connect(sender)
-                    .convert2(path, value.add(BigNumber.from(2)), MIN_RETURN, ZERO_ADDRESS, 0, {
+                    .convert2(path, value.add(BigNumber.from(2)), MIN_RETURN, Constants.ZERO_ADDRESS, 0, {
                         value: value
                     })
             ).to.be.revertedWith('ERR_ETH_AMOUNT_MISMATCH');
         });
 
         it('should revert when calling convert2 with too-short path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address];
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.connect(sender).convert2(invalidPath, value, MIN_RETURN, ZERO_ADDRESS, 0, {
+                bancorNetwork.connect(sender).convert2(invalidPath, value, MIN_RETURN, Constants.ZERO_ADDRESS, 0, {
                     value: value
                 })
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
         it('should revert when calling convert2 with even-length path', async () => {
-            const invalidPath = [NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
+            const invalidPath = [Constants.NATIVE_TOKEN_ADDRESS, anchor1.address, anchor2.address, anchor3.address];
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.connect(sender).convert2(invalidPath, value, MIN_RETURN, ZERO_ADDRESS, 0, {
+                bancorNetwork.connect(sender).convert2(invalidPath, value, MIN_RETURN, Constants.ZERO_ADDRESS, 0, {
                     value: value
                 })
             ).to.be.revertedWith('ERR_INVALID_PATH');
@@ -710,10 +715,17 @@ describe('BancorNetwork', () => {
                 value,
                 MIN_RETURN,
                 sender2.address,
-                ZERO_ADDRESS,
+                Constants.ZERO_ADDRESS,
                 0
             );
-            await bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0);
+            await bancorNetwork.claimAndConvertFor2(
+                path,
+                value,
+                MIN_RETURN,
+                sender2.address,
+                Constants.ZERO_ADDRESS,
+                0
+            );
 
             const balanceAfterTransfer = await erc20Token3.balanceOf(sender2.address);
             expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
@@ -722,8 +734,9 @@ describe('BancorNetwork', () => {
         it('should revert when calling claimAndConvertFor2 without approval', async () => {
             const path = paths.ERC1.ERC3;
             const value = BigNumber.from(1000);
-            await expect(bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2, ZERO_ADDRESS, 0)).to.be
-                .reverted;
+            await expect(
+                bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2.address, Constants.ZERO_ADDRESS, 0)
+            ).to.be.reverted;
         });
 
         it('verifies that claimAndConvert2 transfers the converted amount correctly', async () => {
@@ -737,10 +750,10 @@ describe('BancorNetwork', () => {
                 path,
                 value,
                 MIN_RETURN,
-                ZERO_ADDRESS,
+                Constants.ZERO_ADDRESS,
                 0
             );
-            await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
+            await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, Constants.ZERO_ADDRESS, 0);
 
             const balanceAfterTransfer = await erc20Token3.balanceOf(sender.address);
             expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
@@ -750,7 +763,8 @@ describe('BancorNetwork', () => {
             const path = paths.ERC1.ERC3;
             const value = BigNumber.from(1000);
 
-            await expect(bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0)).to.be.reverted;
+            await expect(bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, Constants.ZERO_ADDRESS, 0)).to.be
+                .reverted;
         });
 
         it('should revert when attempting to convert and passing an amount higher than the ETH amount sent with the request', async () => {
@@ -760,7 +774,7 @@ describe('BancorNetwork', () => {
             await expect(
                 bancorNetwork
                     .connect(sender2)
-                    .convert2(path, value.add(BigNumber.from(10)), MIN_RETURN, ZERO_ADDRESS, 0, {
+                    .convert2(path, value.add(BigNumber.from(10)), MIN_RETURN, Constants.ZERO_ADDRESS, 0, {
                         value: value
                     })
             ).to.be.revertedWith('ERR_ETH_AMOUNT_MISMATCH');
