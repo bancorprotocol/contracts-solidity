@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 const { ZERO_ADDRESS } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const name = 'Token1';
 const symbol = 'TKN1';

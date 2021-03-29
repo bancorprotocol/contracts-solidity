@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 const { ZERO_ADDRESS } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const portion1 = BigNumber.from(111);
 const portion2 = BigNumber.from(222);

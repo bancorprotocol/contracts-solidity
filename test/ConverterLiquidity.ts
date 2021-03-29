@@ -5,7 +5,7 @@ const { Decimal } = require('./helpers/MathUtils.js');
 
 const { NATIVE_TOKEN_ADDRESS, MAX_UINT256, registry } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let contractRegistry;
 let owner;

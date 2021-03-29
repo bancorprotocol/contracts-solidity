@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let contract;
 let owner;

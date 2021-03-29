@@ -5,7 +5,7 @@ const { Decimal } = require('./helpers/MathUtils.js');
 const { registry, roles } = require('./helpers/Constants');
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const INITIAL_AMOUNT = 1000000;
 

@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 const { Decimal } = require('./helpers/MathUtils.js');
 const MathUtils = require('./helpers/MathUtils');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);

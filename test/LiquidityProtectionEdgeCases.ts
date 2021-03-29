@@ -6,7 +6,7 @@ const { Decimal } = require('./helpers/MathUtils.js');
 
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);

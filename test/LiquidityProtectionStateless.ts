@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 const { Decimal } = require('./helpers/MathUtils.js');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const MIN_AMOUNT = Decimal(2).pow(0);
 const MAX_AMOUNT = Decimal(2).pow(127);

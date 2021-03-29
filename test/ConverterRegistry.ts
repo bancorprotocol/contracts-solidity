@@ -3,9 +3,9 @@ import { BigNumber } from 'ethers';
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
-const ConverterHelper = require('./helpers/Converter');
+import ConverterHelper from './helpers/Converter';
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let contractRegistry;
 let converterFactory;

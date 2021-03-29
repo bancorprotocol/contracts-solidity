@@ -1,9 +1,13 @@
+import { ethers } from 'hardhat';
+
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { advanceBlock } = require('./helpers/Time');
+import Utils from './helpers/utils';
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { BancorX } from '../typechain';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
@@ -18,13 +22,14 @@ const X_TRANSFER_ID = BigNumber.from(87654321);
 const EOS_ADDRESS = '0x3c69a194aaf415ba5d6afca734660d0a3d45acdc05d54cd1ca89a8988e7625b4';
 const EOS_BLOCKCHAIN = '0x4e8ebbefa452077428f93c9520d3edd60594ff452a29ac7d2ccc11d47f3ab95b';
 
-let bancorX;
+let bancorX: BancorX;
 
-let defaultSender;
-let reporter1;
-let reporter2;
-let reporter3;
-let nonOwner;
+let accounts: SignerWithAddress[];
+let defaultSender: SignerWithAddress;
+let reporter1: SignerWithAddress;
+let reporter2: SignerWithAddress;
+let reporter3: SignerWithAddress;
+let nonOwner: SignerWithAddress;
 
 describe('BancorX', () => {
     before(async () => {
@@ -193,13 +198,13 @@ describe('BancorX', () => {
             expect(await bancorX.getCurrentLockLimit()).to.be.equal(
                 MAX_LOCK_LIMIT.sub(amount).add(MIN_LIMIT.mul(BigNumber.from(i)))
             );
-            await advanceBlock();
+            await Utils.advanceBlock();
         }
 
         for (let i = 0; i < 3; i++) {
             expect(await bancorX.getCurrentLockLimit()).to.be.equal(MAX_LOCK_LIMIT);
 
-            await advanceBlock();
+            await Utils.advanceBlock();
         }
     });
 

@@ -5,7 +5,7 @@ const { duration } = require('./helpers/Time');
 const { roles } = require('./helpers/Constants');
 const { ROLE_OWNER, ROLE_SEEDER } = roles;
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let checkpointStore;
 

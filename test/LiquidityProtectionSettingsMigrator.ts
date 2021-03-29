@@ -3,7 +3,7 @@ const { roles } = require('./helpers/Constants');
 
 const rlp = require('rlp');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let networkToken;
 let registry;

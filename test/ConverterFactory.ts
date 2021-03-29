@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const Factories = {
     LiquidityPoolV1ConverterFactory: 'LiquidityPoolV1ConverterFactory',

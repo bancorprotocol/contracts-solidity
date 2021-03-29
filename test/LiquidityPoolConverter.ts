@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let bancorNetwork;
 let anchor;

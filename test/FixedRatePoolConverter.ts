@@ -6,7 +6,7 @@ const { duration, latest } = require('./helpers/Time');
 
 const { Decimal, divCeil } = require('./helpers/MathUtils.js');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let now;
 let bancorNetwork;

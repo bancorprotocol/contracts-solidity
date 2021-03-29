@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, roles } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
 

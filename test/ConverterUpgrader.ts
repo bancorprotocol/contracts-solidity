@@ -1,11 +1,11 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const ConverterHelper = require('./helpers/Converter');
+import ConverterHelper from './helpers/Converter';
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const CONVERSION_FEE = BigNumber.from(1000);
 const MAX_CONVERSION_FEE = BigNumber.from(30000);

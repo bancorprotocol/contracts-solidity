@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 

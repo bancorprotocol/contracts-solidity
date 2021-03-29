@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt

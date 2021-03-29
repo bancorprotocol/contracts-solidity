@@ -2,7 +2,9 @@ import { Contract, ContractFactory } from '@ethersproject/contracts';
 import { ethers } from 'hardhat';
 
 import {
+    BancorFormula,
     BancorNetwork,
+    BancorX,
     ContractRegistry,
     DSToken,
     TestBancorFormula,
@@ -71,7 +73,7 @@ export type ContractsType =
 export default {
     TestBancorFormula: deployOrAttach<TestBancorFormula>('TestBancorFormula'),
     BancorNetwork: deployOrAttach<BancorNetwork>('BancorNetwork'),
-    BancorFormula: deployOrAttach('BancorFormula'),
+    BancorFormula: deployOrAttach<BancorFormula>('BancorFormula'),
     NetworkSettings: deployOrAttach('NetworkSettings'),
     ContractRegistry: deployOrAttach<ContractRegistry>('ContractRegistry'),
     ConverterRegistry: deployOrAttach('ConverterRegistry'),
@@ -86,7 +88,7 @@ export default {
     LiquidityPoolV1Converter: deployOrAttach('LiquidityPoolV1Converter'),
     TestCheckpointStore: deployOrAttach('TestCheckpointStore'),
     DSToken: deployOrAttach<DSToken>('DSToken'),
-    BancorX: deployOrAttach('BancorX'),
+    BancorX: deployOrAttach<BancorX>('BancorX'),
     TestContractRegistryClient: deployOrAttach('TestContractRegistryClient'),
     ConversionPathFinder: deployOrAttach('ConversionPathFinder'),
     ConverterRegistryData: deployOrAttach('ConverterRegistryData'),

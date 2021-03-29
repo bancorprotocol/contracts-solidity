@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { registry } = require('./helpers/Constants');
+import Constants from './helpers/Constants';
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let contractRegistry;
 let converterRegistry;

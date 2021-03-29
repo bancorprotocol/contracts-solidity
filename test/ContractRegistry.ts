@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { registry } = require('./helpers/Constants');
-const Contracts = require('./helpers/Contracts');
+import Constants from './helpers/Constants';
+import Contracts from './helpers/Contracts';
 
 const contractName1 = 'red';
 const contractName2 = 'blue';

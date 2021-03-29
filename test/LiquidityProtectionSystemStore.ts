@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 const { roles } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
 
 let liquidityProtectionSystemStore;
 

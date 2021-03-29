@@ -1,10 +1,13 @@
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
-const { registry } = require('./helpers/Constants');
-const ConverterHelper = require('./helpers/Converter');
+import Constants from './helpers/Constants';
+import ConverterHelper from './helpers/Converter';
 
-const Contracts = require('./helpers/Contracts');
+import Contracts from './helpers/Contracts';
+import { BancorNetwork, ContractRegistry, DSToken } from '../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 /*
 Token network structure:
@@ -17,14 +20,15 @@ Token network structure:
 
 const OLD_CONVERTER_VERSION = 9;
 
-let poolToken1;
-let poolToken2;
-let poolToken3;
-let contractRegistry;
-let converter;
-let bancorNetwork;
+let poolToken1: DSToken;
+let poolToken2: DSToken;
+let poolToken3: DSToken;
+let contractRegistry: ContractRegistry;
+let converter: any;
+let bancorNetwork: BancorNetwork;
 
-let owner;
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
 
 describe('BancorNetworkWithOldConverter', () => {
     before(async () => {
@@ -37,12 +41,12 @@ describe('BancorNetworkWithOldConverter', () => {
 
         const bancorFormula = await Contracts.BancorFormula.deploy();
         await bancorFormula.init();
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     beforeEach(async () => {
         bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
 
         poolToken1 = await Contracts.DSToken.deploy('Token1', 'TKN1', 2);
         await poolToken1.issue(owner.address, 1000000);
@@ -53,7 +57,7 @@ describe('BancorNetworkWithOldConverter', () => {
         poolToken3 = await Contracts.DSToken.deploy('Token3', 'TKN3', 2);
         await poolToken3.issue(owner.address, 3000000);
 
-        converter = await ConverterHelper.new(
+        converter = await ConverterHelper.deploy(
             1,
             poolToken2.address,
             contractRegistry.address,
