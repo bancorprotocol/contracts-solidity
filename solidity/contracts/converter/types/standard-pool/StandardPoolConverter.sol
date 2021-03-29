@@ -233,7 +233,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         ownerOnly
         only(CONVERTER_UPGRADER)
     {
-        uint256 reserveCount = __reserveTokens.length;
+        uint256 reserveCount = __reserveTokensCount;
         for (uint256 i = 0; i < reserveCount; ++i) {
             IERC20 reserveToken = __reserveTokens[i];
 
