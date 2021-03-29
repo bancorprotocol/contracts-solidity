@@ -147,8 +147,8 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      * @return amount of reserve tokens to transfer from the caller
      */
     function addLiquidityAmounts(
-        IERC20[] memory _reserveTokens,
-        uint256[] memory _reserveAmounts,
+        IERC20[2] memory _reserveTokens,
+        uint256[2] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
     ) internal view override returns (uint256, uint256[2] memory) {
@@ -156,14 +156,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256 rateD = _rate[_reserveTokens[1]];
         uint256 n = _reserveAmounts[0].mul(rateN).add(_reserveAmounts[1]).mul(rateD);
         uint256 d = _reserveBalances[0].mul(rateN).add(_reserveBalances[1]).mul(rateD);
-        uint256 amount = _totalSupply.mul(n).div(d);
-
-        uint256[2] memory reserveAmounts;
-        for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = _reserveAmounts[i];
-        }
-
-        return (amount, reserveAmounts);
+        return (_totalSupply.mul(n).div(d), _reserveAmounts);
     }
 
     /**
@@ -173,7 +166,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
      *
      * @return true if at least one of the reserve amounts is larger than zero; false otherwise
      */
-    function validReserveAmounts(uint256[] memory _reserveAmounts) internal pure override returns (bool) {
+    function validReserveAmounts(uint256[2] memory _reserveAmounts) internal pure override returns (bool) {
         return _reserveAmounts[0] > 0 || _reserveAmounts[1] > 0;
     }
 }
