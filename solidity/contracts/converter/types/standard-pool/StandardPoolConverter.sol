@@ -347,17 +347,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev returns the reserve balances of the given reserve tokens
+     * @dev returns the balances of both reserve tokens
      *
-     * @param _reserveTokens reserve tokens
-     *
-     * @return reserve balances
+     * @return the balances of both reserve tokens
      */
-    function baseReserveBalances(IERC20[2] memory _reserveTokens) internal view returns (uint256[2] memory) {
-        uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
-        uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
-        (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
-        return [reserveBalance0, reserveBalance1];
+    function reserveBalancesArray() internal view returns (uint256[2] memory) {
+        (uint256 reserveBalance1, uint256 reserveBalance2) = reserveBalances(1, 2);
+        return [reserveBalance1, reserveBalance2];
     }
 
     /**
@@ -855,37 +851,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev get the amount of pool tokens to mint for the caller
-     * and the amount of reserve tokens to transfer from the caller
-     *
-     * @param _reserveAmounts   amount of each reserve token
-     * @param _reserveBalances  balance of each reserve token
-     * @param _totalSupply      total supply of pool tokens
-     *
-     * @return amount of pool tokens to mint for the caller
-     * @return amount of reserve tokens to transfer from the caller
-     */
-    function addLiquidityAmounts(
-        IERC20[2] memory, /* _reserveTokens */
-        uint256[2] memory _reserveAmounts,
-        uint256[2] memory _reserveBalances,
-        uint256 _totalSupply
-    ) internal view virtual returns (uint256, uint256[2] memory) {
-        this;
-
-        uint256 index =
-            _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
-        uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
-
-        uint256[2] memory reserveAmounts = [
-            fundCost(_totalSupply, _reserveBalances[0], amount),
-            fundCost(_totalSupply, _reserveBalances[1], amount)
-        ];
-
-        return (amount, reserveAmounts);
-    }
-
-    /**
      * @dev decreases the pool's liquidity and burns the caller's shares in the pool
      * this version receives the two minimum return amounts as separate args
      *
@@ -1004,25 +969,25 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * since an empty pool can be funded with any list of non-zero input amounts,
      * this function assumes that the pool is not empty (has already been funded)
      *
-     * @param _reserveTokens       address of each reserve token
-     * @param _reserveTokenIndex   index of the relevant reserve token
-     * @param _reserveAmount       amount of the relevant reserve token
+     * @param _reserveTokenIndex the index of the relevant reserve token
+     * @param _reserveAmount the amount of the relevant reserve token
      *
-     * @return the required amount of each one of the reserve tokens
+     * @return the required amount of the 1st reserve token
+     * @return the required amount of the 2nd reserve token
      */
-    function addLiquidityCost(
-        IERC20[2] memory _reserveTokens,
-        uint256 _reserveTokenIndex,
-        uint256 _reserveAmount
-    ) public view returns (uint256[2] memory) {
+    function addLiquidityCost(uint256 _reserveTokenIndex, uint256 _reserveAmount)
+        public
+        view
+        returns (uint256, uint256)
+    {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
+        uint256[2] memory baseBalances = reserveBalancesArray();
         uint256 amount = fundSupplyAmount(totalSupply, baseBalances[_reserveTokenIndex], _reserveAmount);
 
-        return [
+        return (
             fundCost(totalSupply, baseBalances[0], amount),
             fundCost(totalSupply, baseBalances[1], amount)
-        ];
+        );
     }
 
     /**
@@ -1030,37 +995,40 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * since an empty pool can be funded with any list of non-zero input amounts,
      * this function assumes that the pool is not empty (has already been funded)
      *
-     * @param _reserveTokens   address of each reserve token
-     * @param _reserveAmounts  amount of each reserve token
+     * @param _reserve1Amount the amount of the 1st reserve token
+     * @param _reserve2Amount the amount of the 2nd reserve token
      *
      * @return the amount of pool tokens entitled for the given amounts of reserve tokens
      */
-    function addLiquidityReturn(
-        IERC20[2] memory _reserveTokens,
-        uint256[2] memory _reserveAmounts
-    ) public view returns (uint256) {
+    function addLiquidityReturn(uint256 _reserve1Amount, uint256 _reserve2Amount)
+        public
+        view
+        returns (uint256)
+    {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
-        (uint256 amount, ) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, baseBalances, totalSupply);
+        uint256[2] memory baseBalances = reserveBalancesArray();
+        uint256[2] memory reserveAmounts = [_reserve1Amount, _reserve2Amount];
+        (uint256 amount, ) = addLiquidityAmounts(__reserveTokens, reserveAmounts, baseBalances, totalSupply);
         return amount;
     }
 
     /**
      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
      *
-     * @param _amount          amount of pool tokens
-     * @param _reserveTokens   address of each reserve token
+     * @param _amount the amount of pool tokens
      *
-     * @return the amount of each reserve token entitled for the given amount of pool tokens
+     * @return the amount of the 1st reserves token entitled for the given amount of pool tokens
+     * @return the amount of the 2nd reserves token entitled for the given amount of pool tokens
      */
-    function removeLiquidityReturn(uint256 _amount, IERC20[2] memory _reserveTokens)
+    function removeLiquidityReturn(uint256 _amount)
         public
         view
-        returns (uint256[2] memory)
+        returns (uint256, uint256)
     {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
-        return removeLiquidityReserveAmounts(_amount, totalSupply, baseBalances);
+        uint256[2] memory baseBalances = reserveBalancesArray();
+        uint256[2] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, baseBalances);
+        return (reserveAmounts[0], reserveAmounts[1]);
     }
 
     /**
@@ -1107,6 +1075,37 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     function validReserveAmounts(uint256[2] memory _reserveAmounts) internal pure virtual returns (bool) {
         return _reserveAmounts[0] > 0 && _reserveAmounts[1] > 0;
+    }
+
+    /**
+     * @dev get the amount of pool tokens to mint for the caller
+     * and the amount of reserve tokens to transfer from the caller
+     *
+     * @param _reserveAmounts   amount of each reserve token
+     * @param _reserveBalances  balance of each reserve token
+     * @param _totalSupply      total supply of pool tokens
+     *
+     * @return amount of pool tokens to mint for the caller
+     * @return amount of reserve tokens to transfer from the caller
+     */
+    function addLiquidityAmounts(
+        IERC20[2] memory, /* _reserveTokens */
+        uint256[2] memory _reserveAmounts,
+        uint256[2] memory _reserveBalances,
+        uint256 _totalSupply
+    ) internal view virtual returns (uint256, uint256[2] memory) {
+        this;
+
+        uint256 index =
+            _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
+        uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
+
+        uint256[2] memory reserveAmounts = [
+            fundCost(_totalSupply, _reserveBalances[0], amount),
+            fundCost(_totalSupply, _reserveBalances[1], amount)
+        ];
+
+        return (amount, reserveAmounts);
     }
 
     /**
