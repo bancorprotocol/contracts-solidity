@@ -208,7 +208,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // calculate the burn incentive fee and reduce it from the total amount to convert
         (uint256 sourceAmount, uint256 incentiveFeeAmount) = netNetworkConversionAmounts();
 
-        // approve the governance token network to withdraw the network token amount
+        // approve the network to withdraw the network token amount
         ensureAllowance(_networkToken, network, sourceAmount);
 
         // convert all network token amounts to the governance token
