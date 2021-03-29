@@ -282,10 +282,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return array of reserve tokens
      */
     function reserveTokens() public view returns (IERC20[] memory) {
-        IERC20[] memory tempReserveToken = new IERC20[](2);
-        tempReserveToken[0] = __reserveTokens[0];
-        tempReserveToken[1] = __reserveTokens[1];
-        return tempReserveToken;
+        IERC20[] memory tempReserveTokens = new IERC20[](2);
+        tempReserveTokens[0] = __reserveTokens[0];
+        tempReserveTokens[1] = __reserveTokens[1];
+        return tempReserveTokens;
     }
 
     /**
