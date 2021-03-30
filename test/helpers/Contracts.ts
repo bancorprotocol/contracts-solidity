@@ -24,7 +24,6 @@ import {
     LiquidityPoolV1ConverterFactory,
     LiquidityProtection,
     LiquidityProtectionSettings,
-    LiquidityProtectionSettingsMigrator,
     LiquidityProtectionStats,
     LiquidityProtectionStore,
     LiquidityProtectionSystemStore,
@@ -176,9 +175,6 @@ export default {
     TokenGovernance: deployOrAttach<TokenGovernance>('TokenGovernance'),
     CheckpointStore: deployOrAttach<CheckpointStore>('CheckpointStore'),
     LiquidityProtection: deployOrAttach<LiquidityProtection>('LiquidityProtection'),
-    LiquidityProtectionSettingsMigrator: deployOrAttach<LiquidityProtectionSettingsMigrator>(
-        'LiquidityProtectionSettingsMigrator'
-    ),
     TestMathEx: deployOrAttach<TestMathEx>('TestMathEx'),
     Owned: deployOrAttach<Owned>('Owned'),
     TestReentrancyGuardAttacker: deployOrAttach<TestReentrancyGuardAttacker>('TestReentrancyGuardAttacker'),
