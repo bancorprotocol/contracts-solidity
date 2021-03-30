@@ -14,11 +14,13 @@ import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
 import "../utility/Owned.sol";
-import "./interfaces/ILiquidityProtection.sol";
+
 import "../token/interfaces/IDSToken.sol";
 import "../converter/interfaces/IConverterAnchor.sol";
 import "../converter/interfaces/IConverter.sol";
 import "../converter/interfaces/IConverterRegistry.sol";
+
+import "./interfaces/ILiquidityProtection.sol";
 
 interface ILiquidityPoolConverter is IConverter {
     function addLiquidity(
