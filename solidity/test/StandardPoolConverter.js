@@ -1062,19 +1062,16 @@ describe('StandardPoolConverter', () => {
             );
         };
 
-        const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        const getLiquidityReturn = async (firstTime, converter, reserveTokens, reserveAmounts) => {
             if (firstTime) {
                 const length = Math.round(
                     reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length /
                         reserveAmounts.length
                 );
-                const retVal = new BN('1'.padEnd(length, '0'));
-                return reserveAmounts.map((reserveAmount, i) => retVal);
+                return new BN(10).pow(new BN(length - 1));
             }
 
-            return await Promise.all(
-                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
-            );
+            return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
         };
 
         const test = async (hasETH) => {
@@ -1105,7 +1102,7 @@ describe('StandardPoolConverter', () => {
                     reserveTokens,
                     reserveAmounts
                 );
-                const liquidityReturns = await getLiquidityReturns(
+                const liquidityReturn = await getLiquidityReturn(
                     state.length == 0,
                     converter,
                     reserveTokens,
@@ -1126,21 +1123,19 @@ describe('StandardPoolConverter', () => {
 
                 for (let i = 0; i < allowances.length; i++) {
                     const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
-                    expect(diff.eq('0')).to.be.true();
+                    expect(diff.toFixed()).to.be.equal('0');
                 }
 
                 const actual = balances.map((balance) => Decimal(balance.toString()).div(supply.toString()));
                 for (let i = 0; i < expected.length; i++) {
                     const diff = expected[i].div(actual[i]);
-                    expect(diff.eq('1')).to.be.true();
+                    expect(diff.toFixed()).to.be.equal('1');
                     for (const liquidityCost of liquidityCosts) {
                         expect(liquidityCost[i]).to.be.bignumber.equal(balances[i].sub(prevBalances[i]));
                     }
                 }
 
-                for (const liquidityReturn of liquidityReturns) {
-                    expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
-                }
+                expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
 
                 expected = actual;
                 prevSupply = supply;
@@ -1160,7 +1155,7 @@ describe('StandardPoolConverter', () => {
                 );
                 for (let i = 0; i < balances.length; i++) {
                     const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
-                    expect(diff.eq('1')).to.be.true();
+                    expect(diff.toFixed()).to.be.equal('1');
                     expect(prevBalances[i].sub(balances[i])).to.be.bignumber.equal(reserveAmounts[i]);
                 }
                 prevBalances = balances;
