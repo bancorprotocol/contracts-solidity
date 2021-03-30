@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 import MathUtils from './helpers/MathUtils';
+import Utils from './helpers/Utils';
 import Decimal from 'decimal.js';
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
@@ -198,7 +199,7 @@ describe('ConverterLiquidity', () => {
                         reserveTokens.map((reserveToken) => getAllowance(reserveToken, converter))
                     );
                     const balances = await Promise.all(
-                        reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                        reserveTokens.map((reserveToken) => Utils.getBalance(reserveToken, converter.address))
                     );
                     const supply = await poolToken.totalSupply();
 
@@ -238,7 +239,7 @@ describe('ConverterLiquidity', () => {
                         reserveTokens.map((reserveTokens) => 1)
                     );
                     const balances = await Promise.all(
-                        reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                        reserveTokens.map((reserveToken) => Utils.getBalance(reserveToken, converter.address))
                     );
                     for (let i = 0; i < balances.length; i++) {
                         const diff = new MathUtils.Decimal(state[n - 1].balances[i].toString()).div(
@@ -258,7 +259,7 @@ describe('ConverterLiquidity', () => {
                     reserveTokens.map((reserveTokens) => 1)
                 );
                 const balances = await Promise.all(
-                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                    reserveTokens.map((reserveToken) => Utils.getBalance(reserveToken, converter.address))
                 );
                 for (let i = 0; i < balances.length; i++) {
                     expect(balances[i]).to.be.equal(BigNumber.from(0));
@@ -306,15 +307,6 @@ describe('ConverterLiquidity', () => {
 
         const token = await Contracts.TestStandardToken.attach(reserveToken);
         return token.allowance(owner.address, converter.address);
-    };
-
-    const getBalance = async (reserveToken: string, converter: LiquidityPoolV1Converter) => {
-        if (reserveToken === Constants.NATIVE_TOKEN_ADDRESS) {
-            return ethers.provider.getBalance(converter.address);
-        }
-
-        const token = await Contracts.TestStandardToken.attach(reserveToken);
-        return await token.balanceOf(converter.address);
     };
 
     const getLiquidityCosts = async (

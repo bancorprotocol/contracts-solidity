@@ -99,19 +99,6 @@ describe('FixedRatePoolConverter', () => {
         return isETH ? Constants.NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
-    const getBalance = async (token: any, address: any, account: any) => {
-        if (address === Constants.NATIVE_TOKEN_ADDRESS) {
-            return ethers.provider.getBalance(account);
-        }
-
-        return token.balanceOf(account);
-    };
-
-    const getTransactionCost = async (txResult: any) => {
-        const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
-        return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
-    };
-
     const convert = async (path: any, amount: any, minReturn: any, options = {}) => {
         return bancorNetwork.convertByPath2(path, amount, minReturn, ethers.constants.AddressZero, options);
     };
@@ -497,11 +484,7 @@ describe('FixedRatePoolConverter', () => {
                 const token1Amount = reserve1Balance.mul(percentage).div(supply);
                 const token2Amount = reserve2Balance.mul(percentage).div(supply);
 
-                const token1PrevBalance = await getBalance(
-                    reserveToken,
-                    getReserve1Address(isETHReserve),
-                    sender2.address
-                );
+                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
                 const res = await converter
                     .connect(sender2)
@@ -513,10 +496,10 @@ describe('FixedRatePoolConverter', () => {
 
                 let transactionCost = BigNumber.from(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = await Utils.getTransactionCost(res);
                 }
 
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2.address);
+                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2Balance = await reserveToken2.balanceOf(sender2.address);
 
                 expect(token1Balance).to.be.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
@@ -538,11 +521,7 @@ describe('FixedRatePoolConverter', () => {
                 const token1Amount = reserve1Balance.mul(percentage).div(supply);
                 const token2Amount = reserve2Balance.mul(percentage).div(supply);
 
-                const token1PrevBalance = await getBalance(
-                    reserveToken,
-                    getReserve1Address(isETHReserve),
-                    sender2.address
-                );
+                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
 
                 const res = await converter
@@ -555,10 +534,10 @@ describe('FixedRatePoolConverter', () => {
 
                 let transactionCost = BigNumber.from(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = await Utils.getTransactionCost(res);
                 }
 
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2.address);
+                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2Balance = await reserveToken2.balanceOf(sender2.address);
 
                 expect(token1Balance).to.be.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
@@ -576,11 +555,7 @@ describe('FixedRatePoolConverter', () => {
                 const reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
 
-                const token1PrevBalance = await getBalance(
-                    reserveToken,
-                    getReserve1Address(isETHReserve),
-                    sender2.address
-                );
+                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
                 const res = await converter
                     .connect(sender2)
@@ -592,11 +567,11 @@ describe('FixedRatePoolConverter', () => {
 
                 let transactionCost = BigNumber.from(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = await Utils.getTransactionCost(res);
                 }
 
                 const supply = await token.totalSupply();
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2.address);
+                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2Balance = await reserveToken2.balanceOf(sender2.address);
 
                 expect(supply).to.be.equal(BigNumber.from(0));
@@ -646,20 +621,16 @@ describe('FixedRatePoolConverter', () => {
                 const token1Amount = reserve1Balance.mul(percentage).div(supply);
                 const token2Amount = reserve2Balance.mul(percentage).div(supply);
 
-                const token1PrevBalance = await getBalance(
-                    reserveToken,
-                    getReserve1Address(isETHReserve),
-                    sender2.address
-                );
+                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
                 const res = await converter.connect(sender2)['removeLiquidity(uint256,uint256,uint256)'](19, 1, 1);
 
                 let transactionCost = BigNumber.from(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = await Utils.getTransactionCost(res);
                 }
 
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2.address);
+                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2Balance = await reserveToken2.balanceOf(sender2.address);
 
                 expect(token1Balance).to.be.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
@@ -1072,15 +1043,6 @@ describe('FixedRatePoolConverter', () => {
             return token.allowance(sender.address, converter.address);
         };
 
-        const getBalance = async (reserveToken: any, converter: any) => {
-            if (reserveToken === Constants.NATIVE_TOKEN_ADDRESS) {
-                return ethers.provider.getBalance(converter.address);
-            }
-
-            const token = await Contracts.TestStandardToken.attach(reserveToken);
-            return await token.balanceOf(converter.address);
-        };
-
         const getLiquidityCosts = async (firstTime: any, converter: any, reserveTokens: any, reserveAmounts: any) => {
             if (firstTime) {
                 return reserveAmounts.map((reserveAmount: any, i: any) => reserveAmounts);
@@ -1163,7 +1125,7 @@ describe('FixedRatePoolConverter', () => {
                     reserveTokens.map((reserveToken: any) => getAllowance(reserveToken, converter))
                 )) as any;
                 const balances = (await Promise.all(
-                    reserveTokens.map((reserveToken: any) => getBalance(reserveToken, converter))
+                    reserveTokens.map((reserveToken: any) => Utils.getBalance(reserveToken, converter))
                 )) as any;
                 const supply = await poolToken.totalSupply();
 
@@ -1203,7 +1165,7 @@ describe('FixedRatePoolConverter', () => {
                     reserveTokens.map((reserveTokens: any) => 1)
                 );
                 const balances = (await Promise.all(
-                    reserveTokens.map((reserveToken: any) => getBalance(reserveToken, converter))
+                    reserveTokens.map((reserveToken: any) => Utils.getBalance(reserveToken, converter))
                 )) as any;
                 for (let i = 0; i < balances.length; i++) {
                     const diff = new MathUtils.Decimal(state[n - 1].balances[i].toString()).div(
@@ -1223,7 +1185,7 @@ describe('FixedRatePoolConverter', () => {
                 reserveTokens.map((reserveTokens: any) => 1)
             );
             const balances = await Promise.all(
-                reserveTokens.map((reserveToken: any) => getBalance(reserveToken, converter))
+                reserveTokens.map((reserveToken: any) => Utils.getBalance(reserveToken, converter))
             );
             for (let i = 0; i < balances.length; i++) {
                 expect(balances[i]).to.be.equal(BigNumber.from(0));

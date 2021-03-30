@@ -183,19 +183,6 @@ describe('LiquidityProtection', () => {
                 return { n: reserveBalance.mul(BigNumber.from('2')), d: poolSupply };
             };
 
-            const getBalance = async (token: any, address: any, account: any) => {
-                if (address === Constants.NATIVE_TOKEN_ADDRESS) {
-                    return ethers.provider.getBalance(account);
-                }
-
-                return token.balanceOf(account);
-            };
-
-            const getTransactionCost = async (txResult: any) => {
-                const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
-                return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
-            };
-
             const expectAlmostEqual = (amount1: any, amount2: any, maxError = '0.01') => {
                 if (!amount1.eq(amount2)) {
                     const error = new MathUtils.Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
@@ -580,8 +567,7 @@ describe('LiquidityProtection', () => {
                                     );
                                     expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
 
-                                    const protectionBaseBalance = await getBalance(
-                                        baseToken,
+                                    const protectionBaseBalance = await Utils.getBalance(
                                         baseTokenAddress,
                                         liquidityProtection.address
                                     );
@@ -825,8 +811,7 @@ describe('LiquidityProtection', () => {
                                 const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
                                 expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
 
-                                const protectionBaseBalance = await getBalance(
-                                    baseToken,
+                                const protectionBaseBalance = await Utils.getBalance(
                                     baseTokenAddress,
                                     liquidityProtection.address
                                 );
@@ -1109,7 +1094,7 @@ describe('LiquidityProtection', () => {
                                 poolToken.address
                             );
                             const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            const prevBalance = await getBalance(baseToken, baseTokenAddress, owner.address);
+                            const prevBalance = await Utils.getBalance(baseTokenAddress, owner.address);
                             const prevGovBalance = await govToken.balanceOf(owner.address);
 
                             let transactionCost = BigNumber.from(0);
@@ -1118,18 +1103,18 @@ describe('LiquidityProtection', () => {
                                     liquidityProtection.address,
                                     protection.reserveAmount
                                 );
-                                transactionCost = transactionCost.add(await getTransactionCost(res));
+                                transactionCost = transactionCost.add(await Utils.getTransactionCost(res));
                             }
                             const response = await liquidityProtection.setTime(now.add(Utils.duration.seconds(1)));
                             if (isETHReserve) {
-                                transactionCost = transactionCost.add(await getTransactionCost(response));
+                                transactionCost = transactionCost.add(await Utils.getTransactionCost(response));
                             }
                             const res = await liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION);
                             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
                             expect(protectionIds.length).to.eql(0);
 
                             if (isETHReserve) {
-                                transactionCost = transactionCost.add(await getTransactionCost(res));
+                                transactionCost = transactionCost.add(await Utils.getTransactionCost(res));
                             }
 
                             // verify balances
@@ -1141,7 +1126,7 @@ describe('LiquidityProtection', () => {
                             const delta = protection.poolAmount.mul(BigNumber.from(2));
                             expect(walletBalance).to.be.equal(prevWalletBalance.sub(delta));
 
-                            const balance = await getBalance(baseToken, baseTokenAddress, owner.address);
+                            const balance = await Utils.getBalance(baseTokenAddress, owner.address);
                             expect(balance).to.be.equal(prevBalance.add(reserveAmount).sub(transactionCost));
 
                             const govBalance = await govToken.balanceOf(owner.address);
@@ -1150,8 +1135,7 @@ describe('LiquidityProtection', () => {
                             const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
                             expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
 
-                            const protectionBaseBalance = await getBalance(
-                                baseToken,
+                            const protectionBaseBalance = await Utils.getBalance(
                                 baseTokenAddress,
                                 liquidityProtection.address
                             );
@@ -1179,7 +1163,7 @@ describe('LiquidityProtection', () => {
                                 poolToken.address
                             );
                             const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            const prevBalance = await getBalance(baseToken, baseTokenAddress, owner.address);
+                            const prevBalance = await Utils.getBalance(baseTokenAddress, owner.address);
                             const prevGovBalance = await govToken.balanceOf(owner.address);
 
                             const portion = BigNumber.from(800000);
@@ -1190,11 +1174,11 @@ describe('LiquidityProtection', () => {
                                     prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
                                 );
 
-                                transactionCost = transactionCost.add(await getTransactionCost(res));
+                                transactionCost = transactionCost.add(await Utils.getTransactionCost(res));
                             }
                             const response = await liquidityProtection.setTime(now.add(Utils.duration.seconds(1)));
                             if (isETHReserve) {
-                                transactionCost = transactionCost.add(await getTransactionCost(response));
+                                transactionCost = transactionCost.add(await Utils.getTransactionCost(response));
                             }
                             const res = await liquidityProtection.removeLiquidity(protectionId, portion);
                             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
@@ -1209,7 +1193,7 @@ describe('LiquidityProtection', () => {
                             );
 
                             if (isETHReserve) {
-                                transactionCost = transactionCost.add(await getTransactionCost(res));
+                                transactionCost = transactionCost.add(await Utils.getTransactionCost(res));
                             }
 
                             // verify balances
@@ -1223,7 +1207,7 @@ describe('LiquidityProtection', () => {
                             const delta = prevProtection.poolAmount.sub(protection.poolAmount).mul(BigNumber.from(2));
                             expect(walletBalance).to.be.equal(prevWalletBalance.sub(delta));
 
-                            const balance = await getBalance(baseToken, baseTokenAddress, owner.address);
+                            const balance = await Utils.getBalance(baseTokenAddress, owner.address);
                             expect(balance).to.be.equal(prevBalance.add(BigNumber.from(800)).sub(transactionCost));
 
                             const govBalance = await govToken.balanceOf(owner.address);
@@ -1232,8 +1216,7 @@ describe('LiquidityProtection', () => {
                             const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
                             expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
 
-                            const protectionBaseBalance = await getBalance(
-                                baseToken,
+                            const protectionBaseBalance = await Utils.getBalance(
                                 baseTokenAddress,
                                 liquidityProtection.address
                             );
@@ -1422,7 +1405,7 @@ describe('LiquidityProtection', () => {
 
                         const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
                         const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                        const prevBalance = await getBalance(networkToken, networkToken.address, owner.address);
+                        const prevBalance = await Utils.getBalance(networkToken.address, owner.address);
                         const prevGovBalance = await govToken.balanceOf(owner.address);
 
                         await govToken.approve(liquidityProtection.address, protection.reserveAmount);
@@ -1438,7 +1421,7 @@ describe('LiquidityProtection', () => {
                         const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
                         expect(walletBalance).to.be.equal(prevWalletBalance);
 
-                        const balance = await getBalance(networkToken, networkToken.address, owner.address);
+                        const balance = await Utils.getBalance(networkToken.address, owner.address);
                         expectAlmostEqual(balance, prevBalance.add(reserveAmount));
 
                         const govBalance = await govToken.balanceOf(owner.address);
@@ -1447,8 +1430,7 @@ describe('LiquidityProtection', () => {
                         const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
                         expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
 
-                        const protectionBaseBalance = await getBalance(
-                            baseToken,
+                        const protectionBaseBalance = await Utils.getBalance(
                             baseTokenAddress,
                             liquidityProtection.address
                         );
@@ -1484,7 +1466,7 @@ describe('LiquidityProtection', () => {
 
                         const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
                         const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                        const prevBalance = await getBalance(networkToken, networkToken.address, owner.address);
+                        const prevBalance = await Utils.getBalance(networkToken.address, owner.address);
                         const prevGovBalance = await govToken.balanceOf(owner.address);
 
                         const portion = BigNumber.from(800000);
@@ -1514,7 +1496,7 @@ describe('LiquidityProtection', () => {
                         const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
                         expect(walletBalance).to.be.equal(prevWalletBalance);
 
-                        const balance = await getBalance(networkToken, networkToken.address, owner.address);
+                        const balance = await Utils.getBalance(networkToken.address, owner.address);
                         expectAlmostEqual(balance, prevBalance.add(BigNumber.from(800)));
 
                         const govBalance = await govToken.balanceOf(owner.address);
@@ -1523,8 +1505,7 @@ describe('LiquidityProtection', () => {
                         const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
                         expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
 
-                        const protectionBaseBalance = await getBalance(
-                            baseToken,
+                        const protectionBaseBalance = await Utils.getBalance(
                             baseTokenAddress,
                             liquidityProtection.address
                         );
@@ -1649,8 +1630,7 @@ describe('LiquidityProtection', () => {
                                                 );
                                                 protection = getProtection(protection);
 
-                                                const prevBalance = await getBalance(
-                                                    reserveToken,
+                                                const prevBalance = await Utils.getBalance(
                                                     reserveAddress,
                                                     owner.address
                                                 );
@@ -1662,11 +1642,7 @@ describe('LiquidityProtection', () => {
                                                     timestamp.add(Utils.duration.seconds(1))
                                                 );
                                                 await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
-                                                const balance = await getBalance(
-                                                    reserveToken,
-                                                    reserveAddress,
-                                                    owner.address
-                                                );
+                                                const balance = await Utils.getBalance(reserveAddress, owner.address);
 
                                                 let lockedBalance = await getLockedBalance(owner.address);
                                                 if (reserveAddress == baseTokenAddress) {
@@ -1706,8 +1682,7 @@ describe('LiquidityProtection', () => {
                                                 );
                                                 protection = getProtection(protection);
 
-                                                const prevBalance = await getBalance(
-                                                    reserveToken,
+                                                const prevBalance = await Utils.getBalance(
                                                     reserveAddress,
                                                     owner.address
                                                 );
@@ -1719,11 +1694,7 @@ describe('LiquidityProtection', () => {
                                                     timestamp.add(Utils.duration.seconds(1))
                                                 );
                                                 await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
-                                                const balance = await getBalance(
-                                                    reserveToken,
-                                                    reserveAddress,
-                                                    owner.address
-                                                );
+                                                const balance = await Utils.getBalance(reserveAddress, owner.address);
 
                                                 let lockedBalance = await getLockedBalance(owner.address);
                                                 if (reserveAddress == baseTokenAddress) {
@@ -1763,8 +1734,7 @@ describe('LiquidityProtection', () => {
                                                 );
                                                 protection = getProtection(protection);
 
-                                                const prevBalance = await getBalance(
-                                                    reserveToken,
+                                                const prevBalance = await Utils.getBalance(
                                                     reserveAddress,
                                                     owner.address
                                                 );
@@ -1776,11 +1746,7 @@ describe('LiquidityProtection', () => {
                                                     timestamp.add(Utils.duration.seconds(1))
                                                 );
                                                 await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
-                                                const balance = await getBalance(
-                                                    reserveToken,
-                                                    reserveAddress,
-                                                    owner.address
-                                                );
+                                                const balance = await Utils.getBalance(reserveAddress, owner.address);
 
                                                 let lockedBalance = await getLockedBalance(owner.address);
                                                 if (reserveAddress == baseTokenAddress) {

@@ -3,6 +3,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { BancorNetwork, ContractRegistry, DSToken, TestNonStandardToken, TestStandardToken } from '../typechain';
+import Utils from './helpers/Utils';
 
 const { Decimal, divCeil } = require('./helpers/MathUtils');
 
@@ -88,19 +89,6 @@ describe('LiquidityPoolV1Converter', () => {
 
     const getReserve1Address = (isETH: any) => {
         return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
-    };
-
-    const getBalance = async (token: any, address: any, account: any) => {
-        if (address === NATIVE_TOKEN_ADDRESS) {
-            return ethers.provider.getBalance(account);
-        }
-
-        return token.balanceOf(account);
-    };
-
-    const getTransactionCost = async (txResult: any) => {
-        const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
-        return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
     };
 
     const convert = async (path: any, amount: any, minReturn: any, options = {}) => {
@@ -514,21 +502,17 @@ describe('LiquidityPoolV1Converter', () => {
                 const token2Amount = reserve2Balance.mul(percentage).div(supply);
                 const token3Amount = reserve3Balance.mul(percentage).div(supply);
 
-                const token1PrevBalance = await getBalance(
-                    reserveToken,
-                    getReserve1Address(isETHReserve),
-                    sender2.address
-                );
+                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
                 const token3PrevBalance = await reserveToken3.balanceOf(sender2.address);
                 const res = await converter.connect(sender2).liquidate(percentage);
 
                 let transactionCost = BigNumber.from(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = await Utils.getTransactionCost(res);
                 }
 
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2.address);
+                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2Balance = await reserveToken2.balanceOf(sender2.address);
                 const token3Balance = await reserveToken3.balanceOf(sender2.address);
 
@@ -557,21 +541,17 @@ describe('LiquidityPoolV1Converter', () => {
                 const token2Amount = reserve2Balance.mul(percentage).div(supply);
                 const token3Amount = reserve3Balance.mul(percentage).div(supply);
 
-                const token1PrevBalance = await getBalance(
-                    reserveToken,
-                    getReserve1Address(isETHReserve),
-                    sender2.address
-                );
+                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
                 const token3PrevBalance = await reserveToken3.balanceOf(sender2.address);
                 const res = await converter.connect(sender2).liquidate(14854);
 
                 let transactionCost = BigNumber.from(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = await Utils.getTransactionCost(res);
                 }
 
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2.address);
+                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2Balance = await reserveToken2.balanceOf(sender2.address);
                 const token3Balance = await reserveToken3.balanceOf(sender2.address);
 
@@ -595,22 +575,18 @@ describe('LiquidityPoolV1Converter', () => {
                 const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
                 const reserve3Balance = await converter.reserveBalance(reserveToken3.address);
 
-                const token1PrevBalance = await getBalance(
-                    reserveToken,
-                    getReserve1Address(isETHReserve),
-                    sender2.address
-                );
+                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
                 const token3PrevBalance = await reserveToken3.balanceOf(sender2.address);
                 const res = await converter.connect(sender2).liquidate(20000);
 
                 let transactionCost = BigNumber.from(0);
                 if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
+                    transactionCost = await Utils.getTransactionCost(res);
                 }
 
                 const supply = await token.totalSupply();
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2.address);
+                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
                 const token2Balance = await reserveToken2.balanceOf(sender2.address);
                 const token3Balance = await reserveToken3.balanceOf(sender2.address);
 
@@ -993,15 +969,6 @@ describe('LiquidityPoolV1Converter', () => {
             return token.allowance(sender.address, converter.address);
         };
 
-        const getBalance = async (reserveToken: any, converter: any) => {
-            if (reserveToken === NATIVE_TOKEN_ADDRESS) {
-                return ethers.provider.getBalance(converter.address);
-            }
-
-            const token = await Contracts.TestStandardToken.attach(reserveToken);
-            return await token.balanceOf(converter.address);
-        };
-
         const getLiquidityCosts = async (firstTime: any, converter: any, reserveTokens: any, reserveAmounts: any) => {
             if (firstTime) {
                 return reserveAmounts.map((reserveAmount: any, i: any) => reserveAmounts);
@@ -1074,7 +1041,7 @@ describe('LiquidityPoolV1Converter', () => {
                     reserveTokens.map((reserveToken: any) => getAllowance(reserveToken, converter))
                 )) as any;
                 const balances = (await Promise.all(
-                    reserveTokens.map((reserveToken: any) => getBalance(reserveToken, converter))
+                    reserveTokens.map((reserveToken: any) => Utils.getBalance(reserveToken, converter))
                 )) as any;
                 const supply = await poolToken.totalSupply();
 
@@ -1112,7 +1079,7 @@ describe('LiquidityPoolV1Converter', () => {
                     reserveTokens.map((reserveTokens: any) => 1)
                 );
                 const balances = (await Promise.all(
-                    reserveTokens.map((reserveToken: any) => getBalance(reserveToken, converter))
+                    reserveTokens.map((reserveToken: any) => Utils.getBalance(reserveToken, converter))
                 )) as any;
                 for (let i = 0; i < balances.length; i++) {
                     const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
@@ -1130,7 +1097,7 @@ describe('LiquidityPoolV1Converter', () => {
                 reserveTokens.map((reserveTokens: any) => 1)
             );
             const balances = await Promise.all(
-                reserveTokens.map((reserveToken: any) => getBalance(reserveToken, converter))
+                reserveTokens.map((reserveToken: any) => Utils.getBalance(reserveToken, converter))
             );
             for (let i = 0; i < balances.length; i++) {
                 expect(balances[i]).to.be.equal(BigNumber.from(0));
