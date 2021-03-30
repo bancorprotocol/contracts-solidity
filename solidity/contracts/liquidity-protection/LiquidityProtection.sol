@@ -85,32 +85,44 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     /**
      * @dev initializes a new LiquidityProtection contract
      *
-     * @param _contractAddresses:
-     * - [0] liquidity protection settings
-     * - [1] liquidity protection store
-     * - [2] liquidity protection stats
-     * - [3] liquidity protection system store
-     * - [4] liquidity protection wallet
-     * - [5] network token governance
-     * - [6] governance token governance
-     * - [7] last liquidity removal/unprotection checkpoints store
+     * @param settings liquidity protection settings
+     * @param store liquidity protection store
+     * @param stats liquidity protection stats
+     * @param systemStore liquidity protection system store
+     * @param wallet liquidity protection wallet
+     * @param networkTokenGovernance network token governance
+     * @param govTokenGovernance governance token governance
+     * @param lastRemoveCheckpointStore last liquidity removal/unprotection checkpoints store
      */
-    constructor(address[8] memory _contractAddresses) public {
-        for (uint256 i = 0; i < _contractAddresses.length; i++) {
-            _validAddress(_contractAddresses[i]);
-        }
+    constructor(
+        ILiquidityProtectionSettings settings,
+        ILiquidityProtectionStore store,
+        ILiquidityProtectionStats stats,
+        ILiquidityProtectionSystemStore systemStore,
+        ITokenHolder wallet,
+        ITokenGovernance networkTokenGovernance,
+        ITokenGovernance govTokenGovernance,
+        ICheckpointStore lastRemoveCheckpointStore
+    )
+        public
+        validAddress(address(settings))
+        validAddress(address(store))
+        validAddress(address(stats))
+        validAddress(address(systemStore))
+        validAddress(address(wallet))
+        validAddress(address(lastRemoveCheckpointStore))
+    {
+        _settings = settings;
+        _store = store;
+        _stats = stats;
+        _systemStore = systemStore;
+        _wallet = wallet;
+        _networkTokenGovernance = networkTokenGovernance;
+        _govTokenGovernance = govTokenGovernance;
+        _lastRemoveCheckpointStore = lastRemoveCheckpointStore;
 
-        _settings = ILiquidityProtectionSettings(_contractAddresses[0]);
-        _store = ILiquidityProtectionStore(_contractAddresses[1]);
-        _stats = ILiquidityProtectionStats(_contractAddresses[2]);
-        _systemStore = ILiquidityProtectionSystemStore(_contractAddresses[3]);
-        _wallet = ITokenHolder(payable(_contractAddresses[4]));
-        _networkTokenGovernance = ITokenGovernance(_contractAddresses[5]);
-        _govTokenGovernance = ITokenGovernance(_contractAddresses[6]);
-        _lastRemoveCheckpointStore = ICheckpointStore(_contractAddresses[7]);
-
-        _networkToken = ITokenGovernance(_contractAddresses[5]).token();
-        _govToken = ITokenGovernance(_contractAddresses[6]).token();
+        _networkToken = networkTokenGovernance.token();
+        _govToken = govTokenGovernance.token();
     }
 
     // ensures that the pool is supported and whitelisted

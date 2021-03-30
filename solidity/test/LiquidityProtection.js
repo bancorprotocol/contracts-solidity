@@ -340,7 +340,7 @@ describe('LiquidityProtection', () => {
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionWallet = await TokenHolder.new();
-                liquidityProtection = await LiquidityProtection.new([
+                liquidityProtection = await LiquidityProtection.new(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
@@ -349,7 +349,7 @@ describe('LiquidityProtection', () => {
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                ]);
+                );
 
                 await liquidityProtectionSettings.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
