@@ -80,9 +80,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ITokenGovernance private immutable _govTokenGovernance;
     ICheckpointStore private immutable _lastRemoveCheckpointStore;
 
-    // true if the contract is currently adding/removing liquidity from a converter, used for accepting ETH
-    bool private updatingLiquidity = false;
-
     /**
      * @dev initializes a new LiquidityProtection contract
      *
@@ -112,12 +109,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         _networkToken = ITokenGovernance(_contractAddresses[5]).token();
         _govToken = ITokenGovernance(_contractAddresses[6]).token();
-    }
-
-    // ensures that the contract is currently removing liquidity from a converter
-    modifier updatingLiquidityOnly() {
-        require(updatingLiquidity, "ERR_NOT_UPDATING_LIQUIDITY");
-        _;
     }
 
     // ensures that the pool is supported and whitelisted
@@ -202,9 +193,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     /**
      * @dev accept ETH
-     * used when removing liquidity from ETH converters
      */
-    receive() external payable updatingLiquidityOnly() {}
+    receive() external payable {}
 
     /**
      * @dev transfers the ownership of the store
@@ -1108,9 +1098,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 reserveAmount2,
         uint256 value
     ) internal {
-        // ensure that the contract can receive ETH
-        updatingLiquidity = true;
-
         IERC20[] memory reserveTokens = new IERC20[](2);
         uint256[] memory amounts = new uint256[](2);
         reserveTokens[0] = reserveToken1;
@@ -1118,9 +1105,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         amounts[0] = reserveAmount1;
         amounts[1] = reserveAmount2;
         converter.addLiquidity{ value: value }(reserveTokens, amounts, 1);
-
-        // ensure that the contract can receive ETH
-        updatingLiquidity = false;
     }
 
     /**
@@ -1139,9 +1123,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ) internal {
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
 
-        // ensure that the contract can receive ETH
-        updatingLiquidity = true;
-
         IERC20[] memory reserveTokens = new IERC20[](2);
         uint256[] memory minReturns = new uint256[](2);
         reserveTokens[0] = reserveToken1;
@@ -1149,9 +1130,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         minReturns[0] = 1;
         minReturns[1] = 1;
         converter.removeLiquidity(poolAmount, reserveTokens, minReturns);
-
-        // ensure that the contract can receive ETH
-        updatingLiquidity = false;
     }
 
     /**
