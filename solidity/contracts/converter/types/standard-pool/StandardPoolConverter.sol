@@ -378,7 +378,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return reserve balances minus their corresponding fees
      */
-    function baseReserveBalances(IERC20[2] memory _reserveTokens) internal view returns (uint256[2] memory) {
+    function baseReserveBalances(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
