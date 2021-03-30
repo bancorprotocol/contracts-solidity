@@ -716,27 +716,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev increases the pool's liquidity and mints new shares in the pool to the caller
-     * this version receives the two reserve amounts as separate args
-     *
-     * @param _reserve1Amount  amount of the first reserve token
-     * @param _reserve2Amount  amount of the second reserve token
-     * @param _minReturn       token minimum return-amount
-     *
-     * @return amount of pool tokens issued
-     */
-    function addLiquidity(
-        uint256 _reserve1Amount,
-        uint256 _reserve2Amount,
-        uint256 _minReturn
-    ) public payable returns (uint256) {
-        uint256[] memory reserveAmounts = new uint256[](2);
-        reserveAmounts[0] = _reserve1Amount;
-        reserveAmounts[1] = _reserve2Amount;
-        return addLiquidity(__reserveTokens, reserveAmounts, _minReturn);
-    }
-
-    /**
-     * @dev increases the pool's liquidity and mints new shares in the pool to the caller
      *
      * @param _reserveTokens   address of each reserve token
      * @param _reserveAmounts  amount of each reserve token
@@ -856,29 +835,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         reserveAmounts[0] = fundCost(_totalSupply, _reserveBalances[0], amount);
         reserveAmounts[1] = fundCost(_totalSupply, _reserveBalances[1], amount);
         return (amount, reserveAmounts);
-    }
-
-    /**
-     * @dev decreases the pool's liquidity and burns the caller's shares in the pool
-     * this version receives the two minimum return amounts as separate args
-     *
-     * @param _amount               token amount
-     * @param _reserve1MinReturn    minimum return for the first reserve token
-     * @param _reserve2MinReturn    minimum return for the second reserve token
-     *
-     * @return the first reserve amount returned
-     * @return the second reserve amount returned
-     */
-    function removeLiquidity(
-        uint256 _amount,
-        uint256 _reserve1MinReturn,
-        uint256 _reserve2MinReturn
-    ) public returns (uint256, uint256) {
-        uint256[] memory minReturnAmounts = new uint256[](2);
-        minReturnAmounts[0] = _reserve1MinReturn;
-        minReturnAmounts[1] = _reserve2MinReturn;
-        uint256[] memory reserveAmounts = removeLiquidity(_amount, __reserveTokens, minReturnAmounts);
-        return (reserveAmounts[0], reserveAmounts[1]);
     }
 
     /**

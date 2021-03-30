@@ -166,7 +166,7 @@ describe('StandardPoolConverter', () => {
         await reserveToken.approve(converter.address, value, { from: sender });
         await reserveToken2.approve(converter.address, value, { from: sender });
 
-        const res = await converter.methods['addLiquidity(address[],uint256[],uint256)'](
+        const res = await converter.addLiquidity(
             [reserveToken.address, reserveToken2.address],
             [value, value],
             MIN_RETURN
@@ -194,7 +194,7 @@ describe('StandardPoolConverter', () => {
     it('verifies the TokenRateUpdate event after removing liquidity', async () => {
         const converter = await initConverter(true, false);
 
-        const res = await converter.methods['removeLiquidity(uint256,address[],uint256[])'](
+        const res = await converter.removeLiquidity(
             100,
             [reserveToken.address, reserveToken2.address],
             [MIN_RETURN, MIN_RETURN]
@@ -418,7 +418,7 @@ describe('StandardPoolConverter', () => {
                 }
 
                 await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                await converter.methods['addLiquidity(address[],uint256[],uint256)'](
+                await converter.addLiquidity(
                     [getReserve1Address(isETHReserve), reserveToken2.address],
                     [amount, token2Amount],
                     1,
@@ -457,7 +457,7 @@ describe('StandardPoolConverter', () => {
                 }
 
                 await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                await converter.methods['addLiquidity(address[],uint256[],uint256)'](
+                await converter.addLiquidity(
                     [getReserve1Address(isETHReserve), reserveToken2.address],
                     [amount, token2Amount],
                     1,
@@ -489,7 +489,7 @@ describe('StandardPoolConverter', () => {
                 }
 
                 await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                await converter.methods['addLiquidity(address[],uint256[],uint256)'](
+                await converter.addLiquidity(
                     [getReserve1Address(isETHReserve), reserveToken2.address],
                     [amount, 10],
                     1,
@@ -497,7 +497,7 @@ describe('StandardPoolConverter', () => {
                 );
 
                 await expectRevert.unspecified(
-                    converter.methods['addLiquidity(address[],uint256[],uint256)'](
+                    converter.addLiquidity(
                         [getReserve1Address(isETHReserve), reserveToken2.address],
                         [amount, 1000],
                         1,
@@ -560,7 +560,7 @@ describe('StandardPoolConverter', () => {
 
                 const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
                 const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
-                const res = await converter.methods['removeLiquidity(uint256,address[],uint256[])'](
+                const res = await converter.removeLiquidity(
                     19,
                     [getReserve1Address(isETHReserve), reserveToken2.address],
                     [1, 1],
@@ -597,7 +597,7 @@ describe('StandardPoolConverter', () => {
                 const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
                 const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
 
-                const res = await converter.methods['removeLiquidity(uint256,address[],uint256[])'](
+                const res = await converter.removeLiquidity(
                     14854,
                     [getReserve1Address(isETHReserve), reserveToken2.address],
                     [1, 1],
@@ -629,7 +629,7 @@ describe('StandardPoolConverter', () => {
 
                 const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
                 const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
-                const res = await converter.methods['removeLiquidity(uint256,address[],uint256[])'](
+                const res = await converter.removeLiquidity(
                     20000,
                     [getReserve1Address(isETHReserve), reserveToken2.address],
                     [1, 1],
@@ -660,12 +660,12 @@ describe('StandardPoolConverter', () => {
 
                 await token.transfer(sender2, 100);
 
-                await converter.methods['removeLiquidity(uint256,address[],uint256[])'](5, [getReserve1Address(isETHReserve), reserveToken2.address], [1, 1], {
+                await converter.removeLiquidity(5, [getReserve1Address(isETHReserve), reserveToken2.address], [1, 1], {
                     from: sender2
                 });
 
                 await expectRevert.unspecified(
-                    converter.methods['removeLiquidity(uint256,address[],uint256[])'](600, [getReserve1Address(isETHReserve), reserveToken2.address], [1, 1], {
+                    converter.removeLiquidity(600, [getReserve1Address(isETHReserve), reserveToken2.address], [1, 1], {
                         from: sender2
                     })
                 );
@@ -735,7 +735,7 @@ describe('StandardPoolConverter', () => {
             it(`addLiquidity(${[amount1, amount2]})`, async () => {
                 await reserveToken1.approve(converter.address, amount1, { from: sender });
                 await reserveToken2.approve(converter.address, amount2, { from: sender });
-                await converter.methods['addLiquidity(address[],uint256[],uint256)']([reserveToken1.address, reserveToken2.address], [amount1, amount2], 1);
+                await converter.addLiquidity([reserveToken1.address, reserveToken2.address], [amount1, amount2], 1);
                 const balance1 = await reserveToken1.balanceOf.call(converter.address);
                 const balance2 = await reserveToken2.balanceOf.call(converter.address);
                 const a1b2 = new BN(amount1).mul(balance2);
@@ -776,7 +776,7 @@ describe('StandardPoolConverter', () => {
                         await reserveToken2.transfer(sender2, amount, { from: sender });
                         await reserveToken1.approve(converter.address, amount, { from: sender2 });
                         await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                        await converter.methods['addLiquidity(address[],uint256[],uint256)'](
+                        await converter.addLiquidity(
                             [reserveToken1.address, reserveToken2.address],
                             [amount, amount],
                             MIN_RETURN,
@@ -786,7 +786,7 @@ describe('StandardPoolConverter', () => {
                         lastAmount = balance.sub(lastAmount);
                     }
                     for (const percent of percents) {
-                        await converter.methods['removeLiquidity(uint256,address[],uint256[])'](
+                        await converter.removeLiquidity(
                             lastAmount.mul(new BN(percent)).div(new BN(100)),
                             [reserveToken1.address, reserveToken2.address],
                             [MIN_RETURN, MIN_RETURN],
@@ -1108,7 +1108,7 @@ describe('StandardPoolConverter', () => {
                     reserveTokens,
                     reserveAmounts
                 );
-                await converter.methods['addLiquidity(address[],uint256[],uint256)'](reserveTokens, reserveAmounts, MIN_RETURN, {
+                await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, {
                     value: hasETH ? reserveAmounts.slice(-1)[0] : 0
                 });
                 const allowances = await Promise.all(
@@ -1145,7 +1145,7 @@ describe('StandardPoolConverter', () => {
             for (let n = state.length - 1; n > 0; n--) {
                 const supplyAmount = state[n].supply.sub(new BN(state[n - 1].supply));
                 const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
-                await converter.methods['removeLiquidity(uint256,address[],uint256[])'](
+                await converter.removeLiquidity(
                     supplyAmount,
                     reserveTokens,
                     reserveTokens.map((reserveTokens) => 1)
@@ -1163,7 +1163,7 @@ describe('StandardPoolConverter', () => {
 
             const supplyAmount = state[0].supply;
             const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
-            await converter.methods['removeLiquidity(uint256,address[],uint256[])'](
+            await converter.removeLiquidity(
                 supplyAmount,
                 reserveTokens,
                 reserveTokens.map((reserveTokens) => 1)
