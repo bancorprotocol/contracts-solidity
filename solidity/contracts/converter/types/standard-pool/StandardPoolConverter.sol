@@ -203,7 +203,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // verify the the converter has exactly two reserves
         require(reserveTokenCount() == 2, "ERR_INVALID_RESERVE_COUNT");
         anchor.acceptOwnership();
-        syncReserveBalances();
+        syncReserveBalances(0);
         emit Activation(converterType(), anchor, true);
     }
 
@@ -343,6 +343,20 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
+     * @dev returns the reserve balances of the given reserve tokens
+     *
+     * @param _reserveTokens reserve tokens
+     *
+     * @return reserve balances
+     */
+    function baseReserveBalances(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
+        uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
+        uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
+        (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
+        return [reserveBalance0, reserveBalance1];
+    }
+
+    /**
      * @dev converts a specific amount of source tokens to target tokens
      * can only be called by the bancor network contract
      *
@@ -449,19 +463,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 balance =
             _reserveToken == NATIVE_TOKEN_ADDRESS ? address(this).balance : _reserveToken.balanceOf(address(this));
         setReserveBalance(reserveId, balance);
-    }
-
-    /**
-     * @dev syncs all stored reserve balances
-     */
-    function syncReserveBalances() internal {
-        IERC20 _reserveToken0 = __reserveTokens[0];
-        IERC20 _reserveToken1 = __reserveTokens[1];
-        uint256 balance0 =
-            _reserveToken0 == NATIVE_TOKEN_ADDRESS ? address(this).balance : _reserveToken0.balanceOf(address(this));
-        uint256 balance1 =
-            _reserveToken1 == NATIVE_TOKEN_ADDRESS ? address(this).balance : _reserveToken1.balanceOf(address(this));
-        setReserveBalances(1, 2, balance0, balance1);
     }
 
     /**
@@ -627,11 +628,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        if (_targetToken == NATIVE_TOKEN_ADDRESS) {
-            _beneficiary.transfer(amount);
-        } else {
-            _targetToken.safeTransfer(_beneficiary, amount);
-        }
+        safeTransfer(_targetToken, _beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
@@ -646,6 +643,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev returns the recent average rate of 1 `_token` in the other reserve token units
      *
      * @param _token   token to get the rate for
+     *
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
@@ -678,6 +676,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev returns the recent average rate of 1 reserve token 0 in reserve token 1 units
      *
      * @param _averageRateInfo a local copy of the `averageRateInfo` state-variable
+     *
      * @return recent average rate between the reserves
      */
     function calcRecentAverageRate(uint256 _averageRateInfo) internal view returns (uint256) {
@@ -779,17 +778,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
 
         uint256 amount;
-        uint256[2] memory reserveAmounts;
 
         // calculate the amount of pool tokens to mint for the caller
         // and the amount of reserve tokens to transfer from the caller
         if (totalSupply == 0) {
             amount = MathEx.geometricMean(_reserveAmounts);
-            for (uint256 i = 0; i < 2; i++) {
-                reserveAmounts[i] = _reserveAmounts[i];
-            }
         } else {
-            (amount, reserveAmounts) = addLiquidityAmounts(
+            (amount, _reserveAmounts) = addLiquidityAmounts(
                 _reserveTokens,
                 _reserveAmounts,
                 oldReserveBalances,
@@ -800,9 +795,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 newPoolTokenSupply = totalSupply.add(amount);
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
-            uint256 reserveAmount = reserveAmounts[i];
+            uint256 reserveAmount = _reserveAmounts[i];
             require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
-            assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
             if (reserveToken != NATIVE_TOKEN_ADDRESS) {
@@ -851,18 +845,16 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
-    ) internal view virtual returns (uint256, uint256[2] memory) {
+    ) internal view virtual returns (uint256, uint256[] memory) {
         this;
 
         uint256 index =
             _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
         uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
 
-        uint256[2] memory reserveAmounts;
-        for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = fundCost(_totalSupply, _reserveBalances[i], amount);
-        }
-
+        uint256[] memory reserveAmounts = new uint256[](2);
+        reserveAmounts[0] = fundCost(_totalSupply, _reserveBalances[0], amount);
+        reserveAmounts[1] = fundCost(_totalSupply, _reserveBalances[1], amount);
         return (amount, reserveAmounts);
     }
 
@@ -916,14 +908,15 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         poolToken.destroy(msg.sender, _amount);
 
         // sync the balances to ensure no mismatch
-        syncReserveBalances();
+        syncReserveBalances(0);
 
         uint256 newPoolTokenSupply = totalSupply.sub(_amount);
-        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, _reserveTokens, totalSupply);
 
         uint256[2] memory oldReserveBalances;
         uint256[2] memory newReserveBalances;
         (oldReserveBalances[0], oldReserveBalances[1]) = reserveBalances();
+
+        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
 
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
@@ -934,11 +927,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             newReserveBalances[i] = oldReserveBalances[i].sub(reserveAmount);
 
             // transfer each one of the reserve amounts from the pool to the user
-            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
-                msg.sender.transfer(reserveAmount);
-            } else {
-                reserveToken.safeTransfer(msg.sender, reserveAmount);
-            }
+            safeTransfer(reserveToken, msg.sender, reserveAmount);
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
@@ -976,37 +965,34 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 _reserveTokenIndex,
         uint256 _reserveAmount
     ) public view returns (uint256[] memory) {
-        uint256[] memory _reserveAmounts = new uint256[](2);
-        uint256[] memory _reserveBalances = new uint256[](2);
-
-        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
-        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
-        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
-
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256 amount = fundSupplyAmount(totalSupply, _reserveBalances[_reserveTokenIndex], _reserveAmount);
+        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
+        uint256 amount = fundSupplyAmount(totalSupply, baseBalances[_reserveTokenIndex], _reserveAmount);
 
-        for (uint256 i = 0; i < 2; i++) {
-            _reserveAmounts[i] = fundCost(totalSupply, _reserveBalances[i], amount);
-        }
-
-        return _reserveAmounts;
+        uint256[] memory reserveAmounts = new uint256[](2);
+        reserveAmounts[0] = fundCost(totalSupply, baseBalances[0], amount);
+        reserveAmounts[1] = fundCost(totalSupply, baseBalances[1], amount);
+        return reserveAmounts;
     }
 
     /**
-     * @dev given the amount of one of the reserve tokens to add liquidity of,
-     * returns the amount of pool tokens entitled for it
+     * @dev returns the amount of pool tokens entitled for given amounts of reserve tokens
      * since an empty pool can be funded with any list of non-zero input amounts,
      * this function assumes that the pool is not empty (has already been funded)
      *
-     * @param _reserveToken    address of the reserve token
-     * @param _reserveAmount   amount of the reserve token
+     * @param _reserveTokens   address of each reserve token
+     * @param _reserveAmounts  amount of each reserve token
      *
-     * @return the amount of pool tokens entitled
+     * @return the amount of pool tokens entitled for the given amounts of reserve tokens
      */
-    function addLiquidityReturn(IERC20 _reserveToken, uint256 _reserveAmount) public view returns (uint256) {
+    function addLiquidityReturn(
+        IERC20[] memory _reserveTokens,
+        uint256[] memory _reserveAmounts
+    ) public view returns (uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        return fundSupplyAmount(totalSupply, reserveBalance(__reserveIds[_reserveToken]), _reserveAmount);
+        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
+        (uint256 amount, ) = addLiquidityAmounts(_reserveTokens, _reserveAmounts, baseBalances, totalSupply);
+        return amount;
     }
 
     /**
@@ -1017,13 +1003,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
-    function removeLiquidityReturn(uint256 _amount, IERC20[] memory _reserveTokens)
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function removeLiquidityReturn(
+        uint256 _amount,
+        IERC20[] memory _reserveTokens
+    ) public view returns (uint256[] memory) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        return removeLiquidityReserveAmounts(_amount, _reserveTokens, totalSupply);
+        uint256[2] memory baseBalances = baseReserveBalances(_reserveTokens);
+        return removeLiquidityReserveAmounts(_amount, totalSupply, baseBalances);
     }
 
     /**
@@ -1076,27 +1062,20 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
      *
      * @param _amount          amount of pool tokens
-     * @param _reserveTokens   address of each reserve token
-     * @param _totalSupply     token total supply
+     * @param _totalSupply     total supply of pool tokens
+     * @param _reserveBalances balance of each reserve token
      *
      * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
     function removeLiquidityReserveAmounts(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
-        uint256 _totalSupply
-    ) private view returns (uint256[] memory) {
-        uint256[] memory _reserveAmounts = new uint256[](2);
-        uint256[] memory _reserveBalances = new uint256[](2);
-
-        uint256 reserve0Id = __reserveIds[_reserveTokens[0]];
-        uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
-        (_reserveBalances[0], _reserveBalances[1]) = reserveBalances(reserve0Id, reserve1Id);
-
-        for (uint256 i = 0; i < 2; i++) {
-            _reserveAmounts[i] = liquidateReserveAmount(_totalSupply, _reserveBalances[i], _amount);
-        }
-        return _reserveAmounts;
+        uint256 _totalSupply,
+        uint256[2] memory _reserveBalances
+    ) private pure returns (uint256[] memory) {
+        uint256[] memory reserveAmounts = new uint256[](2);
+        reserveAmounts[0] = liquidateReserveAmount(_totalSupply, _reserveBalances[0], _amount);
+        reserveAmounts[1] = liquidateReserveAmount(_totalSupply, _reserveBalances[1], _amount);
+        return reserveAmounts;
     }
 
     /**
