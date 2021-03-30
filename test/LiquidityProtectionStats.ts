@@ -87,10 +87,10 @@ describe('LiquidityProtectionStats', () => {
     });
 
     it('should revert when a non owner attempts to remove a provider pool', async () => {
-        await liquidityProtectionStats.connect(owner).addProviderPool(provider.address, poolToken.address),
-            await expect(
-                liquidityProtectionStats.removeProviderPool(provider.address, poolToken.address)
-            ).to.be.revertedWith('ERR_ACCESS_DENIED');
+        await liquidityProtectionStats.connect(owner).addProviderPool(provider.address, poolToken.address);
+        await expect(
+            liquidityProtectionStats.removeProviderPool(provider.address, poolToken.address)
+        ).to.be.revertedWith('ERR_ACCESS_DENIED');
         expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([poolToken.address]);
     });
 
@@ -203,19 +203,15 @@ describe('LiquidityProtectionStats', () => {
 
     it('should succeed when the owner attempts to add a provider pool', async () => {
         expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([]);
-        await liquidityProtectionStats.connect(owner).addProviderPool(provider.address, poolToken.address),
-            expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([
-                poolToken.address
-            ]);
+        await liquidityProtectionStats.connect(owner).addProviderPool(provider.address, poolToken.address);
+        expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([poolToken.address]);
     });
 
     it('should succeed when the owner attempts to remove a provider pool', async () => {
-        await liquidityProtectionStats.connect(owner).addProviderPool(provider.address, poolToken.address),
-            expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([
-                poolToken.address
-            ]);
-        await liquidityProtectionStats.connect(owner).removeProviderPool(provider.address, poolToken.address),
-            expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([]);
+        await liquidityProtectionStats.connect(owner).addProviderPool(provider.address, poolToken.address);
+        expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([poolToken.address]);
+        await liquidityProtectionStats.connect(owner).removeProviderPool(provider.address, poolToken.address);
+        expect(await liquidityProtectionStats.providerPools(provider.address)).to.be.deep.equal([]);
     });
 
     it('should succeed when a seeder attempts to seed pool amounts', async () => {
