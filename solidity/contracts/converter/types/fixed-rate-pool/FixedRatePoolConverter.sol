@@ -151,19 +151,12 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
-    ) internal view override returns (uint256, uint256[2] memory) {
+    ) internal view override returns (uint256, uint256[] memory) {
         uint256 rateN = _rate[_reserveTokens[0]];
         uint256 rateD = _rate[_reserveTokens[1]];
         uint256 n = _reserveAmounts[0].mul(rateN).add(_reserveAmounts[1]).mul(rateD);
         uint256 d = _reserveBalances[0].mul(rateN).add(_reserveBalances[1]).mul(rateD);
-        uint256 amount = _totalSupply.mul(n).div(d);
-
-        uint256[2] memory reserveAmounts;
-        for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = _reserveAmounts[i];
-        }
-
-        return (amount, reserveAmounts);
+        return (_totalSupply.mul(n).div(d), _reserveAmounts);
     }
 
     /**
