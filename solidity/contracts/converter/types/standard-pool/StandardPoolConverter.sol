@@ -1155,8 +1155,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         return x > 0 ? MathEx.floorSqrt(x) : 0;
     }
 
-    }
-
     function crossReserveTargetAmount(
         uint256 _sourceReserveBalance,
         uint256 _targetReserveBalance,
