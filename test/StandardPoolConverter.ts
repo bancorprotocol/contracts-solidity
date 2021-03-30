@@ -1790,7 +1790,13 @@ describe('StandardPoolConverter', () => {
             }
         }
 
-        function description(prefix, initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent) {
+        function description(
+            prefix: any,
+            initialBalance1: any,
+            initialBalance2: any,
+            conversionFeePercent: any,
+            networkFeePercent: any
+        ) {
             return (
                 prefix +
                 ` initial balances = [${initialBalance1}, ${initialBalance2}],` +
@@ -1799,7 +1805,7 @@ describe('StandardPoolConverter', () => {
             );
         }
 
-        async function createPool(networkFeePercent, conversionFeePercent) {
+        async function createPool(networkFeePercent: any, conversionFeePercent: any) {
             const poolToken = await Contracts.DSToken.deploy('poolToken', 'poolToken', 18);
             const reserveToken1 = await Contracts.TestStandardToken.deploy(
                 'reserveToken1',
@@ -1829,7 +1835,13 @@ describe('StandardPoolConverter', () => {
             return { poolToken, reserveToken1, reserveToken2, converter };
         }
 
-        async function addLiquidity(reserveToken1, reserveToken2, converter, reserveAmounts, verify = false) {
+        async function addLiquidity(
+            reserveToken1: any,
+            reserveToken2: any,
+            converter: any,
+            reserveAmounts: any,
+            verify = false
+        ) {
             const reserveTokens = [reserveToken1.address, reserveToken2.address];
             await reserveToken1.approve(converter.address, reserveAmounts[0]);
             await reserveToken2.approve(converter.address, reserveAmounts[1]);
@@ -1847,7 +1859,13 @@ describe('StandardPoolConverter', () => {
             await converter['addLiquidity(address[],uint256[],uint256)'](reserveTokens, reserveAmounts, 1);
         }
 
-        async function removeLiquidity(reserveToken1, reserveToken2, converter, supplyAmount, verify = false) {
+        async function removeLiquidity(
+            reserveToken1: any,
+            reserveToken2: any,
+            converter: any,
+            supplyAmount: any,
+            verify = false
+        ) {
             const reserveTokens = [reserveToken1.address, reserveToken2.address];
             if (verify) {
                 const expected = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
@@ -1862,7 +1880,14 @@ describe('StandardPoolConverter', () => {
             await converter['removeLiquidity(uint256,address[],uint256[])'](supplyAmount, reserveTokens, [1, 1]);
         }
 
-        async function convert(sourceToken, poolToken, targetToken, bancorNetwork, converter, conversionAmount) {
+        async function convert(
+            sourceToken: any,
+            poolToken: any,
+            targetToken: any,
+            bancorNetwork: any,
+            converter: any,
+            conversionAmount: any
+        ) {
             const conversionPath = [sourceToken.address, poolToken.address, targetToken.address];
             await sourceToken.approve(bancorNetwork.address, conversionAmount);
             const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS);
@@ -1872,7 +1897,7 @@ describe('StandardPoolConverter', () => {
             return { amount: args._return, fee: args._conversionFee };
         }
 
-        function expectAlmostEqual(actual, expected, maxAbsoluteError, maxRelativeError) {
+        function expectAlmostEqual(actual: any, expected: any, maxAbsoluteError: any, maxRelativeError: any) {
             const x = Decimal(actual.toString());
             const y = Decimal(expected.toString());
             if (!x.eq(y)) {

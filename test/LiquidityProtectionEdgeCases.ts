@@ -10,7 +10,7 @@ const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = Constants.roles;
 import Contracts from './helpers/Contracts';
 
 const f = (a: any, b: any) => [].concat(...a.map((d: any) => b.map((e: any) => [].concat(d, e))));
-const cartesian = (a: any, b: any, ...c: any): any => (b ? cartesian(f(a, b), c) : a);
+const cartesian = (a: any, b: any, ...c: any): any => (b ? cartesian(f(a, b), c[0], ...c.splice(1)) : a);
 
 function decimalToInteger(value: any, decimals: any) {
     const parts = [...value.split('.'), ''];
