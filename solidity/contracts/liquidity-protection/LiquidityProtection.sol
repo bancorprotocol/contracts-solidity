@@ -375,7 +375,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         IDSToken poolToken = IDSToken(address(poolAnchor));
 
         // get the reserve balances
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolAnchor)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(poolAnchor.owner()));
         (uint256 reserveBalanceBase, uint256 reserveBalanceNetwork) =
             converterReserveBalances(converter, baseToken, _networkToken);
 
@@ -474,7 +474,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      */
     function _baseTokenAvailableSpace(IConverterAnchor poolAnchor) internal view returns (uint256) {
         // get the pool converter
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolAnchor)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(poolAnchor.owner()));
 
         // get the base token
         IERC20 baseToken = converterOtherReserve(converter, _networkToken);
@@ -928,7 +928,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             );
         }
 
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(poolToken.owner()));
         IERC20 otherReserve = converterOtherReserve(converter, reserveToken);
         (uint256 rateN, uint256 rateD) = converterReserveBalances(converter, otherReserve, reserveToken);
 
@@ -969,7 +969,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolTokenSupply = poolToken.totalSupply();
 
         // get the reserve balance
-        IConverter converter = IConverter(payable(ownedBy(poolToken)));
+        IConverter converter = IConverter(payable(poolToken.owner()));
         uint256 reserveBalance = converter.getConnectorBalance(reserveToken);
 
         // for standard pools, 50% of the pool supply value equals the value of each reserve
@@ -997,7 +997,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             uint256
         )
     {
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(poolToken.owner()));
         IERC20 otherReserve = converterOtherReserve(converter, reserveToken);
 
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, reserveToken);
@@ -1121,7 +1121,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         IERC20 reserveToken1,
         IERC20 reserveToken2
     ) internal {
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(poolToken.owner()));
 
         IERC20[] memory reserveTokens = new IERC20[](2);
         uint256[] memory minReturns = new uint256[](2);
@@ -1371,10 +1371,5 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function converterOtherReserve(IConverter converter, IERC20 thisReserve) private view returns (IERC20) {
         IERC20 otherReserve = converter.connectorTokens(0);
         return otherReserve != thisReserve ? otherReserve : converter.connectorTokens(1);
-    }
-
-    // utility to get the owner
-    function ownedBy(IOwned owned) private view returns (address) {
-        return owned.owner();
     }
 }
