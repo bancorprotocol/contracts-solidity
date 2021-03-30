@@ -345,7 +345,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-<<<<<<< HEAD
      * @dev transfers a portion of the accumulated conversion fees
      */
     function processNetworkFees() external protected {
@@ -378,24 +377,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param _reserveTokens reserve tokens
      *
      * @return reserve balances minus their corresponding fees
-=======
-     * @dev returns the reserve balances of the given reserve tokens
-     *
-     * @param _reserveTokens reserve tokens
-     *
-     * @return reserve balances
->>>>>>> 36415acc53257d17e08a348c2da5ce192c05b32b
      */
     function baseReserveBalances(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
-<<<<<<< HEAD
         (, uint256 fee0, uint256 fee1) = networkWalletAndFees(reserveBalance0, reserveBalance1);
         return [reserveBalance0 - fee0, reserveBalance1 - fee1];
-=======
-        return [reserveBalance0, reserveBalance1];
->>>>>>> 36415acc53257d17e08a348c2da5ce192c05b32b
     }
 
     /**
@@ -907,12 +895,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // destroy the user tokens
         poolToken.destroy(msg.sender, _amount);
 
-<<<<<<< HEAD
-=======
-        // sync the balances to ensure no mismatch
-        syncReserveBalances(0);
-
->>>>>>> 36415acc53257d17e08a348c2da5ce192c05b32b
         uint256 newPoolTokenSupply = totalSupply.sub(_amount);
 
         uint256[2] memory oldReserveBalances;
