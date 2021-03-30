@@ -905,8 +905,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
 
-        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
-
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
             uint256 reserveAmount = reserveAmounts[i];
