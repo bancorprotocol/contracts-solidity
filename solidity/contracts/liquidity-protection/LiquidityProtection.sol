@@ -430,7 +430,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         poolSupportedAndWhitelisted(poolAnchor)
         returns (uint256, uint256)
     {
-        return (_baseTokenAvailableSpace(poolAnchor), _networkTokenAvailableSpace(poolAnchor));
+        return (baseTokenAvailableSpace(poolAnchor), networkTokenAvailableSpace(poolAnchor));
     }
 
     /**
@@ -440,39 +440,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * @return maximum amount of base tokens that can be single-side staked in the pool
      */
-    function baseTokenAvailableSpace(IConverterAnchor poolAnchor)
-        external
-        view
-        poolSupportedAndWhitelisted(poolAnchor)
-        returns (uint256)
-    {
-        return _baseTokenAvailableSpace(poolAnchor);
-    }
-
-    /**
-     * @dev returns the network-token staking limits of a given pool
-     *
-     * @param poolAnchor anchor of the pool
-     *
-     * @return maximum amount of network tokens that can be single-side staked in the pool
-     */
-    function networkTokenAvailableSpace(IConverterAnchor poolAnchor)
-        external
-        view
-        poolSupportedAndWhitelisted(poolAnchor)
-        returns (uint256)
-    {
-        return _networkTokenAvailableSpace(poolAnchor);
-    }
-
-    /**
-     * @dev returns the base-token staking limits of a given pool
-     *
-     * @param poolAnchor anchor of the pool
-     *
-     * @return maximum amount of base tokens that can be single-side staked in the pool
-     */
-    function _baseTokenAvailableSpace(IConverterAnchor poolAnchor) internal view returns (uint256) {
+    function baseTokenAvailableSpace(IConverterAnchor poolAnchor) internal view returns (uint256) {
         // get the pool converter
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolAnchor)));
 
@@ -506,7 +474,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * @return maximum amount of network tokens that can be single-side staked in the pool
      */
-    function _networkTokenAvailableSpace(IConverterAnchor poolAnchor) internal view returns (uint256) {
+    function networkTokenAvailableSpace(IConverterAnchor poolAnchor) internal view returns (uint256) {
         // get the pool token
         IDSToken poolToken = IDSToken(address(poolAnchor));
 
