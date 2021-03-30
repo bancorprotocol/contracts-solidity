@@ -30,7 +30,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     uint256 private constant AVERAGE_RATE_PERIOD = 10 minutes;
 
     uint256 private __reserveBalances;
-    uint256 private __reserveBalancesProd;
+    uint256 private _reserveBalancesProduct;
     IERC20[] private __reserveTokens;
     mapping(IERC20 => uint256) private __reserveIds;
 
@@ -348,23 +348,27 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev transfers a portion of the accumulated conversion fees
      */
     function processNetworkFees() external protected {
-        (uint256 reserveBalance0, uint256 reserveBalance1) = processNetworkFeesAndSyncReserveBalances(0);
-        __reserveBalancesProd = reserveBalance0 * reserveBalance1;
+        (uint256 reserveBalance0, uint256 reserveBalance1) = processNetworkFees(0);
+        _reserveBalancesProduct = reserveBalance0 * reserveBalance1;
     }
 
     /**
-     * @dev transfers a portion of the accumulated conversion fees and syncs the reserve balances
+     * @dev transfers a portion of the accumulated conversion fees
      *
      * @param _value amount of ether to exclude from the ether reserve balance (if relevant)
      *
      * @return new reserve balances
      */
-    function processNetworkFeesAndSyncReserveBalances(uint256 _value) internal returns (uint256, uint256) {
+    function processNetworkFees(uint256 _value) internal returns (uint256, uint256) {
         syncReserveBalances(_value);
 
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
+<<<<<<< HEAD
         (uint256 currPoint, uint256 prevPoint) =
             networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
+=======
+        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, _reserveBalancesProduct);
+>>>>>>> 0bc92a4971f919d21db379ceb317e0b6d6562882
 
         if (currPoint <= prevPoint) {
             return (reserveBalance0, reserveBalance1);
@@ -391,10 +395,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return reserve balances minus their corresponding fees
      */
-    function reserveBalancesMinusFees(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
+    function baseReserveBalances(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
+<<<<<<< HEAD
         (uint256 currPoint, uint256 prevPoint) =
             networkFeePoints(reserveBalance0 * reserveBalance1, __reserveBalancesProd);
 
@@ -405,9 +410,20 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
                 reserveBalance0.sub(reserveBalance0.mul(n).div(d)),
                 reserveBalance1.sub(reserveBalance1.mul(n).div(d))
             ];
+=======
+        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(reserveBalance0 * reserveBalance1, _reserveBalancesProduct);
+
+        if (currPoint <= prevPoint) {
+            return [reserveBalance0, reserveBalance1];
+>>>>>>> 0bc92a4971f919d21db379ceb317e0b6d6562882
         }
 
-        return [reserveBalance0, reserveBalance1];
+        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
+        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
+        return [
+            reserveBalance0.sub(reserveBalance0.mul(n).div(d)),
+            reserveBalance1.sub(reserveBalance1.mul(n).div(d))
+        ];
     }
 
     /**
@@ -417,19 +433,23 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return reserve balance minus its corresponding fee
      */
-    function reserveBalanceMinusFee(IERC20 _reserveToken) internal view returns (uint256) {
+    function baseReserveBalance(IERC20 _reserveToken) internal view returns (uint256) {
         uint256 reserveId = __reserveIds[_reserveToken];
         (uint256 thisReserveBalance, uint256 otherReserveBalance) = reserveBalances(reserveId, 3 - reserveId);
+<<<<<<< HEAD
         (uint256 currPoint, uint256 prevPoint) =
             networkFeePoints(thisReserveBalance * otherReserveBalance, __reserveBalancesProd);
+=======
+        (uint256 currPoint, uint256 prevPoint) = networkFeePoints(thisReserveBalance * otherReserveBalance, _reserveBalancesProduct);
+>>>>>>> 0bc92a4971f919d21db379ceb317e0b6d6562882
 
-        if (currPoint > prevPoint) {
-            uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
-            (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
-            return thisReserveBalance.sub(thisReserveBalance.mul(n).div(d));
+        if (currPoint <= prevPoint) {
+            return thisReserveBalance;
         }
 
-        return thisReserveBalance;
+        uint32 networkFee = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFee();
+        (uint256 n, uint256 d) = networkFeeRatio(currPoint, prevPoint, networkFee);
+        return thisReserveBalance.sub(thisReserveBalance.mul(n).div(d));
     }
 
     /**
@@ -850,7 +870,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[2] memory newReserveBalances;
 
         // transfer the fees and sync the balances to ensure no mismatch
-        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFeesAndSyncReserveBalances(msg.value);
+        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFees(msg.value);
 
         uint256 amount;
         uint256[2] memory reserveAmounts;
@@ -900,7 +920,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         setReserveBalances(1, 2, newReserveBalances[0], newReserveBalances[1]);
 
         // set the reserve balances product
-        __reserveBalancesProd = newReserveBalances[0] * newReserveBalances[1];
+        _reserveBalancesProduct = newReserveBalances[0] * newReserveBalances[1];
 
         // verify that the equivalent amount of tokens is equal to or larger than the user's expectation
         require(amount >= _minReturn, "ERR_RETURN_TOO_LOW");
@@ -998,7 +1018,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[2] memory newReserveBalances;
 
         // transfer the fees and sync the balances to ensure no mismatch
-        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFeesAndSyncReserveBalances(0);
+        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFees(0);
 
         uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
 
@@ -1023,7 +1043,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         setReserveBalances(1, 2, newReserveBalances[0], newReserveBalances[1]);
 
         // set the reserve balances product
-        __reserveBalancesProd = newReserveBalances[0] * newReserveBalances[1];
+        _reserveBalancesProduct = newReserveBalances[0] * newReserveBalances[1];
 
         if (inputRearranged) {
             uint256 tempReserveAmount = reserveAmounts[0];
@@ -1055,7 +1075,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[] memory _reserveAmounts = new uint256[](2);
 
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory _reserveBalances = reserveBalancesMinusFees(_reserveTokens);
+        uint256[2] memory _reserveBalances = baseReserveBalances(_reserveTokens);
         uint256 amount = fundSupplyAmount(totalSupply, _reserveBalances[_reserveTokenIndex], _reserveAmount);
 
         for (uint256 i = 0; i < 2; i++) {
@@ -1078,7 +1098,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     function addLiquidityReturn(IERC20 _reserveToken, uint256 _reserveAmount) public view returns (uint256) {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256 _reserveBalance = reserveBalanceMinusFee(_reserveToken);
+        uint256 _reserveBalance = baseReserveBalance(_reserveToken);
         return fundSupplyAmount(totalSupply, _reserveBalance, _reserveAmount);
     }
 
@@ -1096,7 +1116,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         returns (uint256[] memory)
     {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
-        uint256[2] memory _reserveBalances = reserveBalancesMinusFees(_reserveTokens);
+        uint256[2] memory _reserveBalances = baseReserveBalances(_reserveTokens);
         return removeLiquidityReserveAmounts(_amount, totalSupply, _reserveBalances);
     }
 
