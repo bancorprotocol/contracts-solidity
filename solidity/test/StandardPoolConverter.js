@@ -1128,7 +1128,7 @@ describe('StandardPoolConverter', () => {
         for (const initialBalance1 of [100000, 200000, 400000, 800000]) {
             for (const initialBalance2 of [100000, 300000, 500000, 700000]) {
                 for (const conversionFeePercent of [0, 5, 10, 25, 75]) {
-                    for (const networkFeePercent of [0, 5, 10, 25, 50]) {
+                    for (const networkFeePercent of [0, 5, 10, 25, 75, 100]) {
                         it(description('processNetworkFees when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
                             const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
@@ -1146,8 +1146,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.000375');
-                            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.000375');
+                            expectAlmostEqual(actualFee1, expectedFee1, '2', '0.000188');
+                            expectAlmostEqual(actualFee2, expectedFee2, '2', '0.000188');
                         });
                     }
                 }
@@ -1176,8 +1176,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000006');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000006');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000005');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000005');
                         });
                     }
                 }
@@ -1232,8 +1232,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001369');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001369');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001371');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001371');
                         });
                     }
                 }
@@ -1309,8 +1309,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003395');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001667');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003391');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001671');
                         });
                     }
                 }
@@ -1401,8 +1401,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.02861');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.02861');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.02383');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.02383');
                         });
                     }
                 }
