@@ -1264,7 +1264,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         (address networkFeeWallet, uint32 networkFee) = INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFeeParams();
         uint256 n = (currPoint - prevPoint) * networkFee;
-        uint256 d = (currPoint * (PPM_RESOLUTION - networkFee * 2)).add(prevPoint * networkFee * 2);
+        uint256 d = (currPoint * (PPM_RESOLUTION - networkFee) * 2).add(prevPoint * networkFee * 2);
         return (networkFeeWallet, reserveBalance0.mul(n).div(d), reserveBalance1.mul(n).div(d));
     }
 
