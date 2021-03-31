@@ -1128,7 +1128,7 @@ describe('StandardPoolConverter', () => {
         for (const initialBalance1 of [100000, 200000, 400000, 800000]) {
             for (const initialBalance2 of [100000, 300000, 500000, 700000]) {
                 for (const conversionFeePercent of [0, 5, 10, 25, 75]) {
-                    for (const networkFeePercent of [0, 5, 10, 25, 75, 100]) {
+                    for (const networkFeePercent of [0, 5, 10, 25, 50]) {
                         it(description('processNetworkFees when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
                             const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
@@ -1146,8 +1146,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.000563');
-                            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.000563');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000438');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000438');
                         });
                     }
                 }
@@ -1472,7 +1472,7 @@ describe('StandardPoolConverter', () => {
                 const absoluteError = x.sub(y).abs();
                 const relativeError = x.div(y).sub(1).abs();
                 expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.be.true(
-                    `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
+                    `\nabsoluteError = ${absoluteError.toFixed()}\nrelativeError = ${relativeError.toFixed(25)}`
                 );
             }
         }

@@ -23,7 +23,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
 
     // error message binary size optimization
     function _validFee(uint32 fee) internal pure {
-        require(fee <= PPM_RESOLUTION, "ERR_INVALID_FEE");
+        require(fee <= PPM_RESOLUTION / 2, "ERR_INVALID_FEE");
     }
 
     /**
