@@ -106,7 +106,7 @@ describe('ConverterUpgrader', () => {
     };
 
     const upgradeConverter = async (upgrader: any, converter: any, options = {}) => {
-        let res;
+        let res: any;
         // For versions 11 or higher, we just call upgrade on the converter.
         if (converter.upgrade) {
             res = await converter.connect(deployer).upgrade({ ...options });

@@ -7,7 +7,7 @@ import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
 
-let accounts;
+let accounts: SignerWithAddress[];
 let owner: SignerWithAddress;
 let nonOwner: SignerWithAddress;
 
