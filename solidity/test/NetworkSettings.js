@@ -11,7 +11,7 @@ describe('NetworkSettings', () => {
     const portion1 = new BN(111);
     const portion2 = new BN(222);
     const invalidAddress = constants.ZERO_ADDRESS;
-    const invalidPortion = new BN(500001);
+    const invalidPortion = new BN(666667);
 
     const expectReturn = async (method, object) => {
         expect(JSON.stringify(await method)).to.be.equal(JSON.stringify(object));
