@@ -1134,7 +1134,7 @@ describe('StandardPoolConverter', () => {
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, CONVERSION_AMOUNT);
-                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
@@ -1146,8 +1146,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.000563');
-                            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.000563');
+                            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.000375');
+                            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.000375');
                         });
                     }
                 }
@@ -1163,7 +1163,7 @@ describe('StandardPoolConverter', () => {
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, CONVERSION_AMOUNT);
-                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
@@ -1176,8 +1176,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000007');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000007');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000006');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000006');
                         });
                     }
                 }
@@ -1225,15 +1225,15 @@ describe('StandardPoolConverter', () => {
                             const totalConversionFee1InPoolTokenUnits = totalConversionFee1.mul(totalSupply).div(reserveBalance1);
                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2.mul(totalSupply).div(reserveBalance2);
                             const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(totalConversionFee2InPoolTokenUnits);
-                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.muln(networkFeePercent).divn(200);
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
                             const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001367');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001367');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001369');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001369');
                         });
                     }
                 }
@@ -1302,15 +1302,15 @@ describe('StandardPoolConverter', () => {
                             const totalConversionFee1InPoolTokenUnits = totalConversionFee1.mul(totalSupply).div(reserveBalance1);
                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2.mul(totalSupply).div(reserveBalance2);
                             const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(totalConversionFee2InPoolTokenUnits);
-                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.muln(networkFeePercent).divn(200);
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
                             const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003398');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001664');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003395');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001667');
                         });
                     }
                 }
@@ -1363,15 +1363,15 @@ describe('StandardPoolConverter', () => {
                             const totalConversionFee1InPoolTokenUnits = totalConversionFee1.mul(totalSupply).div(reserveBalance1);
                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2.mul(totalSupply).div(reserveBalance2);
                             const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(totalConversionFee2InPoolTokenUnits);
-                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.muln(networkFeePercent).divn(200);
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
                             const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.0000015');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.0000029');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.0000014');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.0000014');
                         });
                     }
                 }
@@ -1388,7 +1388,7 @@ describe('StandardPoolConverter', () => {
 
                             const conversionAmount = ONE_TOKEN.muln(Math.max(initialBalance1, initialBalance2));
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, conversionAmount);
-                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(conversionAmount);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
@@ -1401,8 +1401,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.03256');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.03256');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.02861');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.02861');
                         });
                     }
                 }
