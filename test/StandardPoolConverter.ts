@@ -313,11 +313,8 @@ describe('StandardPoolConverter', () => {
                 const reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
 
-                const events = await converter.queryFilter(
-                    { topics: ['TokenRateUpdate'] },
-                    res.blockNumber,
-                    res.blockNumber
-                );
+                const filter = converter.filters.TokenRateUpdate(null, null, null, null);
+                const events = await converter.queryFilter(filter, res.blockNumber, res.blockNumber);
 
                 // TokenRateUpdate for [source, target):
                 const { args: event1 } = events[0];
@@ -1880,7 +1877,9 @@ describe('StandardPoolConverter', () => {
                 1,
                 Constants.ZERO_ADDRESS
             );
-            const events = await converter.queryFilter('Conversion', response.blockNumber, response.blockNumber);
+
+            const filter = converter.filters.Conversion(null, null, null, null);
+            const events = await converter.queryFilter(filter, response.blockNumber, response.blockNumber);
 
             const args = events.slice(-1)[0].args;
             return { amount: args._return, fee: args._conversionFee };

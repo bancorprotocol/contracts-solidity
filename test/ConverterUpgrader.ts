@@ -7,7 +7,7 @@ import ConverterHelper, { ConverterType } from './helpers/Converter';
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { ContractRegistry, ConverterFactory, TestStandardToken } from '../typechain';
+import { ContractRegistry, ConverterFactory, ConverterUpgrader, TestStandardToken } from '../typechain';
 
 const CONVERSION_FEE = BigNumber.from(1000);
 const MAX_CONVERSION_FEE = BigNumber.from(30000);
@@ -105,7 +105,7 @@ describe('ConverterUpgrader', () => {
         return await initWithETHReserve(3, deployer, version, activate);
     };
 
-    const upgradeConverter = async (upgrader: any, converter: any, options = {}) => {
+    const upgradeConverter = async (upgrader: ConverterUpgrader, converter: any, options = {}) => {
         let res: any;
         // For versions 11 or higher, we just call upgrade on the converter.
         if (converter.upgrade) {
@@ -120,7 +120,8 @@ describe('ConverterUpgrader', () => {
             await converter.acceptOwnership();
         }
 
-        const events = await upgrader.queryFilter('ConverterUpgrade', res.blockNumber, res.blockNumber);
+        const filter = upgrader.filters.ConverterUpgrade(null, null);
+        const events = await upgrader.queryFilter(filter, res.blockNumber, res.blockNumber);
 
         expect(events.length).to.be.at.most(1);
 

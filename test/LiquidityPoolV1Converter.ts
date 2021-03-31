@@ -2,14 +2,18 @@ import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { BancorNetwork, ContractRegistry, DSToken, TestNonStandardToken, TestStandardToken } from '../typechain';
+import {
+    BancorNetwork,
+    ContractRegistry,
+    DSToken,
+    TestLiquidityPoolV1Converter,
+    TestNonStandardToken,
+    TestStandardToken
+} from '../typechain';
+
 import Utils from './helpers/Utils';
-
-const { Decimal, divCeil } = require('./helpers/MathUtils');
-
-const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS, MAX_UINT256 } = require('./helpers/Constants');
-const { duration, latest } = require('./helpers/Time');
-
+import MathUtils from './helpers/MathUtils';
+import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 
 let now: BigNumber;
@@ -29,19 +33,20 @@ const MIN_RETURN = BigNumber.from(1);
 const PPM_RESOLUTION = BigNumber.from(1000000);
 
 describe('LiquidityPoolV1Converter', () => {
-    const createConverter = async (
-        tokenAddress: any,
-        registryAddress = contractRegistry.address,
-        maxConversionFee = 0
-    ) => {
-        return await Contracts.TestLiquidityPoolV1Converter.deploy(tokenAddress, registryAddress, maxConversionFee);
-    };
-
-    const initConverter = async (activate: any, isETHReserve: any, maxConversionFee = 0, isStandardPool = false) => {
+    const initConverter = async (
+        activate: any,
+        isETHReserve: any,
+        maxConversionFee = 0,
+        isStandardPool = false
+    ): Promise<TestLiquidityPoolV1Converter> => {
         token = await Contracts.DSToken.deploy('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
+        const converter = await Contracts.TestLiquidityPoolV1Converter.deploy(
+            tokenAddress,
+            contractRegistry.address,
+            maxConversionFee
+        );
         await converter.addReserve(getReserve1Address(isETHReserve), isStandardPool ? 500000 : 250000);
         await converter.addReserve(reserveToken2.address, isStandardPool ? 500000 : 150000);
         await reserveToken2.transfer(converter.address, 8000);
@@ -58,7 +63,7 @@ describe('LiquidityPoolV1Converter', () => {
             await converter.acceptTokenOwnership();
         }
 
-        now = await latest();
+        now = await Utils.latest();
         await converter.setTime(now);
 
         return converter;
@@ -88,11 +93,11 @@ describe('LiquidityPoolV1Converter', () => {
     };
 
     const getReserve1Address = (isETH: any) => {
-        return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
+        return isETH ? Constants.NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
     const convert = async (path: any, amount: any, minReturn: any, options = {}) => {
-        return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS, options);
+        return bancorNetwork.convertByPath2(path, amount, minReturn, Constants.ZERO_ADDRESS, options);
     };
 
     before(async () => {
@@ -106,20 +111,20 @@ describe('LiquidityPoolV1Converter', () => {
         await bancorFormula.init();
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
 
         const factory = await Contracts.ConverterFactory.deploy();
-        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, factory.address);
 
         await factory.registerTypedConverterFactory((await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address);
     });
 
     beforeEach(async () => {
         bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
 
         upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+        await contractRegistry.registerAddress(Constants.registry.CONVERTER_UPGRADER, upgrader.address);
 
         token = await Contracts.DSToken.deploy('Token1', 'TKN1', 2);
         tokenAddress = token.address;
@@ -277,7 +282,8 @@ describe('LiquidityPoolV1Converter', () => {
                 const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
                 const reserve2Weight = await converter.reserveWeight(reserveToken2.address);
 
-                const events = await converter.queryFilter('TokenRateUpdate', res.blockNumber, res.blockNumber);
+                const filter = converter.filters.TokenRateUpdate(null, null, null, null);
+                const events = await converter.queryFilter(filter, res.blockNumber, res.blockNumber);
 
                 // TokenRateUpdate for [source, target):
                 const { args: event1 } = events[0];
@@ -368,9 +374,9 @@ describe('LiquidityPoolV1Converter', () => {
                 const prevReserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
                 const prevReserve2Balance = await converter.reserveBalance(reserveToken2.address);
                 const prevReserve3Balance = await converter.reserveBalance(reserveToken3.address);
-                const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
-                const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
-                const token3Amount = divCeil(prevReserve3Balance.mul(percentage), supply);
+                const token1Amount = MathUtils.divCeil(prevReserve1Balance.mul(percentage), supply);
+                const token2Amount = MathUtils.divCeil(prevReserve2Balance.mul(percentage), supply);
+                const token3Amount = MathUtils.divCeil(prevReserve3Balance.mul(percentage), supply);
 
                 const amount = BigNumber.from(100000);
                 let value = BigNumber.from(0);
@@ -411,9 +417,9 @@ describe('LiquidityPoolV1Converter', () => {
                 const prevReserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
                 const prevReserve2Balance = await converter.reserveBalance(reserveToken2.address);
                 const prevReserve3Balance = await converter.reserveBalance(reserveToken3.address);
-                const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
-                const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
-                const token3Amount = divCeil(prevReserve3Balance.mul(percentage), supply);
+                const token1Amount = MathUtils.divCeil(prevReserve1Balance.mul(percentage), supply);
+                const token2Amount = MathUtils.divCeil(prevReserve2Balance.mul(percentage), supply);
+                const token3Amount = MathUtils.divCeil(prevReserve3Balance.mul(percentage), supply);
 
                 const amount = BigNumber.from(100000);
                 let value = BigNumber.from(0);
@@ -724,7 +730,7 @@ describe('LiquidityPoolV1Converter', () => {
     });
 
     describe('recent average rate', () => {
-        const AVERAGE_RATE_PERIOD = duration.minutes(10);
+        const AVERAGE_RATE_PERIOD = Utils.duration.minutes(10);
 
         let converter: any;
         beforeEach(async () => {
@@ -750,11 +756,11 @@ describe('LiquidityPoolV1Converter', () => {
         };
 
         const expectRatesAlmostEqual = (rate: any, newRate: any) => {
-            const rate1 = Decimal(rate.n.toString()).div(Decimal(rate.d.toString()));
-            const rate2 = Decimal(newRate.n.toString()).div(Decimal(newRate.d.toString()));
+            const rate1 = new MathUtils.Decimal(rate.n.toString()).div(new MathUtils.Decimal(rate.d.toString()));
+            const rate2 = new MathUtils.Decimal(newRate.n.toString()).div(new MathUtils.Decimal(newRate.d.toString()));
 
             if (!rate1.eq(rate2)) {
-                const error = Decimal(rate1.toString()).div(rate2.toString()).sub(1).abs();
+                const error = new MathUtils.Decimal(rate1.toString()).div(rate2.toString()).sub(1).abs();
                 expect(error.lte('0.000002')).to.be.true;
             }
         };
@@ -785,8 +791,8 @@ describe('LiquidityPoolV1Converter', () => {
         });
 
         it('should be initially equal to the current rate', async () => {
-            const averageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
-            const currentRate = await getCurrentRate(NATIVE_TOKEN_ADDRESS, reserveToken2.address);
+            const averageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
+            const currentRate = await getCurrentRate(Constants.NATIVE_TOKEN_ADDRESS, reserveToken2.address);
             const prevAverageRateUpdateTime = await getPrevAverageRateUpdateTime();
 
             expect(averageRate.n).to.be.equal(currentRate.n);
@@ -797,18 +803,18 @@ describe('LiquidityPoolV1Converter', () => {
         it('should change after a conversion', async () => {
             const amount = BigNumber.from(500);
 
-            await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+            await convert([Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
                 value: amount
             });
-            const prevAverageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+            const prevAverageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
             const prevAverageRateUpdateTime = await getPrevAverageRateUpdateTime();
 
-            await converter.setTime(now.add(duration.seconds(10)));
+            await converter.setTime(now.add(Utils.duration.seconds(10)));
 
-            await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+            await convert([Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
                 value: amount
             });
-            const averageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+            const averageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
             const averageRateUpdateTime = await getPrevAverageRateUpdateTime();
 
             expect(averageRate.n).not.to.be.equal(prevAverageRate.n);
@@ -820,49 +826,59 @@ describe('LiquidityPoolV1Converter', () => {
             const amount = BigNumber.from(500);
 
             // set initial rate
-            await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+            await convert([Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
                 value: amount
             });
 
-            let converterTime = now.add(duration.seconds(10));
+            let converterTime = now.add(Utils.duration.seconds(10));
             await converter.setTime(converterTime);
-            await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
+            await convert([Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
                 value: amount
             });
 
-            const currentRate = await getCurrentRate(NATIVE_TOKEN_ADDRESS, reserveToken2.address);
-            let averageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+            const currentRate = await getCurrentRate(Constants.NATIVE_TOKEN_ADDRESS, reserveToken2.address);
+            let averageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
 
             expect(averageRate.n).not.to.be.equal(currentRate.n);
             expect(averageRate.d).not.to.be.equal(currentRate.d);
 
             converterTime = converterTime.add(AVERAGE_RATE_PERIOD);
             await converter.setTime(converterTime);
-            averageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+            averageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
 
             expect(averageRate.n).to.be.equal(currentRate.n);
             expect(averageRate.d).to.be.equal(currentRate.d);
         });
 
         for (const seconds of [0, 1, 2, 3, 10, 100, 200, 300, 400, 500]) {
-            const timeElapsed = duration.seconds(seconds);
+            const timeElapsed = Utils.duration.seconds(seconds);
             context(`${timeElapsed.toString()} seconds after conversion`, async () => {
                 beforeEach(async () => {
                     const amount = BigNumber.from(500);
 
                     // set initial rate (a second ago)
-                    await converter.setTime(now.sub(duration.seconds(1)));
-                    await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
-                        value: amount
-                    });
+                    await converter.setTime(now.sub(Utils.duration.seconds(1)));
+                    await convert(
+                        [Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address],
+                        amount,
+                        MIN_RETURN,
+                        {
+                            value: amount
+                        }
+                    );
 
                     // reset converter time to current time
                     await converter.setTime(now);
 
                     // convert
-                    await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
-                        value: amount
-                    });
+                    await convert(
+                        [Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address],
+                        amount,
+                        MIN_RETURN,
+                        {
+                            value: amount
+                        }
+                    );
 
                     // increase the current time
                     await converter.setTime(now.add(timeElapsed));
@@ -872,12 +888,17 @@ describe('LiquidityPoolV1Converter', () => {
                     const amount = BigNumber.from(1000);
 
                     const prevAverageRate = await getPrevAverageRate();
-                    const currentRate = await getCurrentRate(NATIVE_TOKEN_ADDRESS, reserveToken2.address);
+                    const currentRate = await getCurrentRate(Constants.NATIVE_TOKEN_ADDRESS, reserveToken2.address);
                     const expectedAverageRate = getExpectedAverageRate(prevAverageRate, currentRate, timeElapsed);
-                    await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
-                        value: amount
-                    });
-                    const averageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+                    await convert(
+                        [Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address],
+                        amount,
+                        MIN_RETURN,
+                        {
+                            value: amount
+                        }
+                    );
+                    const averageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
 
                     expectRatesAlmostEqual(averageRate, expectedAverageRate);
                 });
@@ -885,16 +906,26 @@ describe('LiquidityPoolV1Converter', () => {
                 it('should not change more than once in a block', async () => {
                     const amount = BigNumber.from(1000);
 
-                    await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
-                        value: amount
-                    });
-                    const averageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+                    await convert(
+                        [Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address],
+                        amount,
+                        MIN_RETURN,
+                        {
+                            value: amount
+                        }
+                    );
+                    const averageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
 
                     for (let i = 0; i < 5; i++) {
-                        await convert([NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address], amount, MIN_RETURN, {
-                            value: amount
-                        });
-                        let averageRate2 = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+                        await convert(
+                            [Constants.NATIVE_TOKEN_ADDRESS, tokenAddress, reserveToken2.address],
+                            amount,
+                            MIN_RETURN,
+                            {
+                                value: amount
+                            }
+                        );
+                        let averageRate2 = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
 
                         expect(averageRate.n).to.be.equal(averageRate2.n);
                         expect(averageRate.d).to.be.equal(averageRate2.d);
@@ -903,11 +934,11 @@ describe('LiquidityPoolV1Converter', () => {
 
                 it('should change after some time with no conversions', async () => {
                     const prevAverageRate = await getPrevAverageRate();
-                    const currentRate = await getCurrentRate(NATIVE_TOKEN_ADDRESS, reserveToken2.address);
+                    const currentRate = await getCurrentRate(Constants.NATIVE_TOKEN_ADDRESS, reserveToken2.address);
 
                     for (let i = 0; i < 10; i++) {
                         // increase the current time and verify that the average rate is updated accordingly
-                        const delta = duration.seconds(10).mul(BigNumber.from(i));
+                        const delta = Utils.duration.seconds(10).mul(BigNumber.from(i));
                         const totalElapsedTime = timeElapsed.add(delta);
                         await converter.setTime(now.add(totalElapsedTime));
 
@@ -916,7 +947,7 @@ describe('LiquidityPoolV1Converter', () => {
                             currentRate,
                             totalElapsedTime
                         );
-                        const averageRate = await getAverageRate(NATIVE_TOKEN_ADDRESS);
+                        const averageRate = await getAverageRate(Constants.NATIVE_TOKEN_ADDRESS);
 
                         expectRatesAlmostEqual(averageRate, expectedAverageRate);
                     }
@@ -935,10 +966,10 @@ describe('LiquidityPoolV1Converter', () => {
             );
 
             const reserveTokens = [
-                (await Contracts.TestStandardToken.deploy('name', 'symbol', 0, MAX_UINT256)).address,
+                (await Contracts.TestStandardToken.deploy('name', 'symbol', 0, Constants.MAX_UINT256)).address,
                 hasETH
-                    ? NATIVE_TOKEN_ADDRESS
-                    : (await Contracts.TestStandardToken.deploy('name', 'symbol', 0, MAX_UINT256)).address
+                    ? Constants.NATIVE_TOKEN_ADDRESS
+                    : (await Contracts.TestStandardToken.deploy('name', 'symbol', 0, Constants.MAX_UINT256)).address
             ];
 
             for (const reserveToken of reserveTokens) {
@@ -952,7 +983,7 @@ describe('LiquidityPoolV1Converter', () => {
         };
 
         const approve = async (reserveToken: any, converter: any, amount: any) => {
-            if (reserveToken === NATIVE_TOKEN_ADDRESS) {
+            if (reserveToken === Constants.NATIVE_TOKEN_ADDRESS) {
                 return;
             }
 
@@ -961,7 +992,7 @@ describe('LiquidityPoolV1Converter', () => {
         };
 
         const getAllowance = async (reserveToken: any, converter: any) => {
-            if (reserveToken === NATIVE_TOKEN_ADDRESS) {
+            if (reserveToken === Constants.NATIVE_TOKEN_ADDRESS) {
                 return BigNumber.from(0);
             }
 
@@ -1048,11 +1079,13 @@ describe('LiquidityPoolV1Converter', () => {
                 state.push({ supply: supply, balances: balances });
 
                 for (let i = 0; i < allowances.length; i++) {
-                    const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
+                    const diff = new MathUtils.Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
                     expect(diff.eq('0')).to.be.true;
                 }
 
-                const actual = balances.map((balance) => Decimal(balance.toString()).div(supply.toString()));
+                const actual = balances.map((balance: any) =>
+                    new MathUtils.Decimal(balance.toString()).div(supply.toString())
+                );
                 for (let i = 0; i < expected.length; i++) {
                     const diff = expected[i].div(actual[i]);
                     expect(diff.eq('1')).to.be.true;
@@ -1082,7 +1115,9 @@ describe('LiquidityPoolV1Converter', () => {
                     reserveTokens.map((reserveToken: any) => Utils.getBalance(reserveToken, converter))
                 )) as any;
                 for (let i = 0; i < balances.length; i++) {
-                    const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
+                    const diff = new MathUtils.Decimal(state[n - 1].balances[i].toString()).div(
+                        new MathUtils.Decimal(balances[i].toString())
+                    );
                     expect(diff.eq('1')).to.be.true;
                     expect(prevBalances[i].sub(balances[i])).to.be.equal(reserveAmounts[i]);
                 }
