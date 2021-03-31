@@ -180,7 +180,7 @@ describe('ConverterLiquidity', () => {
                         reserveTokens,
                         reserveAmounts
                     );
-                    const liquidityReturns = await getLiquidityReturns(
+                    const liquidityReturn = await getLiquidityReturn(
                         state.length == 0,
                         converter,
                         reserveTokens,
@@ -213,9 +213,7 @@ describe('ConverterLiquidity', () => {
                         }
                     }
 
-                    for (const liquidityReturn of liquidityReturns) {
-                        expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
-                    }
+                    expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
 
                     expected = actual;
                     prevSupply = supply;
@@ -318,17 +316,14 @@ describe('ConverterLiquidity', () => {
         );
     };
 
-    const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+    const getLiquidityReturn = async (firstTime, converter, reserveTokens, reserveAmounts) => {
         if (firstTime) {
             const length = Math.round(
                 reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length / reserveAmounts.length
             );
-            const retVal = new BN('1'.padEnd(length, '0'));
-            return reserveAmounts.map((reserveAmount, i) => retVal);
+            return new BN(10).pow(new BN(length - 1));
         }
 
-        return await Promise.all(
-            reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
-        );
+        return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
     };
 });

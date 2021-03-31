@@ -512,43 +512,6 @@ describe('StandardPoolConverter', () => {
                 );
             });
 
-            it('verifies that addLiquidity with separate reserve balances gets the correct reserve balance amounts from the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await reserveToken.transfer(sender2, 5000);
-                await reserveToken2.transfer(sender2, 5000);
-
-                const supply = await token.totalSupply.call();
-                const percentage = new BN(19);
-                const prevReserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const prevReserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token1Amount = divCeil(prevReserve1Balance.mul(percentage), supply);
-                const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
-
-                const amount = new BN(100000);
-                let value = 0;
-                if (isETHReserve) {
-                    value = amount;
-                } else {
-                    await reserveToken.approve(converter.address, amount, { from: sender2 });
-                }
-
-                await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                await converter.methods['addLiquidity(uint256,uint256,uint256)'](amount, token2Amount, 1, {
-                    from: sender2,
-                    value
-                });
-
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-
-                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(token1Amount));
-                expect(reserve2Balance).to.be.bignumber.equal(prevReserve2Balance.add(token2Amount));
-            });
-
             it('verifies that removeLiquidity sends the correct reserve balance amounts to the caller', async () => {
                 const converter = await initConverter(false, isETHReserve);
 
@@ -675,39 +638,6 @@ describe('StandardPoolConverter', () => {
                         from: sender2
                     })
                 );
-            });
-
-            it('verifies that removeLiquidity with separate minimum return args sends the correct reserve balance amounts to the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await token.transfer(sender2, 100);
-
-                const supply = await token.totalSupply.call();
-                const percentage = new BN(19);
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token1Amount = reserve1Balance.mul(percentage).div(supply);
-                const token2Amount = reserve2Balance.mul(percentage).div(supply);
-
-                const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
-                const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
-                const res = await converter.methods['removeLiquidity(uint256,uint256,uint256)'](19, 1, 1, {
-                    from: sender2
-                });
-
-                let transactionCost = new BN(0);
-                if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
-                }
-
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
-                const token2Balance = await reserveToken2.balanceOf.call(sender2);
-
-                expect(token1Balance).to.be.bignumber.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
-                expect(token2Balance).to.be.bignumber.equal(token2PrevBalance.add(token2Amount));
             });
         });
     }
@@ -1068,19 +998,16 @@ describe('StandardPoolConverter', () => {
             );
         };
 
-        const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        const getLiquidityReturn = async (firstTime, converter, reserveTokens, reserveAmounts) => {
             if (firstTime) {
                 const length = Math.round(
                     reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length /
                         reserveAmounts.length
                 );
-                const retVal = new BN('1'.padEnd(length, '0'));
-                return reserveAmounts.map((reserveAmount, i) => retVal);
+                return new BN(10).pow(new BN(length - 1));
             }
 
-            return await Promise.all(
-                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
-            );
+            return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
         };
 
         const test = async (hasETH) => {
@@ -1111,7 +1038,7 @@ describe('StandardPoolConverter', () => {
                     reserveTokens,
                     reserveAmounts
                 );
-                const liquidityReturns = await getLiquidityReturns(
+                const liquidityReturn = await getLiquidityReturn(
                     state.length == 0,
                     converter,
                     reserveTokens,
@@ -1144,9 +1071,7 @@ describe('StandardPoolConverter', () => {
                     }
                 }
 
-                for (const liquidityReturn of liquidityReturns) {
-                    expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
-                }
+                expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
 
                 expected = actual;
                 prevSupply = supply;
@@ -1209,7 +1134,7 @@ describe('StandardPoolConverter', () => {
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, CONVERSION_AMOUNT);
-                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
@@ -1221,8 +1146,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '1', '0.000563');
-                            expectAlmostEqual(actualFee2, expectedFee2, '1', '0.000563');
+                            expectAlmostEqual(actualFee1, expectedFee1, '2', '0.000188');
+                            expectAlmostEqual(actualFee2, expectedFee2, '2', '0.000188');
                         });
                     }
                 }
@@ -1238,7 +1163,7 @@ describe('StandardPoolConverter', () => {
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, CONVERSION_AMOUNT);
-                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
@@ -1251,8 +1176,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000007');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000007');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000005');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000005');
                         });
                     }
                 }
@@ -1300,15 +1225,15 @@ describe('StandardPoolConverter', () => {
                             const totalConversionFee1InPoolTokenUnits = totalConversionFee1.mul(totalSupply).div(reserveBalance1);
                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2.mul(totalSupply).div(reserveBalance2);
                             const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(totalConversionFee2InPoolTokenUnits);
-                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.muln(networkFeePercent).divn(200);
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
                             const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001367');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001367');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001371');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001371');
                         });
                     }
                 }
@@ -1377,15 +1302,15 @@ describe('StandardPoolConverter', () => {
                             const totalConversionFee1InPoolTokenUnits = totalConversionFee1.mul(totalSupply).div(reserveBalance1);
                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2.mul(totalSupply).div(reserveBalance2);
                             const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(totalConversionFee2InPoolTokenUnits);
-                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.muln(networkFeePercent).divn(200);
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
                             const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003398');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001664');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003391');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001671');
                         });
                     }
                 }
@@ -1438,15 +1363,15 @@ describe('StandardPoolConverter', () => {
                             const totalConversionFee1InPoolTokenUnits = totalConversionFee1.mul(totalSupply).div(reserveBalance1);
                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2.mul(totalSupply).div(reserveBalance2);
                             const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(totalConversionFee2InPoolTokenUnits);
-                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = totalConversionFeeInPoolTokenUnits.muln(networkFeePercent).divn(200);
                             const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
                             const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.0000015');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.0000029');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.0000014');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.0000014');
                         });
                     }
                 }
@@ -1463,7 +1388,7 @@ describe('StandardPoolConverter', () => {
 
                             const conversionAmount = ONE_TOKEN.muln(Math.max(initialBalance1, initialBalance2));
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, conversionAmount);
-                            const expectedFeeBase = conversion.fee.divn(2).muln(networkFeePercent).divn(100 + networkFeePercent);
+                            const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
                             const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(conversionAmount);
                             const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
@@ -1476,8 +1401,8 @@ describe('StandardPoolConverter', () => {
                             const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
                             const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
 
-                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.03256');
-                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.03256');
+                            expectAlmostEqual(actualFee1, expectedFee1, '0', '0.02383');
+                            expectAlmostEqual(actualFee2, expectedFee2, '0', '0.02383');
                         });
                     }
                 }
@@ -1513,10 +1438,9 @@ describe('StandardPoolConverter', () => {
             await reserveToken1.approve(converter.address, reserveAmounts[0]);
             await reserveToken2.approve(converter.address, reserveAmounts[1]);
             if (verify) {
-                const expected1 = await converter.addLiquidityReturn(reserveTokens[0], reserveAmounts[0]);
-                const expected2 = await converter.addLiquidityReturn(reserveTokens[1], reserveAmounts[1]);
+                const expected = await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
                 const actual = await converter.addLiquidity.call(reserveTokens, reserveAmounts, 1);
-                expect(actual).to.be.bignumber.equal(BN.min(expected1, expected2));
+                expect(actual).to.be.bignumber.equal(expected);
             }
             await converter.addLiquidity(reserveTokens, reserveAmounts, 1);
         }
@@ -1548,7 +1472,7 @@ describe('StandardPoolConverter', () => {
                 const absoluteError = x.sub(y).abs();
                 const relativeError = x.div(y).sub(1).abs();
                 expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.be.true(
-                    `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
+                    `\nabsoluteError = ${absoluteError.toFixed()}\nrelativeError = ${relativeError.toFixed(25)}`
                 );
             }
         }
