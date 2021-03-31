@@ -385,21 +385,6 @@ describe('LiquidityProtection', () => {
 
                 const wallet = await liquidityProtection.wallet.call();
                 expect(wallet).to.eql(liquidityProtectionWallet.address);
-
-                const networkTknGovernance = await liquidityProtection.networkTokenGovernance.call();
-                expect(networkTknGovernance).to.eql(networkTokenGovernance.address);
-
-                const networkTkn = await liquidityProtection.networkToken.call();
-                expect(networkTkn).to.eql(networkToken.address);
-
-                const govTknGovernance = await liquidityProtection.govTokenGovernance.call();
-                expect(govTknGovernance).to.eql(govTokenGovernance.address);
-
-                const govTkn = await liquidityProtection.govToken.call();
-                expect(govTkn).to.eql(govToken.address);
-
-                const lastRemoveCheckpointStore = await liquidityProtection.lastRemoveCheckpointStore.call();
-                expect(lastRemoveCheckpointStore).to.eql(checkpointStore.address);
             });
 
             it('verifies that the owner can transfer the store ownership', async () => {
@@ -489,7 +474,6 @@ describe('LiquidityProtection', () => {
 
                     const poolTokenAvailableSpace = await liquidityProtection.poolAvailableSpace(poolToken.address);
                     const baseTokenAvailableSpace = poolTokenAvailableSpace[0];
-                    const networkTokenAvailableSpace = poolTokenAvailableSpace[1];
 
                     await expectRevert(
                         liquidityProtection.addLiquidity(
@@ -504,6 +488,9 @@ describe('LiquidityProtection', () => {
                         baseToken.address,
                         baseTokenAvailableSpace
                     );
+
+                    const poolTokenAvailableSpace2 = await liquidityProtection.poolAvailableSpace(poolToken.address);
+                    const networkTokenAvailableSpace = poolTokenAvailableSpace2[1];
 
                     await expectRevert(
                         liquidityProtection.addLiquidity(
