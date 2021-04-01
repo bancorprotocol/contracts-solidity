@@ -763,9 +763,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // and the amount of reserve tokens to transfer from the caller
         if (totalSupply == 0) {
             amount = MathEx.geometricMean(_reserveAmounts);
-            for (uint256 i = 0; i < 2; i++) {
-                reserveAmounts[i] = _reserveAmounts[i];
-            }
+            reserveAmounts[0] = _reserveAmounts[0];
+            reserveAmounts[1] = _reserveAmounts[1];
         } else {
             (amount, reserveAmounts) = addLiquidityAmounts(
                 _reserveTokens,
