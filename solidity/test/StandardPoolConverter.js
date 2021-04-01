@@ -1157,6 +1157,7 @@ describe('StandardPoolConverter', () => {
                     await web3.eth.sendTransaction({
                         from: networkFeeWallet,
                         to: defaultSender,
+                        gas: 21000,
                         value: balance.sub(gasPrice.muln(21000))
                     });
                 }
