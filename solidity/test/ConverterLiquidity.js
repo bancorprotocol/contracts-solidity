@@ -7,16 +7,15 @@ const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 const { MAX_UINT256 } = constants;
 
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
-const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
 const DSToken = contract.fromArtifact('DSToken');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
 describe('ConverterLiquidity', () => {
-    const initLiquidityPool = async (converterContract, hasETH, ...weights) => {
+    const initLiquidityPool = async (hasETH, ...weights) => {
         const poolToken = await DSToken.new('name', 'symbol', 0);
-        const converter = await converterContract.new(poolToken.address, contractRegistry.address, 0);
+        const converter = await LiquidityPoolV1Converter.new(poolToken.address, contractRegistry.address, 0);
 
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
@@ -56,7 +55,7 @@ describe('ConverterLiquidity', () => {
 
         context('without ether reserve', async () => {
             beforeEach(async () => {
-                [converter, poolToken] = await initLiquidityPool(LiquidityPoolV1Converter, false, ...weights);
+                [converter, poolToken] = await initLiquidityPool(false, ...weights);
                 reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
             });
 
@@ -129,7 +128,7 @@ describe('ConverterLiquidity', () => {
 
         context('with ether reserve', async () => {
             beforeEach(async () => {
-                [converter, poolToken] = await initLiquidityPool(LiquidityPoolV1Converter, true, ...weights);
+                [converter, poolToken] = await initLiquidityPool(true, ...weights);
                 reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
             });
 
@@ -145,9 +144,9 @@ describe('ConverterLiquidity', () => {
     });
 
     describe('functionality assertion', () => {
-        const test = (converterContract, hasETH, ...weights) => {
+        const test = (hasETH, ...weights) => {
             it(`hasETH = ${hasETH}, weights = [${weights.join('%, ')}%]`, async () => {
-                const [converter, poolToken] = await initLiquidityPool(converterContract, hasETH, ...weights);
+                const [converter, poolToken] = await initLiquidityPool(hasETH, ...weights);
                 const reserveTokens = await Promise.all(weights.map((weight, i) => converter.connectorTokens.call(i)));
 
                 const state = [];
@@ -255,7 +254,7 @@ describe('ConverterLiquidity', () => {
             for (const weight1 of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
                 for (const weight2 of [10, 20, 30, 40, 50, 60, 70, 80, 90]) {
                     if (weight1 + weight2 <= 100) {
-                        test(LiquidityPoolV1Converter, hasETH, weight1, weight2);
+                        test(hasETH, weight1, weight2);
                     }
                 }
             }
@@ -266,15 +265,11 @@ describe('ConverterLiquidity', () => {
                 for (const weight2 of [10, 20, 30, 40, 50, 60]) {
                     for (const weight3 of [10, 20, 30, 40, 50, 60]) {
                         if (weight1 + weight2 + weight3 <= 100) {
-                            test(LiquidityPoolV1Converter, hasETH, weight1, weight2, weight3);
+                            test(hasETH, weight1, weight2, weight3);
                         }
                     }
                 }
             }
-        }
-
-        for (const hasETH of [false, true]) {
-            test(StandardPoolConverter, hasETH, 50, 50);
         }
     });
 
