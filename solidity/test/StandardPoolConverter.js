@@ -1043,13 +1043,13 @@ describe('StandardPoolConverter', () => {
             return token.allowance.call(sender, converter.address);
         };
 
-        const getBalance = async (reserveToken, converter) => {
+        const getBalance = async (reserveToken, account) => {
             if (reserveToken === NATIVE_TOKEN_ADDRESS) {
-                return balance.current(converter.address);
+                return balance.current(account);
             }
 
             const token = await TestStandardToken.at(reserveToken);
-            return await token.balanceOf.call(converter.address);
+            return await token.balanceOf.call(account);
         };
 
         const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
@@ -1115,7 +1115,7 @@ describe('StandardPoolConverter', () => {
                     reserveTokens.map((reserveToken) => getAllowance(reserveToken, converter))
                 );
                 const balances = await Promise.all(
-                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter.address))
                 );
                 const supply = await poolToken.totalSupply.call();
 
@@ -1151,7 +1151,7 @@ describe('StandardPoolConverter', () => {
                     reserveTokens.map((reserveTokens) => 1)
                 );
                 const balances = await Promise.all(
-                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                    reserveTokens.map((reserveToken) => getBalance(reserveToken, converter.address))
                 );
                 for (let i = 0; i < balances.length; i++) {
                     const diff = Decimal(state[n - 1].balances[i].toString()).div(Decimal(balances[i].toString()));
@@ -1169,7 +1169,7 @@ describe('StandardPoolConverter', () => {
                 reserveTokens.map((reserveTokens) => 1)
             );
             const balances = await Promise.all(
-                reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
+                reserveTokens.map((reserveToken) => getBalance(reserveToken, converter.address))
             );
             for (let i = 0; i < balances.length; i++) {
                 expect(balances[i]).to.be.bignumber.equal(new BN(0));
@@ -1180,6 +1180,33 @@ describe('StandardPoolConverter', () => {
         for (const hasETH of [false, true]) {
             it(`hasETH = ${hasETH}`, async () => {
                 await test(hasETH);
+            });
+        }
+
+        for (const hasETH of [false, true]) {
+            const AMOUNT = 1000000000;
+            it(`hasETH = ${hasETH}`, async () => {
+                const gasPrice = new BN(await web3.eth.getGasPrice());
+                const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
+                for (const factors of [[1, 1], [1, 2], [2, 1]]) {
+                    const reserveAmounts = factors.map((factor) => factor * AMOUNT);
+                    const balancesBefore = await Promise.all(
+                        reserveTokens.map((reserveToken) => getBalance(reserveToken, defaultSender))
+                    );
+                    for (let i = 0; i < 2; i++) {
+                        await approve(reserveTokens[i], converter, 0);
+                        await approve(reserveTokens[i], converter, reserveAmounts[i]);
+                    }
+                    const response = await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, {
+                        value: hasETH ? reserveAmounts[1] : 0
+                    });
+                    const balancesAfter = await Promise.all(
+                        reserveTokens.map((reserveToken) => getBalance(reserveToken, defaultSender))
+                    );
+                    const ethUsed = gasPrice.muln(response.receipt.gasUsed);
+                    expect(balancesAfter[0]).to.be.bignumber.equal(balancesBefore[0].sub(new BN(AMOUNT)));
+                    expect(balancesAfter[1]).to.be.bignumber.equal(balancesBefore[1].sub(new BN(AMOUNT).add(hasETH ? ethUsed : new BN(0))));
+                }
             });
         }
     });
