@@ -20,15 +20,11 @@ const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 describe('StandardPoolConverter', () => {
-    const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
-        return StandardPoolConverter.new(tokenAddress, registryAddress, maxConversionFee);
-    };
-
     const initConverter = async (activate, isETHReserve, maxConversionFee = 0) => {
         token = await DSToken.new('Token1', 'TKN1', 2);
         tokenAddress = token.address;
 
-        const converter = await createConverter(tokenAddress, contractRegistry.address, maxConversionFee);
+        const converter = await StandardPoolConverter.new(tokenAddress, contractRegistry.address, maxConversionFee);
         await converter.addReserve(getReserve1Address(isETHReserve), 500000);
         await converter.addReserve(reserveToken2.address, 500000);
         await reserveToken2.transfer(converter.address, 8000);
@@ -78,12 +74,17 @@ describe('StandardPoolConverter', () => {
         return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
-    const getBalance = async (token, address, account) => {
-        if (address === NATIVE_TOKEN_ADDRESS) {
+    const getBalance = async (reserveToken, account) => {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return balance.current(account);
         }
 
-        return token.balanceOf.call(account);
+        if (typeof reserveToken === 'string') {
+            const token = await TestStandardToken.at(reserveToken);
+            return await token.balanceOf.call(account);
+        }
+
+        return reserveToken.balanceOf.call(account);
     };
 
     const getTransactionCost = async (txResult) => {
@@ -530,7 +531,7 @@ describe('StandardPoolConverter', () => {
                 const token1Amount = reserve1Balance.mul(percentage).div(supply);
                 const token2Amount = reserve2Balance.mul(percentage).div(supply);
 
-                const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
+                const token1PrevBalance = await getBalance(reserveToken, sender2);
                 const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
                 const res = await converter.removeLiquidity(
                     19,
@@ -544,7 +545,7 @@ describe('StandardPoolConverter', () => {
                     transactionCost = await getTransactionCost(res);
                 }
 
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
+                const token1Balance = await getBalance(reserveToken, sender2);
                 const token2Balance = await reserveToken2.balanceOf.call(sender2);
 
                 expect(token1Balance).to.be.bignumber.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
@@ -566,7 +567,7 @@ describe('StandardPoolConverter', () => {
                 const token1Amount = reserve1Balance.mul(percentage).div(supply);
                 const token2Amount = reserve2Balance.mul(percentage).div(supply);
 
-                const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
+                const token1PrevBalance = await getBalance(reserveToken, sender2);
                 const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
 
                 const res = await converter.removeLiquidity(
@@ -581,7 +582,7 @@ describe('StandardPoolConverter', () => {
                     transactionCost = await getTransactionCost(res);
                 }
 
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
+                const token1Balance = await getBalance(reserveToken, sender2);
                 const token2Balance = await reserveToken2.balanceOf.call(sender2);
 
                 expect(token1Balance).to.be.bignumber.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
@@ -599,7 +600,7 @@ describe('StandardPoolConverter', () => {
                 const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
                 const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
 
-                const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
+                const token1PrevBalance = await getBalance(reserveToken, sender2);
                 const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
                 const res = await converter.removeLiquidity(
                     20000,
@@ -614,7 +615,7 @@ describe('StandardPoolConverter', () => {
                 }
 
                 const supply = await token.totalSupply.call();
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
+                const token1Balance = await getBalance(reserveToken, sender2);
                 const token2Balance = await reserveToken2.balanceOf.call(sender2);
 
                 expect(supply).to.be.bignumber.equal(new BN(0));
@@ -982,15 +983,6 @@ describe('StandardPoolConverter', () => {
             return token.allowance.call(sender, converter.address);
         };
 
-        const getBalance = async (reserveToken, account) => {
-            if (reserveToken === NATIVE_TOKEN_ADDRESS) {
-                return balance.current(account);
-            }
-
-            const token = await TestStandardToken.at(reserveToken);
-            return await token.balanceOf.call(account);
-        };
-
         const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
             if (firstTime) {
                 return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
@@ -1182,13 +1174,7 @@ describe('StandardPoolConverter', () => {
             const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
             const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
 
-            const description = async (
-                prefix,
-                initialBalance1,
-                initialBalance2,
-                conversionFeePercent,
-                networkFeePercent
-            ) => {
+            const description = (prefix, initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent) => {
                 return (
                     prefix +
                     ` initial balances = [${initialBalance1}, ${initialBalance2}],` +
