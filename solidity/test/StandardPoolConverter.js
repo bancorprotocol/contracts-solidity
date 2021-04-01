@@ -1477,7 +1477,7 @@ describe('StandardPoolConverter', () => {
                 if (hasETH) {
                     reserveToken2.address = NATIVE_TOKEN_ADDRESS;
                     reserveToken2.approve = async (spender, value) => {};
-                    reserveToken2.balanceOf = async (account) => await web3.eth.getBalance(account);
+                    reserveToken2.balanceOf = async (account) => new BN(await web3.eth.getBalance(account));
                 }
 
                 await networkSettings.setNetworkFee(networkFeePercent * 10000);
