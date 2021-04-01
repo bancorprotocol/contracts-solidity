@@ -111,6 +111,7 @@ describe('StandardPoolConverter', () => {
         }
     };
 
+    let gasPrice;
     let now;
     let bancorNetwork;
     let token;
@@ -127,6 +128,8 @@ describe('StandardPoolConverter', () => {
     const MIN_RETURN = new BN(1);
 
     before(async () => {
+        gasPrice = new BN(await web3.eth.getGasPrice());
+
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
 
@@ -1122,7 +1125,6 @@ describe('StandardPoolConverter', () => {
         for (const hasETH of [false, true]) {
             const AMOUNT = 1000000000;
             it(`provider refund, when hasETH = ${hasETH}`, async () => {
-                const gasPrice = new BN(await web3.eth.getGasPrice());
                 const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
                 for (const factors of [[1, 1], [1, 2], [2, 1]]) {
                     const reserveAmounts = factors.map((factor) => factor * AMOUNT);
@@ -1149,6 +1151,17 @@ describe('StandardPoolConverter', () => {
 
     for (const hasETH of [false, true]) {
         describe(`with hasETH = ${hasETH}, verifies that the network fee is transferred correctly via`, () => {
+            beforeEach(async () => {
+                if (hasETH) {
+                    const balance = new BN(await web3.eth.getBalance(networkFeeWallet));
+                    await web3.eth.sendTransaction({
+                        from: networkFeeWallet,
+                        to: defaultSender,
+                        value: balance.sub(gasPrice.muln(21000))
+                    });
+                }
+            });
+
             const ONE_TOKEN = new BN(10).pow(new BN(18));
             const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
             const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
