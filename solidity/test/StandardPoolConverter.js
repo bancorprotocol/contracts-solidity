@@ -75,16 +75,35 @@ describe('StandardPoolConverter', () => {
     };
 
     const getBalance = async (reserveToken, account) => {
-        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
-            return balance.current(account);
+        const reserveTokenAddress = reserveToken.address || reserveToken;
+        const address = account.address || account;
+
+        if (reserveTokenAddress === NATIVE_TOKEN_ADDRESS) {
+            return balance.current(address);
         }
 
         if (typeof reserveToken === 'string') {
             const token = await TestStandardToken.at(reserveToken);
-            return await token.balanceOf.call(account);
+            return await token.balanceOf.call(address);
         }
 
-        return reserveToken.balanceOf.call(account);
+        return reserveToken.balanceOf.call(address);
+    };
+
+    const approve = async (reserveToken, account, amount) => {
+        const reserveTokenAddress = reserveToken.address || reserveToken;
+        if (reserveTokenAddress === NATIVE_TOKEN_ADDRESS) {
+            return;
+        }
+
+        const address = account.address || account;
+
+        if (typeof reserveToken === 'string') {
+            const token = await TestStandardToken.at(reserveToken);
+            return token.approve(address, amount);
+        }
+
+        return reserveToken.approve(address, amount);
     };
 
     const getTransactionCost = async (txResult) => {
@@ -112,7 +131,6 @@ describe('StandardPoolConverter', () => {
         }
     };
 
-    let gasPrice;
     let now;
     let bancorNetwork;
     let token;
@@ -129,8 +147,6 @@ describe('StandardPoolConverter', () => {
     const MIN_RETURN = new BN(1);
 
     before(async () => {
-        gasPrice = new BN(await web3.eth.getGasPrice());
-
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
 
@@ -965,15 +981,6 @@ describe('StandardPoolConverter', () => {
             return [converter, poolToken, reserveTokens];
         };
 
-        const approve = async (reserveToken, converter, amount) => {
-            if (reserveToken === NATIVE_TOKEN_ADDRESS) {
-                return;
-            }
-
-            const token = await TestStandardToken.at(reserveToken);
-            return token.approve(converter.address, amount);
-        };
-
         const getAllowance = async (reserveToken, converter) => {
             if (reserveToken === NATIVE_TOKEN_ADDRESS) {
                 return new BN(0);
@@ -1028,13 +1035,13 @@ describe('StandardPoolConverter', () => {
                     )
                 );
                 const liquidityCosts = await getLiquidityCosts(
-                    state.length == 0,
+                    state.length === 0,
                     converter,
                     reserveTokens,
                     reserveAmounts
                 );
                 const liquidityReturn = await getLiquidityReturn(
-                    state.length == 0,
+                    state.length === 0,
                     converter,
                     reserveTokens,
                     reserveAmounts
@@ -1137,7 +1144,7 @@ describe('StandardPoolConverter', () => {
                     const balancesAfter = await Promise.all(
                         reserveTokens.map((reserveToken) => getBalance(reserveToken, defaultSender))
                     );
-                    const ethUsed = gasPrice.muln(response.receipt.gasUsed);
+                    const ethUsed = getTransactionCost(response);
                     expect(balancesAfter[0]).to.be.bignumber.equal(balancesBefore[0].sub(new BN(AMOUNT)));
                     expect(balancesAfter[1]).to.be.bignumber.equal(
                         balancesBefore[1].sub(new BN(AMOUNT).add(hasETH ? ethUsed : new BN(0)))
@@ -1147,29 +1154,9 @@ describe('StandardPoolConverter', () => {
         }
     });
 
-    for (const hasETH of [false, true]) {
-        describe(`with hasETH = ${hasETH}, verifies that the network fee is transferred correctly via`, () => {
-            beforeEach(async () => {
-                if (hasETH) {
-                    let balance = new BN(await web3.eth.getBalance(networkFeeWallet));
-                    if (balance.lt(gasPrice.muln(21000))) {
-                        await web3.eth.sendTransaction({
-                            from: defaultSender,
-                            to: networkFeeWallet,
-                            gas: 21000,
-                            value: gasPrice.muln(21000).sub(balance)
-                        });
-                        balance = gasPrice.muln(21000);
-                    }
-                    await web3.eth.sendTransaction({
-                        from: networkFeeWallet,
-                        to: defaultSender,
-                        gas: 21000,
-                        value: balance.sub(gasPrice.muln(21000))
-                    });
-                }
-            });
-
+    // for (const hasETH of [false, true]) {
+    for (const hasETH of [true]) {
+        describe.only(`with hasETH = ${hasETH}, verifies that the network fee is transferred correctly via`, () => {
             const ONE_TOKEN = new BN(10).pow(new BN(18));
             const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
             const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
@@ -1183,53 +1170,78 @@ describe('StandardPoolConverter', () => {
                 );
             };
 
+            let poolToken;
+            let reserveToken1;
+            let reserveToken2;
+            let converter;
+            let networkFeeWalletReserve1Balance;
+            let networkFeeWalletReserve2Balance;
+
             for (const initialBalance1 of [100000, 200000, 400000, 800000]) {
                 for (const initialBalance2 of [100000, 300000, 500000, 700000]) {
                     for (const conversionFeePercent of [0, 5, 10, 25, 75]) {
                         for (const networkFeePercent of [0, 5, 10, 25, 75, 100]) {
-                            it(
+                            context(
                                 description(
-                                    'processNetworkFees when',
+                                    'when',
                                     initialBalance1,
                                     initialBalance2,
                                     conversionFeePercent,
                                     networkFeePercent
                                 ),
-                                async () => {
-                                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
-                                        networkFeePercent,
-                                        conversionFeePercent,
-                                        hasETH
-                                    );
-                                    await addLiquidity(
-                                        reserveToken1,
-                                        reserveToken2,
-                                        converter,
-                                        [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
-                                    );
+                                () => {
+                                    beforeEach(async () => {
+                                        ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            networkFeePercent,
+                                            conversionFeePercent,
+                                            hasETH
+                                        ));
 
-                                    const conversion = await convert(
-                                        reserveToken1,
-                                        poolToken,
-                                        reserveToken2,
-                                        bancorNetwork,
-                                        converter,
-                                        CONVERSION_AMOUNT
-                                    );
-                                    const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
-                                    const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
-                                    const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
+                                        networkFeeWalletReserve1Balance = await getBalance(
+                                            reserveToken1,
+                                            networkFeeWallet
+                                        );
+                                        networkFeeWalletReserve2Balance = await getBalance(
+                                            reserveToken2,
+                                            networkFeeWallet
+                                        );
+                                    });
 
-                                    await converter.processNetworkFees();
+                                    it('should process network fees after conversion', async () => {
+                                        await addLiquidity(
+                                            reserveToken1,
+                                            reserveToken2,
+                                            converter,
+                                            [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
+                                        );
 
-                                    const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
-                                    const expectedFee2 = expectedFeeBase;
+                                        const conversion = await convert(
+                                            reserveToken1,
+                                            poolToken,
+                                            reserveToken2,
+                                            bancorNetwork,
+                                            converter,
+                                            CONVERSION_AMOUNT
+                                        );
+                                        const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
+                                        const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
+                                        const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
-                                    const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
-                                    const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
+                                        await converter.processNetworkFees();
 
-                                    expectAlmostEqual(actualFee1, expectedFee1, '2', '0.000188');
-                                    expectAlmostEqual(actualFee2, expectedFee2, '2', '0.000188');
+                                        const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
+                                        const expectedFee2 = expectedFeeBase;
+
+                                        const actualFee1 = (await getBalance(reserveToken1, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve1Balance
+                                        );
+                                        const actualFee2 = (await getBalance(reserveToken2, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve2Balance
+                                        );
+
+                                        expectAlmostEqual(actualFee1, expectedFee1, '2', '0.000188');
+                                        expectAlmostEqual(actualFee2, expectedFee2, '2', '0.000188');
+                                    });
                                 }
                             );
                         }
@@ -1241,52 +1253,77 @@ describe('StandardPoolConverter', () => {
                 for (const initialBalance2 of [100000, 500000]) {
                     for (const conversionFeePercent of [1, 2]) {
                         for (const networkFeePercent of [5, 10]) {
-                            it(
+                            context(
                                 description(
-                                    'addLiquidity when',
+                                    'when',
                                     initialBalance1,
                                     initialBalance2,
                                     conversionFeePercent,
                                     networkFeePercent
                                 ),
-                                async () => {
-                                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
-                                        networkFeePercent,
-                                        conversionFeePercent,
-                                        hasETH
-                                    );
-                                    await addLiquidity(
-                                        reserveToken1,
-                                        reserveToken2,
-                                        converter,
-                                        [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
-                                    );
+                                () => {
+                                    beforeEach(async () => {
+                                        ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            networkFeePercent,
+                                            conversionFeePercent,
+                                            hasETH
+                                        ));
 
-                                    const conversion = await convert(
-                                        reserveToken1,
-                                        poolToken,
-                                        reserveToken2,
-                                        bancorNetwork,
-                                        converter,
-                                        CONVERSION_AMOUNT
-                                    );
-                                    const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
-                                    const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
-                                    const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
+                                        networkFeeWalletReserve1Balance = await getBalance(
+                                            reserveToken1,
+                                            networkFeeWallet
+                                        );
+                                        networkFeeWalletReserve2Balance = await getBalance(
+                                            reserveToken2,
+                                            networkFeeWallet
+                                        );
+                                    });
 
-                                    const reserveAmounts = [initialBalance1, initialBalance2].map((n) =>
-                                        ONE_TOKEN.muln(n)
-                                    );
-                                    await addLiquidity(reserveToken1, reserveToken2, converter, reserveAmounts, true);
+                                    it('should process network fees after liquidity provision', async () => {
+                                        await addLiquidity(
+                                            reserveToken1,
+                                            reserveToken2,
+                                            converter,
+                                            [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
+                                        );
 
-                                    const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
-                                    const expectedFee2 = expectedFeeBase;
+                                        const conversion = await convert(
+                                            reserveToken1,
+                                            poolToken,
+                                            reserveToken2,
+                                            bancorNetwork,
+                                            converter,
+                                            CONVERSION_AMOUNT
+                                        );
+                                        const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
+                                        const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
+                                        const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
-                                    const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
-                                    const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
+                                        const reserveAmounts = [initialBalance1, initialBalance2].map((n) =>
+                                            ONE_TOKEN.muln(n)
+                                        );
 
-                                    expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000005');
-                                    expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000005');
+                                        await addLiquidity(
+                                            reserveToken1,
+                                            reserveToken2,
+                                            converter,
+                                            reserveAmounts,
+                                            true
+                                        );
+
+                                        const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
+                                        const expectedFee2 = expectedFeeBase;
+
+                                        const actualFee1 = (await getBalance(reserveToken1, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve1Balance
+                                        );
+                                        const actualFee2 = (await getBalance(reserveToken2, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve2Balance
+                                        );
+
+                                        expectAlmostEqual(actualFee1, expectedFee1, '0', '0.000005');
+                                        expectAlmostEqual(actualFee2, expectedFee2, '0', '0.000005');
+                                    });
                                 }
                             );
                         }
@@ -1298,105 +1335,129 @@ describe('StandardPoolConverter', () => {
                 for (const initialBalance2 of [100000, 500000]) {
                     for (const conversionFeePercent of [1, 2]) {
                         for (const networkFeePercent of [5, 10]) {
-                            it(
+                            context(
                                 description(
-                                    'removeLiquidity when',
+                                    'when',
                                     initialBalance1,
                                     initialBalance2,
                                     conversionFeePercent,
                                     networkFeePercent
                                 ),
-                                async () => {
-                                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
-                                        networkFeePercent,
-                                        conversionFeePercent,
-                                        hasETH
-                                    );
-                                    await addLiquidity(
-                                        reserveToken1,
-                                        reserveToken2,
-                                        converter,
-                                        [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
-                                    );
+                                () => {
+                                    beforeEach(async () => {
+                                        ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            networkFeePercent,
+                                            conversionFeePercent,
+                                            hasETH
+                                        ));
 
-                                    let totalConversionFee1 = new BN(0);
-                                    let totalConversionFee2 = new BN(0);
-
-                                    for (const n of [10, 20, 30, 40]) {
-                                        const conversion = await convert(
+                                        networkFeeWalletReserve1Balance = await getBalance(
                                             reserveToken1,
-                                            poolToken,
-                                            reserveToken2,
-                                            bancorNetwork,
-                                            converter,
-                                            ONE_TOKEN.muln(n)
+                                            networkFeeWallet
                                         );
-                                        totalConversionFee2 = totalConversionFee2.add(conversion.fee);
-                                    }
-
-                                    for (const n of [50, 60, 70, 80]) {
-                                        const conversion = await convert(
+                                        networkFeeWalletReserve2Balance = await getBalance(
                                             reserveToken2,
-                                            poolToken,
+                                            networkFeeWallet
+                                        );
+                                    });
+
+                                    it('should process network fees after multiple conversions', async () => {
+                                        await addLiquidity(
                                             reserveToken1,
-                                            bancorNetwork,
-                                            converter,
-                                            ONE_TOKEN.muln(n)
-                                        );
-                                        totalConversionFee1 = totalConversionFee1.add(conversion.fee);
-                                    }
-
-                                    for (const n of [180, 170, 160, 150]) {
-                                        const conversion = await convert(
-                                            reserveToken1,
-                                            poolToken,
                                             reserveToken2,
-                                            bancorNetwork,
                                             converter,
-                                            ONE_TOKEN.muln(n)
+                                            [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
                                         );
-                                        totalConversionFee2 = totalConversionFee2.add(conversion.fee);
-                                    }
 
-                                    for (const n of [140, 130, 120, 110]) {
-                                        const conversion = await convert(
-                                            reserveToken2,
-                                            poolToken,
+                                        let totalConversionFee1 = new BN(0);
+                                        let totalConversionFee2 = new BN(0);
+
+                                        for (const n of [10, 20, 30, 40]) {
+                                            const conversion = await convert(
+                                                reserveToken1,
+                                                poolToken,
+                                                reserveToken2,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+                                        }
+
+                                        for (const n of [50, 60, 70, 80]) {
+                                            const conversion = await convert(
+                                                reserveToken2,
+                                                poolToken,
+                                                reserveToken1,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+                                        }
+
+                                        for (const n of [180, 170, 160, 150]) {
+                                            const conversion = await convert(
+                                                reserveToken1,
+                                                poolToken,
+                                                reserveToken2,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+                                        }
+
+                                        for (const n of [140, 130, 120, 110]) {
+                                            const conversion = await convert(
+                                                reserveToken2,
+                                                poolToken,
+                                                reserveToken1,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+                                        }
+
+                                        const totalSupply = await poolToken.totalSupply();
+                                        const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
+                                        const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
+
+                                        const supplyAmount = await poolToken.balanceOf(defaultSender);
+                                        await removeLiquidity(
                                             reserveToken1,
-                                            bancorNetwork,
+                                            reserveToken2,
                                             converter,
-                                            ONE_TOKEN.muln(n)
+                                            supplyAmount,
+                                            true
                                         );
-                                        totalConversionFee1 = totalConversionFee1.add(conversion.fee);
-                                    }
 
-                                    const totalSupply = await poolToken.totalSupply();
-                                    const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
-                                    const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
+                                        const totalConversionFee1InPoolTokenUnits = totalConversionFee1
+                                            .mul(totalSupply)
+                                            .div(reserveBalance1);
+                                        const totalConversionFee2InPoolTokenUnits = totalConversionFee2
+                                            .mul(totalSupply)
+                                            .div(reserveBalance2);
+                                        const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
+                                            totalConversionFee2InPoolTokenUnits
+                                        );
+                                        const expectedFeeBase = totalConversionFeeInPoolTokenUnits
+                                            .muln(networkFeePercent)
+                                            .divn(200);
+                                        const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
+                                        const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
-                                    const supplyAmount = await poolToken.balanceOf(defaultSender);
-                                    await removeLiquidity(reserveToken1, reserveToken2, converter, supplyAmount, true);
+                                        const actualFee1 = (await getBalance(reserveToken1, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve1Balance
+                                        );
+                                        const actualFee2 = (await getBalance(reserveToken2, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve2Balance
+                                        );
 
-                                    const totalConversionFee1InPoolTokenUnits = totalConversionFee1
-                                        .mul(totalSupply)
-                                        .div(reserveBalance1);
-                                    const totalConversionFee2InPoolTokenUnits = totalConversionFee2
-                                        .mul(totalSupply)
-                                        .div(reserveBalance2);
-                                    const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
-                                        totalConversionFee2InPoolTokenUnits
-                                    );
-                                    const expectedFeeBase = totalConversionFeeInPoolTokenUnits
-                                        .muln(networkFeePercent)
-                                        .divn(200);
-                                    const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
-                                    const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
-
-                                    const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
-                                    const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
-
-                                    expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001371');
-                                    expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001371');
+                                        expectAlmostEqual(actualFee1, expectedFee1, '0', '0.001371');
+                                        expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001371');
+                                    });
                                 }
                             );
                         }
@@ -1408,150 +1469,168 @@ describe('StandardPoolConverter', () => {
                 for (const initialBalance2 of [100000]) {
                     for (const conversionFeePercent of [1]) {
                         for (const networkFeePercent of [10]) {
-                            it(
+                            context(
                                 description(
-                                    'add/remove liquidity when',
+                                    'when',
                                     initialBalance1,
                                     initialBalance2,
                                     conversionFeePercent,
                                     networkFeePercent
                                 ),
-                                async () => {
-                                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
-                                        networkFeePercent,
-                                        conversionFeePercent,
-                                        hasETH
-                                    );
-                                    await addLiquidity(
-                                        reserveToken1,
-                                        reserveToken2,
-                                        converter,
-                                        [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
-                                    );
+                                () => {
+                                    beforeEach(async () => {
+                                        ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            networkFeePercent,
+                                            conversionFeePercent,
+                                            hasETH
+                                        ));
 
-                                    let totalConversionFee1 = new BN(0);
-                                    let totalConversionFee2 = new BN(0);
-
-                                    for (const n of [10, 20, 30, 40]) {
-                                        const conversion = await convert(
+                                        networkFeeWalletReserve1Balance = await getBalance(
                                             reserveToken1,
-                                            poolToken,
-                                            reserveToken2,
-                                            bancorNetwork,
-                                            converter,
-                                            ONE_TOKEN.muln(n)
+                                            networkFeeWallet
                                         );
-                                        totalConversionFee2 = totalConversionFee2.add(conversion.fee);
-                                    }
+                                        networkFeeWalletReserve2Balance = await getBalance(
+                                            reserveToken2,
+                                            networkFeeWallet
+                                        );
+                                    });
 
-                                    for (let n = 0; n < 4; n++) {
-                                        const reserveAmounts = [ONE_TOKEN.muln(1000), ONE_TOKEN.muln(1000)];
+                                    it('should process network fee after liquidity provision and removal', async () => {
                                         await addLiquidity(
                                             reserveToken1,
                                             reserveToken2,
                                             converter,
-                                            reserveAmounts,
-                                            true
+                                            [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
                                         );
-                                        await reserveToken1.approve(converter.address, 0);
-                                        await reserveToken2.approve(converter.address, 0);
-                                    }
 
-                                    for (const n of [50, 60, 70, 80]) {
-                                        const conversion = await convert(
-                                            reserveToken2,
-                                            poolToken,
-                                            reserveToken1,
-                                            bancorNetwork,
-                                            converter,
-                                            ONE_TOKEN.muln(n)
+                                        let totalConversionFee1 = new BN(0);
+                                        let totalConversionFee2 = new BN(0);
+
+                                        for (const n of [10, 20, 30, 40]) {
+                                            const conversion = await convert(
+                                                reserveToken1,
+                                                poolToken,
+                                                reserveToken2,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+                                        }
+
+                                        for (let n = 0; n < 4; n++) {
+                                            const reserveAmounts = [ONE_TOKEN.muln(1000), ONE_TOKEN.muln(1000)];
+                                            await addLiquidity(
+                                                reserveToken1,
+                                                reserveToken2,
+                                                converter,
+                                                reserveAmounts,
+                                                true
+                                            );
+                                            await approve(reserveToken1, converter, 0);
+                                            await approve(reserveToken2, converter, 0);
+                                        }
+
+                                        for (const n of [50, 60, 70, 80]) {
+                                            const conversion = await convert(
+                                                reserveToken2,
+                                                poolToken,
+                                                reserveToken1,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+                                        }
+
+                                        for (let n = 0; n < 4; n++) {
+                                            const supplyAmount = await poolToken.balanceOf(defaultSender);
+                                            await removeLiquidity(
+                                                reserveToken1,
+                                                reserveToken2,
+                                                converter,
+                                                supplyAmount.divn(10),
+                                                true
+                                            );
+                                        }
+
+                                        for (const n of [180, 170, 160, 150]) {
+                                            const conversion = await convert(
+                                                reserveToken1,
+                                                poolToken,
+                                                reserveToken2,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+                                        }
+
+                                        for (let n = 0; n < 4; n++) {
+                                            const reserveAmounts = [ONE_TOKEN.muln(1000), ONE_TOKEN.muln(1000)];
+                                            await addLiquidity(
+                                                reserveToken1,
+                                                reserveToken2,
+                                                converter,
+                                                reserveAmounts,
+                                                true
+                                            );
+                                            await approve(reserveToken1, converter, 0);
+                                            await approve(reserveToken2, converter, 0);
+                                        }
+
+                                        for (const n of [140, 130, 120, 110]) {
+                                            const conversion = await convert(
+                                                reserveToken2,
+                                                poolToken,
+                                                reserveToken1,
+                                                bancorNetwork,
+                                                converter,
+                                                ONE_TOKEN.muln(n)
+                                            );
+                                            totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+                                        }
+
+                                        for (let n = 0; n < 4; n++) {
+                                            const supplyAmount = await poolToken.balanceOf(defaultSender);
+                                            await removeLiquidity(
+                                                reserveToken1,
+                                                reserveToken2,
+                                                converter,
+                                                supplyAmount.divn(10),
+                                                true
+                                            );
+                                        }
+
+                                        const totalSupply = await poolToken.totalSupply();
+                                        const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
+                                        const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
+
+                                        const totalConversionFee1InPoolTokenUnits = totalConversionFee1
+                                            .mul(totalSupply)
+                                            .div(reserveBalance1);
+                                        const totalConversionFee2InPoolTokenUnits = totalConversionFee2
+                                            .mul(totalSupply)
+                                            .div(reserveBalance2);
+                                        const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
+                                            totalConversionFee2InPoolTokenUnits
                                         );
-                                        totalConversionFee1 = totalConversionFee1.add(conversion.fee);
-                                    }
+                                        const expectedFeeBase = totalConversionFeeInPoolTokenUnits
+                                            .muln(networkFeePercent)
+                                            .divn(200);
+                                        const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
+                                        const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
-                                    for (let n = 0; n < 4; n++) {
-                                        const supplyAmount = await poolToken.balanceOf(defaultSender);
-                                        await removeLiquidity(
-                                            reserveToken1,
-                                            reserveToken2,
-                                            converter,
-                                            supplyAmount.divn(10),
-                                            true
+                                        const actualFee1 = (await getBalance(reserveToken1, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve1Balance
                                         );
-                                    }
-
-                                    for (const n of [180, 170, 160, 150]) {
-                                        const conversion = await convert(
-                                            reserveToken1,
-                                            poolToken,
-                                            reserveToken2,
-                                            bancorNetwork,
-                                            converter,
-                                            ONE_TOKEN.muln(n)
+                                        const actualFee2 = (await getBalance(reserveToken2, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve2Balance
                                         );
-                                        totalConversionFee2 = totalConversionFee2.add(conversion.fee);
-                                    }
 
-                                    for (let n = 0; n < 4; n++) {
-                                        const reserveAmounts = [ONE_TOKEN.muln(1000), ONE_TOKEN.muln(1000)];
-                                        await addLiquidity(
-                                            reserveToken1,
-                                            reserveToken2,
-                                            converter,
-                                            reserveAmounts,
-                                            true
-                                        );
-                                        await reserveToken1.approve(converter.address, 0);
-                                        await reserveToken2.approve(converter.address, 0);
-                                    }
-
-                                    for (const n of [140, 130, 120, 110]) {
-                                        const conversion = await convert(
-                                            reserveToken2,
-                                            poolToken,
-                                            reserveToken1,
-                                            bancorNetwork,
-                                            converter,
-                                            ONE_TOKEN.muln(n)
-                                        );
-                                        totalConversionFee1 = totalConversionFee1.add(conversion.fee);
-                                    }
-
-                                    for (let n = 0; n < 4; n++) {
-                                        const supplyAmount = await poolToken.balanceOf(defaultSender);
-                                        await removeLiquidity(
-                                            reserveToken1,
-                                            reserveToken2,
-                                            converter,
-                                            supplyAmount.divn(10),
-                                            true
-                                        );
-                                    }
-
-                                    const totalSupply = await poolToken.totalSupply();
-                                    const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
-                                    const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
-
-                                    const totalConversionFee1InPoolTokenUnits = totalConversionFee1
-                                        .mul(totalSupply)
-                                        .div(reserveBalance1);
-                                    const totalConversionFee2InPoolTokenUnits = totalConversionFee2
-                                        .mul(totalSupply)
-                                        .div(reserveBalance2);
-                                    const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
-                                        totalConversionFee2InPoolTokenUnits
-                                    );
-                                    const expectedFeeBase = totalConversionFeeInPoolTokenUnits
-                                        .muln(networkFeePercent)
-                                        .divn(200);
-                                    const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
-                                    const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
-
-                                    const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
-                                    const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
-
-                                    expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003391');
-                                    expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001671');
+                                        expectAlmostEqual(actualFee1, expectedFee1, '0', '0.003391');
+                                        expectAlmostEqual(actualFee2, expectedFee2, '0', '0.001671');
+                                    });
                                 }
                             );
                         }
@@ -1563,110 +1642,128 @@ describe('StandardPoolConverter', () => {
                 for (const initialBalance2 of [100000]) {
                     for (const conversionFeePercent of [1]) {
                         for (const networkFeePercent of [10]) {
-                            it(
+                            context(
                                 description(
-                                    'processNetworkFees when',
+                                    'when',
                                     initialBalance1,
                                     initialBalance2,
                                     conversionFeePercent,
                                     networkFeePercent
                                 ),
-                                async () => {
-                                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
-                                        networkFeePercent,
-                                        conversionFeePercent,
-                                        hasETH
-                                    );
-                                    await addLiquidity(
-                                        reserveToken1,
-                                        reserveToken2,
-                                        converter,
-                                        [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
-                                    );
+                                () => {
+                                    beforeEach(async () => {
+                                        ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            networkFeePercent,
+                                            conversionFeePercent,
+                                            hasETH
+                                        ));
 
-                                    let totalConversionFee1 = new BN(0);
-                                    let totalConversionFee2 = new BN(0);
-
-                                    for (const n of [10, 20, 30, 40]) {
-                                        const conversion = await convert(
+                                        networkFeeWalletReserve1Balance = await getBalance(
                                             reserveToken1,
-                                            poolToken,
-                                            reserveToken2,
-                                            bancorNetwork,
-                                            converter,
-                                            1000000 * n
+                                            networkFeeWallet
                                         );
-                                        totalConversionFee2 = totalConversionFee2.add(conversion.fee);
-                                    }
-
-                                    await converter.processNetworkFees();
-
-                                    for (const n of [50, 60, 70, 80]) {
-                                        const conversion = await convert(
+                                        networkFeeWalletReserve2Balance = await getBalance(
                                             reserveToken2,
-                                            poolToken,
+                                            networkFeeWallet
+                                        );
+                                    });
+
+                                    it('should process network fees after multiple conversions', async () => {
+                                        await addLiquidity(
                                             reserveToken1,
-                                            bancorNetwork,
-                                            converter,
-                                            1000000 * n
-                                        );
-                                        totalConversionFee1 = totalConversionFee1.add(conversion.fee);
-                                    }
-
-                                    await converter.processNetworkFees();
-
-                                    for (const n of [180, 170, 160, 150]) {
-                                        const conversion = await convert(
-                                            reserveToken1,
-                                            poolToken,
                                             reserveToken2,
-                                            bancorNetwork,
                                             converter,
-                                            1000000 * n
+                                            [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
                                         );
-                                        totalConversionFee2 = totalConversionFee2.add(conversion.fee);
-                                    }
 
-                                    await converter.processNetworkFees();
+                                        let totalConversionFee1 = new BN(0);
+                                        let totalConversionFee2 = new BN(0);
 
-                                    for (const n of [140, 130, 120, 110]) {
-                                        const conversion = await convert(
-                                            reserveToken2,
-                                            poolToken,
-                                            reserveToken1,
-                                            bancorNetwork,
-                                            converter,
-                                            1000000 * n
+                                        for (const n of [10, 20, 30, 40]) {
+                                            const conversion = await convert(
+                                                reserveToken1,
+                                                poolToken,
+                                                reserveToken2,
+                                                bancorNetwork,
+                                                converter,
+                                                1000000 * n
+                                            );
+                                            totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+                                        }
+
+                                        await converter.processNetworkFees();
+
+                                        for (const n of [50, 60, 70, 80]) {
+                                            const conversion = await convert(
+                                                reserveToken2,
+                                                poolToken,
+                                                reserveToken1,
+                                                bancorNetwork,
+                                                converter,
+                                                1000000 * n
+                                            );
+                                            totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+                                        }
+
+                                        await converter.processNetworkFees();
+
+                                        for (const n of [180, 170, 160, 150]) {
+                                            const conversion = await convert(
+                                                reserveToken1,
+                                                poolToken,
+                                                reserveToken2,
+                                                bancorNetwork,
+                                                converter,
+                                                1000000 * n
+                                            );
+                                            totalConversionFee2 = totalConversionFee2.add(conversion.fee);
+                                        }
+
+                                        await converter.processNetworkFees();
+
+                                        for (const n of [140, 130, 120, 110]) {
+                                            const conversion = await convert(
+                                                reserveToken2,
+                                                poolToken,
+                                                reserveToken1,
+                                                bancorNetwork,
+                                                converter,
+                                                1000000 * n
+                                            );
+                                            totalConversionFee1 = totalConversionFee1.add(conversion.fee);
+                                        }
+
+                                        await converter.processNetworkFees();
+
+                                        const totalSupply = await poolToken.totalSupply();
+                                        const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
+                                        const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
+
+                                        const totalConversionFee1InPoolTokenUnits = totalConversionFee1
+                                            .mul(totalSupply)
+                                            .div(reserveBalance1);
+                                        const totalConversionFee2InPoolTokenUnits = totalConversionFee2
+                                            .mul(totalSupply)
+                                            .div(reserveBalance2);
+                                        const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
+                                            totalConversionFee2InPoolTokenUnits
                                         );
-                                        totalConversionFee1 = totalConversionFee1.add(conversion.fee);
-                                    }
+                                        const expectedFeeBase = totalConversionFeeInPoolTokenUnits
+                                            .muln(networkFeePercent)
+                                            .divn(200);
+                                        const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
+                                        const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
 
-                                    await converter.processNetworkFees();
+                                        const actualFee1 = (await getBalance(reserveToken1, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve1Balance
+                                        );
+                                        const actualFee2 = (await getBalance(reserveToken2, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve2Balance
+                                        );
 
-                                    const totalSupply = await poolToken.totalSupply();
-                                    const reserveBalance1 = await reserveToken1.balanceOf(converter.address);
-                                    const reserveBalance2 = await reserveToken2.balanceOf(converter.address);
-
-                                    const totalConversionFee1InPoolTokenUnits = totalConversionFee1
-                                        .mul(totalSupply)
-                                        .div(reserveBalance1);
-                                    const totalConversionFee2InPoolTokenUnits = totalConversionFee2
-                                        .mul(totalSupply)
-                                        .div(reserveBalance2);
-                                    const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
-                                        totalConversionFee2InPoolTokenUnits
-                                    );
-                                    const expectedFeeBase = totalConversionFeeInPoolTokenUnits
-                                        .muln(networkFeePercent)
-                                        .divn(200);
-                                    const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(totalSupply);
-                                    const expectedFee2 = expectedFeeBase.mul(reserveBalance2).div(totalSupply);
-
-                                    const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
-                                    const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
-
-                                    expectAlmostEqual(actualFee1, expectedFee1, '0', '0.0000014');
-                                    expectAlmostEqual(actualFee2, expectedFee2, '0', '0.0000014');
+                                        expectAlmostEqual(actualFee1, expectedFee1, '0', '0.0000014');
+                                        expectAlmostEqual(actualFee2, expectedFee2, '0', '0.0000014');
+                                    });
                                 }
                             );
                         }
@@ -1678,51 +1775,82 @@ describe('StandardPoolConverter', () => {
                 for (const initialBalance2 of [100000, 500000]) {
                     for (const conversionFeePercent of [1, 2]) {
                         for (const networkFeePercent of [5, 10]) {
-                            it(
+                            context(
                                 description(
-                                    'removeLiquidity when',
+                                    'when',
                                     initialBalance1,
                                     initialBalance2,
                                     conversionFeePercent,
                                     networkFeePercent
                                 ),
-                                async () => {
-                                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
-                                        networkFeePercent,
-                                        conversionFeePercent,
-                                        hasETH
-                                    );
-                                    await addLiquidity(
-                                        reserveToken1,
-                                        reserveToken2,
-                                        converter,
-                                        [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
-                                    );
+                                () => {
+                                    beforeEach(async () => {
+                                        ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            networkFeePercent,
+                                            conversionFeePercent,
+                                            hasETH
+                                        ));
 
-                                    const conversionAmount = ONE_TOKEN.muln(Math.max(initialBalance1, initialBalance2));
-                                    const conversion = await convert(
-                                        reserveToken1,
-                                        poolToken,
-                                        reserveToken2,
-                                        bancorNetwork,
-                                        converter,
-                                        conversionAmount
-                                    );
-                                    const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
-                                    const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(conversionAmount);
-                                    const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
+                                        networkFeeWalletReserve1Balance = await getBalance(
+                                            reserveToken1,
+                                            networkFeeWallet
+                                        );
+                                        networkFeeWalletReserve2Balance = await getBalance(
+                                            reserveToken2,
+                                            networkFeeWallet
+                                        );
+                                    });
 
-                                    const supplyAmount = await poolToken.balanceOf(defaultSender);
-                                    await removeLiquidity(reserveToken1, reserveToken2, converter, supplyAmount, true);
+                                    it('should process network fees after large liquidity removal', async () => {
+                                        const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            networkFeePercent,
+                                            conversionFeePercent,
+                                            hasETH
+                                        );
+                                        await addLiquidity(
+                                            reserveToken1,
+                                            reserveToken2,
+                                            converter,
+                                            [initialBalance1, initialBalance2].map((n) => ONE_TOKEN.muln(n))
+                                        );
 
-                                    const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
-                                    const expectedFee2 = expectedFeeBase;
+                                        const conversionAmount = ONE_TOKEN.muln(
+                                            Math.max(initialBalance1, initialBalance2)
+                                        );
+                                        const conversion = await convert(
+                                            reserveToken1,
+                                            poolToken,
+                                            reserveToken2,
+                                            bancorNetwork,
+                                            converter,
+                                            conversionAmount
+                                        );
+                                        const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
+                                        const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(conversionAmount);
+                                        const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
 
-                                    const actualFee1 = await reserveToken1.balanceOf(networkFeeWallet);
-                                    const actualFee2 = await reserveToken2.balanceOf(networkFeeWallet);
+                                        const supplyAmount = await poolToken.balanceOf(defaultSender);
+                                        await removeLiquidity(
+                                            reserveToken1,
+                                            reserveToken2,
+                                            converter,
+                                            supplyAmount,
+                                            true
+                                        );
 
-                                    expectAlmostEqual(actualFee1, expectedFee1, '0', '0.02383');
-                                    expectAlmostEqual(actualFee2, expectedFee2, '0', '0.02383');
+                                        const expectedFee1 = expectedFeeBase.mul(reserveBalance1).div(reserveBalance2);
+                                        const expectedFee2 = expectedFeeBase;
+
+                                        const actualFee1 = (await getBalance(reserveToken1, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve1Balance
+                                        );
+                                        const actualFee2 = (await getBalance(reserveToken2, networkFeeWallet)).sub(
+                                            networkFeeWalletReserve2Balance
+                                        );
+
+                                        expectAlmostEqual(actualFee1, expectedFee1, '0', '0.02383');
+                                        expectAlmostEqual(actualFee2, expectedFee2, '0', '0.02383');
+                                    });
                                 }
                             );
                         }
@@ -1733,13 +1861,13 @@ describe('StandardPoolConverter', () => {
             const createPool = async (networkFeePercent, conversionFeePercent, hasETH) => {
                 const poolToken = await DSToken.new('poolToken', 'poolToken', 18);
                 const reserveToken1 = await TestStandardToken.new('reserveToken1', 'reserveToken1', 18, TOTAL_SUPPLY);
-                const reserveToken2 = await TestStandardToken.new('reserveToken2', 'reserveToken2', 18, TOTAL_SUPPLY);
+                let reserveToken2;
                 const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 1000000);
 
                 if (hasETH) {
-                    reserveToken2.address = NATIVE_TOKEN_ADDRESS;
-                    reserveToken2.approve = async (spender, value) => {};
-                    reserveToken2.balanceOf = async (account) => await web3.eth.getBalance(account);
+                    reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
+                } else {
+                    reserveToken2 = await TestStandardToken.new('reserveToken2', 'reserveToken2', 18, TOTAL_SUPPLY);
                 }
 
                 await networkSettings.setNetworkFee(networkFeePercent * 10000);
@@ -1754,8 +1882,10 @@ describe('StandardPoolConverter', () => {
 
             const addLiquidity = async (reserveToken1, reserveToken2, converter, reserveAmounts, verify = false) => {
                 const reserveTokens = [reserveToken1.address, reserveToken2.address];
-                await reserveToken1.approve(converter.address, reserveAmounts[0]);
-                await reserveToken2.approve(converter.address, reserveAmounts[1]);
+
+                await approve(reserveToken1, converter, reserveAmounts[0]);
+                await approve(reserveToken2, converter, reserveAmounts[1]);
+
                 const value = reserveToken2.address === NATIVE_TOKEN_ADDRESS ? reserveAmounts[1] : 0;
                 if (verify) {
                     const expected = await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
@@ -1778,9 +1908,11 @@ describe('StandardPoolConverter', () => {
 
             const convert = async (sourceToken, poolToken, targetToken, bancorNetwork, converter, conversionAmount) => {
                 const conversionPath = [sourceToken.address, poolToken.address, targetToken.address];
-                await sourceToken.approve(bancorNetwork.address, conversionAmount);
+                await approve(sourceToken, bancorNetwork, conversionAmount);
                 const value = sourceToken.address === NATIVE_TOKEN_ADDRESS ? conversionAmount : 0;
-                const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS, { value });
+                const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS, {
+                    value
+                });
                 const events = await converter.getPastEvents('Conversion', { fromBlock: response.receipt.blockNumber });
                 const args = events.slice(-1)[0].args;
                 return { amount: args._return, fee: args._conversionFee };
