@@ -1147,7 +1147,8 @@ describe('StandardPoolConverter', () => {
         }
     });
 
-    describe('verifies that the network fee is transferred correctly via', () => {
+    for (const hasETH of [false, true]) {
+    describe(`with hasETH = ${hasETH}, verifies that the network fee is transferred correctly via`, () => {
         const ONE_TOKEN = new BN(10).pow(new BN(18));
         const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
         const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
@@ -1157,7 +1158,7 @@ describe('StandardPoolConverter', () => {
                 for (const conversionFeePercent of [0, 5, 10, 25, 75]) {
                     for (const networkFeePercent of [0, 5, 10, 25, 75, 100]) {
                         it(description('processNetworkFees when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
-                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
+                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent, hasETH);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, CONVERSION_AMOUNT);
@@ -1186,7 +1187,7 @@ describe('StandardPoolConverter', () => {
                 for (const conversionFeePercent of [1, 2]) {
                     for (const networkFeePercent of [5, 10]) {
                         it(description('addLiquidity when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
-                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
+                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent, hasETH);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             const conversion = await convert(reserveToken1, poolToken, reserveToken2, bancorNetwork, converter, CONVERSION_AMOUNT);
@@ -1216,7 +1217,7 @@ describe('StandardPoolConverter', () => {
                 for (const conversionFeePercent of [1, 2]) {
                     for (const networkFeePercent of [5, 10]) {
                         it(description('removeLiquidity when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
-                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
+                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent, hasETH);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             let totalConversionFee1 = new BN(0);
@@ -1272,7 +1273,7 @@ describe('StandardPoolConverter', () => {
                 for (const conversionFeePercent of [1]) {
                     for (const networkFeePercent of [10]) {
                         it(description('add/remove liquidity when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
-                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
+                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent, hasETH);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             let totalConversionFee1 = new BN(0);
@@ -1349,7 +1350,7 @@ describe('StandardPoolConverter', () => {
                 for (const conversionFeePercent of [1]) {
                     for (const networkFeePercent of [10]) {
                         it(description('processNetworkFees when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
-                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
+                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent, hasETH);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             let totalConversionFee1 = new BN(0);
@@ -1410,7 +1411,7 @@ describe('StandardPoolConverter', () => {
                 for (const conversionFeePercent of [1, 2]) {
                     for (const networkFeePercent of [5, 10]) {
                         it(description('removeLiquidity when', initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent), async () => {
-                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent);
+                            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(networkFeePercent, conversionFeePercent, hasETH);
                             await addLiquidity(reserveToken1, reserveToken2, converter, [initialBalance1, initialBalance2].map(n => ONE_TOKEN.muln(n)));
 
                             const conversionAmount = ONE_TOKEN.muln(Math.max(initialBalance1, initialBalance2));
@@ -1444,11 +1445,17 @@ describe('StandardPoolConverter', () => {
             ;
         }
 
-        async function createPool(networkFeePercent, conversionFeePercent) {
+        async function createPool(networkFeePercent, conversionFeePercent, isETH) {
             const poolToken = await DSToken.new('poolToken', 'poolToken', 18);
             const reserveToken1 = await TestStandardToken.new('reserveToken1', 'reserveToken1', 18, TOTAL_SUPPLY);
             const reserveToken2 = await TestStandardToken.new('reserveToken2', 'reserveToken2', 18, TOTAL_SUPPLY);
             const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 1000000);
+
+            if (isETH) {
+                reserveToken2.address = NATIVE_TOKEN_ADDRESS;
+                reserveToken2.approve = async (spender, value) => {};
+                reserveToken2.balanceOf = async (account) => await web3.eth.getBalance(account);
+            }
 
             await networkSettings.setNetworkFee(networkFeePercent * 10000);
             await converter.setConversionFee(conversionFeePercent * 10000);
@@ -1464,12 +1471,13 @@ describe('StandardPoolConverter', () => {
             const reserveTokens = [reserveToken1.address, reserveToken2.address];
             await reserveToken1.approve(converter.address, reserveAmounts[0]);
             await reserveToken2.approve(converter.address, reserveAmounts[1]);
+            const value = reserveToken2.address === NATIVE_TOKEN_ADDRESS ? reserveAmounts[1] : 0;
             if (verify) {
                 const expected = await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
-                const actual = await converter.addLiquidity.call(reserveTokens, reserveAmounts, 1);
+                const actual = await converter.addLiquidity.call(reserveTokens, reserveAmounts, 1, { value });
                 expect(actual).to.be.bignumber.equal(expected);
             }
-            await converter.addLiquidity(reserveTokens, reserveAmounts, 1);
+            await converter.addLiquidity(reserveTokens, reserveAmounts, 1, { value });
         }
 
         async function removeLiquidity(reserveToken1, reserveToken2, converter, supplyAmount, verify = false) {
@@ -1504,4 +1512,5 @@ describe('StandardPoolConverter', () => {
             }
         }
     });
+    }
 });
