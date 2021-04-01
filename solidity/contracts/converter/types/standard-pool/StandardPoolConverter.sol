@@ -781,11 +781,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // get the total supply
         uint256 totalSupply = poolToken.totalSupply();
 
-        uint256[2] memory oldReserveBalances;
+        uint256[2] memory prevReserveBalances;
         uint256[2] memory newReserveBalances;
 
         // process the network fees and get the reserve balances
-        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFees(msg.value);
+        (prevReserveBalances[0], prevReserveBalances[1]) = processNetworkFees(msg.value);
 
         uint256 amount;
 
@@ -797,7 +797,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             (amount, _reserveAmounts) = addLiquidityAmounts(
                 _reserveTokens,
                 _reserveAmounts,
-                oldReserveBalances,
+                prevReserveBalances,
                 totalSupply
             );
         }
@@ -818,7 +818,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             }
 
             // save the new reserve balance
-            newReserveBalances[i] = oldReserveBalances[i].add(reserveAmount);
+            newReserveBalances[i] = prevReserveBalances[i].add(reserveAmount);
 
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
@@ -899,13 +899,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         uint256 newPoolTokenSupply = totalSupply.sub(_amount);
 
-        uint256[2] memory oldReserveBalances;
+        uint256[2] memory prevReserveBalances;
         uint256[2] memory newReserveBalances;
 
         // process the network fees and get the reserve balances
-        (oldReserveBalances[0], oldReserveBalances[1]) = processNetworkFees(0);
+        (prevReserveBalances[0], prevReserveBalances[1]) = processNetworkFees(0);
 
-        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, oldReserveBalances);
+        uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, prevReserveBalances);
 
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
@@ -913,7 +913,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_TARGET_AMOUNT");
 
             // save the new reserve balance
-            newReserveBalances[i] = oldReserveBalances[i].sub(reserveAmount);
+            newReserveBalances[i] = prevReserveBalances[i].sub(reserveAmount);
 
             // transfer each one of the reserve amounts from the pool to the user
             safeTransfer(reserveToken, msg.sender, reserveAmount);
