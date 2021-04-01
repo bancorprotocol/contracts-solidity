@@ -1517,7 +1517,8 @@ describe('StandardPoolConverter', () => {
             async function convert(sourceToken, poolToken, targetToken, bancorNetwork, converter, conversionAmount) {
                 const conversionPath = [sourceToken.address, poolToken.address, targetToken.address];
                 await sourceToken.approve(bancorNetwork.address, conversionAmount);
-                const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS);
+                const value = sourceToken.address === NATIVE_TOKEN_ADDRESS ? conversionAmount : 0;
+                const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS, { value });
                 const events = await converter.getPastEvents('Conversion', { fromBlock: response.receipt.blockNumber });
                 const args = events.slice(-1)[0].args;
                 return { amount: args._return, fee: args._conversionFee };
