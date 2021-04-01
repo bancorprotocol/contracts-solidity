@@ -788,13 +788,16 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (prevReserveBalances[0], prevReserveBalances[1]) = processNetworkFees(msg.value);
 
         uint256 amount;
+        uint256[2] memory reserveAmounts;
 
         // calculate the amount of pool tokens to mint for the caller
         // and the amount of reserve tokens to transfer from the caller
         if (totalSupply == 0) {
             amount = MathEx.geometricMean(_reserveAmounts);
+            reserveAmounts[0] = _reserveAmounts[0];
+            reserveAmounts[1] = _reserveAmounts[1];
         } else {
-            (amount, _reserveAmounts) = addLiquidityAmounts(
+            (amount, reserveAmounts) = addLiquidityAmounts(
                 _reserveTokens,
                 _reserveAmounts,
                 prevReserveBalances,
@@ -805,8 +808,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 newPoolTokenSupply = totalSupply.add(amount);
         for (uint256 i = 0; i < 2; i++) {
             IERC20 reserveToken = _reserveTokens[i];
-            uint256 reserveAmount = _reserveAmounts[i];
+            uint256 reserveAmount = reserveAmounts[i];
             require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
+            assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
             if (reserveToken != NATIVE_TOKEN_ADDRESS) {
@@ -858,16 +862,18 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
-    ) internal view virtual returns (uint256, uint256[] memory) {
+    ) internal view virtual returns (uint256, uint256[2] memory) {
         this;
 
         uint256 index =
             _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
         uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
 
-        uint256[] memory reserveAmounts = new uint256[](2);
-        reserveAmounts[0] = fundCost(_totalSupply, _reserveBalances[0], amount);
-        reserveAmounts[1] = fundCost(_totalSupply, _reserveBalances[1], amount);
+        uint256[2] memory reserveAmounts = [
+            fundCost(_totalSupply, _reserveBalances[0], amount),
+            fundCost(_totalSupply, _reserveBalances[1], amount)
+        ];
+
         return (amount, reserveAmounts);
     }
 

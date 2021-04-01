@@ -251,8 +251,7 @@ const run = async () => {
             const symbol = await token.methods.symbol().call();
             const decimals = await token.methods.symbol().call();
             reserves[symbol] = { address: token._address, decimals: decimals };
-        }
-        else {
+        } else {
             const name = reserve.symbol + ' DS Token';
             const symbol = reserve.symbol;
             const decimals = reserve.decimals;
@@ -308,7 +307,7 @@ const run = async () => {
                 }
             }
 
-            const deployedConverterType = {1: 'LiquidityPoolV1Converter', 3: 'StandardPoolConverter'}[type];
+            const deployedConverterType = { 1: 'LiquidityPoolV1Converter', 3: 'StandardPoolConverter' }[type];
             const deployedConverter = deployed(web3, deployedConverterType, converterBase._address);
             await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
         }
@@ -349,16 +348,14 @@ const run = async () => {
     const liquidityProtectionWallet = await web3Func(deploy, 'liquidityProtectionWallet', 'TokenHolder', []);
 
     const liquidityProtection = await web3Func(deploy, 'liquidityProtection', 'LiquidityProtection', [
-        [
-            liquidityProtectionSettings._address,
-            liquidityProtectionStore._address,
-            liquidityProtectionStats._address,
-            liquidityProtectionSystemStore._address,
-            liquidityProtectionWallet._address,
-            bntTokenGovernance._address,
-            vbntTokenGovernance._address,
-            checkpointStore._address
-        ]
+        liquidityProtectionSettings._address,
+        liquidityProtectionStore._address,
+        liquidityProtectionStats._address,
+        liquidityProtectionSystemStore._address,
+        liquidityProtectionWallet._address,
+        bntTokenGovernance._address,
+        vbntTokenGovernance._address,
+        checkpointStore._address
     ]);
 
     await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
