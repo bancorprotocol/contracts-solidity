@@ -575,6 +575,7 @@ describe('FixedRatePoolConverter', () => {
                     })
                 );
             });
+        });
     }
 
     for (const rateN of [1, 2, 4, 8]) {
