@@ -1445,13 +1445,13 @@ describe('StandardPoolConverter', () => {
                 ;
             }
 
-            async function createPool(networkFeePercent, conversionFeePercent, isETH) {
+            async function createPool(networkFeePercent, conversionFeePercent, hasETH) {
                 const poolToken = await DSToken.new('poolToken', 'poolToken', 18);
                 const reserveToken1 = await TestStandardToken.new('reserveToken1', 'reserveToken1', 18, TOTAL_SUPPLY);
                 const reserveToken2 = await TestStandardToken.new('reserveToken2', 'reserveToken2', 18, TOTAL_SUPPLY);
                 const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 1000000);
 
-                if (isETH) {
+                if (hasETH) {
                     reserveToken2.address = NATIVE_TOKEN_ADDRESS;
                     reserveToken2.approve = async (spender, value) => {};
                     reserveToken2.balanceOf = async (account) => await web3.eth.getBalance(account);
