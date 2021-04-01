@@ -1185,7 +1185,7 @@ describe('StandardPoolConverter', () => {
 
         for (const hasETH of [false, true]) {
             const AMOUNT = 1000000000;
-            it(`hasETH = ${hasETH}`, async () => {
+            it(`provider refund, when hasETH = ${hasETH}`, async () => {
                 const gasPrice = new BN(await web3.eth.getGasPrice());
                 const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
                 for (const factors of [[1, 1], [1, 2], [2, 1]]) {
