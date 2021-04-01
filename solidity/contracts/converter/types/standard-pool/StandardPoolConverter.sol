@@ -829,16 +829,18 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
-    ) internal view virtual returns (uint256, uint256[] memory) {
+    ) internal view virtual returns (uint256, uint256[2] memory) {
         this;
 
         uint256 index =
             _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
         uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
 
-        uint256[] memory reserveAmounts = new uint256[](2);
-        reserveAmounts[0] = fundCost(_totalSupply, _reserveBalances[0], amount);
-        reserveAmounts[1] = fundCost(_totalSupply, _reserveBalances[1], amount);
+        uint256[2] memory reserveAmounts = [
+            fundCost(_totalSupply, _reserveBalances[0], amount),
+            fundCost(_totalSupply, _reserveBalances[1], amount)
+        ];
+
         return (amount, reserveAmounts);
     }
 
