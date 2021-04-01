@@ -1153,7 +1153,16 @@ describe('StandardPoolConverter', () => {
         describe(`with hasETH = ${hasETH}, verifies that the network fee is transferred correctly via`, () => {
             beforeEach(async () => {
                 if (hasETH) {
-                    const balance = new BN(await web3.eth.getBalance(networkFeeWallet));
+                    let balance = new BN(await web3.eth.getBalance(networkFeeWallet));
+                    if (balance.lt(gasPrice.muln(21000))) {
+                        await web3.eth.sendTransaction({
+                            from: defaultSender,
+                            to: networkFeeWallet,
+                            gas: 21000,
+                            value: gasPrice.muln(21000).sub(balance)
+                        });
+                        balance = gasPrice.muln(21000);
+                    }
                     await web3.eth.sendTransaction({
                         from: networkFeeWallet,
                         to: defaultSender,
