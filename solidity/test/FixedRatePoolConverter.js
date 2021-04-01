@@ -448,42 +448,6 @@ describe('FixedRatePoolConverter', () => {
                 );
             });
 
-            it('verifies that addLiquidity with separate reserve balances gets the correct reserve balance amounts from the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await reserveToken.transfer(sender2, 123456789);
-                await reserveToken2.transfer(sender2, 123456789);
-
-                const supply = await token.totalSupply.call();
-                const percentage = new BN(19);
-                const prevReserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const prevReserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
-
-                const amount = new BN(100000);
-                let value = 0;
-                if (isETHReserve) {
-                    value = amount;
-                } else {
-                    await reserveToken.approve(converter.address, amount, { from: sender2 });
-                }
-
-                await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                await converter.methods['addLiquidity(uint256,uint256,uint256)'](amount, token2Amount, 1, {
-                    from: sender2,
-                    value
-                });
-
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-
-                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(amount));
-                expect(reserve2Balance).to.be.bignumber.equal(prevReserve2Balance.add(token2Amount));
-            });
-
             it('verifies that removeLiquidity sends the correct reserve balance amounts to the caller', async () => {
                 const converter = await initConverter(false, isETHReserve);
 
@@ -610,39 +574,6 @@ describe('FixedRatePoolConverter', () => {
                         from: sender2
                     })
                 );
-            });
-
-            it('verifies that removeLiquidity with separate minimum return args sends the correct reserve balance amounts to the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await token.transfer(sender2, 100);
-
-                const supply = await token.totalSupply.call();
-                const percentage = new BN(19);
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token1Amount = reserve1Balance.mul(percentage).div(supply);
-                const token2Amount = reserve2Balance.mul(percentage).div(supply);
-
-                const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
-                const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
-                const res = await converter.methods['removeLiquidity(uint256,uint256,uint256)'](19, 1, 1, {
-                    from: sender2
-                });
-
-                let transactionCost = new BN(0);
-                if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
-                }
-
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
-                const token2Balance = await reserveToken2.balanceOf.call(sender2);
-
-                expect(token1Balance).to.be.bignumber.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
-                expect(token2Balance).to.be.bignumber.equal(token2PrevBalance.add(token2Amount));
             });
         });
     }
