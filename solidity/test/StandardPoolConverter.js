@@ -1190,13 +1190,13 @@ describe('StandardPoolConverter', () => {
                 const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
                 for (const factors of [[1, 1], [1, 2], [2, 1]]) {
                     const reserveAmounts = factors.map((factor) => factor * AMOUNT);
-                    const balancesBefore = await Promise.all(
-                        reserveTokens.map((reserveToken) => getBalance(reserveToken, defaultSender))
-                    );
                     for (let i = 0; i < 2; i++) {
                         await approve(reserveTokens[i], converter, 0);
                         await approve(reserveTokens[i], converter, reserveAmounts[i]);
                     }
+                    const balancesBefore = await Promise.all(
+                        reserveTokens.map((reserveToken) => getBalance(reserveToken, defaultSender))
+                    );
                     const response = await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, {
                         value: hasETH ? reserveAmounts[1] : 0
                     });
