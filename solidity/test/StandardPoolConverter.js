@@ -19,6 +19,9 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
+const ONE_TOKEN = new BN(10).pow(new BN(18));
+const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
+
 describe('StandardPoolConverter', () => {
     const initConverter = async (activate, isETHReserve, maxConversionFee = 0) => {
         token = await DSToken.new('Token1', 'TKN1', 2);
@@ -45,6 +48,30 @@ describe('StandardPoolConverter', () => {
         await converter.setTime(now);
 
         return converter;
+    };
+
+    const createPool = async (hasETH, networkFeePercent, conversionFeePercent) => {
+        const poolToken = await DSToken.new('PT', 'PT', 18);
+        const reserveToken1 = await TestStandardToken.new('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
+        let reserveToken2;
+        const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 1000000);
+
+        if (hasETH) {
+            reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
+        } else {
+            reserveToken2 = await TestStandardToken.new('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+        }
+
+        await networkSettings.setNetworkFee(networkFeePercent ? networkFeePercent * 10000 : 0);
+        await converter.setConversionFee(conversionFeePercent ? conversionFeePercent * 10000 : 0);
+
+        await converter.addReserve(reserveToken1.address, 500000);
+        await converter.addReserve(reserveToken2.address, 500000);
+
+        await poolToken.transferOwnership(converter.address);
+        await converter.acceptTokenOwnership();
+
+        return { poolToken, reserveToken1, reserveToken2, converter };
     };
 
     const removeLiquidityTest = async (poolTokenAmount, reserveTokens) => {
@@ -88,6 +115,22 @@ describe('StandardPoolConverter', () => {
         }
 
         return reserveToken.balanceOf.call(address);
+    };
+
+    const getAllowance = async (reserveToken, account) => {
+        const reserveTokenAddress = reserveToken.address || reserveToken;
+        if (reserveTokenAddress === NATIVE_TOKEN_ADDRESS) {
+            return new BN(0);
+        }
+
+        const address = account.address || account;
+
+        if (typeof reserveToken === 'string') {
+            const token = await TestStandardToken.at(reserveToken);
+            return token.allowance.call(sender, address);
+        }
+
+        return reserveToken.allowance.call(sender, address);
     };
 
     const approve = async (reserveToken, account, amount) => {
@@ -961,35 +1004,7 @@ describe('StandardPoolConverter', () => {
         }
     });
 
-    describe('add/remove liquidity', () => {
-        const initLiquidityPool = async (hasETH) => {
-            const poolToken = await DSToken.new('name', 'symbol', 0);
-            const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 0);
-
-            const reserveTokens = [
-                (await TestStandardToken.new('name', 'symbol', 0, MAX_UINT256)).address,
-                hasETH ? NATIVE_TOKEN_ADDRESS : (await TestStandardToken.new('name', 'symbol', 0, MAX_UINT256)).address
-            ];
-
-            for (const reserveToken of reserveTokens) {
-                await converter.addReserve(reserveToken, 500000);
-            }
-
-            await poolToken.transferOwnership(converter.address);
-            await converter.acceptAnchorOwnership();
-
-            return [converter, poolToken, reserveTokens];
-        };
-
-        const getAllowance = async (reserveToken, converter) => {
-            if (reserveToken === NATIVE_TOKEN_ADDRESS) {
-                return new BN(0);
-            }
-
-            const token = await TestStandardToken.at(reserveToken);
-            return token.allowance.call(sender, converter.address);
-        };
-
+    describe.only('add/remove liquidity', () => {
         const getLiquidityCosts = async (firstTime, converter, reserveTokens, reserveAmounts) => {
             if (firstTime) {
                 return reserveAmounts.map((reserveAmount, i) => reserveAmounts);
@@ -1013,7 +1028,8 @@ describe('StandardPoolConverter', () => {
         };
 
         const test = async (hasETH) => {
-            const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
+            const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(hasETH);
+            const reserveTokens = [reserveToken1.address, reserveToken2.address];
 
             const state = [];
             let expected = [];
@@ -1124,7 +1140,9 @@ describe('StandardPoolConverter', () => {
         for (const hasETH of [false, true]) {
             const AMOUNT = 1000000000;
             it(`provider refund, when hasETH = ${hasETH}`, async () => {
-                const [converter, poolToken, reserveTokens] = await initLiquidityPool(hasETH);
+                const { reserveToken1, reserveToken2, converter } = await createPool(hasETH);
+                const reserveTokens = [reserveToken1.address, reserveToken2.address];
+
                 for (const factors of [
                     [1, 1],
                     [1, 2],
@@ -1144,10 +1162,14 @@ describe('StandardPoolConverter', () => {
                     const balancesAfter = await Promise.all(
                         reserveTokens.map((reserveToken) => getBalance(reserveToken, defaultSender))
                     );
-                    const ethUsed = getTransactionCost(response);
+                    let transactionCost = new BN(0);
+                    if (hasETH) {
+                        transactionCost = await getTransactionCost(response);
+                    }
+
                     expect(balancesAfter[0]).to.be.bignumber.equal(balancesBefore[0].sub(new BN(AMOUNT)));
                     expect(balancesAfter[1]).to.be.bignumber.equal(
-                        balancesBefore[1].sub(new BN(AMOUNT).add(hasETH ? ethUsed : new BN(0)))
+                        balancesBefore[1].sub(new BN(AMOUNT).add(transactionCost))
                     );
                 }
             });
@@ -1157,8 +1179,6 @@ describe('StandardPoolConverter', () => {
     // for (const hasETH of [false, true]) {
     for (const hasETH of [true]) {
         describe.only(`with hasETH = ${hasETH}, verifies that the network fee is transferred correctly via`, () => {
-            const ONE_TOKEN = new BN(10).pow(new BN(18));
-            const TOTAL_SUPPLY = ONE_TOKEN.muln(1000000);
             const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
 
             const description = (prefix, initialBalance1, initialBalance2, conversionFeePercent, networkFeePercent) => {
@@ -1174,6 +1194,7 @@ describe('StandardPoolConverter', () => {
             let reserveToken1;
             let reserveToken2;
             let converter;
+
             let networkFeeWalletReserve1Balance;
             let networkFeeWalletReserve2Balance;
 
@@ -1192,9 +1213,9 @@ describe('StandardPoolConverter', () => {
                                 () => {
                                     beforeEach(async () => {
                                         ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            hasETH,
                                             networkFeePercent,
-                                            conversionFeePercent,
-                                            hasETH
+                                            conversionFeePercent
                                         ));
 
                                         networkFeeWalletReserve1Balance = await getBalance(
@@ -1223,6 +1244,7 @@ describe('StandardPoolConverter', () => {
                                             converter,
                                             CONVERSION_AMOUNT
                                         );
+
                                         const expectedFeeBase = conversion.fee.muln(networkFeePercent).divn(200);
                                         const reserveBalance1 = ONE_TOKEN.muln(initialBalance1).add(CONVERSION_AMOUNT);
                                         const reserveBalance2 = ONE_TOKEN.muln(initialBalance2).sub(conversion.amount);
@@ -1264,9 +1286,9 @@ describe('StandardPoolConverter', () => {
                                 () => {
                                     beforeEach(async () => {
                                         ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            hasETH,
                                             networkFeePercent,
-                                            conversionFeePercent,
-                                            hasETH
+                                            conversionFeePercent
                                         ));
 
                                         networkFeeWalletReserve1Balance = await getBalance(
@@ -1346,9 +1368,9 @@ describe('StandardPoolConverter', () => {
                                 () => {
                                     beforeEach(async () => {
                                         ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            hasETH,
                                             networkFeePercent,
-                                            conversionFeePercent,
-                                            hasETH
+                                            conversionFeePercent
                                         ));
 
                                         networkFeeWalletReserve1Balance = await getBalance(
@@ -1480,9 +1502,9 @@ describe('StandardPoolConverter', () => {
                                 () => {
                                     beforeEach(async () => {
                                         ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            hasETH,
                                             networkFeePercent,
-                                            conversionFeePercent,
-                                            hasETH
+                                            conversionFeePercent
                                         ));
 
                                         networkFeeWalletReserve1Balance = await getBalance(
@@ -1653,9 +1675,9 @@ describe('StandardPoolConverter', () => {
                                 () => {
                                     beforeEach(async () => {
                                         ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            hasETH,
                                             networkFeePercent,
-                                            conversionFeePercent,
-                                            hasETH
+                                            conversionFeePercent
                                         ));
 
                                         networkFeeWalletReserve1Balance = await getBalance(
@@ -1786,9 +1808,9 @@ describe('StandardPoolConverter', () => {
                                 () => {
                                     beforeEach(async () => {
                                         ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            hasETH,
                                             networkFeePercent,
-                                            conversionFeePercent,
-                                            hasETH
+                                            conversionFeePercent
                                         ));
 
                                         networkFeeWalletReserve1Balance = await getBalance(
@@ -1803,9 +1825,9 @@ describe('StandardPoolConverter', () => {
 
                                     it('should process network fees after large liquidity removal', async () => {
                                         const { poolToken, reserveToken1, reserveToken2, converter } = await createPool(
+                                            hasETH,
                                             networkFeePercent,
-                                            conversionFeePercent,
-                                            hasETH
+                                            conversionFeePercent
                                         );
                                         await addLiquidity(
                                             reserveToken1,
@@ -1857,28 +1879,6 @@ describe('StandardPoolConverter', () => {
                     }
                 }
             }
-
-            const createPool = async (networkFeePercent, conversionFeePercent, hasETH) => {
-                const poolToken = await DSToken.new('poolToken', 'poolToken', 18);
-                const reserveToken1 = await TestStandardToken.new('reserveToken1', 'reserveToken1', 18, TOTAL_SUPPLY);
-                let reserveToken2;
-                const converter = await StandardPoolConverter.new(poolToken.address, contractRegistry.address, 1000000);
-
-                if (hasETH) {
-                    reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
-                } else {
-                    reserveToken2 = await TestStandardToken.new('reserveToken2', 'reserveToken2', 18, TOTAL_SUPPLY);
-                }
-
-                await networkSettings.setNetworkFee(networkFeePercent * 10000);
-                await converter.setConversionFee(conversionFeePercent * 10000);
-                await converter.addReserve(reserveToken1.address, 500000);
-                await converter.addReserve(reserveToken2.address, 500000);
-                await poolToken.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                return { poolToken, reserveToken1, reserveToken2, converter };
-            };
 
             const addLiquidity = async (reserveToken1, reserveToken2, converter, reserveAmounts, verify = false) => {
                 const reserveTokens = [reserveToken1.address, reserveToken2.address];
