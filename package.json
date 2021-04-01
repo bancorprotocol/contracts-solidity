@@ -19,7 +19,7 @@
     ],
     "scripts": {
         "build": "hardhat compile",
-        "test": "hardhat test",
+        "test": "NODE_OPTIONS='--max-old-space-size=5120' hardhat test",
         "coverage": "hardhat coverage",
         "export": "node scripts/export.js",
         "lint": "yarn lint:js && yarn lint:sol",

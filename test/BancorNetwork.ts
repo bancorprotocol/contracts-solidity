@@ -270,7 +270,7 @@ describe('BancorNetwork', () => {
                         await sourceToken.connect(sender).approve(bancorNetwork.address, amount);
                     }
 
-                    const prevBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
+                    const prevBalance = await Utils.getBalance(targetSymbol, sender.address);
                     const returnAmount = await bancorNetwork.callStatic.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
@@ -285,7 +285,7 @@ describe('BancorNetwork', () => {
                         Constants.ZERO_ADDRESS,
                         { value: value }
                     );
-                    const postBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
+                    const postBalance = await Utils.getBalance(targetSymbol, sender.address);
 
                     let transactionCost = BigNumber.from(0);
                     if (targetSymbol === 'ETH') {
@@ -309,7 +309,7 @@ describe('BancorNetwork', () => {
                     }
 
                     const beneficiary = accounts[2];
-                    const prevBalance = await Utils.getBalance(targetToken, targetSymbol, beneficiary.address);
+                    const prevBalance = await Utils.getBalance(targetSymbol, beneficiary.address);
                     const returnAmount = await bancorNetwork.callStatic.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
@@ -324,7 +324,7 @@ describe('BancorNetwork', () => {
                         beneficiary.address,
                         { value: value }
                     );
-                    const postBalance = await Utils.getBalance(targetToken, targetSymbol, beneficiary.address);
+                    const postBalance = await Utils.getBalance(targetSymbol, beneficiary.address);
 
                     let transactionCost = BigNumber.from(0);
                     if (targetSymbol === 'ETH') {
@@ -348,7 +348,7 @@ describe('BancorNetwork', () => {
                     }
 
                     const expectedReturn = await bancorNetwork.rateByPath(paths[sourceSymbol][targetSymbol], amount);
-                    const prevBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
+                    const prevBalance = await Utils.getBalance(targetSymbol, sender.address);
                     const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
@@ -356,7 +356,7 @@ describe('BancorNetwork', () => {
                         Constants.ZERO_ADDRESS,
                         { value: value }
                     );
-                    const postBalance = await Utils.getBalance(targetToken, targetSymbol, sender.address);
+                    const postBalance = await Utils.getBalance(targetSymbol, sender.address);
 
                     let transactionCost = BigNumber.from(0);
                     if (targetSymbol === 'ETH') {

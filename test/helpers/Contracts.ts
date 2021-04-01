@@ -180,5 +180,6 @@ export default {
     TestReentrancyGuardAttacker: deployOrAttach<TestReentrancyGuardAttacker>('TestReentrancyGuardAttacker'),
     TestReentrancyGuard: deployOrAttach<TestReentrancyGuard>('TestReentrancyGuard'),
     XTransferRerouter: deployOrAttach<XTransferRerouter>('XTransferRerouter'),
-    ConverterBase: deployOrAttach<ConverterBase>('ConverterBase')
+    ConverterBase: deployOrAttach<ConverterBase>('ConverterBase'),
+    ConverterV27OrLowerWithoutFallback: deployOrAttach<any>('ConverterV27OrLowerWithoutFallback')
 };
