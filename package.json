@@ -20,6 +20,7 @@
     "scripts": {
         "build": "hardhat compile",
         "test": "NODE_OPTIONS='--max-old-space-size=5120' hardhat test",
+        "testobo": "for f in test/*.ts; do hardhat test $f; done",
         "coverage": "hardhat coverage",
         "export": "node scripts/export.js",
         "lint": "yarn lint:js && yarn lint:sol",

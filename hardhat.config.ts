@@ -31,7 +31,8 @@ const Config: HardhatUserConfig = {
     },
     mocha: {
         timeout: 600000,
-        color: true
+        color: true,
+        bail: true
     }
 };
 
