@@ -1477,7 +1477,7 @@ describe('StandardPoolConverter', () => {
                 if (hasETH) {
                     reserveToken2.address = NATIVE_TOKEN_ADDRESS;
                     reserveToken2.approve = async (spender, value) => {};
-                    reserveToken2.balanceOf = async (account) => await web3.eth.getBalance(account);
+                    reserveToken2.balanceOf = async (account) => new BN(await web3.eth.getBalance(account));
                 }
 
                 await networkSettings.setNetworkFee(networkFeePercent * 10000);
@@ -1494,7 +1494,7 @@ describe('StandardPoolConverter', () => {
                 const reserveTokens = [reserveToken1.address, reserveToken2.address];
                 await reserveToken1.approve(converter.address, reserveAmounts[0]);
                 await reserveToken2.approve(converter.address, reserveAmounts[1]);
-                const value = reserveToken2.address === NATIVE_TOKEN_ADDRESS ? reserveAmounts[1] : 0;
+                const value = reserveAmounts[reserveTokens.findIndex((address) => address === NATIVE_TOKEN_ADDRESS)];
                 if (verify) {
                     const expected = await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
                     const actual = await converter.addLiquidity.call(reserveTokens, reserveAmounts, 1, { value });
@@ -1517,7 +1517,8 @@ describe('StandardPoolConverter', () => {
             async function convert(sourceToken, poolToken, targetToken, bancorNetwork, converter, conversionAmount) {
                 const conversionPath = [sourceToken.address, poolToken.address, targetToken.address];
                 await sourceToken.approve(bancorNetwork.address, conversionAmount);
-                const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS);
+                const value = sourceToken.address === NATIVE_TOKEN_ADDRESS ? conversionAmount : 0;
+                const response = await bancorNetwork.convertByPath2(conversionPath, conversionAmount, 1, ZERO_ADDRESS, { value });
                 const events = await converter.getPastEvents('Conversion', { fromBlock: response.receipt.blockNumber });
                 const args = events.slice(-1)[0].args;
                 return { amount: args._return, fee: args._conversionFee };
