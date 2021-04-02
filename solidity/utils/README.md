@@ -113,9 +113,6 @@ Here is an example of the initial configuration file which should be provided to
             ]
         }
     ],
-    "networkSettingsParams": {
-        "networkFeeWallet": "0x1234567812345678123456781234567812345678"
-    },
     "liquidityProtectionParams": {
         "minNetworkTokenLiquidityForMinting": "100",
         "defaultNetworkTokenMintingLimit": "750",
