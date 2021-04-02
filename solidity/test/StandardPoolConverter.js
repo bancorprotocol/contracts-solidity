@@ -96,6 +96,7 @@ describe('StandardPoolConverter', () => {
         );
 
         return {
+            res,
             transactionCost: approveTransactionCost.add(approveTransactionCost2).add(await getTransactionCost(res))
         };
     };
@@ -106,7 +107,7 @@ describe('StandardPoolConverter', () => {
             [reserveToken1.address, reserveToken2.address],
             [MIN_RETURN, MIN_RETURN]
         );
-        return { transactionCost: await getTransactionCost(res) };
+        return { res, transactionCost: await getTransactionCost(res) };
     };
 
     const convert = async (conversionPath, amount, minReturn) => {
@@ -669,7 +670,7 @@ describe('StandardPoolConverter', () => {
 
                 it('verifies the TokenRateUpdate event after adding liquidity', async () => {
                     const amount = new BN(500);
-                    const res = await addLiquidity(converter, reserveToken1, reserveToken2, [amount, amount]);
+                    const { res } = await addLiquidity(converter, reserveToken1, reserveToken2, [amount, amount]);
 
                     const poolTokenSupply = await poolToken.totalSupply.call();
                     const reserve1Balance = await converter.reserveBalance.call(reserveToken1.address);
@@ -695,7 +696,7 @@ describe('StandardPoolConverter', () => {
                     await addLiquidity(converter, reserveToken1, reserveToken2, [amount, amount]);
 
                     const removeAmount = new BN(100);
-                    const res = await removeLiquidity(converter, reserveToken1, reserveToken2, removeAmount);
+                    const { res } = await removeLiquidity(converter, reserveToken1, reserveToken2, removeAmount);
 
                     const poolTokenSupply = await poolToken.totalSupply.call();
                     const reserve1Balance = await converter.reserveBalance.call(reserveToken1.address);
@@ -842,11 +843,12 @@ describe('StandardPoolConverter', () => {
 
                 it('should revert when attempting to add liquidity with insufficient funds', async () => {
                     const amount = await getBalance(reserveToken1, defaultSender);
-                    await addLiquidity(converter, reserveToken1, reserveToken2, [amount, 10]);
 
                     await expectRevert(
-                        addLiquidity(converter, reserveToken1, reserveToken2, [amount, 1000]),
-                        'SafeMath: subtraction overflow'
+                        addLiquidity(converter, reserveToken1, reserveToken2, [amount.add(new BN(1)), 1000]),
+                        reserveToken1.address !== NATIVE_TOKEN_ADDRESS
+                            ? 'SafeMath: subtraction overflow'
+                            : "Returned error: sender doesn't have enough funds to send tx"
                     );
                 });
 
@@ -952,8 +954,8 @@ describe('StandardPoolConverter', () => {
                             const a2b1 = new BN(amount2).mul(balance1);
                             const expected1 = a1b2.lt(a2b1) ? new BN(0) : a1b2.sub(a2b1).div(balance2);
                             const expected2 = a2b1.lt(a1b2) ? new BN(0) : a2b1.sub(a1b2).div(balance1);
-                            const actual1 = await reserveToken1.allowance.call(sender, converter.address);
-                            const actual2 = await reserveToken2.allowance.call(sender, converter.address);
+                            const actual1 = await getAllowance(reserveToken1, converter);
+                            const actual2 = await getAllowance(reserveToken2, converter);
                             expect(actual1).to.be.bignumber.equal(expected1);
                             expect(actual2).to.be.bignumber.equal(expected2);
                         });
@@ -1055,7 +1057,7 @@ describe('StandardPoolConverter', () => {
                 });
             });
 
-            describe('verifies that the network fee is transferred correctly', () => {
+            describe('network fees', () => {
                 const CONVERSION_AMOUNT = ONE_TOKEN.muln(100);
 
                 const description = (
