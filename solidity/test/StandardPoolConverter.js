@@ -68,7 +68,12 @@ describe('StandardPoolConverter', () => {
         const { transactionCost: approveTransactionCost } = await approve(reserveToken1, converter, reserveAmounts[0]);
         const { transactionCost: approveTransactionCost2 } = await approve(reserveToken2, converter, reserveAmounts[1]);
 
-        const value = reserveToken2.address === NATIVE_TOKEN_ADDRESS ? reserveAmounts[1] : 0;
+        let value = new BN(0);
+        if (reserveToken1.address === NATIVE_TOKEN_ADDRESS) {
+            value = reserveAmounts[0];
+        } else if (reserveToken2.address === NATIVE_TOKEN_ADDRESS) {
+            value = reserveAmounts[1];
+        }
 
         const res = await converter.addLiquidity(
             [reserveToken1.address, reserveToken2.address],
@@ -85,9 +90,11 @@ describe('StandardPoolConverter', () => {
     };
 
     const removeLiquidity = async (converter, reserveToken1, reserveToken2, amount) => {
-        const reserveTokens = [reserveToken1.address, reserveToken2.address];
-
-        const res = await converter.removeLiquidity(amount, reserveTokens, [MIN_RETURN, MIN_RETURN]);
+        const res = await converter.removeLiquidity(
+            amount,
+            [reserveToken1.address, reserveToken2.address],
+            [MIN_RETURN, MIN_RETURN]
+        );
         return { transactionCost: await getTransactionCost(res) };
     };
 
@@ -559,7 +566,11 @@ describe('StandardPoolConverter', () => {
 
                     return await Promise.all(
                         reserveAmounts.map((reserveAmount, i) =>
-                            converter.addLiquidityCost(reserveTokens, i, reserveAmount)
+                            converter.addLiquidityCost(
+                                reserveTokens.map((reserveToken) => reserveToken.address || reserveToken),
+                                i,
+                                reserveAmount
+                            )
                         )
                     );
                 };
@@ -573,27 +584,34 @@ describe('StandardPoolConverter', () => {
                         return new BN(10).pow(new BN(length - 1));
                     }
 
-                    return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
+                    return await converter.addLiquidityReturn(
+                        reserveTokens.map((reserveToken) => reserveToken.address || reserveToken),
+                        reserveAmounts
+                    );
                 };
 
                 const removeLiquidityTest = async (hasETH, reverse) => {
                     const { poolToken, reserveToken1, reserveToken2, converter } = await createPool({ hasETH });
-                    const reserveTokens = [reserveToken1.address, reserveToken2.address];
+                    const reserveTokens = [reserveToken1, reserveToken2];
 
                     if (reverse) {
                         reserveTokens.reverse();
                     }
 
+                    const amount = new BN(100000);
+                    await addLiquidity(converter, reserveToken1, reserveToken2, [amount, amount]);
+
                     const poolTokenSupply = await poolToken.totalSupply.call();
                     const reserveBalances = await Promise.all(
                         reserveTokens.map((reserveToken) => converter.reserveBalance.call(reserveToken.address))
                     );
-                    const amount = new BN(100);
+
+                    const removeAmount = new BN(100);
                     const expectedOutputAmounts = reserveBalances.map((reserveBalance) =>
-                        reserveBalance.mul(amount).div(poolTokenSupply)
+                        reserveBalance.mul(removeAmount).div(poolTokenSupply)
                     );
                     await converter.removeLiquidityTest(
-                        amount,
+                        removeAmount,
                         reserveTokens.map((reserveToken) => reserveToken.address),
                         [MIN_RETURN, MIN_RETURN]
                     );
@@ -674,7 +692,7 @@ describe('StandardPoolConverter', () => {
                 });
 
                 it('should allow adding and removing liquidity', async () => {
-                    const reserveTokens = [reserveToken1.address, reserveToken2.address];
+                    const reserveTokens = [reserveToken1, reserveToken2];
 
                     const state = [];
                     let expected = [];
@@ -707,9 +725,9 @@ describe('StandardPoolConverter', () => {
                             reserveTokens,
                             reserveAmounts
                         );
-                        await converter.addLiquidity(reserveTokens, reserveAmounts, MIN_RETURN, {
-                            value: hasETH ? reserveAmounts.slice(-1)[0] : 0
-                        });
+
+                        await addLiquidity(converter, reserveToken1, reserveToken2, reserveAmounts);
+
                         const allowances = await Promise.all(
                             reserveTokens.map((reserveToken) => getAllowance(reserveToken, converter))
                         );
@@ -743,12 +761,12 @@ describe('StandardPoolConverter', () => {
 
                     for (let n = state.length - 1; n > 0; n--) {
                         const supplyAmount = state[n].supply.sub(new BN(state[n - 1].supply));
-                        const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
-                        await converter.removeLiquidity(
+                        const reserveAmounts = await converter.removeLiquidityReturn(
                             supplyAmount,
-                            reserveTokens,
-                            reserveTokens.map((reserveTokens) => 1)
+                            reserveTokens.map((reserveToken) => reserveToken.address)
                         );
+                        await removeLiquidity(converter, reserveToken1, reserveToken2, supplyAmount);
+
                         const balances = await Promise.all(
                             reserveTokens.map((reserveToken) => getBalance(reserveToken, converter))
                         );
@@ -763,12 +781,13 @@ describe('StandardPoolConverter', () => {
                     }
 
                     const supplyAmount = state[0].supply;
-                    const reserveAmounts = await converter.removeLiquidityReturn(supplyAmount, reserveTokens);
-                    await converter.removeLiquidity(
+                    const reserveAmounts = await converter.removeLiquidityReturn(
                         supplyAmount,
-                        reserveTokens,
-                        reserveTokens.map((reserveTokens) => 1)
+                        reserveTokens.map((reserveToken) => reserveToken.address)
                     );
+
+                    await removeLiquidity(converter, reserveToken1, reserveToken2, supplyAmount);
+
                     const balances = await Promise.all(
                         reserveTokens.map((reserveToken) => getBalance(reserveToken, converter.address))
                     );
@@ -968,7 +987,7 @@ describe('StandardPoolConverter', () => {
                 });
 
                 it('should refund the provider', async () => {
-                    const reserveTokens = [reserveToken1.address, reserveToken2.address];
+                    const reserveTokens = [reserveToken1, reserveToken2];
                     const amount = new BN(1000000000);
 
                     for (const factors of [
