@@ -24,16 +24,27 @@ const MAX_CONVERSION_FEE = new BN(1000000);
 
 describe('StandardPoolConverter', () => {
     const createPool = async (options = {}) => {
-        const { disabled, hasETH, networkFeePercent, conversionFeePercent } = options;
+        const { disabled, ethIndex, networkFeePercent, conversionFeePercent } = options;
 
         const poolToken = await DSToken.new('PT', 'PT', 18);
-        const reserveToken1 = await TestStandardToken.new('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
-
+        let reserveToken1;
         let reserveToken2;
-        if (hasETH) {
-            reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
-        } else {
-            reserveToken2 = await TestStandardToken.new('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+
+        switch (ethIndex) {
+            case 0:
+                reserveToken1 = await TestStandardToken.new('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
+                reserveToken2 = await TestStandardToken.new('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+                break;
+            case 1:
+                reserveToken1 = { address: NATIVE_TOKEN_ADDRESS };
+                reserveToken2 = await TestStandardToken.new('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+                break;
+            case 2:
+                reserveToken1 = await TestStandardToken.new('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
+                reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
+                break;
+            default:
+                throw new Error(`Unexpected ethIndex ${ethIndex}`);
         }
 
         const converter = await StandardPoolConverter.new(
@@ -213,11 +224,27 @@ describe('StandardPoolConverter', () => {
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
-    for (const hasETH of [false, true]) {
-        context(`${hasETH ? 'with an ETH reserve' : 'with ERC20 reserves'}`, () => {
+    for (const ethIndex of [0, 1, 2]) {
+        const ethIndexDescription = () => {
+            switch (ethIndex) {
+                case 0:
+                    return 'with [ERC20, ERC20] reserves';
+
+                case 1:
+                    return 'with [ETH, ERC20] reserve';
+
+                case 2:
+                    return 'with [ERC20, ETH] reserve';
+
+                default:
+                    throw new Error(`Unexpected ethIndex ${ethIndex}`);
+            }
+        };
+
+        context(ethIndexDescription(), () => {
             describe('construction', () => {
                 it('verifies the Activation event after converter activation', async () => {
-                    const { converter, poolToken } = await createPool({ hasETH, disabled: true });
+                    const { converter, poolToken } = await createPool({ ethIndex, disabled: true });
                     await poolToken.transferOwnership(converter.address);
                     const res = await converter.acceptTokenOwnership();
 
@@ -246,7 +273,7 @@ describe('StandardPoolConverter', () => {
 
                             beforeEach(async () => {
                                 ({ converter, reserveToken1, reserveToken2 } = await createPool({
-                                    hasETH,
+                                    ethIndex,
                                     conversionFeePercent
                                 }));
 
@@ -286,7 +313,7 @@ describe('StandardPoolConverter', () => {
 
                 beforeEach(async () => {
                     ({ converter, poolToken, reserveToken1, reserveToken2 } = await createPool({
-                        hasETH,
+                        ethIndex,
                         conversionFeePercent: 0.3
                     }));
 
@@ -369,7 +396,7 @@ describe('StandardPoolConverter', () => {
 
                 beforeEach(async () => {
                     ({ converter, poolToken, reserveToken1, reserveToken2 } = await createPool({
-                        hasETH,
+                        ethIndex,
                         conversionFeePercent: 0.3
                     }));
 
@@ -590,8 +617,8 @@ describe('StandardPoolConverter', () => {
                     );
                 };
 
-                const removeLiquidityTest = async (hasETH, reverse) => {
-                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool({ hasETH });
+                const removeLiquidityTest = async (ethIndex, reverse) => {
+                    const { poolToken, reserveToken1, reserveToken2, converter } = await createPool({ ethIndex });
                     const reserveTokens = [reserveToken1, reserveToken2];
 
                     if (reverse) {
@@ -629,15 +656,15 @@ describe('StandardPoolConverter', () => {
                 let reserveToken2;
 
                 beforeEach(async () => {
-                    ({ converter, poolToken, reserveToken1, reserveToken2 } = await createPool({ hasETH }));
+                    ({ converter, poolToken, reserveToken1, reserveToken2 } = await createPool({ ethIndex }));
                 });
 
                 it('verifies function removeLiquidity when the reserves tokens are passed in the initial order', async () => {
-                    await removeLiquidityTest(hasETH);
+                    await removeLiquidityTest(ethIndex);
                 });
 
                 it('verifies function removeLiquidity when the reserves tokens are passed in the opposite order', async () => {
-                    await removeLiquidityTest(hasETH, true);
+                    await removeLiquidityTest(ethIndex, true);
                 });
 
                 it('verifies the TokenRateUpdate event after adding liquidity', async () => {
@@ -953,16 +980,14 @@ describe('StandardPoolConverter', () => {
 
                                 let transactionCost = new BN(0);
                                 for (const percent of percents) {
-                                    const res = await removeLiquidity(
+                                    const { transactionCost: removeTransactionConst } = await removeLiquidity(
                                         converter,
                                         reserveToken1,
                                         reserveToken2,
                                         lastAmount.mul(new BN(percent)).div(new BN(100))
                                     );
 
-                                    if (hasETH) {
-                                        transactionCost = transactionCost.add(await getTransactionCost(res));
-                                    }
+                                    transactionCost = transactionCost.add(removeTransactionConst);
                                 }
                                 const balance1 = await getBalance(reserveToken1, defaultSender);
                                 const balance2 = await getBalance(reserveToken2, defaultSender);
@@ -1071,7 +1096,7 @@ describe('StandardPoolConverter', () => {
                                     () => {
                                         beforeEach(async () => {
                                             ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
-                                                hasETH,
+                                                ethIndex,
                                                 networkFeePercent,
                                                 conversionFeePercent
                                             }));
@@ -1147,7 +1172,7 @@ describe('StandardPoolConverter', () => {
                                     () => {
                                         beforeEach(async () => {
                                             ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
-                                                hasETH,
+                                                ethIndex,
                                                 networkFeePercent,
                                                 conversionFeePercent
                                             }));
@@ -1226,7 +1251,7 @@ describe('StandardPoolConverter', () => {
                                     () => {
                                         beforeEach(async () => {
                                             ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
-                                                hasETH,
+                                                ethIndex,
                                                 networkFeePercent,
                                                 conversionFeePercent
                                             }));
@@ -1347,7 +1372,7 @@ describe('StandardPoolConverter', () => {
                                     () => {
                                         beforeEach(async () => {
                                             ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
-                                                hasETH,
+                                                ethIndex,
                                                 networkFeePercent,
                                                 conversionFeePercent
                                             }));
@@ -1501,7 +1526,7 @@ describe('StandardPoolConverter', () => {
                                     () => {
                                         beforeEach(async () => {
                                             ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
-                                                hasETH,
+                                                ethIndex,
                                                 networkFeePercent,
                                                 conversionFeePercent
                                             }));
@@ -1622,7 +1647,7 @@ describe('StandardPoolConverter', () => {
                                     () => {
                                         beforeEach(async () => {
                                             ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
-                                                hasETH,
+                                                ethIndex,
                                                 networkFeePercent,
                                                 conversionFeePercent
                                             }));
