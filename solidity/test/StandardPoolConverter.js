@@ -1494,7 +1494,7 @@ describe('StandardPoolConverter', () => {
                 const reserveTokens = [reserveToken1.address, reserveToken2.address];
                 await reserveToken1.approve(converter.address, reserveAmounts[0]);
                 await reserveToken2.approve(converter.address, reserveAmounts[1]);
-                const value = reserveToken2.address === NATIVE_TOKEN_ADDRESS ? reserveAmounts[1] : 0;
+                const value = reserveAmounts[reserveTokens.findIndex((address) => address === NATIVE_TOKEN_ADDRESS)];
                 if (verify) {
                     const expected = await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
                     const actual = await converter.addLiquidity.call(reserveTokens, reserveAmounts, 1, { value });
