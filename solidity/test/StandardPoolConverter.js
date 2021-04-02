@@ -1154,21 +1154,23 @@ describe('StandardPoolConverter', () => {
             beforeEach(async () => {
                 if (ethIndex) {
                     let balance = new BN(await web3.eth.getBalance(networkFeeWallet));
-                    if (balance.lt(gasPrice.muln(21000))) {
+                    if (balance.gtn(0)) {
+                        if (balance.lt(gasPrice.muln(21000))) {
+                            await web3.eth.sendTransaction({
+                                from: defaultSender,
+                                to: networkFeeWallet,
+                                gas: 21000,
+                                value: gasPrice.muln(21000).sub(balance)
+                            });
+                            balance = gasPrice.muln(21000);
+                        }
                         await web3.eth.sendTransaction({
-                            from: defaultSender,
-                            to: networkFeeWallet,
+                            from: networkFeeWallet,
+                            to: defaultSender,
                             gas: 21000,
-                            value: gasPrice.muln(21000).sub(balance)
+                            value: balance.sub(gasPrice.muln(21000))
                         });
-                        balance = gasPrice.muln(21000);
                     }
-                    await web3.eth.sendTransaction({
-                        from: networkFeeWallet,
-                        to: defaultSender,
-                        gas: 21000,
-                        value: balance.sub(gasPrice.muln(21000))
-                    });
                 }
             });
 
