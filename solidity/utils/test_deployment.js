@@ -169,10 +169,13 @@ const run = async () => {
     const converterRegistryData = await web3Func(deploy, 'converterRegistryData', 'ConverterRegistryData', [
         contractRegistry._address
     ]);
+
+    const networkFeeWallet = await web3Func(deploy, 'networkFeeWallet', 'TokenHolder', []);
     const networkSettings = await web3Func(deploy, 'networkSettings', 'NetworkSettings', [
-        getConfig().networkSettingsParams.networkFeeWallet,
-        percentageToPPM(getConfig().networkSettingsParams.networkFee)
+        networkFeeWallet._address,
+        0
     ]);
+
     const liquidityPoolV1ConverterFactory = await web3Func(
         deploy,
         'liquidityPoolV1ConverterFactory',
@@ -216,6 +219,7 @@ const run = async () => {
     await execute(
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('NetworkSettings'), networkSettings._address)
     );
+
     await execute(
         contractRegistry.methods.registerAddress(
             Web3.utils.asciiToHex('ConversionPathFinder'),
@@ -289,11 +293,13 @@ const run = async () => {
                 weights
             )
         );
+
         const converterAnchor = deployed(
             web3,
             'IConverterAnchor',
             await converterRegistry.methods.getAnchor(index).call()
         );
+
         const converterBase = deployed(web3, 'ConverterBase', await converterAnchor.methods.owner().call());
         await execute(converterBase.methods.acceptOwnership());
         await execute(converterBase.methods.setConversionFee(fee));
@@ -406,6 +412,15 @@ const run = async () => {
     for (const converter of params.converters) {
         await execute(liquidityProtectionSettings.methods.addPoolToWhitelist(reserves[converter].address));
     }
+
+    const vortexBurner = await web3Func(deploy, 'vortexBurner', 'VortexBurner', [
+        reserves.BNT.address,
+        vbntTokenGovernance._address,
+        contractRegistry._address
+    ]);
+
+    await execute(networkFeeWallet.methods.transferOwnership(vortexBurner._address));
+    await execute(vortexBurner.methods.acceptNetworkFeeOwnership());
 
     web3.currentProvider.disconnect();
 };
