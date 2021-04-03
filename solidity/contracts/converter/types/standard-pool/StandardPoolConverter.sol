@@ -345,6 +345,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
+     * @dev syncs all stored reserve balances
+     */
+    function syncReserveBalances() external {
+        syncReserveBalances(0);
+    }
+
+    /**
      * @dev calculates what portion of the accumulated conversion fees on each reserve should be
      * transferred from this contract, and then transfers that portion to the network fee wallet
      */
@@ -869,10 +876,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             _reserveAmounts[0].mul(_reserveBalances[1]) < _reserveAmounts[1].mul(_reserveBalances[0]) ? 0 : 1;
         uint256 amount = fundSupplyAmount(_totalSupply, _reserveBalances[index], _reserveAmounts[index]);
 
-        uint256[2] memory reserveAmounts = [
-            fundCost(_totalSupply, _reserveBalances[0], amount),
-            fundCost(_totalSupply, _reserveBalances[1], amount)
-        ];
+        uint256[2] memory reserveAmounts =
+            [fundCost(_totalSupply, _reserveBalances[0], amount), fundCost(_totalSupply, _reserveBalances[1], amount)];
 
         return (amount, reserveAmounts);
     }
