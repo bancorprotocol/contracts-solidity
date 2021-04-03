@@ -1,28 +1,20 @@
 let contracts = {};
 
-const deployContract = async (contractName, _signerOrArg = undefined, ...args) => {
-    let signer;
-    if (typeof _signerOrArg === Object) {
-        if (owner.constructor.name === 'SignerWithAddress') {
-            signer = _signerOrArg;
-        } else {
-            signer = (await ethers.getSigners())[0];
-            args.unshift(_signerOrArg);
-        }
-    } else {
-        signer = (await ethers.getSigners())[0];
-        if (_signerOrArg !== undefined) {
-            args.unshift(_signerOrArg);
-        }
+const deployContract = async (contractName, ...args) => {
+    let signer = (await ethers.getSigners())[0];
+
+    if (typeof args[args.length - 1] === 'object' && args[args.length - 1].constructor.name === 'SignerWithAddress') {
+        signer = args[args.length - 1];
+        args.pop();
     }
 
     if (contracts[contractName + signer.address] === undefined) {
-        contracts[contractName + signer.address] = await ethers.getContractFactory(contractName);
+        contracts[contractName + signer.address] = await ethers.getContractFactory(contractName, signer);
     }
 
-    return args !== undefined
-        ? await contracts[contractName + signer.address].deploy(...args)
-        : await contracts[contractName + signer.address].deploy();
+    return args === undefined || args.length === 0
+        ? await contracts[contractName + signer.address].deploy()
+        : await contracts[contractName + signer.address].deploy(...args);
 };
 
 const attachContract = async (contractName, address) => {

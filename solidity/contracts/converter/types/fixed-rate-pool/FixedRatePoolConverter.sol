@@ -156,14 +156,7 @@ contract FixedRatePoolConverter is StandardPoolConverter {
         uint256 rateD = _rate[_reserveTokens[1]];
         uint256 n = _reserveAmounts[0].mul(rateN).add(_reserveAmounts[1]).mul(rateD);
         uint256 d = _reserveBalances[0].mul(rateN).add(_reserveBalances[1]).mul(rateD);
-        uint256 amount = _totalSupply.mul(n).div(d);
-
-        uint256[2] memory reserveAmounts;
-        for (uint256 i = 0; i < 2; i++) {
-            reserveAmounts[i] = _reserveAmounts[i];
-        }
-
-        return (amount, reserveAmounts);
+        return (_totalSupply.mul(n).div(d), [_reserveAmounts[0], _reserveAmounts[1]]);
     }
 
     /**

@@ -1011,19 +1011,16 @@ describe('LiquidityPoolV1Converter', () => {
             );
         };
 
-        const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        const getLiquidityReturn = async (firstTime, converter, reserveTokens, reserveAmounts) => {
             if (firstTime) {
                 const length = Math.round(
                     reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length /
                         reserveAmounts.length
                 );
-                const retVal = BigNumber.from('1'.padEnd(length, '0'));
-                return reserveAmounts.map((reserveAmount, i) => retVal);
+                return BigNumber.from(10).pow(BigNumber.from(length - 1));
             }
 
-            return await Promise.all(
-                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
-            );
+            return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
         };
 
         const test = async (hasETH) => {
@@ -1056,7 +1053,7 @@ describe('LiquidityPoolV1Converter', () => {
                     reserveTokens,
                     reserveAmounts
                 );
-                const liquidityReturns = await getLiquidityReturns(
+                const liquidityReturn = await getLiquidityReturn(
                     state.length == 0,
                     converter,
                     reserveTokens,
@@ -1089,9 +1086,7 @@ describe('LiquidityPoolV1Converter', () => {
                     }
                 }
 
-                for (const liquidityReturn of liquidityReturns) {
-                    expect(liquidityReturn).to.be.equal(supply.sub(prevSupply));
-                }
+                expect(liquidityReturn).to.be.equal(supply.sub(prevSupply));
 
                 expected = actual;
                 prevSupply = supply;
