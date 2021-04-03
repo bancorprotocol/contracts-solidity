@@ -371,12 +371,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function processNetworkFees(uint256 _value) internal returns (uint256, uint256) {
         syncReserveBalances(_value);
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
-        (address wallet, uint256 fee0, uint256 fee1) = networkWalletAndFees(reserveBalance0, reserveBalance1);
+        (ITokenHolder wallet, uint256 fee0, uint256 fee1) = networkWalletAndFees(reserveBalance0, reserveBalance1);
         reserveBalance0 -= fee0;
         reserveBalance1 -= fee1;
         setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
-        safeTransfer(__reserveTokens[0], wallet, fee0);
-        safeTransfer(__reserveTokens[1], wallet, fee1);
+        safeTransfer(__reserveTokens[0], address(wallet), fee0);
+        safeTransfer(__reserveTokens[1], address(wallet), fee1);
         return (reserveBalance0, reserveBalance1);
     }
 
@@ -1268,7 +1268,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         private
         view
         returns (
-            address,
+            ITokenHolder,
             uint256,
             uint256
         )
@@ -1277,10 +1277,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 currPoint = floorSqrt(reserveBalance0 * reserveBalance1);
 
         if (prevPoint >= currPoint) {
-            return (address(0), 0, 0);
+            return (ITokenHolder(address(0)), 0, 0);
         }
 
-        (address networkFeeWallet, uint32 networkFee) =
+        (ITokenHolder networkFeeWallet, uint32 networkFee) =
             INetworkSettings(addressOf(NETWORK_SETTINGS)).networkFeeParams();
         uint256 n = (currPoint - prevPoint) * networkFee;
         uint256 d = currPoint * PPM_RESOLUTION;

@@ -4,6 +4,7 @@ pragma solidity 0.6.12;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
+import "./IBancorNetwork.sol";
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
@@ -43,7 +44,7 @@ interface ILegacyConverter {
  * Format:
  * [source token, converter anchor, target token, converter anchor, target token...]
  */
-contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
+contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -80,8 +81,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
      *
      * @param _registry    address of a contract registry contract
      */
-    constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {
-    }
+    constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {}
 
     /**
      * @dev returns the conversion path between two tokens in the network
@@ -106,7 +106,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
      *
      * @return expected target amount
      */
-    function rateByPath(address[] memory _path, uint256 _amount) public view returns (uint256) {
+    function rateByPath(address[] memory _path, uint256 _amount) public view override returns (uint256) {
         uint256 amount;
         uint256 fee;
         uint256 supply;
@@ -306,7 +306,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
             if (stepData.isV28OrHigherConverter) {
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
-                if (i != 0 && _data[i - 1].beneficiary == address(this) && stepData.sourceToken != NATIVE_TOKEN_ADDRESS) {
+                if (
+                    i != 0 && _data[i - 1].beneficiary == address(this) && stepData.sourceToken != NATIVE_TOKEN_ADDRESS
+                ) {
                     stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
                 }
             }
@@ -423,10 +425,11 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
      *
      * @return cached conversion data to be ingested later on by the conversion flow
      */
-    function createConversionData(
-        address[] memory _conversionPath,
-        address payable _beneficiary
-    ) private view returns (ConversionStep[] memory) {
+    function createConversionData(address[] memory _conversionPath, address payable _beneficiary)
+        private
+        view
+        returns (ConversionStep[] memory)
+    {
         ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
 
         // iterate the conversion path and create the conversion data for each step
@@ -548,9 +551,9 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         uint256 _amount,
         uint256 _minReturn,
         address payable _beneficiary,
-        address /* _affiliateAccount */,
+        address, /* _affiliateAccount */
         uint256 /* _affiliateFee */
-    ) public payable returns (uint256) {
+    ) public payable override returns (uint256) {
         return convertByPath2(_path, _amount, _minReturn, _beneficiary);
     }
 
@@ -572,7 +575,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
-        address /* _affiliateAccount */,
+        address, /* _affiliateAccount */
         uint256 /* _affiliateFee */
     ) public payable returns (uint256) {
         return convertByPath2(_path, _amount, _minReturn, address(0));
@@ -598,7 +601,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         uint256 _amount,
         uint256 _minReturn,
         address payable _beneficiary,
-        address /* _affiliateAccount */,
+        address, /* _affiliateAccount */
         uint256 /* _affiliateFee */
     ) public payable greaterThanZero(_minReturn) returns (uint256) {
         return convertByPath2(_path, _amount, _minReturn, _beneficiary);
@@ -622,7 +625,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         address[] memory _path,
         uint256 _amount,
         uint256 _minReturn,
-        address /* _affiliateAccount */,
+        address, /* _affiliateAccount */
         uint256 /* _affiliateFee */
     ) public returns (uint256) {
         return convertByPath2(_path, _amount, _minReturn, address(0));
@@ -648,7 +651,7 @@ contract BancorNetwork is TokenHolder, ContractRegistryClient, ReentrancyGuard {
         uint256 _amount,
         uint256 _minReturn,
         address payable _beneficiary,
-        address /* _affiliateAccount */,
+        address, /* _affiliateAccount */
         uint256 /* _affiliateFee */
     ) public returns (uint256) {
         return convertByPath2(_path, _amount, _minReturn, _beneficiary);
