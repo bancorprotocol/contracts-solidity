@@ -9,7 +9,7 @@ import {
     TestBancorNetwork,
     TestNonStandardToken,
     TestStandardToken
-} from '../typechain';
+} from '../../typechain';
 
 import Utils from './helpers/Utils';
 

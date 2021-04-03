@@ -7,7 +7,7 @@ import ConverterHelper, { ConverterType } from './helpers/Converter';
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { ContractRegistry, ConverterFactory, ConverterUpgrader, TestStandardToken } from '../typechain';
+import { ContractRegistry, ConverterFactory, ConverterUpgrader, TestStandardToken } from '../../typechain';
 
 const CONVERSION_FEE = BigNumber.from(1000);
 const MAX_CONVERSION_FEE = BigNumber.from(30000);

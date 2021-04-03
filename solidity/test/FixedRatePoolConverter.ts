@@ -17,7 +17,7 @@ import {
     TestFixedRatePoolConverter,
     TestNonStandardToken,
     TestStandardToken
-} from '../typechain';
+} from '../../typechain';
 
 let now: BigNumber;
 let token: DSToken;
@@ -435,41 +435,6 @@ describe('FixedRatePoolConverter', () => {
                 ).to.be.reverted;
             });
 
-            it('verifies that addLiquidity with separate reserve balances gets the correct reserve balance amounts from the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await reserveToken.transfer(sender2.address, 123456789);
-                await reserveToken2.transfer(sender2.address, 123456789);
-
-                const supply = await token.totalSupply();
-                const percentage = BigNumber.from(19);
-                const prevReserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
-                const prevReserve2Balance = await converter.reserveBalance(reserveToken2.address);
-                const token2Amount = MathUtils.divCeil(prevReserve2Balance.mul(percentage), supply);
-
-                const amount = BigNumber.from(100000);
-                let value = BigNumber.from(0);
-                if (isETHReserve) {
-                    value = amount;
-                } else {
-                    await reserveToken.connect(sender2).approve(converter.address, amount);
-                }
-
-                await reserveToken2.connect(sender2).approve(converter.address, amount);
-                await converter.connect(sender2)['addLiquidity(uint256,uint256,uint256)'](amount, token2Amount, 1, {
-                    value: value
-                });
-
-                const reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
-
-                expect(reserve1Balance).to.be.equal(prevReserve1Balance.add(amount));
-                expect(reserve2Balance).to.be.equal(prevReserve2Balance.add(token2Amount));
-            });
-
             it('verifies that removeLiquidity sends the correct reserve balance amounts to the caller', async () => {
                 const converter = await initConverter(false, isETHReserve);
 
@@ -605,37 +570,6 @@ describe('FixedRatePoolConverter', () => {
                             [1, 1]
                         )
                 ).to.be.reverted;
-            });
-
-            it('verifies that removeLiquidity with separate minimum return args sends the correct reserve balance amounts to the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await token.transfer(sender2.address, 100);
-
-                const supply = await token.totalSupply();
-                const percentage = BigNumber.from(19);
-                const reserve1Balance = await converter.reserveBalance(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
-                const token1Amount = reserve1Balance.mul(percentage).div(supply);
-                const token2Amount = reserve2Balance.mul(percentage).div(supply);
-
-                const token1PrevBalance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
-                const token2PrevBalance = await reserveToken2.balanceOf(sender2.address);
-                const res = await converter.connect(sender2)['removeLiquidity(uint256,uint256,uint256)'](19, 1, 1);
-
-                let transactionCost = BigNumber.from(0);
-                if (isETHReserve) {
-                    transactionCost = await Utils.getTransactionCost(res);
-                }
-
-                const token1Balance = await Utils.getBalance(getReserve1Address(isETHReserve), sender2.address);
-                const token2Balance = await reserveToken2.balanceOf(sender2.address);
-
-                expect(token1Balance).to.be.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
-                expect(token2Balance).to.be.equal(token2PrevBalance.add(token2Amount));
             });
         });
     }
@@ -1056,21 +990,16 @@ describe('FixedRatePoolConverter', () => {
             );
         };
 
-        const getLiquidityReturns = async (firstTime: any, converter: any, reserveTokens: any, reserveAmounts: any) => {
+        const getLiquidityReturn = async (firstTime: any, converter: any, reserveTokens: any, reserveAmounts: any) => {
             if (firstTime) {
                 const length = Math.round(
                     reserveAmounts.map((reserveAmount: any) => reserveAmount.toString()).join('').length /
                         reserveAmounts.length
                 );
-                const retVal = BigNumber.from('1'.padEnd(length, '0'));
-                return reserveAmounts.map((reserveAmount: any, i: any) => retVal);
+                return BigNumber.from(10).pow(BigNumber.from(length - 1));
             }
 
-            return await Promise.all(
-                reserveAmounts.map((reserveAmount: any, i: any) =>
-                    converter.addLiquidityReturn(reserveTokens[i], reserveAmount)
-                )
-            );
+            return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
         };
 
         const test = async (hasETH: any, rateN: any, rateD: any) => {
@@ -1105,8 +1034,7 @@ describe('FixedRatePoolConverter', () => {
                     reserveTokens,
                     reserveAmounts
                 );
-
-                const liquidityReturns = await getLiquidityReturns(
+                const liquidityReturn = await getLiquidityReturn(
                     state.length == 0,
                     converter,
                     reserveTokens,
@@ -1148,9 +1076,7 @@ describe('FixedRatePoolConverter', () => {
                     }
                 }
 
-                for (const liquidityReturn of liquidityReturns) {
-                    expect(liquidityReturn).to.be.equal(supply.sub(prevSupply));
-                }
+                expect(liquidityReturn).to.be.equal(supply.sub(prevSupply));
 
                 expected = actual;
                 prevSupply = supply;

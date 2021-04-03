@@ -20,7 +20,7 @@
     "scripts": {
         "build": "hardhat compile",
         "test": "NODE_OPTIONS='--max-old-space-size=5120' hardhat test",
-        "testfix": "for f in solidity/test/*.js; do hardhat test $f; if [ $? != 0 ]; then exit $?; fi; done; echo 'Success, no error !'",
+        "testfix": "for f in solidity/test/*.ts; do hardhat test $f; if [ $? != 0 ]; then exit $?; fi; done; echo 'Success, no error !'",
         "coverage": "hardhat coverage",
         "export": "node scripts/export.js",
         "lint": "yarn lint:js && yarn lint:sol",

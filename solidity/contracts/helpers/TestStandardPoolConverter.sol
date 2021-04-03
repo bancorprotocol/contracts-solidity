@@ -5,7 +5,7 @@ import "../converter/types/standard-pool/StandardPoolConverter.sol";
 import "./TestTime.sol";
 
 contract TestStandardPoolConverter is StandardPoolConverter, TestTime {
-    uint256[] public reserveAmountsRemoved = new uint256[](2);
+    uint256[] public reserveAmountsRemoved;
 
     constructor(
         IDSToken _token,

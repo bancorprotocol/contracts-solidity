@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { BigNumber, ContractTransaction } from 'ethers';
 import { ethers } from 'hardhat';
-import { TestStandardToken } from '../../typechain';
+import { TestStandardToken } from '../../../typechain';
 import Constants from './Constants';
 import Contracts from './Contracts';
 import { Contract } from '@ethersproject/contracts';

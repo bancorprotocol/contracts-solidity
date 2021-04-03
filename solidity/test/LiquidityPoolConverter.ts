@@ -11,7 +11,7 @@ import {
     ConverterUpgrader,
     TestNonStandardToken,
     TestStandardToken
-} from '../typechain';
+} from '../../typechain';
 
 let bancorNetwork: BancorNetwork;
 let upgrader: ConverterUpgrader;

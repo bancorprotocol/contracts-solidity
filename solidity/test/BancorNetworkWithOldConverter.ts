@@ -6,7 +6,7 @@ import Constants from './helpers/Constants';
 import ConverterHelper from './helpers/Converter';
 
 import Contracts from './helpers/Contracts';
-import { BancorNetwork, ContractRegistry, DSToken } from '../typechain';
+import { BancorNetwork, ContractRegistry, DSToken } from '../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 /*

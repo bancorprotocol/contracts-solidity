@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
-import { ContractRegistry, TestContractRegistryClient } from '../typechain';
+import { ContractRegistry, TestContractRegistryClient } from '../../typechain';
 
 import Constants from './helpers/Constants';
 

@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { DSToken } from '../typechain';
+import { DSToken } from '../../typechain';
 
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';

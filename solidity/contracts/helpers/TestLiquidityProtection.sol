@@ -5,104 +5,125 @@ import "../liquidity-protection/LiquidityProtection.sol";
 import "./TestTime.sol";
 
 contract TestLiquidityProtection is LiquidityProtection, TestTime {
-    bool private poolTokenRateOverride;
-    uint256 private poolTokenRateN;
-    uint256 private poolTokenRateD;
+    bool private _poolTokenRateOverride;
+    uint256 private _poolTokenRateN;
+    uint256 private _poolTokenRateD;
 
-    constructor(address[8] memory _contractAddresses) public LiquidityProtection(_contractAddresses) {}
+    constructor(
+        ILiquidityProtectionSettings settings,
+        ILiquidityProtectionStore store,
+        ILiquidityProtectionStats stats,
+        ILiquidityProtectionSystemStore systemStore,
+        ITokenHolder wallet,
+        ITokenGovernance networkTokenGovernance,
+        ITokenGovernance govTokenGovernance,
+        ICheckpointStore lastRemoveCheckpointStore
+    )
+        public
+        LiquidityProtection(
+            settings,
+            store,
+            stats,
+            systemStore,
+            wallet,
+            networkTokenGovernance,
+            govTokenGovernance,
+            lastRemoveCheckpointStore
+        )
+    {}
 
     function protectedAmountPlusFeeTest(
-        uint256 _poolAmount,
-        uint256 _poolRateN,
-        uint256 _poolRateD,
-        uint256 _addRateN,
-        uint256 _addRateD,
-        uint256 _removeRateN,
-        uint256 _removeRateD
+        uint256 poolAmount,
+        uint256 poolRateN,
+        uint256 poolRateD,
+        uint256 addRateN,
+        uint256 addRateD,
+        uint256 removeRateN,
+        uint256 removeRateD
     ) external pure returns (uint256) {
-        Fraction memory poolRate = Fraction({ n: _poolRateN, d: _poolRateD });
-        Fraction memory addRate = Fraction({ n: _addRateN, d: _addRateD });
-        Fraction memory removeRate = Fraction({ n: _removeRateN, d: _removeRateD });
-        return protectedAmountPlusFee(_poolAmount, poolRate, addRate, removeRate);
+        Fraction memory poolRate = Fraction({ n: poolRateN, d: poolRateD });
+        Fraction memory addRate = Fraction({ n: addRateN, d: addRateD });
+        Fraction memory removeRate = Fraction({ n: removeRateN, d: removeRateD });
+        return protectedAmountPlusFee(poolAmount, poolRate, addRate, removeRate);
     }
 
     function impLossTest(
-        uint256 _initialRateN,
-        uint256 _initialRateD,
-        uint256 _currentRateN,
-        uint256 _currentRateD
+        uint256 initialRateN,
+        uint256 initialRateD,
+        uint256 currentRateN,
+        uint256 currentRateD
     ) external pure returns (uint256, uint256) {
-        Fraction memory initialRate = Fraction({ n: _initialRateN, d: _initialRateD });
-        Fraction memory currentRate = Fraction({ n: _currentRateN, d: _currentRateD });
+        Fraction memory initialRate = Fraction({ n: initialRateN, d: initialRateD });
+        Fraction memory currentRate = Fraction({ n: currentRateN, d: currentRateD });
         Fraction memory impLossRate = impLoss(initialRate, currentRate);
         return (impLossRate.n, impLossRate.d);
     }
 
     function compensationAmountTest(
-        uint256 _amount,
-        uint256 _total,
-        uint256 _lossN,
-        uint256 _lossD,
-        uint256 _levelN,
-        uint256 _levelD
+        uint256 amount,
+        uint256 total,
+        uint256 lossN,
+        uint256 lossD,
+        uint256 levelN,
+        uint256 levelD
     ) external pure returns (uint256) {
-        Fraction memory loss = Fraction({ n: _lossN, d: _lossD });
-        Fraction memory level = Fraction({ n: _levelN, d: _levelD });
-        return compensationAmount(_amount, _total, loss, level);
+        Fraction memory loss = Fraction({ n: lossN, d: lossD });
+        Fraction memory level = Fraction({ n: levelN, d: levelD });
+        return compensationAmount(amount, total, loss, level);
     }
 
-    function averageRateTest(IDSToken _poolToken, IERC20 _reserveToken) external view returns (uint256, uint256) {
-        (, , uint256 rateN, uint256 rateD) = reserveTokenRates(_poolToken, _reserveToken, true);
+    function averageRateTest(IDSToken poolToken, IERC20 reserveToken) external view returns (uint256, uint256) {
+        (, , uint256 rateN, uint256 rateD) = reserveTokenRates(poolToken, reserveToken, true);
         return (rateN, rateD);
     }
 
     function removeLiquidityTargetAmountTest(
-        uint256 _poolTokenRateN,
-        uint256 _poolTokenRateD,
-        uint256 _poolAmount,
-        uint256 _reserveAmount,
-        uint128 _addSpotRateN,
-        uint128 _addSpotRateD,
-        uint128 _removeSpotRateN,
-        uint128 _removeSpotRateD,
-        uint128 _removeAverageRateN,
-        uint128 _removeAverageRateD,
-        uint256 _addTimestamp,
-        uint256 _removeTimestamp
+        uint256 poolTokenRateN,
+        uint256 poolTokenRateD,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        uint128 addSpotRateN,
+        uint128 addSpotRateD,
+        uint128 removeSpotRateN,
+        uint128 removeSpotRateD,
+        uint128 removeAverageRateN,
+        uint128 removeAverageRateD,
+        uint256 addTimestamp,
+        uint256 removeTimestamp
     ) external returns (uint256) {
-        poolTokenRateOverride = true;
-        poolTokenRateN = _poolTokenRateN;
-        poolTokenRateD = _poolTokenRateD;
+        _poolTokenRateOverride = true;
+        _poolTokenRateN = poolTokenRateN;
+        _poolTokenRateD = poolTokenRateD;
 
         PackedRates memory packedRates =
             PackedRates({
-                addSpotRateN: _addSpotRateN,
-                addSpotRateD: _addSpotRateD,
-                removeSpotRateN: _removeSpotRateN,
-                removeSpotRateD: _removeSpotRateD,
-                removeAverageRateN: _removeAverageRateN,
-                removeAverageRateD: _removeAverageRateD
+                addSpotRateN: addSpotRateN,
+                addSpotRateD: addSpotRateD,
+                removeSpotRateN: removeSpotRateN,
+                removeSpotRateD: removeSpotRateD,
+                removeAverageRateN: removeAverageRateN,
+                removeAverageRateD: removeAverageRateD
             });
 
         uint256 targetAmount =
             removeLiquidityTargetAmount(
                 IDSToken(0),
                 IERC20(0),
-                _poolAmount,
-                _reserveAmount,
+                poolAmount,
+                reserveAmount,
                 packedRates,
-                _addTimestamp,
-                _removeTimestamp
+                addTimestamp,
+                removeTimestamp
             );
-        poolTokenRateOverride = false;
+        _poolTokenRateOverride = false;
         return targetAmount;
     }
 
-    function poolTokenRate(IDSToken _poolToken, IERC20 _reserveToken) internal view override returns (Fraction memory) {
-        if (poolTokenRateOverride) {
-            return Fraction({ n: poolTokenRateN, d: poolTokenRateD });
+    function poolTokenRate(IDSToken poolToken, IERC20 reserveToken) internal view override returns (Fraction memory) {
+        if (_poolTokenRateOverride) {
+            return Fraction({ n: _poolTokenRateN, d: _poolTokenRateD });
         }
-        return super.poolTokenRate(_poolToken, _reserveToken);
+        return super.poolTokenRate(poolToken, reserveToken);
     }
 
     function time() internal view override(Time, TestTime) returns (uint256) {

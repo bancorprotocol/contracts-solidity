@@ -7,7 +7,7 @@ import Utils from './helpers/Utils';
 import Decimal from 'decimal.js';
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
-import { ContractRegistry, DSToken, LiquidityPoolV1Converter } from '../typechain';
+import { ContractRegistry, DSToken, LiquidityPoolV1Converter } from '../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 let contractRegistry: ContractRegistry;
@@ -185,7 +185,7 @@ describe('ConverterLiquidity', () => {
                         reserveTokens,
                         reserveAmounts
                     );
-                    const liquidityReturns = await getLiquidityReturns(
+                    const liquidityReturn = await getLiquidityReturn(
                         state.length == 0,
                         converter,
                         reserveTokens,
@@ -221,9 +221,7 @@ describe('ConverterLiquidity', () => {
                         }
                     }
 
-                    for (const liquidityReturn of liquidityReturns) {
-                        expect(liquidityReturn).to.be.equal(supply.sub(prevSupply));
-                    }
+                    expect(liquidityReturn).to.be.equal(supply.sub(prevSupply));
 
                     expected = actual;
                     prevSupply = supply;
@@ -324,7 +322,7 @@ describe('ConverterLiquidity', () => {
         );
     };
 
-    const getLiquidityReturns = async (
+    const getLiquidityReturn = async (
         firstTime: Boolean,
         converter: LiquidityPoolV1Converter,
         reserveTokens: string[],
@@ -334,12 +332,9 @@ describe('ConverterLiquidity', () => {
             const length = Math.round(
                 reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length / reserveAmounts.length
             );
-            const retVal = BigNumber.from('1'.padEnd(length, '0'));
-            return reserveAmounts.map((reserveAmount, i) => retVal);
+            return BigNumber.from(10).pow(BigNumber.from(length - 1));
         }
 
-        return await Promise.all(
-            reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
-        );
+        return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
     };
 });

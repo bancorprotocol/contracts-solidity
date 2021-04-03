@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers';
 
 import Contracts from './helpers/Contracts';
 import Constants from './helpers/Constants';
-import { ContractRegistry } from '../typechain';
+import { ContractRegistry } from '../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 const contractName1 = 'red';
