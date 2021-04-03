@@ -13,7 +13,8 @@ module.exports = {
         CONVERTER_REGISTRY_DATA: web3.utils.asciiToHex('BancorConverterRegistryData'),
         BNT_TOKEN: web3.utils.asciiToHex('BNTToken'),
         BANCOR_X: web3.utils.asciiToHex('BancorX'),
-        BANCOR_X_UPGRADER: web3.utils.asciiToHex('BancorXUpgrader')
+        BANCOR_X_UPGRADER: web3.utils.asciiToHex('BancorXUpgrader'),
+        NETWORK_SETTINGS: web3.utils.asciiToHex('NetworkSettings')
     },
 
     roles: {
