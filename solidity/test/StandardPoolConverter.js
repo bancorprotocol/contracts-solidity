@@ -188,6 +188,22 @@ describe('StandardPoolConverter', () => {
         return { transactionCost };
     };
 
+    const transfer = async (reserveToken, account, amount) => {
+        const reserveTokenAddress = reserveToken.address || reserveToken;
+        if (reserveTokenAddress === NATIVE_TOKEN_ADDRESS) {
+            return await sender.sendTransaction({ to: account.address, value: amount });
+        }
+
+        const address = account.address || account;
+
+        if (typeof reserveToken === 'string') {
+            const token = await Contracts.TestStandardToken.attach(reserveToken);
+            return await token.transfer(address, amount);
+        }
+
+        return await reserveToken.transfer(address, amount);
+    };
+
     const getTransactionCost = async (txResult) => {
         const cumulativeGasUsed = (await txResult.wait()).cumulativeGasUsed;
         return BigNumber.from(txResult.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
@@ -1728,6 +1744,75 @@ describe('StandardPoolConverter', () => {
                         );
                     }
                 };
+            });
+
+            describe.only('sync reserve balances', () => {
+                let poolToken;
+                let reserveToken1;
+                let reserveToken2;
+                let converter;
+
+                beforeEach(async () => {
+                    ({ converter, poolToken, reserveToken1, reserveToken2 } = await createPool({ ethIndex }));
+
+                    await addLiquidity(converter, reserveToken1, reserveToken2, [
+                        BigNumber.from(1000000000),
+                        BigNumber.from(1000000000)
+                    ]);
+                });
+
+                const testSync = async (operation) => {
+                    await operation();
+
+                    const reserve1Balance = await converter.reserveBalance(reserveToken1.address);
+                    const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
+
+                    await converter.syncReserveBalances();
+
+                    expect(await converter.reserveBalance(reserveToken1.address)).to.be.equal(reserve1Balance);
+                    expect(await converter.reserveBalance(reserveToken2.address)).to.be.equal(reserve2Balance);
+                };
+
+                it('should not affect reserve balances before and after conversion', async () => {
+                    const amount = BigNumber.from(500);
+                    await testSync(async () => convert([reserveToken1, poolToken, reserveToken2], amount, MIN_RETURN));
+                });
+
+                it('should not affect reserve balances before and after liquidity is added', async () => {
+                    const amount = BigNumber.from(1000).mul(ONE_TOKEN);
+                    await testSync(async () => addLiquidity(converter, reserveToken1, reserveToken2, [amount, amount]));
+                });
+
+                it('should not affect reserve balances before and after liquidity is removed', async () => {
+                    const amount = await poolToken.totalSupply();
+                    await testSync(async () =>
+                        converter.removeLiquidity(
+                            amount,
+                            [reserveToken1.address, reserveToken2.address],
+                            [MIN_RETURN, MIN_RETURN]
+                        )
+                    );
+                });
+
+                it('should sync with external changes', async () => {
+                    const reserve1Balance = await converter.reserveBalance(reserveToken1.address);
+                    const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
+
+                    const amount1 = BigNumber.from(1);
+                    const amount2 = BigNumber.from(100);
+
+                    await transfer(reserveToken1, converter, amount1);
+                    await transfer(reserveToken2, converter, amount2);
+
+                    await converter.syncReserveBalances();
+
+                    expect(await converter.reserveBalance(reserveToken1.address)).to.be.equal(
+                        reserve1Balance.add(amount1)
+                    );
+                    expect(await converter.reserveBalance(reserveToken2.address)).to.be.equal(
+                        reserve2Balance.add(amount2)
+                    );
+                });
             });
         });
     }

@@ -345,6 +345,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
+     * @dev syncs all stored reserve balances
+     */
+    function syncReserveBalances() external {
+        syncReserveBalances(0);
+    }
+
+    /**
      * @dev calculates what portion of the accumulated conversion fees on each reserve should be
      * transferred from this contract, and then transfers that portion to the network fee wallet
      */
