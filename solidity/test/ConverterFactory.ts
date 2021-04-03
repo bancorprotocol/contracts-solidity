@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 import Contracts, { ContractsType } from './helpers/Contracts';
-import { ContractRegistry, TestConverterFactory, TestTypedConverterAnchorFactory } from '../typechain';
+import { ContractRegistry, TestConverterFactory, TestTypedConverterAnchorFactory } from '../../typechain';
 
 const Factories: { [key: string]: ContractsType } = {
     LiquidityPoolV1ConverterFactory: 'LiquidityPoolV1ConverterFactory',

@@ -8,14 +8,14 @@ const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = Constants.roles;
 
 import Contracts from './helpers/Contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BancorNetwork } from '../typechain/BancorNetwork.js';
-import { DSToken } from '../typechain/DSToken.js';
-import { LiquidityProtectionSettings } from '../typechain/LiquidityProtectionSettings.js';
-import { LiquidityProtectionStore } from '../typechain/LiquidityProtectionStore.js';
-import { LiquidityProtectionStats } from '../typechain/LiquidityProtectionStats.js';
-import { LiquidityProtectionSystemStore } from '../typechain/LiquidityProtectionSystemStore.js';
-import { TokenHolder } from '../typechain/TokenHolder.js';
-import { TestLiquidityProtection } from '../typechain/TestLiquidityProtection.js';
+import { BancorNetwork } from '../../typechain/BancorNetwork.js';
+import { DSToken } from '../../typechain/DSToken.js';
+import { LiquidityProtectionSettings } from '../../typechain/LiquidityProtectionSettings.js';
+import { LiquidityProtectionStore } from '../../typechain/LiquidityProtectionStore.js';
+import { LiquidityProtectionStats } from '../../typechain/LiquidityProtectionStats.js';
+import { LiquidityProtectionSystemStore } from '../../typechain/LiquidityProtectionSystemStore.js';
+import { TokenHolder } from '../../typechain/TokenHolder.js';
+import { TestLiquidityProtection } from '../../typechain/TestLiquidityProtection.js';
 
 const INITIAL_AMOUNT = 1000000;
 

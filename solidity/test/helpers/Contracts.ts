@@ -55,38 +55,25 @@ import {
     TokenHolder,
     Whitelist,
     XTransferRerouter
-} from '../../typechain';
+} from '../../../typechain';
 
 let contractStore: { [key: string]: ContractFactory } = {};
 
-const deployContract = async <T extends Promise<Contract>>(
-    contractName: string,
-    _signerOrArg: any = undefined,
-    ...args: any[]
-): Promise<T> => {
-    let signer;
+const deployContract = async <T extends Promise<Contract>>(contractName: string, ...args: any[]): Promise<T> => {
+    let signer = (await ethers.getSigners())[0];
 
-    if (typeof _signerOrArg === 'object') {
-        if (_signerOrArg.constructor.name === 'SignerWithAddress') {
-            signer = _signerOrArg;
-        } else {
-            signer = (await ethers.getSigners())[0];
-            args.unshift(_signerOrArg);
-        }
-    } else {
-        signer = (await ethers.getSigners())[0];
-        if (_signerOrArg !== undefined) {
-            args.unshift(_signerOrArg);
-        }
+    if (typeof args[args.length - 1] === 'object' && args[args.length - 1].constructor.name === 'SignerWithAddress') {
+        signer = args[args.length - 1];
+        args.pop();
     }
 
     if (contractStore[contractName + signer.address] === undefined) {
-        contractStore[contractName + signer.address] = await ethers.getContractFactory(contractName);
+        contractStore[contractName + signer.address] = await ethers.getContractFactory(contractName, signer);
     }
 
-    return args !== undefined
-        ? await contractStore[contractName + signer.address].deploy(...args)
-        : await contractStore[contractName + signer.address].deploy();
+    return args === undefined || args.length === 0
+        ? await contractStore[contractName + signer.address].deploy()
+        : await contractStore[contractName + signer.address].deploy(...args);
 };
 
 const attachContract = async <T extends Promise<Contract>>(

@@ -7,7 +7,7 @@ const { ROLE_OWNER, ROLE_SEEDER } = Constants.roles;
 
 import Utils from './helpers/Utils';
 import Contracts from './helpers/Contracts';
-import { TestCheckpointStore } from '../typechain';
+import { TestCheckpointStore } from '../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 let checkpointStore: TestCheckpointStore;

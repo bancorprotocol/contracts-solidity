@@ -7,7 +7,7 @@ import Utils from './helpers/Utils';
 
 import Contracts from './helpers/Contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { BancorX } from '../typechain';
+import { BancorX } from '../../typechain';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens

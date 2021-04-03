@@ -14,7 +14,7 @@ import {
     DSToken,
     TestConverterRegistry,
     TestStandardToken
-} from '../typechain';
+} from '../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 let contractRegistry: ContractRegistry;

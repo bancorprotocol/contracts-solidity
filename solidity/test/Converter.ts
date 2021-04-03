@@ -15,7 +15,7 @@ import {
     DSToken,
     TestNonStandardToken,
     TestStandardToken
-} from '../typechain';
+} from '../../typechain';
 
 let bancorNetwork: BancorNetwork;
 let contractRegistry: ContractRegistry;

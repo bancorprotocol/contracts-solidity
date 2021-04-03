@@ -8,7 +8,7 @@ import Formula from './helpers/FormulaFunctions';
 import FormulaConstants from './helpers/FormulaConstants';
 
 import Contracts from './helpers/Contracts';
-import { TestBancorFormula } from './../typechain';
+import { TestBancorFormula } from './../../typechain';
 
 let formula: TestBancorFormula;
 
