@@ -268,6 +268,20 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
+     * @dev executed by the upgrader at the end of the upgrade process to handle custom pool logic
+     */
+    function onUpgradeComplete()
+        external
+        override
+        protected
+        ownerOnly
+        only(CONVERTER_UPGRADER)
+    {
+        (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
+        _reserveBalancesProduct = reserveBalance0 * reserveBalance1;
+    }
+
+    /**
      * @dev returns the number of reserve tokens
      * note that prior to version 17, you should use 'connectorTokenCount' instead
      *

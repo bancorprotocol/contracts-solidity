@@ -15,6 +15,7 @@ const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
+const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const ONE_TOKEN = new BN(10).pow(new BN(18));
@@ -219,9 +220,39 @@ describe('StandardPoolConverter', () => {
         return new BN(transaction.gasPrice).mul(new BN(txResult.receipt.cumulativeGasUsed));
     };
 
+    const upgradeConverter = async (upgrader, converter) => {
+        let res;
+
+        // For versions 11 or higher, we just call upgrade on the converter.
+        if (converter.upgrade) {
+            res = await converter.upgrade();
+        } else {
+            // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
+            // then accept ownership of the new and old converter. The end results should be the same.
+            await converter.transferOwnership(upgrader.address);
+            res = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''));
+            await converter.acceptOwnership();
+        }
+
+        const logs = res.logs.filter((log) => log.event === 'ConverterUpgrade');
+        expect(logs.length).to.be.at.most(1);
+
+        if (logs.length === 1) {
+            return StandardPoolConverter.at(logs[0].args._newConverter);
+        }
+
+        const events = await upgrader.getPastEvents('ConverterUpgrade', {
+            fromBlock: res.receipt.blockNumber,
+            toBlock: res.receipt.blockNumber
+        });
+
+        return StandardPoolConverter.at(events[0].args._newConverter);
+    };
+
     let now;
     let bancorNetwork;
     let contractRegistry;
+    let converterUpgrader;
     let networkSettings;
 
     const sender = defaultSender;
@@ -230,6 +261,9 @@ describe('StandardPoolConverter', () => {
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
+
+        converterUpgrader = await ConverterUpgrader.new(contractRegistry.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, converterUpgrader.address);
 
         const factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
@@ -1075,6 +1109,33 @@ describe('StandardPoolConverter', () => {
                         );
                     }
                 });
+            });
+
+            it('should not generate network fees immediately after upgrade', async () => {
+                ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
+                    ethIndex: ethIndex,
+                    networkFeePercent: 20,
+                    conversionFeePercent: 10
+                }));
+
+                await addLiquidity(converter, reserveToken1, reserveToken2, [
+                    ONE_TOKEN.muln(1000),
+                    ONE_TOKEN.muln(1000)
+                ]);
+
+                const balanceBefore1 = await getBalance(reserveToken1, networkFeeWallet);
+                const balanceBefore2 = await getBalance(reserveToken2, networkFeeWallet);
+
+                const newConverter = await upgradeConverter(converterUpgrader, converter);
+                expect(newConverter.address).to.be.not.equal(converter.address);
+
+                await newConverter.processNetworkFees();
+
+                const balanceAfter1 = await getBalance(reserveToken1, networkFeeWallet);
+                const balanceAfter2 = await getBalance(reserveToken2, networkFeeWallet);
+
+                expect(balanceAfter1).to.be.bignumber.equal(balanceBefore1);
+                expect(balanceAfter2).to.be.bignumber.equal(balanceBefore2);
             });
 
             describe('network fees', () => {
