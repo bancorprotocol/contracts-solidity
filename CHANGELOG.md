@@ -2,7 +2,7 @@
 General
 * Added global network settings (`NetworkSettings` contract)
 * Added the Vortex mechanism (global network fee logic and the `VortexBurner` contract)
-* Moved the native token address and more generic utils into the Utils contract
+* Moved the native token address and more generic utils into the `Utils` contract
 * Removed support for Liquid Tokens
 * Removed legacy EtherToken support
 * Removed affiliate fee logic
