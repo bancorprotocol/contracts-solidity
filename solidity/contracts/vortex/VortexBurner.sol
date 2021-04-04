@@ -49,27 +49,27 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     ITokenGovernance private immutable _govTokenGovernance;
 
     // the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
-    uint32 private _burnIncentiveFee;
+    uint32 private _burnReward;
 
-    // the maximum incentive fee to be sent to the caller of the burning event
-    uint256 private _maxBurnIncentiveFeeAmount;
+    // the maximum burn reward to be sent to the caller of the burning event
+    uint256 private _maxBurnRewardAmount;
 
     // stores the total amount of the burned governance tokens
     uint256 private _totalBurntAmount;
 
     /**
-     * @dev triggered when the burn incentive fee has been changed
+     * @dev triggered when the burn reward has been changed
      *
-     * @param prevBurnIncentiveFee the previous burn incentive fee (in units of PPM)
-     * @param newBurnIncentiveFee the new burn incentive fee (in units of PPM)
-     * @param prevMaxBurnIncentiveFeeAmount the previous maximum burn incentive fee
-     * @param newMaxBurnIncentiveFeeAmount the new maximum burn incentive fee
+     * @param prevBurnReward the previous burn reward (in units of PPM)
+     * @param newBurnReward the new burn reward (in units of PPM)
+     * @param prevMaxBurnRewardAmount the previous maximum burn reward
+     * @param newMaxBurnRewardAmount the new maximum burn reward
      */
-    event BurnIncentiveFeeUpdated(
-        uint32 prevBurnIncentiveFee,
-        uint32 newBurnIncentiveFee,
-        uint256 prevMaxBurnIncentiveFeeAmount,
-        uint256 newMaxBurnIncentiveFeeAmount
+    event BurnRewardUpdated(
+        uint32 prevBurnReward,
+        uint32 newBurnReward,
+        uint256 prevMaxBurnRewardAmount,
+        uint256 newMaxBurnRewardAmount
     );
 
     /**
@@ -118,34 +118,29 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     receive() external payable {}
 
     /**
-     * @dev returns the burn incentive fee and its maximum amount
+     * @dev returns the burn reward percentage and its maximum amount
      *
-     * @return the burn incentive fee and its maximum amount
+     * @return the burn reward percentage and its maximum amount
      */
-    function burnIncentiveFee() external view returns (uint32, uint256) {
-        return (_burnIncentiveFee, _maxBurnIncentiveFeeAmount);
+    function burnReward() external view returns (uint32, uint256) {
+        return (_burnReward, _maxBurnRewardAmount);
     }
 
     /**
-     * @dev allows the owner to set the burn incentive fee and its maximum amount
+     * @dev allows the owner to set the burn reward percentage and its maximum amount
      *
-     * @param newBurnIncentiveNetworkFee the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
-     * @param newMaxBurnIncentiveFeeAmount the maximum incentive fee to be sent to the caller of the burning event
+     * @param newBurnReward the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
+     * @param newMaxBurnRewardAmount the maximum burn reward to be sent to the caller of the burning event
      */
-    function setBurnIncentiveFee(uint32 newBurnIncentiveNetworkFee, uint256 newMaxBurnIncentiveFeeAmount)
+    function setBurnReward(uint32 newBurnReward, uint256 newMaxBurnRewardAmount)
         external
         ownerOnly
-        validFee(newBurnIncentiveNetworkFee)
+        validFee(newBurnReward)
     {
-        emit BurnIncentiveFeeUpdated(
-            _burnIncentiveFee,
-            newBurnIncentiveNetworkFee,
-            _maxBurnIncentiveFeeAmount,
-            newMaxBurnIncentiveFeeAmount
-        );
+        emit BurnRewardUpdated(_burnReward, newBurnReward, _maxBurnRewardAmount, newMaxBurnRewardAmount);
 
-        _burnIncentiveFee = newBurnIncentiveNetworkFee;
-        _maxBurnIncentiveFeeAmount = newMaxBurnIncentiveFeeAmount;
+        _burnReward = newBurnReward;
+        _maxBurnRewardAmount = newMaxBurnRewardAmount;
     }
 
     /**
@@ -205,8 +200,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             emit Converted(token, amount, targetAmount);
         }
 
-        // calculate the burn incentive fee and reduce it from the total amount to convert
-        (uint256 sourceAmount, uint256 incentiveFeeAmount) = netNetworkConversionAmounts();
+        // calculate the burn reward and reduce it from the total amount to convert
+        (uint256 sourceAmount, uint256 burnRewardAmount) = netNetworkConversionAmounts();
 
         // approve the network to withdraw the network token amount
         ensureAllowance(_networkToken, network, sourceAmount);
@@ -222,10 +217,10 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // burn all the converter governance tokens
         _govTokenGovernance.burn(govTokenBalance);
 
-        // transfer the incentive fee to the caller
-        _networkToken.transfer(msg.sender, incentiveFeeAmount);
+        // transfer the burn reward to the caller
+        _networkToken.transfer(msg.sender, burnRewardAmount);
 
-        emit Burned(tokens, sourceAmount + incentiveFeeAmount, govTokenBalance);
+        emit Burned(tokens, sourceAmount + burnRewardAmount, govTokenBalance);
     }
 
     /**
@@ -293,17 +288,16 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     }
 
     /**
-     * @dev applies the burn incentive fee on the whole balance and returns the net amount and the fee
+     * @dev applies the burn reward on the whole balance and returns the net amount and the reward
      *
      * @return network token target amount
-     * @return incentive fee amount
+     * @return burn reward amount
      */
     function netNetworkConversionAmounts() private view returns (uint256, uint256) {
         uint256 amount = _networkToken.balanceOf(address(this));
-        uint256 incentiveFeeAmount =
-            Math.min(amount.mul(_burnIncentiveFee) / PPM_RESOLUTION, _maxBurnIncentiveFeeAmount);
+        uint256 burnRewardAmount = Math.min(amount.mul(_burnReward) / PPM_RESOLUTION, _maxBurnRewardAmount);
 
-        return (amount - incentiveFeeAmount, incentiveFeeAmount);
+        return (amount - burnRewardAmount, burnRewardAmount);
     }
 
     /**

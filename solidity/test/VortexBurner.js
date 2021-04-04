@@ -100,11 +100,11 @@ describe('VortexBurner', () => {
 
     describe('construction', () => {
         it('should be properly initialized', async () => {
-            const burnIncentiveFee = await vortex.burnIncentiveFee.call();
-            const incentiveFee = burnIncentiveFee[0];
-            const maxIncentiveFeeAmount = burnIncentiveFee[1];
-            expect(incentiveFee).to.be.bignumber.equal(new BN(0));
-            expect(maxIncentiveFeeAmount).to.be.bignumber.equal(new BN(0));
+            const burnReward = await vortex.burnReward.call();
+            const reward = burnReward[0];
+            const maxRewardAmount = burnReward[1];
+            expect(reward).to.be.bignumber.equal(new BN(0));
+            expect(maxRewardAmount).to.be.bignumber.equal(new BN(0));
 
             expect(await vortex.totalBurntAmount.call()).to.be.bignumber.equal(new BN(0));
         });
@@ -172,45 +172,42 @@ describe('VortexBurner', () => {
         });
     });
 
-    describe('burn incentive fee setting', () => {
-        it('should allow the owner to set the burn incentive fee', async () => {
-            const burnIncentiveFeeParams = await vortex.burnIncentiveFee.call();
-            const prevBurnIncentiveFee = burnIncentiveFeeParams[0];
-            const prevMaxBurnIncentiveFeeAmount = burnIncentiveFeeParams[1];
+    describe('burn reward setting', () => {
+        it('should allow the owner to set the burn reward', async () => {
+            const burnRewardParams = await vortex.burnReward.call();
+            const prevBurnReward = burnRewardParams[0];
+            const prevMaxBurnRewardAmount = burnRewardParams[1];
 
-            const newBurnIncentiveFee = PPM_RESOLUTION;
-            const newMaxBurnIncentiveFeeAmount = new BN(1000);
+            const newBurnReward = PPM_RESOLUTION;
+            const newMaxBurnRewardAmount = new BN(1000);
 
-            const res = await vortex.setBurnIncentiveFee(newBurnIncentiveFee, newMaxBurnIncentiveFeeAmount);
-            expectEvent(res, 'BurnIncentiveFeeUpdated', {
-                prevBurnIncentiveFee,
-                newBurnIncentiveFee,
-                prevMaxBurnIncentiveFeeAmount,
-                newMaxBurnIncentiveFeeAmount
+            const res = await vortex.setBurnReward(newBurnReward, newMaxBurnRewardAmount);
+            expectEvent(res, 'BurnRewardUpdated', {
+                prevBurnReward,
+                newBurnReward,
+                prevMaxBurnRewardAmount,
+                newMaxBurnRewardAmount
             });
 
-            const currentBurnIncentiveFeeParams = await vortex.burnIncentiveFee.call();
-            const currentBurnIncentiveFee = currentBurnIncentiveFeeParams[0];
-            const currentMaxBurnIncentiveAmount = currentBurnIncentiveFeeParams[1];
+            const currentBurnRewardParams = await vortex.burnReward.call();
+            const currentBurnReward = currentBurnRewardParams[0];
+            const currentMaxBurnRewardAmount = currentBurnRewardParams[1];
 
-            expect(currentBurnIncentiveFee).to.be.bignumber.equal(newBurnIncentiveFee);
-            expect(currentMaxBurnIncentiveAmount).to.be.bignumber.equal(newMaxBurnIncentiveFeeAmount);
+            expect(currentBurnReward).to.be.bignumber.equal(newBurnReward);
+            expect(currentMaxBurnRewardAmount).to.be.bignumber.equal(newMaxBurnRewardAmount);
         });
 
-        it('should revert when a non owner attempts to set the burn incentive fee', async () => {
+        it('should revert when a non owner attempts to set the burn reward', async () => {
             await expectRevert(
-                vortex.setBurnIncentiveFee(PPM_RESOLUTION, new BN(111), {
+                vortex.setBurnReward(PPM_RESOLUTION, new BN(111), {
                     from: nonOwner
                 }),
                 'ERR_ACCESS_DENIED'
             );
         });
 
-        it('should revert when the owner attempts set the burn incentive fee to an invalid fee', async () => {
-            await expectRevert(
-                vortex.setBurnIncentiveFee(PPM_RESOLUTION.add(new BN(1)), new BN(111)),
-                'ERR_INVALID_FEE'
-            );
+        it('should revert when the owner attempts set the burn reward to an invalid fee', async () => {
+            await expectRevert(vortex.setBurnReward(PPM_RESOLUTION.add(new BN(1)), new BN(111)), 'ERR_INVALID_FEE');
         });
     });
 
@@ -353,15 +350,15 @@ describe('VortexBurner', () => {
                         ['ETH', 'GOV', 'BNT', 'TKN1', 'TKN2', 'TKN3', 'TKN4', 'TKN5']
                     ]) {
                         context(`with tokens: ${testTokens.join(',')}`, () => {
-                            for (const burnIncentiveFeeParams of [
-                                [new BN(0), new BN(0)], // No incentives
+                            for (const burnRewardParams of [
+                                [new BN(0), new BN(0)], // No rewards
                                 [new BN(200_000), new BN(0)], // 20%, capped at 0
                                 [new BN(500_000), new BN(1_000).mul(TKN)] // 50%, capped at 1000 tokens
                             ]) {
-                                const [burnIncentiveFee, maxBurnIncentiveFeeAmount] = burnIncentiveFeeParams;
+                                const [burnReward, maxBurnRewardAmount] = burnRewardParams;
 
                                 context(
-                                    `with ${burnIncentiveFee.toString()} burn incentive fee, capped at ${maxBurnIncentiveFeeAmount.toString()}`,
+                                    `with ${burnReward.toString()} burn reward, capped at ${maxBurnRewardAmount.toString()}`,
                                     () => {
                                         const getExpectedResults = async () => {
                                             const selectedTokens = testTokens.map((symbol) => data[symbol]);
@@ -410,17 +407,15 @@ describe('VortexBurner', () => {
                                             }
 
                                             let netNetworkTokenConversionAmount = grossNetworkTokenConversionAmount;
-                                            let incentiveFeeAmount = new BN(0);
-                                            if (!burnIncentiveFee.eq(new BN(0))) {
-                                                incentiveFeeAmount = BN.min(
-                                                    netNetworkTokenConversionAmount
-                                                        .mul(burnIncentiveFee)
-                                                        .div(PPM_RESOLUTION),
-                                                    maxBurnIncentiveFeeAmount
+                                            let burnRewardAmount = new BN(0);
+                                            if (!burnReward.eq(new BN(0))) {
+                                                burnRewardAmount = BN.min(
+                                                    netNetworkTokenConversionAmount.mul(burnReward).div(PPM_RESOLUTION),
+                                                    maxBurnRewardAmount
                                                 );
 
                                                 netNetworkTokenConversionAmount = netNetworkTokenConversionAmount.sub(
-                                                    incentiveFeeAmount
+                                                    burnRewardAmount
                                                 );
                                             }
 
@@ -444,15 +439,12 @@ describe('VortexBurner', () => {
                                                 networkTokenConversionAmounts,
                                                 grossNetworkTokenConversionAmount,
                                                 totalBurntAmount,
-                                                incentiveFeeAmount
+                                                burnRewardAmount
                                             };
                                         };
 
                                         beforeEach(async () => {
-                                            await vortex.setBurnIncentiveFee(
-                                                burnIncentiveFee,
-                                                maxBurnIncentiveFeeAmount
-                                            );
+                                            await vortex.setBurnReward(burnReward, maxBurnRewardAmount);
                                         });
 
                                         it('should burn network fees', async () => {
@@ -476,10 +468,10 @@ describe('VortexBurner', () => {
                                                 networkTokenConversionAmounts,
                                                 grossNetworkTokenConversionAmount,
                                                 totalBurntAmount,
-                                                incentiveFeeAmount
+                                                burnRewardAmount
                                             } = await getExpectedResults();
 
-                                            // Check that the sender received the incentive fee.
+                                            // Check that the sender received the reward.
                                             const prevNetworkTokenBalance = await getBalance(
                                                 networkToken,
                                                 defaultSender
@@ -522,9 +514,9 @@ describe('VortexBurner', () => {
                                                 ).to.be.bignumber.equal(new BN(0));
                                             }
 
-                                            // Check that the sender received the incentive fee.
+                                            // Check that the sender received the reward.
                                             expect(await getBalance(networkToken, defaultSender)).to.be.bignumber.equal(
-                                                prevNetworkTokenBalance.add(incentiveFeeAmount)
+                                                prevNetworkTokenBalance.add(burnRewardAmount)
                                             );
 
                                             // Check that no network tokens have left in the contract.
