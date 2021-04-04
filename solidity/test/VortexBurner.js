@@ -346,6 +346,8 @@ describe('VortexBurner', () => {
 
                     for (const testTokens of [
                         ['ETH'],
+                        ['GOV'],
+                        ['BNT'],
                         ['ETH', 'GOV', 'BNT'],
                         ['ETH', 'GOV', 'BNT', 'TKN1', 'TKN2', 'TKN3', 'TKN4', 'TKN5']
                     ]) {
@@ -543,8 +545,15 @@ describe('VortexBurner', () => {
             }
         });
 
+        it('failing burn: 0 governance tokens to burn', async () => {
+            await seedNetworkFeeWallet(new BN(0));
+            const tokenAddresses = getTokenAddresses(['GOV']);
+
+            await expectRevert(vortex.burn(tokenAddresses), 'ERR_ZERO_BURN_AMOUNT');
+        });
+
         describe('failing burn: 0 conversion result', () => {
-            for (const feeAmount of [new BN(0), new BN(1), new BN(100)]) {
+            for (const feeAmount of [new BN(1), new BN(100)]) {
                 context(`with ${feeAmount.toString()} network fee balance per token`, () => {
                     beforeEach(async () => {
                         await seedNetworkFeeWallet(feeAmount);

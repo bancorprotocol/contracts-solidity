@@ -203,22 +203,29 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // calculate the burn reward and reduce it from the total amount to convert
         (uint256 sourceAmount, uint256 burnRewardAmount) = netNetworkConversionAmounts();
 
-        // approve the network to withdraw the network token amount
-        ensureAllowance(_networkToken, network, sourceAmount);
+        // in case there are network tokens to burn, convert them to the governance token
+        if (sourceAmount > 0) {
+            // approve the network to withdraw the network token amount
+            ensureAllowance(_networkToken, network, sourceAmount);
 
-        // convert the entire network token amount to the governance token
-        network.convertByPath(strategy.govPath, sourceAmount, 1, address(this), address(0), 0);
+            // convert the entire network token amount to the governance token
+            network.convertByPath(strategy.govPath, sourceAmount, 1, address(this), address(0), 0);
+        }
 
+        // get the governance token balance
         uint256 govTokenBalance = _govToken.balanceOf(address(this));
+        require(govTokenBalance > 0, "ERR_ZERO_BURN_AMOUNT");
 
         // update the stats of the burning event
         _totalBurnedAmount = _totalBurnedAmount.add(govTokenBalance);
 
-        // burn all the converter governance tokens
+        // burn the entire governance token balance
         _govTokenGovernance.burn(govTokenBalance);
 
-        // transfer the burn reward to the caller
-        _networkToken.transfer(msg.sender, burnRewardAmount);
+        // if there is a burn reward, transfer it to the caller
+        if (burnRewardAmount > 0) {
+            _networkToken.transfer(msg.sender, burnRewardAmount);
+        }
 
         emit Burned(tokens, sourceAmount + burnRewardAmount, govTokenBalance);
     }
