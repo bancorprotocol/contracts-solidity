@@ -37,7 +37,7 @@ const RESERVE2_AMOUNT = new BN(1_000_000).mul(TKN);
 const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
 const TOTAL_SUPPLY = new BN(1_000_000_000).mul(TKN);
 
-describe('VortexBurner', () => {
+describe.only('VortexBurner', () => {
     let contractRegistry;
     let bancorNetwork;
     let networkToken;
@@ -106,7 +106,7 @@ describe('VortexBurner', () => {
             expect(reward).to.be.bignumber.equal(new BN(0));
             expect(maxRewardAmount).to.be.bignumber.equal(new BN(0));
 
-            expect(await vortex.totalBurntAmount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(new BN(0));
         });
 
         it('should revert if initialized with an invalid network token address', async () => {
@@ -367,7 +367,7 @@ describe('VortexBurner', () => {
                                             const networkTokenConversionAmounts = [];
 
                                             let grossNetworkTokenConversionAmount = new BN(0);
-                                            let totalBurntAmount = new BN(0);
+                                            let totalBurnedAmount = new BN(0);
 
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
@@ -387,7 +387,7 @@ describe('VortexBurner', () => {
                                                 } else if (tokenAddress === govToken.address) {
                                                     // if the source token is the governance token, don't try to convert it
                                                     // either, but rather include it in the amount to burn.
-                                                    totalBurntAmount = totalBurntAmount.add(amount);
+                                                    totalBurnedAmount = totalBurnedAmount.add(amount);
                                                 } else {
                                                     convertibleTokens.push(tokenAddress);
                                                     if (tokenAddress !== NATIVE_TOKEN_ADDRESS) {
@@ -422,7 +422,7 @@ describe('VortexBurner', () => {
                                             // take into account that if one of the source tokens is the governance token -
                                             // we won't be able to use rateByPath explicitly, since it wouldn't take into
                                             // account a previous conversion.
-                                            totalBurntAmount = totalBurntAmount.add(
+                                            totalBurnedAmount = totalBurnedAmount.add(
                                                 await bancorNetwork.rateByPath.call(
                                                     [
                                                         networkToken.address,
@@ -438,7 +438,7 @@ describe('VortexBurner', () => {
                                                 amounts,
                                                 networkTokenConversionAmounts,
                                                 grossNetworkTokenConversionAmount,
-                                                totalBurntAmount,
+                                                totalBurnedAmount,
                                                 burnRewardAmount
                                             };
                                         };
@@ -467,7 +467,7 @@ describe('VortexBurner', () => {
                                                 amounts,
                                                 networkTokenConversionAmounts,
                                                 grossNetworkTokenConversionAmount,
-                                                totalBurntAmount,
+                                                totalBurnedAmount,
                                                 burnRewardAmount
                                             } = await getExpectedResults();
 
@@ -483,7 +483,7 @@ describe('VortexBurner', () => {
                                             expectEvent(res, 'Burned', {
                                                 tokens: tokenAddresses,
                                                 sourceAmount: grossNetworkTokenConversionAmount,
-                                                burntAmount: totalBurntAmount
+                                                burnedAmount: totalBurnedAmount
                                             });
 
                                             for (let i = 0; i < convertibleTokens.length; ++i) {
@@ -496,14 +496,14 @@ describe('VortexBurner', () => {
                                                 });
                                             }
 
-                                            // Check that governance tokens were actually burnt.
+                                            // Check that governance tokens were actually burned.
                                             const blockNumber = res.receipt.blockNumber;
                                             const events = await govToken.getPastEvents('Destruction', {
                                                 fromBlock: blockNumber,
                                                 toBlock: blockNumber
                                             });
                                             expectEvent({ logs: events }, 'Destruction', {
-                                                _amount: totalBurntAmount
+                                                _amount: totalBurnedAmount
                                             });
 
                                             // Check that the network fee wallet balances have been depleted.
@@ -530,8 +530,8 @@ describe('VortexBurner', () => {
                                             );
 
                                             // Check that the total burned stat has been increment.
-                                            expect(await vortex.totalBurntAmount.call()).to.be.bignumber.equal(
-                                                totalBurntAmount
+                                            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(
+                                                totalBurnedAmount
                                             );
                                         });
                                     }

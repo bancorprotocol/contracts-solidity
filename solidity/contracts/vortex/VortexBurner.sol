@@ -55,7 +55,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     uint256 private _maxBurnRewardAmount;
 
     // stores the total amount of the burned governance tokens
-    uint256 private _totalBurntAmount;
+    uint256 private _totalBurnedAmount;
 
     /**
      * @dev triggered when the burn reward has been changed
@@ -85,10 +85,10 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      * @dev triggered after a completed burning event
      *
      * @param tokens the converted tokens
-     * @param sourceAmount the total network token amounts the tokens were converted to
-     * @param burntAmount the total burned amount in this burning event
+     * @param sourceAmount the total network token amount the tokens were converted to
+     * @param burnedAmount the total burned amount in the burning event
      */
-    event Burned(IERC20[] tokens, uint256 sourceAmount, uint256 burntAmount);
+    event Burned(IERC20[] tokens, uint256 sourceAmount, uint256 burnedAmount);
 
     /**
      * @dev initializes a new VortexBurner contract
@@ -148,8 +148,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @return total amount of the burned governance tokens
      */
-    function totalBurntAmount() external view returns (uint256) {
-        return _totalBurntAmount;
+    function totalBurnedAmount() external view returns (uint256) {
+        return _totalBurnedAmount;
     }
 
     /**
@@ -206,13 +206,13 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // approve the network to withdraw the network token amount
         ensureAllowance(_networkToken, network, sourceAmount);
 
-        // convert all network token amounts to the governance token
+        // convert the entire network token amount to the governance token
         network.convertByPath(strategy.govPath, sourceAmount, 1, address(this), address(0), 0);
 
         uint256 govTokenBalance = _govToken.balanceOf(address(this));
 
         // update the stats of the burning event
-        _totalBurntAmount = _totalBurntAmount.add(govTokenBalance);
+        _totalBurnedAmount = _totalBurnedAmount.add(govTokenBalance);
 
         // burn all the converter governance tokens
         _govTokenGovernance.burn(govTokenBalance);
