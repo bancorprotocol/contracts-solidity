@@ -268,7 +268,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev updates the product of the reserve balances
+     * @dev executed by the upgrader at the end of the upgrade process to handle custom pool logic
      */
     function onUpgradeComplete()
         external

@@ -259,7 +259,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistr
     }
 
     /**
-     * @dev executed by the upgrader at the end of the upgrade process to handle and custom pool logic
+     * @dev executed by the upgrader at the end of the upgrade process to handle custom pool logic
      */
     function onUpgradeComplete()
         external
