@@ -9,8 +9,6 @@ import "./utility/Utils.sol";
 /**
  * @dev This contract maintains the network settings.
  *
- * In the context below, the term 'network fee' denotes the relative portion
- * (in PPM units) taken from all conversion fees accumulated in the network.
  */
 contract NetworkSettings is INetworkSettings, Owned, Utils {
     ITokenHolder private _networkFeeWallet;
@@ -58,7 +56,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     }
 
     /**
-     * @dev returns the network fee wallet
+     * @dev returns the wallet that receives the global network fees
      *
      * @return network fee wallet
      */
@@ -67,7 +65,8 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     }
 
     /**
-     * @dev returns the network fee
+     * @dev returns the global network fee
+     * the network fee is a portion of the total fees from each pool
      *
      * @return network fee in ppm units
      */
