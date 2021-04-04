@@ -3,15 +3,17 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 const EOS_ADDRESS = '0x3c69a194aaf415ba5d6afca734660d0a3d45acdc05d54cd1ca89a8988e7625b4';
 const EOS_BLOCKCHAIN = '0x4e8ebbefa452077428f93c9520d3edd60594ff452a29ac7d2ccc11d47f3ab95b';
 
-let accounts: any;
-let nonOwner: any;
-let receiver: any;
-let txId: any;
-let owner: any;
+let txId: BigNumber;
+
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
+let nonOwner: SignerWithAddress;
+let receiver: SignerWithAddress;
 
 describe('XTransferRerouter', () => {
     before(async () => {

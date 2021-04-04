@@ -2,14 +2,16 @@ import { ethers } from 'hardhat';
 import { expect } from 'chai';
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { Whitelist } from '../../typechain';
 
-let whitelist: any;
+let whitelist: Whitelist;
 
-let accounts: any;
-let address1: any;
-let address2: any;
-let address3: any;
-let nonOwner: any;
+let accounts: SignerWithAddress[];
+let address1: SignerWithAddress;
+let address2: SignerWithAddress;
+let address3: SignerWithAddress;
+let nonOwner: SignerWithAddress;
 
 describe('Whitelist', () => {
     before(async () => {

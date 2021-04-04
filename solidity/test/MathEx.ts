@@ -4,13 +4,14 @@ import { BigNumber } from 'ethers';
 import MathUtils from './helpers/MathUtils';
 
 import Contracts from './helpers/Contracts';
+import { TestMathEx } from '../../typechain';
 
 const MAX_UINT128 = new MathUtils.Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = new MathUtils.Decimal(2).pow(256).sub(1);
 const SCALES = [6, 18, 30].map((n) => new MathUtils.Decimal(10).pow(n)).concat(MAX_UINT128);
 
 describe('MathEx', () => {
-    let mathContract: any;
+    let mathContract: TestMathEx;
 
     before(async () => {
         mathContract = await Contracts.TestMathEx.deploy();

@@ -5,13 +5,16 @@ import { BigNumber } from 'ethers';
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 import Utils from './helpers/Utils';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { TestStandardToken, TokenHolder } from '../../typechain';
 
-let holder: any;
-let token: any;
-let token2: any;
-let receiver: any;
-let nonOwner: any;
-let accounts: any;
+let holder: TokenHolder;
+let token: TestStandardToken;
+let token2: TestStandardToken;
+
+let accounts: SignerWithAddress[];
+let receiver: SignerWithAddress;
+let nonOwner: SignerWithAddress;
 
 describe('TokenHolder', () => {
     before(async () => {
@@ -21,8 +24,8 @@ describe('TokenHolder', () => {
         nonOwner = accounts[8];
     });
 
-    const getBalances = async (tokenAddresses: any, account: any): Promise<any> => {
-        const balances: any = {};
+    const getBalances = async (tokenAddresses: string[], account: string): Promise<{ [key: string]: BigNumber }> => {
+        const balances: { [key: string]: BigNumber } = {};
         for (const tokenAddress of tokenAddresses) {
             balances[tokenAddress] = await Utils.getBalance(tokenAddress, account);
         }
@@ -44,7 +47,7 @@ describe('TokenHolder', () => {
     describe('withdraw asset', () => {
         for (const isETH of [true, false]) {
             context(isETH ? 'ETH' : 'ERC20', async () => {
-                let tokenAddress: any;
+                let tokenAddress: string;
 
                 beforeEach(async () => {
                     tokenAddress = isETH ? Constants.NATIVE_TOKEN_ADDRESS : token.address;
@@ -104,8 +107,8 @@ describe('TokenHolder', () => {
     });
 
     describe('withdraw multiple assets', () => {
-        let tokenAddresses: any;
-        let amounts: any;
+        let tokenAddresses: string[];
+        let amounts: { [key: string]: BigNumber };
 
         beforeEach(async () => {
             tokenAddresses = [Constants.NATIVE_TOKEN_ADDRESS, token.address, token2.address];

@@ -5,15 +5,17 @@ import { BigNumber } from 'ethers';
 import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { NetworkSettings } from '../../typechain';
 
 const portion1 = BigNumber.from(111);
 const portion2 = BigNumber.from(222);
 const invalidPortion = BigNumber.from(1000001);
 
-let nonOwner: any;
-let address1: any;
-let address2: any;
-let accounts: any;
+let accounts: SignerWithAddress[];
+let nonOwner: SignerWithAddress;
+let address1: SignerWithAddress;
+let address2: SignerWithAddress;
 
 describe('NetworkSettings', () => {
     before(async () => {
@@ -24,7 +26,7 @@ describe('NetworkSettings', () => {
         address2 = accounts[3];
     });
 
-    const expectReturn = async (method: any, object: any) => {
+    const expectReturn = async (method: Promise<[string, number]>, object: [string, number]) => {
         expect(JSON.stringify(await method)).to.be.equal(JSON.stringify(object));
     };
 
@@ -43,7 +45,7 @@ describe('NetworkSettings', () => {
     });
 
     describe('configuration', () => {
-        let networkSettings: any;
+        let networkSettings: NetworkSettings;
 
         beforeEach(async () => {
             networkSettings = await Contracts.NetworkSettings.deploy(address1.address, portion1);

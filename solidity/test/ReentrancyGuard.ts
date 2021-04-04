@@ -1,10 +1,11 @@
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { TestReentrancyGuard, TestReentrancyGuardAttacker } from '../../typechain';
 
 import Contracts from './helpers/Contracts';
 
-let guard: any;
-let attacker: any;
+let guard: TestReentrancyGuard;
+let attacker: TestReentrancyGuardAttacker;
 
 describe('ReentrancyGuard', () => {
     beforeEach(async () => {
