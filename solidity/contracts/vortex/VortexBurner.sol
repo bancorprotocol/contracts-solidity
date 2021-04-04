@@ -46,7 +46,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     IERC20 private immutable _govToken;
 
     // the address of the governance token security module
-    ITokenGovernance public immutable _govTokenGovernance;
+    ITokenGovernance private immutable _govTokenGovernance;
 
     // the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
     uint32 private _burnIncentiveFee;
