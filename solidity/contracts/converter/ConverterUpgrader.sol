@@ -121,7 +121,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         converter.transferOwnership(prevOwner);
         newConverter.transferOwnership(prevOwner);
 
-        newConverter.postUpgrade();
+        newConverter.onUpgradeComplete();
 
         emit ConverterUpgrade(address(converter), address(newConverter));
     }

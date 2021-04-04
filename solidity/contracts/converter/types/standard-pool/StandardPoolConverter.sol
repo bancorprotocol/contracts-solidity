@@ -270,7 +270,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev updates the product of the reserve balances
      */
-    function postUpgrade()
+    function onUpgradeComplete()
         external
         override
         protected

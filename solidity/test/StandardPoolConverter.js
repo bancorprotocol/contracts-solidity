@@ -1117,25 +1117,23 @@ describe('StandardPoolConverter', () => {
                     networkFeePercent: 20,
                     conversionFeePercent: 10
                 }));
-        
-                await addLiquidity(
-                    converter,
-                    reserveToken1,
-                    reserveToken2,
-                    [ONE_TOKEN.muln(1000), ONE_TOKEN.muln(1000)]
-                );
-        
+
+                await addLiquidity(converter, reserveToken1, reserveToken2, [
+                    ONE_TOKEN.muln(1000),
+                    ONE_TOKEN.muln(1000)
+                ]);
+
                 const balanceBefore1 = await getBalance(reserveToken1, networkFeeWallet);
                 const balanceBefore2 = await getBalance(reserveToken2, networkFeeWallet);
-        
+
                 const newConverter = await upgradeConverter(converterUpgrader, converter);
                 expect(newConverter.address).to.be.not.equal(converter.address);
-        
+
                 await newConverter.processNetworkFees();
-        
+
                 const balanceAfter1 = await getBalance(reserveToken1, networkFeeWallet);
                 const balanceAfter2 = await getBalance(reserveToken2, networkFeeWallet);
-        
+
                 expect(balanceAfter1).to.be.bignumber.equal(balanceBefore1);
                 expect(balanceAfter2).to.be.bignumber.equal(balanceBefore2);
             });

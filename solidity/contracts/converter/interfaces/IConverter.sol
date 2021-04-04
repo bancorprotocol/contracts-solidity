@@ -48,7 +48,7 @@ interface IConverter is IOwned {
 
     function transferReservesOnUpgrade(address _newConverter) external;
 
-    function postUpgrade() external;
+    function onUpgradeComplete() external;
 
     // deprecated, backward compatibility
     function token() external view returns (IConverterAnchor);
