@@ -366,8 +366,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev calculates what portion of the accumulated conversion fees on each reserve should be
-     * transferred from this contract, and then transfers that portion to the network fee wallet
+     * @dev calculates the accumulated network fee and transfers it to the network fee wallet
      */
     function processNetworkFees() external protected {
         (uint256 reserveBalance0, uint256 reserveBalance1) = processNetworkFees(0);
@@ -375,8 +374,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev calculates what portion of the accumulated conversion fees on each reserve should be
-     * transferred from this contract, and then transfers that portion to the network fee wallet
+     * @dev calculates the accumulated network fee and transfers it to the network fee wallet
      *
      * @param _value amount of ether to exclude from the ether reserve balance (if relevant)
      *
