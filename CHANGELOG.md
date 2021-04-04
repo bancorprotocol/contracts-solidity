@@ -1,3 +1,24 @@
+### 0.6.34
+General
+* Added global network settings (`NetworkSettings` contract)
+* Added the Vortex mechanism (global network fee logic and the `VortexBurner` contract)
+* Moved the native token address and more generic utils into the Utils contract
+* Removed support for Liquid Tokens
+* Removed legacy EtherToken support
+* Removed affiliate fee logic
+* Many other minor changes and cleanups
+
+Converters
+* `syncReserveBalances` is now exposed
+* Updated the upgrade process with some optimizations
+* Added support for global network fees
+* Removed support for withdrawing locked tokens (simplification)
+* `addLiquidityReturn` updated to handle input of multiple amounts
+
+TokenHolder
+* Added support for ETH and for withdrawing multiple tokens in a single call
+
+
 ### 0.6.33
 General
 * Replaced the local ERC20Token/TokenHandler with OpenZepplin's ERC20/SafeERC20
