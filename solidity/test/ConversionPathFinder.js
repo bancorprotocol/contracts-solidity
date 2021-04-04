@@ -2,14 +2,13 @@ const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const IConverterAnchor = contract.fromArtifact('IConverterAnchor');
 const ConverterBase = contract.fromArtifact('ConverterBase');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const LiquidTokenConverterFactory = contract.fromArtifact('LiquidTokenConverterFactory');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
@@ -19,9 +18,15 @@ const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
 /* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
-    reserves: [{ symbol: 'AAA' }, { symbol: 'BBB' }, { symbol: 'CCC' }, { symbol: 'DDD' }],
+    reserves: [
+        { symbol: 'BNT' },
+        { symbol: 'AAA' },
+        { symbol: 'BBB' },
+        { symbol: 'CCC' },
+        { symbol: 'DDD' }
+    ],
     converters: [
-        { symbol: 'BNT', reserves: [{ symbol: 'ETH' }] },
+        { symbol: 'ETHBNT', reserves: [{ symbol: 'ETH' }, { symbol: 'BNT' }] },
         { symbol: 'AAABNT', reserves: [{ symbol: 'AAA' }, { symbol: 'BNT' }] },
         { symbol: 'BBBBNT', reserves: [{ symbol: 'BBB' }, { symbol: 'BNT' }] },
         { symbol: 'CCCBNT', reserves: [{ symbol: 'CCC' }, { symbol: 'BNT' }] },
@@ -33,7 +38,7 @@ const LAYOUT = {
 /* eslint-enable no-multi-spaces,comma-spacing */
 
 const getSymbol = async (tokenAddress) => {
-    if (tokenAddress === ETH_RESERVE_ADDRESS) {
+    if (tokenAddress === NATIVE_TOKEN_ADDRESS) {
         return 'ETH';
     }
 
@@ -123,7 +128,7 @@ describe('ConversionPathFinder', () => {
     let anchorToken;
     const nonOwner = accounts[1];
 
-    const addresses = { ETH: ETH_RESERVE_ADDRESS };
+    const addresses = { ETH: NATIVE_TOKEN_ADDRESS };
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
@@ -134,7 +139,6 @@ describe('ConversionPathFinder', () => {
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
         pathFinder = await ConversionPathFinder.new(contractRegistry.address);
 
-        await converterFactory.registerTypedConverterFactory((await LiquidTokenConverterFactory.new()).address);
         await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
@@ -151,7 +155,7 @@ describe('ConversionPathFinder', () => {
         for (const converter of LAYOUT.converters) {
             const tokens = converter.reserves.map((reserve) => addresses[reserve.symbol]);
             await converterRegistry.newConverter(
-                tokens.length === 1 ? 0 : 1,
+                1,
                 'name',
                 converter.symbol,
                 0,

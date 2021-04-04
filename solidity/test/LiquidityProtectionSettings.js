@@ -1,7 +1,9 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, BN } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, BN, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
-const { ETH_RESERVE_ADDRESS, registry, roles } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry, roles } = require('./helpers/Constants');
+
+const { ZERO_ADDRESS } = constants;
 
 const { ROLE_OWNER } = roles;
 
@@ -114,6 +116,14 @@ describe('LiquidityProtectionSettings', () => {
             );
         });
 
+        it('should revert when an owner attempts to whitelist a zero address pool', async () => {
+            await expectRevert(settings.addPoolToWhitelist(ZERO_ADDRESS), 'ERR_INVALID_EXTERNAL_ADDRESS');
+        });
+
+        it('should revert when an owner attempts to whitelist the settings contract itself', async () => {
+            await expectRevert(settings.addPoolToWhitelist(settings.address), 'ERR_INVALID_EXTERNAL_ADDRESS');
+        });
+
         it('should succeed when an owner attempts to add a whitelisted pool', async () => {
             expect(await settings.isPoolWhitelisted.call(poolToken.address)).to.be.false();
             expect(await settings.poolWhitelist.call()).to.be.equalTo([]);
@@ -213,7 +223,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, networkToken.address, reserveToken.address],
+                [NATIVE_TOKEN_ADDRESS, networkToken.address, reserveToken.address],
                 [100000, 100000, 100000]
             );
             const anchorCount = await converterRegistry.getAnchorCount.call();
@@ -230,7 +240,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, reserveToken.address],
+                [NATIVE_TOKEN_ADDRESS, reserveToken.address],
                 [500000, 500000]
             );
             const anchorCount = await converterRegistry.getAnchorCount.call();
@@ -246,7 +256,7 @@ describe('LiquidityProtectionSettings', () => {
                 'PT',
                 18,
                 5000,
-                [ETH_RESERVE_ADDRESS, networkToken.address],
+                [NATIVE_TOKEN_ADDRESS, networkToken.address],
                 [450000, 550000]
             );
             const anchorCount = await converterRegistry.getAnchorCount.call();

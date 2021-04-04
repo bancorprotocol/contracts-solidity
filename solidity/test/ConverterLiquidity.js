@@ -3,13 +3,14 @@ const { expectRevert, BN, balance, constants } = require('@openzeppelin/test-hel
 const { expect } = require('../../chai-local');
 const Decimal = require('decimal.js');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 const { MAX_UINT256 } = constants;
 
 const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const DSToken = contract.fromArtifact('DSToken');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const BancorFormula = contract.fromArtifact('BancorFormula');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 
 describe('ConverterLiquidity', () => {
@@ -19,7 +20,7 @@ describe('ConverterLiquidity', () => {
 
         for (let i = 0; i < weights.length; i++) {
             if (hasETH && i === weights.length - 1) {
-                await converter.addReserve(ETH_RESERVE_ADDRESS, weights[i] * 10000);
+                await converter.addReserve(NATIVE_TOKEN_ADDRESS, weights[i] * 10000);
             } else {
                 const erc20Token = await TestStandardToken.new('name', 'symbol', 0, MAX_UINT256);
                 await converter.addReserve(erc20Token.address, weights[i] * 10000);
@@ -40,9 +41,14 @@ describe('ConverterLiquidity', () => {
     before(async () => {
         // The following contracts are unaffected by the underlying tests, thus can be shared
         contractRegistry = await ContractRegistry.new();
+
         const bancorFormula = await BancorFormula.new();
         await bancorFormula.init();
+
+        const networkSettings = await NetworkSettings.new(defaultSender, 0);
+
         await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
     describe('security assertion', () => {
@@ -174,7 +180,7 @@ describe('ConverterLiquidity', () => {
                         reserveTokens,
                         reserveAmounts
                     );
-                    const liquidityReturns = await getLiquidityReturns(
+                    const liquidityReturn = await getLiquidityReturn(
                         state.length == 0,
                         converter,
                         reserveTokens,
@@ -207,9 +213,7 @@ describe('ConverterLiquidity', () => {
                         }
                     }
 
-                    for (const liquidityReturn of liquidityReturns) {
-                        expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
-                    }
+                    expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
 
                     expected = actual;
                     prevSupply = supply;
@@ -276,7 +280,7 @@ describe('ConverterLiquidity', () => {
     });
 
     const approve = async (reserveToken, converter, amount) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return;
         }
 
@@ -285,7 +289,7 @@ describe('ConverterLiquidity', () => {
     };
 
     const getAllowance = async (reserveToken, converter) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return new BN(0);
         }
 
@@ -294,7 +298,7 @@ describe('ConverterLiquidity', () => {
     };
 
     const getBalance = async (reserveToken, converter) => {
-        if (reserveToken === ETH_RESERVE_ADDRESS) {
+        if (reserveToken === NATIVE_TOKEN_ADDRESS) {
             return balance.current(converter.address);
         }
 
@@ -312,17 +316,14 @@ describe('ConverterLiquidity', () => {
         );
     };
 
-    const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+    const getLiquidityReturn = async (firstTime, converter, reserveTokens, reserveAmounts) => {
         if (firstTime) {
             const length = Math.round(
                 reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length / reserveAmounts.length
             );
-            const retVal = new BN('1'.padEnd(length, '0'));
-            return reserveAmounts.map((reserveAmount, i) => retVal);
+            return new BN(10).pow(new BN(length - 1));
         }
 
-        return await Promise.all(
-            reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
-        );
+        return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
     };
 });

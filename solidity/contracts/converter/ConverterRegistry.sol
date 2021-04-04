@@ -27,8 +27,6 @@ import "../token/interfaces/IDSToken.sol";
  * The contract is upgradable.
  */
 contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
-    uint32 private constant PPM_RESOLUTION = 1000000;
-
     /**
      * @dev triggered when a converter anchor is added to the registry
      *
@@ -132,7 +130,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
         anchor.acceptOwnership();
         converter.acceptOwnership();
 
-        for (uint256 i = 0; i < length; i++) converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
+        for (uint256 i = 0; i < length; i++) {
+            converter.addReserve(_reserveTokens[i], _reserveWeights[i]);
+        }
 
         anchor.transferOwnership(address(converter));
         converter.acceptAnchorOwnership();
@@ -402,7 +402,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
         uint16 _type,
         IERC20[] memory _reserveTokens,
         uint32[] memory _reserveWeights
-    ) public view returns (IConverterAnchor) {
+    ) public view override returns (IConverterAnchor) {
         // verify that the input parameters represent a valid liquidity pool
         if (_reserveTokens.length == _reserveWeights.length && _reserveTokens.length > 1) {
             // get the anchors of the least frequent token (optimization)

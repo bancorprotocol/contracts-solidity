@@ -26,6 +26,7 @@ const TokenHolder = contract.fromArtifact('TokenHolder');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
 const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
@@ -73,7 +74,7 @@ describe('LiquidityProtectionEdgeCases', () => {
             const convert = async (sourceToken, targetToken, amount) => {
                 await sourceToken.approve(bancorNetwork.address, amount);
                 const path = [sourceToken.address, poolToken.address, targetToken.address];
-                await bancorNetwork.convertByPath(path, amount, 1, ZERO_ADDRESS, ZERO_ADDRESS, 0);
+                await bancorNetwork.convertByPath2(path, amount, 1, ZERO_ADDRESS);
             };
 
             const increaseRate = async (sourceToken, targetToken) => {
@@ -142,11 +143,14 @@ describe('LiquidityProtectionEdgeCases', () => {
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();
 
+                const networkSettings = await NetworkSettings.new(defaultSender, 0);
+
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
                 await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+                await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
                 await converterRegistry.enableTypeChanging(false);
             });
@@ -202,7 +206,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                 liquidityProtectionStats = await LiquidityProtectionStats.new();
                 liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
                 liquidityProtectionWallet = await TokenHolder.new();
-                liquidityProtection = await LiquidityProtection.new([
+                liquidityProtection = await LiquidityProtection.new(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
@@ -211,7 +215,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                ]);
+                );
 
                 await liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address, { from: owner });
                 await liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address, {

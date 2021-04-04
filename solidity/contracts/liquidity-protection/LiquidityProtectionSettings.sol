@@ -21,8 +21,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // the owner role is used to update the settings
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
-    uint32 private constant PPM_RESOLUTION = 1000000;
-
     IERC20 private immutable _networkToken;
 
     // list of whitelisted pools
@@ -152,8 +150,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     constructor(IERC20 token, IContractRegistry registry)
         public
         ContractRegistryClient(registry)
-        validAddress(address(token))
-        notThis(address(token))
+        validExternalAddress(address(token))
     {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
@@ -172,17 +169,6 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     // error message binary size optimization
     function _onlyOwner() internal view {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
-    }
-
-    // ensures that the portion is valid
-    modifier validPortion(uint32 portion) {
-        _validPortion(portion);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validPortion(uint32 portion) internal pure {
-        require(portion > 0 && portion <= PPM_RESOLUTION, "ERR_INVALID_PORTION");
     }
 
     /**
@@ -292,8 +278,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function addPoolToWhitelist(IConverterAnchor poolAnchor)
         external
         onlyOwner
-        validAddress(address(poolAnchor))
-        notThis(address(poolAnchor))
+        validExternalAddress(address(poolAnchor))
     {
         require(_poolWhitelist.add(address(poolAnchor)), "ERR_POOL_ALREADY_WHITELISTED");
 
@@ -306,12 +291,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param poolAnchor    pool anchor
      */
-    function removePoolFromWhitelist(IConverterAnchor poolAnchor)
-        external
-        onlyOwner
-        validAddress(address(poolAnchor))
-        notThis(address(poolAnchor))
-    {
+    function removePoolFromWhitelist(IConverterAnchor poolAnchor) external onlyOwner {
         require(_poolWhitelist.remove(address(poolAnchor)), "ERR_POOL_NOT_WHITELISTED");
 
         emit PoolWhitelistUpdated(poolAnchor, false);
@@ -350,8 +330,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     function addSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
         external
         onlyOwner
-        validAddress(address(subscriber))
-        notThis(address(subscriber))
+        validExternalAddress(address(subscriber))
     {
         require(_subscribers.add(address(subscriber)), "ERR_SUBSCRIBER_ALREADY_SET");
 
@@ -364,12 +343,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param subscriber    subscriber address
      */
-    function removeSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
-        external
-        onlyOwner
-        validAddress(address(subscriber))
-        notThis(address(subscriber))
-    {
+    function removeSubscriber(ILiquidityProtectionEventsSubscriber subscriber) external onlyOwner {
         require(_subscribers.remove(address(subscriber)), "ERR_INVALID_SUBSCRIBER");
 
         emit SubscriberUpdated(subscriber, false);

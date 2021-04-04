@@ -111,19 +111,6 @@ Here is an example of the initial configuration file which should be provided to
                     "balance": "270"
                 }
             ]
-        },
-        {
-            "type": 0,
-            "symbol": "ZZZ",
-            "decimals": 18,
-            "fee": "0.3%",
-            "reserves": [
-                {
-                    "symbol": "BNT",
-                    "weight": "10%",
-                    "balance": "920"
-                }
-            ]
         }
     ],
     "liquidityProtectionParams": {

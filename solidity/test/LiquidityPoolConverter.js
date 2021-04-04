@@ -2,7 +2,7 @@ const { accounts, defaultSender, contract } = require('@openzeppelin/test-enviro
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
-const { ETH_RESERVE_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const { ZERO_ADDRESS } = constants;
 
@@ -87,7 +87,7 @@ describe('LiquidityPoolConverter', () => {
     };
 
     const getReserve1Address = (isETH) => {
-        return isETH ? ETH_RESERVE_ADDRESS : reserveToken.address;
+        return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
     const verifyReserve = (reserve, balance, weight, isSet) => {
@@ -97,11 +97,11 @@ describe('LiquidityPoolConverter', () => {
     };
 
     const convert = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
+        return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS, options);
     };
 
     const convertCall = async (path, amount, minReturn, options = {}) => {
-        return bancorNetwork.convertByPath.call(path, amount, minReturn, ZERO_ADDRESS, ZERO_ADDRESS, 0, options);
+        return bancorNetwork.convertByPath2.call(path, amount, minReturn, ZERO_ADDRESS, options);
     };
 
     let bancorNetwork;
@@ -379,13 +379,11 @@ describe('LiquidityPoolConverter', () => {
                     }
 
                     await expectRevert(
-                        bancorNetwork.convertByPath(
+                        bancorNetwork.convertByPath2(
                             [getReserve1Address(isETHReserve), anchorAddress, reserveToken2.address],
                             amount,
                             MIN_RETURN,
                             beneficiary,
-                            ZERO_ADDRESS,
-                            0,
                             { from: whitelisted, value }
                         ),
                         'ERR_NOT_WHITELISTED'
