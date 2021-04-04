@@ -14,6 +14,8 @@ const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
 
+const STANDARD_ERRORS = ['nonce too low', 'replacement transaction underpriced'];
+
 const getConfig = () => {
     return JSON.parse(fs.readFileSync(CFG_FILE_NAME, { encoding: 'utf8' }));
 };
@@ -79,10 +81,14 @@ const send = async (web3, account, gasPrice, transaction, value = 0) => {
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
         } catch (error) {
-            console.log(error.message);
-            const receipt = await getTransactionReceipt(web3);
-            if (receipt) {
-                return receipt;
+            if (STANDARD_ERRORS.some((suffix) => error.message.endsWith(suffix))) {
+                console.log(error.message + '; retrying...');
+            } else {
+                console.log(error.message);
+                const receipt = await getTransactionReceipt(web3);
+                if (receipt) {
+                    return receipt;
+                }
             }
         }
     }
