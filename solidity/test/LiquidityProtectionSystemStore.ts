@@ -4,13 +4,15 @@ import { expect } from 'chai';
 import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { LiquidityProtectionSystemStore } from '../../typechain';
 
-let liquidityProtectionSystemStore: any;
+let liquidityProtectionSystemStore: LiquidityProtectionSystemStore;
 
-let owner: any;
-let token: any;
-let anchor: any;
-let accounts: any;
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
+let token: SignerWithAddress;
+let anchor: SignerWithAddress;
 
 describe('LiquidityProtectionSystemStore', () => {
     before(async () => {

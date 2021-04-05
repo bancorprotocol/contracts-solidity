@@ -36,7 +36,7 @@
     },
     "devDependencies": {
         "@bancor/token-governance": "bancorprotocol/token-governance",
-        "@nomiclabs/hardhat-ethers": "^2.0.1",
+        "@nomiclabs/hardhat-ethers": "2.0.2",
         "@nomiclabs/hardhat-waffle": "^2.0.1",
         "@openzeppelin/contracts": "3.4.0",
         "@truffle/contract": "^4.3.7",
