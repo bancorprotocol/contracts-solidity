@@ -187,7 +187,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         uint256 _minReturn,
         address payable _beneficiary
     ) public payable protected greaterThanZero(_minReturn) returns (uint256) {
-        // verify that the path contrains at least a single 'hop' and that the number of elements is odd
+        // verify that the path contains at least a single 'hop' and that the number of elements is odd
         require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
