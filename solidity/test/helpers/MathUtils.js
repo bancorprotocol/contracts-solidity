@@ -70,6 +70,12 @@ function divCeil(a, b) {
     return ans < 0 ? ans.sub(1) : ans.add(1);
 }
 
+function min(a, b) {
+    a = toBN(a);
+    b = toBN(b);
+    return toBigNumber(BN.min(a, b));
+}
+
 function divRound(a, num) {
     a = toBN(a);
     num = toBN(num);
@@ -170,5 +176,6 @@ module.exports = {
 
     divCeil,
     divRound,
+    min,
     Decimal
 };

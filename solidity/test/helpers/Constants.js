@@ -13,7 +13,8 @@ module.exports = {
         CONVERTER_REGISTRY_DATA: ethers.utils.formatBytes32String('BancorConverterRegistryData'),
         BNT_TOKEN: ethers.utils.formatBytes32String('BNTToken'),
         BANCOR_X: ethers.utils.formatBytes32String('BancorX'),
-        BANCOR_X_UPGRADER: ethers.utils.formatBytes32String('BancorXUpgrader')
+        BANCOR_X_UPGRADER: ethers.utils.formatBytes32String('BancorXUpgrader'),
+        NETWORK_SETTINGS: ethers.utils.formatBytes32String('NetworkSettings')
     },
 
     roles: {

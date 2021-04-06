@@ -53,4 +53,15 @@ contract Utils {
     function _validExternalAddress(address _address) internal view {
         require(_address != address(0) && _address != address(this), "ERR_INVALID_EXTERNAL_ADDRESS");
     }
+
+    // ensures that the fee is valid
+    modifier validFee(uint32 fee) {
+        _validFee(fee);
+        _;
+    }
+
+    // error message binary size optimization
+    function _validFee(uint32 fee) internal pure {
+        require(fee <= PPM_RESOLUTION, "ERR_INVALID_FEE");
+    }
 }

@@ -2,29 +2,17 @@
 pragma solidity 0.6.12;
 
 import "./INetworkSettings.sol";
+
 import "./utility/Owned.sol";
 import "./utility/Utils.sol";
 
 /**
  * @dev This contract maintains the network settings.
  *
- * In the context below, the term 'network fee' denotes the relative portion
- * (in PPM units) taken from all conversion fees accumulated in the network.
  */
 contract NetworkSettings is INetworkSettings, Owned, Utils {
-    address private _networkFeeWallet;
+    ITokenHolder private _networkFeeWallet;
     uint32 private _networkFee;
-
-    // ensures that the fee is valid
-    modifier validFee(uint32 fee) {
-        _validFee(fee);
-        _;
-    }
-
-    // error message binary size optimization
-    function _validFee(uint32 fee) internal pure {
-        require(fee <= PPM_RESOLUTION, "ERR_INVALID_FEE");
-    }
 
     /**
      * @dev triggered when the network fee wallet is updated
@@ -32,7 +20,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @param prevNetworkFeeWallet  previous network fee wallet
      * @param newNetworkFeeWallet   new network fee wallet
      */
-    event NetworkFeeWalletUpdated(address prevNetworkFeeWallet, address newNetworkFeeWallet);
+    event NetworkFeeWalletUpdated(ITokenHolder prevNetworkFeeWallet, ITokenHolder newNetworkFeeWallet);
 
     /**
      * @dev triggered when the network fee is updated
@@ -48,7 +36,11 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @param initialNetworkFeeWallet initial network fee wallet
      * @param initialNetworkFee initial network fee in ppm units
      */
-    constructor(address initialNetworkFeeWallet, uint32 initialNetworkFee) validAddress(initialNetworkFeeWallet) validFee(initialNetworkFee) public {
+    constructor(ITokenHolder initialNetworkFeeWallet, uint32 initialNetworkFee)
+        public
+        validAddress(address(initialNetworkFeeWallet))
+        validFee(initialNetworkFee)
+    {
         _networkFeeWallet = initialNetworkFeeWallet;
         _networkFee = initialNetworkFee;
     }
@@ -59,21 +51,22 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      * @return network fee wallet
      * @return network fee in ppm units
      */
-    function networkFeeParams() external view override returns (address, uint32) {
+    function networkFeeParams() external view override returns (ITokenHolder, uint32) {
         return (_networkFeeWallet, _networkFee);
     }
 
     /**
-     * @dev returns the network fee wallet
+     * @dev returns the wallet that receives the global network fees
      *
      * @return network fee wallet
      */
-    function networkFeeWallet() external view override returns (address) {
+    function networkFeeWallet() external view override returns (ITokenHolder) {
         return _networkFeeWallet;
     }
 
     /**
-     * @dev returns the network fee
+     * @dev returns the global network fee
+     * the network fee is a portion of the total fees from each pool
      *
      * @return network fee in ppm units
      */
@@ -87,7 +80,11 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
      *
      * @param newNetworkFeeWallet new network fee wallet
      */
-    function setNetworkFeeWallet(address newNetworkFeeWallet) external ownerOnly validAddress(newNetworkFeeWallet) {
+    function setNetworkFeeWallet(ITokenHolder newNetworkFeeWallet)
+        external
+        ownerOnly
+        validAddress(address(newNetworkFeeWallet))
+    {
         emit NetworkFeeWalletUpdated(_networkFeeWallet, newNetworkFeeWallet);
         _networkFeeWallet = newNetworkFeeWallet;
     }

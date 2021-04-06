@@ -9,6 +9,7 @@ const Contracts = require('./helpers/Contracts');
 
 let now;
 let bancorNetwork;
+let converterUpgrader;
 let contractRegistry;
 let sender;
 let networkFeeWallet;
@@ -218,6 +219,9 @@ describe('StandardPoolConverter', () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
+        converterUpgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, converterUpgrader.address);
+
         const factory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
@@ -231,6 +235,32 @@ describe('StandardPoolConverter', () => {
         networkSettings = await Contracts.NetworkSettings.deploy(networkFeeWallet.address, 0);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
     });
+
+    const upgradeConverter = async (upgrader, converter) => {
+        let res;
+
+        // For versions 11 or higher, we just call upgrade on the converter.
+        if (converter.upgrade) {
+            res = await converter.upgrade();
+        } else {
+            // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
+            // then accept ownership of the new and old converter. The end results should be the same.
+            await converter.transferOwnership(upgrader.address);
+            res = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''));
+            await converter.acceptOwnership();
+        }
+        let tx = await res.wait();
+        const logs = tx.logs.filter((log) => log.event === 'ConverterUpgrade');
+        expect(logs.length).to.be.at.most(1);
+
+        if (logs.length === 1) {
+            return Contracts.TestStandardPoolConverter.attach(logs[0].args._newConverter);
+        }
+
+        const events = await upgrader.queryFilter('ConverterUpgrade', tx.blockNumber, tx.blockNumber);
+
+        return Contracts.TestStandardPoolConverter.attach(events[0].args._newConverter);
+    };
 
     for (const ethIndex of [0, 1, 2]) {
         const ethIndexDescription = () => {
@@ -1071,6 +1101,30 @@ describe('StandardPoolConverter', () => {
                 });
             });
 
+            it('should not generate network fees immediately after upgrade', async () => {
+                ({ poolToken, reserveToken1, reserveToken2, converter } = await createPool({
+                    ethIndex: ethIndex,
+                    networkFeePercent: 20,
+                    conversionFeePercent: 10
+                }));
+
+                await addLiquidity(converter, reserveToken1, reserveToken2, [ONE_TOKEN.mul(1000), ONE_TOKEN.mul(1000)]);
+
+                const balanceBefore1 = await getBalance(reserveToken1, networkFeeWallet);
+                const balanceBefore2 = await getBalance(reserveToken2, networkFeeWallet);
+
+                const newConverter = await upgradeConverter(converterUpgrader, converter);
+                expect(newConverter.address).to.be.not.equal(converter.address);
+
+                await newConverter.processNetworkFees();
+
+                const balanceAfter1 = await getBalance(reserveToken1, networkFeeWallet);
+                const balanceAfter2 = await getBalance(reserveToken2, networkFeeWallet);
+
+                expect(balanceAfter1).to.be.equal(balanceBefore1);
+                expect(balanceAfter2).to.be.equal(balanceBefore2);
+            });
+
             describe('network fees', () => {
                 const CONVERSION_AMOUNT = ONE_TOKEN.mul(100);
 
@@ -1746,7 +1800,7 @@ describe('StandardPoolConverter', () => {
                 };
             });
 
-            describe.only('sync reserve balances', () => {
+            describe('sync reserve balances', () => {
                 let poolToken;
                 let reserveToken1;
                 let reserveToken2;

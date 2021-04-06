@@ -89,5 +89,6 @@ module.exports = {
     Owned: deployOrAttach('Owned'),
     TestReentrancyGuardAttacker: deployOrAttach('TestReentrancyGuardAttacker'),
     TestReentrancyGuard: deployOrAttach('TestReentrancyGuard'),
-    XTransferRerouter: deployOrAttach('XTransferRerouter')
+    XTransferRerouter: deployOrAttach('XTransferRerouter'),
+    VortexBurner: deployOrAttach('VortexBurner')
 };
