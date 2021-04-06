@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "../utility/ContractRegistryClient.sol";
 import "./interfaces/IConverterRegistryData.sol";
 
@@ -88,7 +89,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @param _convertibleToken    convertible token
      * @param _anchor              associated anchor
      */
-    function addConvertibleToken(IERC20 _convertibleToken, IConverterAnchor _anchor)
+    function addConvertibleToken(IReserveToken _convertibleToken, IConverterAnchor _anchor)
         external
         override
         only(CONVERTER_REGISTRY)
@@ -107,7 +108,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @param _convertibleToken    convertible token
      * @param _anchor              associated anchor
      */
-    function removeConvertibleToken(IERC20 _convertibleToken, IConverterAnchor _anchor)
+    function removeConvertibleToken(IReserveToken _convertibleToken, IConverterAnchor _anchor)
         external
         override
         only(CONVERTER_REGISTRY)
@@ -223,8 +224,8 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @param _index index
      * @return convertible token at the given index
      */
-    function getConvertibleToken(uint256 _index) external view override returns (IERC20) {
-        return IERC20(convertibleTokens.array[_index]);
+    function getConvertibleToken(uint256 _index) external view override returns (IReserveToken) {
+        return IReserveToken(convertibleTokens.array[_index]);
     }
 
     /**
@@ -243,7 +244,12 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @param _convertibleToken convertible token
      * @return number of anchors
      */
-    function getConvertibleTokenSmartTokenCount(IERC20 _convertibleToken) external view override returns (uint256) {
+    function getConvertibleTokenSmartTokenCount(IReserveToken _convertibleToken)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return convertibleTokens.table[address(_convertibleToken)].items.array.length;
     }
 
@@ -253,7 +259,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @param _convertibleToken convertible token
      * @return list of anchors
      */
-    function getConvertibleTokenSmartTokens(IERC20 _convertibleToken)
+    function getConvertibleTokenSmartTokens(IReserveToken _convertibleToken)
         external
         view
         override
@@ -268,7 +274,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @param _index index
      * @return anchor
      */
-    function getConvertibleTokenSmartToken(IERC20 _convertibleToken, uint256 _index)
+    function getConvertibleTokenSmartToken(IReserveToken _convertibleToken, uint256 _index)
         external
         view
         override
@@ -284,7 +290,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @param _value value
      * @return true if the given value is an anchor of the given convertible token, false it not
      */
-    function isConvertibleTokenSmartToken(IERC20 _convertibleToken, address _value)
+    function isConvertibleTokenSmartToken(IReserveToken _convertibleToken, address _value)
         external
         view
         override

@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
+import "../utility/ContractRegistryClient.sol";
+
+import "../token/SafeReserveToken.sol";
+
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterUpgrader.sol";
 import "./interfaces/IConverterFactory.sol";
-import "../utility/ContractRegistryClient.sol";
 
 interface ILegacyConverterVersion45 is IConverter {
     function withdrawTokens(
-        IERC20 _token,
+        IReserveToken _token,
         address _to,
         uint256 _amount
     ) external;
@@ -29,6 +33,8 @@ interface ILegacyConverterVersion45 is IConverter {
  * and then the upgrader 'upgrade' function should be executed directly.
  */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
+    using SafeReserveToken for IReserveToken;
+
     /**
      * @dev triggered when the contract accept a converter ownership
      *
@@ -188,7 +194,7 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < reserveTokenCount; i++) {
-            IERC20 reserveAddress = _oldConverter.connectorTokens(i);
+            IReserveToken reserveAddress = _oldConverter.connectorTokens(i);
             (, uint32 weight, , , ) = _oldConverter.connectors(reserveAddress);
 
             _newConverter.addReserve(reserveAddress, weight);
@@ -244,16 +250,17 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < reserveTokenCount; i++) {
-            IERC20 reserveAddress = _oldConverter.connectorTokens(i);
+            IReserveToken reserveToken = _oldConverter.connectorTokens(i);
             // Ether reserve
-            if (reserveAddress == NATIVE_TOKEN_ADDRESS) {
+
+            if (reserveToken.isNativeToken()) {
                 if (address(_oldConverter).balance > 0) {
                     _oldConverter.withdrawETH(address(_newConverter));
                 }
             }
             // ERC20 reserve token
             else {
-                IERC20 connector = reserveAddress;
+                IReserveToken connector = reserveToken;
                 reserveBalance = connector.balanceOf(address(_oldConverter));
                 if (reserveBalance > 0) {
                     _oldConverter.withdrawTokens(connector, address(_newConverter), reserveBalance);

@@ -72,7 +72,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         return compensationAmount(amount, total, loss, level);
     }
 
-    function averageRateTest(IDSToken poolToken, IERC20 reserveToken) external view returns (uint256, uint256) {
+    function averageRateTest(IDSToken poolToken, IReserveToken reserveToken) external view returns (uint256, uint256) {
         (, , uint256 rateN, uint256 rateD) = reserveTokenRates(poolToken, reserveToken, true);
         return (rateN, rateD);
     }
@@ -108,7 +108,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         uint256 targetAmount =
             removeLiquidityTargetAmount(
                 IDSToken(0),
-                IERC20(0),
+                IReserveToken(0),
                 poolAmount,
                 reserveAmount,
                 packedRates,
@@ -119,7 +119,12 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         return targetAmount;
     }
 
-    function poolTokenRate(IDSToken poolToken, IERC20 reserveToken) internal view override returns (Fraction memory) {
+    function poolTokenRate(IDSToken poolToken, IReserveToken reserveToken)
+        internal
+        view
+        override
+        returns (Fraction memory)
+    {
         if (_poolTokenRateOverride) {
             return Fraction({ n: _poolTokenRateN, d: _poolTokenRateD });
         }

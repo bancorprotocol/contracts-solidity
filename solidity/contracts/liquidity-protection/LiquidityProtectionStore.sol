@@ -2,9 +2,11 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./interfaces/ILiquidityProtectionStore.sol";
+
+import "../token/SafeReserveToken.sol";
+
 import "../utility/Owned.sol";
 import "../utility/Utils.sol";
 
@@ -15,13 +17,13 @@ import "../utility/Utils.sol";
  */
 contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeReserveToken for IReserveToken;
 
     struct ProtectedLiquidity {
         address provider; // liquidity provider
         uint256 index; // index in the provider liquidity ids array
         IDSToken poolToken; // pool token address
-        IERC20 reserveToken; // reserve token address
+        IReserveToken reserveToken; // reserve token address
         uint256 poolAmount; // pool token amount
         uint256 reserveAmount; // reserve token amount
         uint256 reserveRateN; // rate of 1 protected reserve token in units of the other reserve token (numerator)
@@ -43,11 +45,11 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     mapping(address => LockedBalance[]) private lockedBalances;
 
     // system balances
-    mapping(IERC20 => uint256) private systemBalances;
+    mapping(IReserveToken => uint256) private systemBalances;
 
     // total protected pool supplies / reserve amounts
     mapping(IDSToken => uint256) private totalProtectedPoolAmounts;
-    mapping(IDSToken => mapping(IERC20 => uint256)) private totalProtectedReserveAmounts;
+    mapping(IDSToken => mapping(IReserveToken => uint256)) private totalProtectedReserveAmounts;
 
     /**
      * @dev triggered when liquidity protection is added
@@ -61,7 +63,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     event ProtectionAdded(
         address indexed _provider,
         IDSToken indexed _poolToken,
-        IERC20 indexed _reserveToken,
+        IReserveToken indexed _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
     );
@@ -95,7 +97,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     event ProtectionRemoved(
         address indexed _provider,
         IDSToken indexed _poolToken,
-        IERC20 indexed _reserveToken,
+        IReserveToken indexed _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount
     );
@@ -124,7 +126,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @param _prevAmount  previous amount
      * @param _newAmount   new amount
      */
-    event SystemBalanceUpdated(IERC20 _token, uint256 _prevAmount, uint256 _newAmount);
+    event SystemBalanceUpdated(IReserveToken _token, uint256 _prevAmount, uint256 _newAmount);
 
     /**
      * @dev withdraws tokens held by the contract
@@ -135,7 +137,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @param _amount  amount to withdraw
      */
     function withdrawTokens(
-        IERC20 _token,
+        IReserveToken _token,
         address _to,
         uint256 _amount
     ) external override ownerOnly validExternalAddress(_to) {
@@ -194,7 +196,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
         returns (
             address,
             IDSToken,
-            IERC20,
+            IReserveToken,
             uint256,
             uint256,
             uint256,
@@ -232,7 +234,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     function addProtectedLiquidity(
         address _provider,
         IDSToken _poolToken,
-        IERC20 _reserveToken,
+        IReserveToken _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount,
         uint256 _reserveRateN,
@@ -305,7 +307,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
         require(provider != address(0), "ERR_INVALID_ID");
 
         IDSToken poolToken = liquidity.poolToken;
-        IERC20 reserveToken = liquidity.reserveToken;
+        IReserveToken reserveToken = liquidity.reserveToken;
         uint256 prevPoolAmount = liquidity.poolAmount;
         uint256 prevReserveAmount = liquidity.reserveAmount;
         liquidity.poolAmount = _newPoolAmount;
@@ -338,7 +340,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
 
         uint256 index = liquidity.index;
         IDSToken poolToken = liquidity.poolToken;
-        IERC20 reserveToken = liquidity.reserveToken;
+        IReserveToken reserveToken = liquidity.reserveToken;
         uint256 poolAmount = liquidity.poolAmount;
         uint256 reserveAmount = liquidity.reserveAmount;
         delete protectedLiquidities[_id];
@@ -487,7 +489,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @param _token   token address
      * @return system balance
      */
-    function systemBalance(IERC20 _token) external view override returns (uint256) {
+    function systemBalance(IReserveToken _token) external view override returns (uint256) {
         return systemBalances[_token];
     }
 
@@ -498,7 +500,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @param _token   token address
      * @param _amount  token amount
      */
-    function incSystemBalance(IERC20 _token, uint256 _amount)
+    function incSystemBalance(IReserveToken _token, uint256 _amount)
         external
         override
         ownerOnly
@@ -518,7 +520,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @param _token   token address
      * @param _amount  token amount
      */
-    function decSystemBalance(IERC20 _token, uint256 _amount)
+    function decSystemBalance(IReserveToken _token, uint256 _amount)
         external
         override
         ownerOnly
@@ -548,7 +550,11 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @param _reserveToken    reserve token address
      * @return total protected amount
      */
-    function totalProtectedReserveAmount(IDSToken _poolToken, IERC20 _reserveToken) external view returns (uint256) {
+    function totalProtectedReserveAmount(IDSToken _poolToken, IReserveToken _reserveToken)
+        external
+        view
+        returns (uint256)
+    {
         return totalProtectedReserveAmounts[_poolToken][_reserveToken];
     }
 }

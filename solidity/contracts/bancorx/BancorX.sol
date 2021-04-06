@@ -2,12 +2,13 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./interfaces/IBancorXUpgrader.sol";
 import "./interfaces/IBancorX.sol";
 import "../utility/ContractRegistryClient.sol";
+
 import "../token/TokenHolder.sol";
+import "../token/SafeERC20Token.sol";
 
 /**
  * @dev This contract allows cross chain token transfers.
@@ -21,7 +22,7 @@ import "../token/TokenHolder.sol";
  */
 contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20Token for IERC20;
 
     // represents a transaction on another blockchain where tokens were destroyed/locked
     struct Transaction {
