@@ -2,8 +2,6 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
@@ -1276,29 +1274,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         }
 
         return 0;
-    }
-
-    /**
-     * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
-     * note that we use the non standard erc-20 interface in which `approve` has no return value so that
-     * this function will work for both standard and non standard tokens
-     *
-     * @param token token to check the allowance in
-     * @param spender approved address
-     * @param value allowance amount
-     */
-    function ensureAllowance(
-        IERC20 token,
-        address spender,
-        uint256 value
-    ) private {
-        uint256 allowance = token.allowance(address(this), spender);
-        if (allowance < value) {
-            if (allowance > 0) {
-                token.safeApprove(spender, 0);
-            }
-            token.safeApprove(spender, value);
-        }
     }
 
     // utility to mint network tokens

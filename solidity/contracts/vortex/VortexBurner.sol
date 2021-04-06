@@ -3,7 +3,6 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
@@ -25,7 +24,6 @@ import "../IBancorNetwork.sol";
 contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     using SafeMath for uint256;
     using Math for uint256;
-    using SafeERC20 for IERC20;
 
     struct Strategy {
         address[][] paths;
@@ -191,7 +189,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
                 value = amount;
             } else {
                 // if the source token is a regular token, approve the network to withdraw the token amount
-                ensureAllowance(token, network, amount);
+                ensureAllowance(token, address(network), amount);
             }
 
             // perform the actual conversion and optionally send ETH to the network
@@ -206,7 +204,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // in case there are network tokens to burn, convert them to the governance token
         if (sourceAmount > 0) {
             // approve the network to withdraw the network token amount
-            ensureAllowance(_networkToken, network, sourceAmount);
+            ensureAllowance(_networkToken, address(network), sourceAmount);
 
             // convert the entire network token amount to the governance token
             network.convertByPath(strategy.govPath, sourceAmount, 1, address(this), address(0), 0);
@@ -340,28 +338,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         require(address(anchor) != address(0), "ERR_INVALID_RESERVE_TOKEN");
 
         return anchor;
-    }
-
-    /**
-     * @dev ensures that the network is able to pull the tokens from this contact
-     *
-     * @param token the source token
-     * @param network the address of the network contract
-     * @param amount the token amount to approve
-     */
-    function ensureAllowance(
-        IERC20 token,
-        IBancorNetwork network,
-        uint256 amount
-    ) private {
-        address networkAddress = address(network);
-        uint256 allowance = token.allowance(address(this), networkAddress);
-        if (allowance < amount) {
-            if (allowance > 0) {
-                token.safeApprove(networkAddress, 0);
-            }
-            token.safeApprove(networkAddress, amount);
-        }
     }
 
     /**

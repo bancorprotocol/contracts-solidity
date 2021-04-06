@@ -2,11 +2,14 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 /**
  * @dev Utilities & Common Modifiers
  */
 contract Utils {
+    using SafeERC20 for IERC20;
+
     uint32 internal constant PPM_RESOLUTION = 1000000;
     IERC20 internal constant NATIVE_TOKEN_ADDRESS = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
@@ -63,5 +66,28 @@ contract Utils {
     // error message binary size optimization
     function _validFee(uint32 fee) internal pure {
         require(fee <= PPM_RESOLUTION, "ERR_INVALID_FEE");
+    }
+
+    /**
+     * @dev checks whether allowance for the given spender exists, and approves one if it doesn't.
+     * note that we use the non standard erc-20 interface in which `approve` has no return value,
+     * so that this function can be executed for both standard and non standard tokens.
+     *
+     * @param token token to check the allowance in
+     * @param spender approved address
+     * @param value allowance amount
+     */
+    function ensureAllowance(
+        IERC20 token,
+        address spender,
+        uint256 value
+    ) internal {
+        uint256 allowance = token.allowance(address(this), spender);
+        if (allowance < value) {
+            if (allowance > 0) {
+                token.safeApprove(spender, 0);
+            }
+            token.safeApprove(spender, value);
+        }
     }
 }

@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "./IBancorNetwork.sol";
 import "./IConversionPathFinder.sol";
@@ -471,29 +470,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         }
 
         return data;
-    }
-
-    /**
-     * @dev utility, checks whether allowance for the given spender exists and approves one if it doesn't.
-     * note that we use the non standard erc-20 interface in which `approve` has no return value so that
-     * this function will work for both standard and non standard tokens
-     *
-     * @param _token   token to check the allowance in
-     * @param _spender approved address
-     * @param _value   allowance amount
-     */
-    function ensureAllowance(
-        IERC20 _token,
-        address _spender,
-        uint256 _value
-    ) private {
-        uint256 allowance = _token.allowance(address(this), _spender);
-        if (allowance < _value) {
-            if (allowance > 0) {
-                _token.safeApprove(_spender, 0);
-            }
-            _token.safeApprove(_spender, _value);
-        }
     }
 
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
