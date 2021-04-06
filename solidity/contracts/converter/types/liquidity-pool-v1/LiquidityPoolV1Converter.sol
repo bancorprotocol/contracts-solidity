@@ -260,11 +260,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
-        require(
-            (!_reserveTokens[0].isNativeToken() || _reserveAmounts[0] == msg.value) &&
-                (!_reserveTokens[1].isNativeToken() || _reserveAmounts[1] == msg.value),
-            "ERR_ETH_AMOUNT_MISMATCH"
-        );
+        for (uint256 i = 0; i < _reserveTokens.length; i++) {
+            if (_reserveTokens[i].isNativeToken()) {
+                require(_reserveAmounts[i] == msg.value, "ERR_ETH_AMOUNT_MISMATCH");
+            }
+        }
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
