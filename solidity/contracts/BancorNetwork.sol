@@ -11,7 +11,7 @@ import "./converter/interfaces/IConverterAnchor.sol";
 import "./converter/interfaces/IBancorFormula.sol";
 import "./utility/ContractRegistryClient.sol";
 import "./utility/ReentrancyGuard.sol";
-import "./utility/TokenHolder.sol";
+import "./token/TokenHolder.sol";
 import "./token/interfaces/IDSToken.sol";
 import "./bancorx/interfaces/IBancorX.sol";
 

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "./interfaces/IBancorXUpgrader.sol";
 import "./interfaces/IBancorX.sol";
 import "../utility/ContractRegistryClient.sol";
-import "../utility/TokenHolder.sol";
+import "../token/TokenHolder.sol";
 
 /**
  * @dev This contract allows cross chain token transfers.

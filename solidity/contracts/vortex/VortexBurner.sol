@@ -13,8 +13,9 @@ import "../converter/interfaces/IConverter.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/Owned.sol";
 import "../utility/Utils.sol";
-import "../utility/TokenHolder.sol";
 import "../utility/ReentrancyGuard.sol";
+
+import "../token/interfaces/ITokenHolder.sol";
 
 import "../INetworkSettings.sol";
 import "../IBancorNetwork.sol";

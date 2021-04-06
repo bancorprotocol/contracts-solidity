@@ -3,8 +3,9 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "./Owned.sol";
-import "./Utils.sol";
+import "../utility/Owned.sol";
+import "../utility/Utils.sol";
+
 import "./interfaces/ITokenHolder.sol";
 
 /**

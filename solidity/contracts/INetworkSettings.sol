@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "./utility/interfaces/ITokenHolder.sol";
+import "./token/interfaces/ITokenHolder.sol";
 
 interface INetworkSettings {
     function networkFeeParams() external view returns (ITokenHolder, uint32);
