@@ -1347,6 +1347,11 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         return owned.owner();
     }
 
+    /**
+     * @dev returns whether the provided reserve token is the network token
+     *
+     * @return whether the provided reserve token is the network token
+     */
     function isNetworkToken(IReserveToken reserveToken) private view returns (bool) {
         return address(reserveToken) == address(_networkToken);
     }
