@@ -746,7 +746,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         // dispatch token rate update event for the reserve tokens
         uint256 rateN = targetReserveBalance.mul(sourceReserveWeight);
         uint256 rateD = sourceReserveBalance.mul(targetReserveWeight);
-        emit TokenRateUpdate(IERC20(address(_sourceToken)), _targetToken, rateN, rateD);
+        emit TokenRateUpdate(IERC20(address(_sourceToken)), IERC20(address(_targetToken)), rateN, rateD);
 
         // dispatch token rate update events for the pool token
         dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
@@ -769,7 +769,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
     ) private {
         emit TokenRateUpdate(
             IDSToken(address(anchor)),
-            _reserveToken,
+            IERC20(address(_reserveToken)),
             _reserveBalance.mul(PPM_RESOLUTION),
             _poolTokenSupply.mul(_reserveWeight)
         );
