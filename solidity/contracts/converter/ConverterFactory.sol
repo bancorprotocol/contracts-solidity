@@ -27,7 +27,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     mapping(uint16 => ITypedConverterCustomFactory) public override customFactories;
 
     /**
-     * @dev initializes the factory with a specific typed converter factory
+     * @dev registers a specific typed converter factory
      * can only be called by the owner
      *
      * @param _factory typed converter factory
@@ -37,7 +37,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-     * @dev initializes the factory with a specific typed converter anchor factory
+     * @dev registers a specific typed converter anchor factory
      * can only be called by the owner
      *
      * @param _factory typed converter anchor factory
@@ -47,13 +47,49 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-     * @dev initializes the factory with a specific typed converter custom factory
+     * @dev registers a specific typed converter custom factory
      * can only be called by the owner
      *
      * @param _factory typed converter custom factory
      */
     function registerTypedConverterCustomFactory(ITypedConverterCustomFactory _factory) public ownerOnly {
         customFactories[_factory.converterType()] = _factory;
+    }
+
+    /**
+     * @dev unregisters a specific typed converter factory
+     * can only be called by the owner
+     *
+     * @param _factory typed converter factory
+     */
+    function unregisterTypedConverterFactory(ITypedConverterFactory _factory) public ownerOnly {
+        uint16 converterType = _factory.converterType();
+        require(converterFactories[converterType] == _factory, "ERR_NOT_REGISTERED");
+        converterFactories[converterType] = ITypedConverterFactory(0);
+    }
+
+    /**
+     * @dev unregisters a specific typed converter anchor factory
+     * can only be called by the owner
+     *
+     * @param _factory typed converter anchor factory
+     */
+    function unregisterTypedConverterAnchorFactory(ITypedConverterAnchorFactory _factory) public ownerOnly {
+        uint16 converterType = _factory.converterType();
+        require(anchorFactories[converterType] == _factory, "ERR_NOT_REGISTERED");
+        anchorFactories[converterType] = ITypedConverterAnchorFactory(0);
+    }
+
+    /**
+     * @dev unregisters a specific typed converter custom factory
+     * can only be called by the owner
+     *
+     * @param _factory typed converter custom factory
+     */
+    function unregisterTypedConverterCustomFactory(ITypedConverterCustomFactory _factory) public ownerOnly {
+        uint16 converterType = _factory.converterType();
+        require(customFactories[converterType] == _factory, "ERR_NOT_REGISTERED");
+        customFactories[converterType] = ITypedConverterCustomFactory(0);
     }
 
     /**
