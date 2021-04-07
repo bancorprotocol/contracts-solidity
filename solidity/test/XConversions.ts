@@ -4,6 +4,17 @@ import { BigNumber } from 'ethers';
 
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
+import { ConverterPath } from './helpers/Types';
+
+import {
+    BancorFormula,
+    BancorNetwork,
+    BancorX,
+    ContractRegistry,
+    LiquidityPoolV1Converter,
+    TestStandardToken
+} from '../../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
@@ -17,27 +28,28 @@ const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c00000000000000
 const MIN_RETURN = BigNumber.from(1);
 const TX_ID = BigNumber.from(0);
 
-let bancorFormula: any;
-let contractRegistry: any;
+let bancorFormula: BancorFormula;
+let contractRegistry: ContractRegistry;
+let bancorX: BancorX;
+let bancorNetwork: BancorNetwork;
 
-let bancorX: any;
-let bancorNetwork: any;
-let bntToken: any;
-let erc20Token: any;
-let erc20TokenConverter1: any;
-let erc20TokenConverter2: any;
-let ethBntPath: any;
-let bntEthPath: any;
-let erc20TokenBntPath: any;
-let bntErc20Path: any;
+let bntToken: TestStandardToken;
+let erc20Token: TestStandardToken;
+let erc20TokenConverter1: LiquidityPoolV1Converter;
+let erc20TokenConverter2: LiquidityPoolV1Converter;
 
-let owner: any;
-let reporter1: any;
-let reporter2: any;
-let reporter3: any;
-let sender: any;
-let sender2: any;
-let accounts: any;
+let ethBntPath: ConverterPath;
+let bntEthPath: ConverterPath;
+let erc20TokenBntPath: ConverterPath;
+let bntErc20Path: ConverterPath;
+
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
+let reporter1: SignerWithAddress;
+let reporter2: SignerWithAddress;
+let reporter3: SignerWithAddress;
+let sender: SignerWithAddress;
+let sender2: SignerWithAddress;
 
 describe('XConversions', () => {
     before(async () => {
@@ -130,11 +142,11 @@ describe('XConversions', () => {
 
     describe('basic tests', () => {
         const reportAndRelease = async (
-            to: any,
-            amount: any,
-            txId: any,
-            blockchainType: any,
-            xTransferId = BigNumber.from(0)
+            to: string,
+            amount: BigNumber,
+            txId: BigNumber,
+            blockchainType: string,
+            xTransferId: BigNumber = BigNumber.from(0)
         ) => {
             const reporters = [reporter1, reporter2, reporter3];
 

@@ -5,6 +5,8 @@ import { BigNumber } from 'ethers';
 import MathUtils from './helpers/MathUtils';
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { TestLiquidityProtection } from '../../typechain';
 
 const MIN_AMOUNT = new MathUtils.Decimal(2).pow(0);
 const MAX_AMOUNT = new MathUtils.Decimal(2).pow(127);
@@ -15,9 +17,10 @@ const MAX_RATIO = new MathUtils.Decimal(2).pow(256 / 3);
 const MIN_DURATION = 30 * 24 * 60 * 60;
 const MAX_DURATION = 100 * 24 * 60 * 60;
 
-let liquidityProtection: any;
-let owner: any;
-let accounts: any;
+let liquidityProtection: TestLiquidityProtection;
+
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
 
 describe('LiquidityProtectionStateless', () => {
     before(async () => {
@@ -37,7 +40,7 @@ describe('LiquidityProtectionStateless', () => {
         const govTokenGovernance = await Contracts.TestTokenGovernance.deploy(owner.address);
         const checkpointStore = await Contracts.TestCheckpointStore.deploy();
 
-        liquidityProtection = await Contracts.TestLiquidityProtection.deploy([
+        liquidityProtection = await Contracts.TestLiquidityProtection.deploy(
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             liquidityProtectionStats.address,
@@ -46,7 +49,7 @@ describe('LiquidityProtectionStateless', () => {
             networkTokenGovernance.address,
             govTokenGovernance.address,
             checkpointStore.address
-        ]);
+        );
     });
 
     describe('sanity part 1', () => {

@@ -3,15 +3,17 @@ import { expect } from 'chai';
 import Constants from './helpers/Constants';
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { LiquidityProtectionStats } from '../../typechain';
 
-let liquidityProtectionStats: any;
+let liquidityProtectionStats: LiquidityProtectionStats;
 
-let owner: any;
-let seeder: any;
-let provider: any;
-let poolToken: any;
-let reserveToken: any;
-let accounts: any;
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
+let seeder: SignerWithAddress;
+let provider: SignerWithAddress;
+let poolToken: SignerWithAddress;
+let reserveToken: SignerWithAddress;
 
 describe('LiquidityProtectionStats', () => {
     before(async () => {

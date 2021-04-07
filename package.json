@@ -1,6 +1,6 @@
 {
     "name": "@bancor/contracts-solidity",
-    "version": "0.6.33",
+    "version": "0.6.34",
     "description": "The solidity version of the Bancor smart contracts is composed of many different components that work together to create the Bancor Network deployment.",
     "repository": {
         "type": "git",
@@ -36,7 +36,7 @@
     },
     "devDependencies": {
         "@bancor/token-governance": "bancorprotocol/token-governance",
-        "@nomiclabs/hardhat-ethers": "^2.0.1",
+        "@nomiclabs/hardhat-ethers": "2.0.2",
         "@nomiclabs/hardhat-waffle": "^2.0.1",
         "@openzeppelin/contracts": "3.4.0",
         "@truffle/contract": "^4.3.7",

@@ -70,6 +70,12 @@ function divCeil(a: any, b: any) {
     return ans < 0 ? ans.sub(1) : ans.add(1);
 }
 
+function min(a: any, b: any) {
+    a = toBN(a);
+    b = toBN(b);
+    return toBigNumber(BN.min(a, b));
+}
+
 function divRound(a: any, num: any) {
     a = toBN(a);
     num = toBN(num);
@@ -169,5 +175,6 @@ export default {
     weightedAverageForFractions,
     divCeil,
     divRound,
+    min,
     Decimal
 };

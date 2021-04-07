@@ -3,17 +3,19 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 import Contracts from './helpers/Contracts';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
+import { LiquidityProtectionStore } from '../../typechain';
 
 const DUMMY_ADDRESS = '0x'.padEnd(42, 'f');
 
-let liquidityProtectionStore: any;
+let liquidityProtectionStore: LiquidityProtectionStore;
+let poolToken: SignerWithAddress;
 
-let owner: any;
-let nonOwner: any;
-let provider: any;
-let poolToken: any;
-let reserveToken: any;
-let accounts: any;
+let accounts: SignerWithAddress[];
+let owner: SignerWithAddress;
+let nonOwner: SignerWithAddress;
+let provider: SignerWithAddress;
+let reserveToken: SignerWithAddress;
 
 describe('LiquidityProtectionStore', () => {
     before(async () => {
