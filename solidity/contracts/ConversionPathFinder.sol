@@ -55,11 +55,16 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
      * @return a path from the input token to the anchor token
      */
     function getPath(IERC20 _token, IConverterRegistry _converterRegistry) private view returns (address[] memory) {
-        if (_token == anchorToken) return getInitialArray(address(_token));
+        if (_token == anchorToken) {
+            return getInitialArray(address(_token));
+        }
 
         address[] memory anchors;
-        if (_converterRegistry.isAnchor(address(_token))) anchors = getInitialArray(address(_token));
-        else anchors = _converterRegistry.getConvertibleTokenAnchors(_token);
+        if (_converterRegistry.isAnchor(address(_token))) {
+            anchors = getInitialArray(address(_token));
+        } else {
+            anchors = _converterRegistry.getConvertibleTokenAnchors(_token);
+        }
 
         for (uint256 n = 0; n < anchors.length; n++) {
             IConverter converter = IConverter(payable(IConverterAnchor(anchors[n]).owner()));
@@ -68,7 +73,9 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
                 IERC20 connectorToken = converter.connectorTokens(i);
                 if (connectorToken != _token) {
                     address[] memory path = getPath(connectorToken, _converterRegistry);
-                    if (path.length > 0) return getExtendedArray(address(_token), anchors[n], path);
+                    if (path.length > 0) {
+                        return getExtendedArray(address(_token), anchors[n], path);
+                    }
                 }
             }
         }
@@ -98,13 +105,19 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
             }
 
             address[] memory path = new address[](i + j + 1);
-            for (uint256 m = 0; m <= i; m++) path[m] = _sourcePath[m];
-            for (uint256 n = j; n > 0; n--) path[path.length - n] = _targetPath[n - 1];
+            for (uint256 m = 0; m <= i; m++) {
+                path[m] = _sourcePath[m];
+            }
+            for (uint256 n = j; n > 0; n--) {
+                path[path.length - n] = _targetPath[n - 1];
+            }
 
             uint256 length = 0;
             for (uint256 p = 0; p < path.length; p += 1) {
                 for (uint256 q = p + 2; q < path.length - (p % 2); q += 2) {
-                    if (path[p] == path[q]) p = q;
+                    if (path[p] == path[q]) {
+                        p = q;
+                    }
                 }
                 path[length++] = path[p];
             }
@@ -145,7 +158,9 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
         address[] memory array = new address[](2 + _array.length);
         array[0] = _item0;
         array[1] = _item1;
-        for (uint256 i = 0; i < _array.length; i++) array[2 + i] = _array[i];
+        for (uint256 i = 0; i < _array.length; i++) {
+            array[2 + i] = _array[i];
+        }
         return array;
     }
 
@@ -159,7 +174,9 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
      */
     function getPartialArray(address[] memory _array, uint256 _length) private pure returns (address[] memory) {
         address[] memory array = new address[](_length);
-        for (uint256 i = 0; i < _length; i++) array[i] = _array[i];
+        for (uint256 i = 0; i < _length; i++) {
+            array[i] = _array[i];
+        }
         return array;
     }
 }

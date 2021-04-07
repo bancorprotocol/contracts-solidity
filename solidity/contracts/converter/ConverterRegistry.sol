@@ -349,8 +349,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
     function getConvertersByAnchors(address[] memory _anchors) public view returns (IConverter[] memory) {
         IConverter[] memory converters = new IConverter[](_anchors.length);
 
-        for (uint256 i = 0; i < _anchors.length; i++)
+        for (uint256 i = 0; i < _anchors.length; i++) {
             converters[i] = IConverter(payable(IConverterAnchor(_anchors[i]).owner()));
+        }
 
         return converters;
     }
@@ -411,7 +412,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
             for (uint256 i = 0; i < convertibleTokenAnchors.length; i++) {
                 IConverterAnchor anchor = IConverterAnchor(convertibleTokenAnchors[i]);
                 IConverter converter = IConverter(payable(anchor.owner()));
-                if (isConverterReserveConfigEqual(converter, _type, _reserveTokens, _reserveWeights)) return anchor;
+                if (isConverterReserveConfigEqual(converter, _type, _reserveTokens, _reserveWeights)) {
+                    return anchor;
+                }
             }
         }
 
@@ -516,12 +519,16 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
 
         // add the converter anchor
         addAnchor(converterRegistryData, anchor);
-        if (reserveTokenCount > 1) addLiquidityPool(converterRegistryData, anchor);
-        else addConvertibleToken(converterRegistryData, IDSToken(address(anchor)), anchor);
+        if (reserveTokenCount > 1) {
+            addLiquidityPool(converterRegistryData, anchor);
+        } else {
+            addConvertibleToken(converterRegistryData, IDSToken(address(anchor)), anchor);
+        }
 
         // add all reserve tokens
-        for (uint256 i = 0; i < reserveTokenCount; i++)
+        for (uint256 i = 0; i < reserveTokenCount; i++) {
             addConvertibleToken(converterRegistryData, _converter.connectorTokens(i), anchor);
+        }
     }
 
     function removeConverterInternal(IConverter _converter) private {
@@ -531,12 +538,16 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
 
         // remove the converter anchor
         removeAnchor(converterRegistryData, anchor);
-        if (reserveTokenCount > 1) removeLiquidityPool(converterRegistryData, anchor);
-        else removeConvertibleToken(converterRegistryData, IDSToken(address(anchor)), anchor);
+        if (reserveTokenCount > 1) {
+            removeLiquidityPool(converterRegistryData, anchor);
+        } else {
+            removeConvertibleToken(converterRegistryData, IDSToken(address(anchor)), anchor);
+        }
 
         // remove all reserve tokens
-        for (uint256 i = 0; i < reserveTokenCount; i++)
+        for (uint256 i = 0; i < reserveTokenCount; i++) {
             removeConvertibleToken(converterRegistryData, _converter.connectorTokens(i), anchor);
+        }
     }
 
     function getLeastFrequentTokenAnchors(IERC20[] memory _reserveTokens) private view returns (address[] memory) {
@@ -565,12 +576,18 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
     ) private view returns (bool) {
         uint256 reserveTokenCount = _converter.connectorTokenCount();
 
-        if (_type != getConverterType(_converter, reserveTokenCount)) return false;
+        if (_type != getConverterType(_converter, reserveTokenCount)) {
+            return false;
+        }
 
-        if (_reserveTokens.length != reserveTokenCount) return false;
+        if (_reserveTokens.length != reserveTokenCount) {
+            return false;
+        }
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            if (_reserveWeights[i] != getReserveWeight(_converter, _reserveTokens[i])) return false;
+            if (_reserveWeights[i] != getReserveWeight(_converter, _reserveTokens[i])) {
+                return false;
+            }
         }
 
         return true;
@@ -588,7 +605,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
     function getConverterType(IConverter _converter, uint256 _reserveTokenCount) private view returns (uint16) {
         (bool success, bytes memory returnData) =
             address(_converter).staticcall(abi.encodeWithSelector(CONVERTER_TYPE_FUNC_SELECTOR));
-        if (success && returnData.length == 32) return abi.decode(returnData, (uint16));
+        if (success && returnData.length == 32) {
+            return abi.decode(returnData, (uint16));
+        }
         return _reserveTokenCount > 1 ? 1 : 0;
     }
 
