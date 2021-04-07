@@ -1290,14 +1290,14 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         IConverterAnchor poolAnchor,
         uint256 amount
     ) private {
-        _networkTokenGovernance.mint(owner, amount);
         _systemStore.incNetworkTokensMinted(poolAnchor, amount);
+        _networkTokenGovernance.mint(owner, amount);
     }
 
     // utility to burn network tokens
     function burnNetworkTokens(IConverterAnchor poolAnchor, uint256 amount) private {
-        _networkTokenGovernance.burn(amount);
         _systemStore.decNetworkTokensMinted(poolAnchor, amount);
+        _networkTokenGovernance.burn(amount);
     }
 
     // utility to notify event subscribers on removing liquidity
