@@ -204,8 +204,9 @@ describe('LiquidityProtectionStore', () => {
 
     describe('locked balances range verification', () => {
         it('should revert when start-index is equal to end-index', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.addLockedBalance(provider, amount, 1, { from: owner });
+            }
             await expectRevert(
                 liquidityProtectionStore.lockedBalanceRange(provider, 0, 0, { from: owner }),
                 'ERR_INVALID_INDICES'
@@ -213,8 +214,9 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should revert when start-index is larger than end-index', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.addLockedBalance(provider, amount, 1, { from: owner });
+            }
             await expectRevert(
                 liquidityProtectionStore.lockedBalanceRange(provider, 1, 0, { from: owner }),
                 'ERR_INVALID_INDICES'
@@ -222,15 +224,17 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should succeed when start-index is smaller than end-index', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.addLockedBalance(provider, amount, 1, { from: owner });
+            }
             const range = await liquidityProtectionStore.lockedBalanceRange(provider, 3, 8);
             for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.bignumber.equal(new BN(i + 4));
         });
 
         it('should succeed when end-index is larger than the total number of items', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.addLockedBalance(provider, amount, 1, { from: owner });
+            }
             const range = await liquidityProtectionStore.lockedBalanceRange(provider, 8, 1000);
             for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.bignumber.equal(new BN(i + 9));
         });

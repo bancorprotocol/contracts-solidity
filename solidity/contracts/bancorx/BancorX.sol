@@ -385,7 +385,9 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
             // otherwise, verify transaction details
             require(txn.to == _to && txn.amount == _amount && txn.fromBlockchain == _fromBlockchain, "ERR_TX_MISMATCH");
 
-            if (_xTransferId != 0) require(transactionIds[_xTransferId] == _txId, "ERR_TX_ALREADY_EXISTS");
+            if (_xTransferId != 0) {
+                require(transactionIds[_xTransferId] == _txId, "ERR_TX_ALREADY_EXISTS");
+            }
         }
 
         // increment the number of reports
@@ -432,7 +434,10 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     function getCurrentLockLimit() public view returns (uint256) {
         // prevLockLimit + ((currBlockNumber - prevLockBlockNumber) * limitIncPerBlock)
         uint256 currentLockLimit = prevLockLimit.add(((block.number).sub(prevLockBlockNumber)).mul(limitIncPerBlock));
-        if (currentLockLimit > maxLockLimit) return maxLockLimit;
+        if (currentLockLimit > maxLockLimit) {
+            return maxLockLimit;
+        }
+
         return currentLockLimit;
     }
 
@@ -445,7 +450,10 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         // prevReleaseLimit + ((currBlockNumber - prevReleaseBlockNumber) * limitIncPerBlock)
         uint256 currentReleaseLimit =
             prevReleaseLimit.add(((block.number).sub(prevReleaseBlockNumber)).mul(limitIncPerBlock));
-        if (currentReleaseLimit > maxReleaseLimit) return maxReleaseLimit;
+        if (currentReleaseLimit > maxReleaseLimit) {
+            return maxReleaseLimit;
+        }
+
         return currentReleaseLimit;
     }
 

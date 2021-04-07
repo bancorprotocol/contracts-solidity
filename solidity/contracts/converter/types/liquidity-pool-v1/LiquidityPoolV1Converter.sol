@@ -396,7 +396,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         IDSToken(address(anchor)).destroy(msg.sender, _amount);
 
         uint256[] memory reserveMinReturnAmounts = new uint256[](reserveTokens.length);
-        for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++) reserveMinReturnAmounts[i] = 1;
+        for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++) {
+            reserveMinReturnAmounts[i] = 1;
+        }
 
         return removeLiquidityFromPool(reserveTokens, reserveMinReturnAmounts, totalSupply, _amount);
     }
@@ -702,13 +704,15 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         IBancorFormula _formula
     ) private view returns (uint256[] memory) {
         uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
-        for (uint256 i = 0; i < reserveAmounts.length; i++)
+        for (uint256 i = 0; i < reserveAmounts.length; i++) {
             reserveAmounts[i] = _formula.liquidateReserveAmount(
                 _totalSupply,
                 reserves[_reserveTokens[i]].balance,
                 reserveRatio,
                 _amount
             );
+        }
+
         return reserveAmounts;
     }
 

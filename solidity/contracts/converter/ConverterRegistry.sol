@@ -361,8 +361,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
     function getConvertersByAnchors(address[] memory _anchors) public view returns (IConverter[] memory) {
         IConverter[] memory converters = new IConverter[](_anchors.length);
 
-        for (uint256 i = 0; i < _anchors.length; i++)
+        for (uint256 i = 0; i < _anchors.length; i++) {
             converters[i] = IConverter(payable(IConverterAnchor(_anchors[i]).owner()));
+        }
 
         return converters;
     }
