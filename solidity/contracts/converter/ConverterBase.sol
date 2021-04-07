@@ -259,6 +259,18 @@ abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistr
     }
 
     /**
+     * @dev executed by the upgrader at the end of the upgrade process to handle custom pool logic
+     */
+    function onUpgradeComplete()
+        external
+        override
+        protected
+        ownerOnly
+        only(CONVERTER_UPGRADER)
+    {
+    }
+
+    /**
      * @dev returns the number of reserve tokens
      * note that prior to version 17, you should use 'connectorTokenCount' instead
      *
