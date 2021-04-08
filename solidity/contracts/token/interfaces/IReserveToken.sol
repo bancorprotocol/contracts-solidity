@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * native ETH (represented by the NATIVE_TOKEN_ADDRESS address)
  *
  * Please note that this interface is intentionally doesn't inherit from IERC20, so that it'd be possible to effectively
- * override its balanceOf() function in the SafeReserveToken library
+ * override its balanceOf() function in the ReserveToken library
  */
 interface IReserveToken {
 

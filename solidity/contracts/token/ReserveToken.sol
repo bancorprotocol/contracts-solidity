@@ -5,14 +5,15 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/IReserveToken.sol";
 
-import "./SafeERC20Token.sol";
+import "./SafeERC20Ex.sol";
 
 /**
  * @dev This library implements ERC20 and SafeERC20 utilities for reserve tokens, which can be either ERC20 tokens or
  * ETH reserves.
  */
-library SafeReserveToken {
-    using SafeERC20Token for IERC20;
+library ReserveToken {
+    using SafeERC20 for IERC20;
+    using SafeERC20Ex for IERC20;
 
     // the address that represents an ETH reserve
     IReserveToken public constant NATIVE_TOKEN_ADDRESS = IReserveToken(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
@@ -107,7 +108,7 @@ library SafeReserveToken {
      * @param spender the address allowed to spend
      * @param amount the allowed amount to spend
      */
-    function ensureAllowance(
+    function ensureApprove(
         IReserveToken reserveToken,
         address spender,
         uint256 amount
@@ -116,7 +117,7 @@ library SafeReserveToken {
             return;
         }
 
-        IERC20(address(reserveToken)).ensureAllowance(spender, amount);
+        toIERC20(reserveToken).ensureApprove(spender, amount);
     }
 
     /**

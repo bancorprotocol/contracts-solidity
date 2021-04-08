@@ -14,7 +14,7 @@ import "../utility/Utils.sol";
 import "../utility/Owned.sol";
 
 import "../token/interfaces/IDSToken.sol";
-import "../token/SafeReserveToken.sol";
+import "../token/ReserveToken.sol";
 
 import "../converter/interfaces/IConverterAnchor.sol";
 import "../converter/interfaces/IConverter.sol";
@@ -43,9 +43,10 @@ interface ILiquidityPoolConverter is IConverter {
  */
 contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGuard, Time {
     using SafeMath for uint256;
-    using SafeReserveToken for IReserveToken;
-    using SafeERC20Token for IERC20;
-    using SafeERC20Token for IDSToken;
+    using ReserveToken for IReserveToken;
+    using SafeERC20 for IERC20;
+    using SafeERC20 for IDSToken;
+    using SafeERC20Ex for IERC20;
     using MathEx for *;
 
     struct ProtectedLiquidity {
@@ -414,11 +415,11 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         mintNetworkTokens(address(this), poolAnchor, newNetworkLiquidityAmount);
 
         // transfer the base tokens from the caller and approve the converter
-        networkToken.ensureAllowance(address(converter), newNetworkLiquidityAmount);
+        networkToken.ensureApprove(address(converter), newNetworkLiquidityAmount);
 
         if (!baseToken.isNativeToken()) {
             baseToken.safeTransferFrom(msg.sender, address(this), amount);
-            baseToken.ensureAllowance(address(converter), amount);
+            baseToken.ensureApprove(address(converter), amount);
         }
 
         // add liquidity

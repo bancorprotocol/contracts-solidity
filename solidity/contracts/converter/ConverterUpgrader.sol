@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 
 import "../utility/ContractRegistryClient.sol";
 
-import "../token/SafeReserveToken.sol";
+import "../token/ReserveToken.sol";
 
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterUpgrader.sol";
@@ -33,7 +33,7 @@ interface ILegacyConverterVersion45 is IConverter {
  * and then the upgrader 'upgrade' function should be executed directly.
  */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
-    using SafeReserveToken for IReserveToken;
+    using ReserveToken for IReserveToken;
 
     /**
      * @dev triggered when the contract accept a converter ownership

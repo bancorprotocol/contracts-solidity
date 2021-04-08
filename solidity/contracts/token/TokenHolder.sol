@@ -5,7 +5,7 @@ import "../utility/Owned.sol";
 import "../utility/Utils.sol";
 
 import "./interfaces/ITokenHolder.sol";
-import "./SafeReserveToken.sol";
+import "./ReserveToken.sol";
 
 /**
  * @dev This contract provides a safety mechanism for allowing the owner to
@@ -15,7 +15,7 @@ import "./SafeReserveToken.sol";
  * for a contract to deny receiving tokens.
  */
 contract TokenHolder is ITokenHolder, Owned, Utils {
-    using SafeReserveToken for IReserveToken;
+    using ReserveToken for IReserveToken;
 
     // prettier-ignore
     receive() external payable override virtual {}

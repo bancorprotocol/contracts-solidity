@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "../token/SafeReserveToken.sol";
+import "../token/ReserveToken.sol";
 
-contract TestSafeReserveToken {
-    using SafeReserveToken for IReserveToken;
+contract TestReserveToken {
+    using ReserveToken for IReserveToken;
 
     receive() external payable {}
 
@@ -37,11 +37,11 @@ contract TestSafeReserveToken {
         reserveToken.safeTransferFrom(from, to, amount);
     }
 
-    function ensureAllowance(
+    function ensureApprove(
         IReserveToken reserveToken,
         address spender,
         uint256 amount
     ) external {
-        reserveToken.ensureAllowance(spender, amount);
+        reserveToken.ensureApprove(spender, amount);
     }
 }

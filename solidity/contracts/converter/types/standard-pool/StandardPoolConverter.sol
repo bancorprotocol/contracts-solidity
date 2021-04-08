@@ -14,7 +14,7 @@ import "../../../utility/ReentrancyGuard.sol";
 import "../../../utility/Time.sol";
 
 import "../../../token/interfaces/IDSToken.sol";
-import "../../../token/SafeReserveToken.sol";
+import "../../../token/ReserveToken.sol";
 
 import "../../../INetworkSettings.sol";
 
@@ -24,8 +24,8 @@ import "../../../INetworkSettings.sol";
  */
 contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistryClient, ReentrancyGuard, Time {
     using SafeMath for uint256;
-    using SafeReserveToken for IReserveToken;
-    using SafeERC20Token for IERC20;
+    using ReserveToken for IReserveToken;
+    using SafeERC20 for IERC20;
     using MathEx for *;
 
     uint256 private constant MAX_UINT128 = 2**128 - 1;
@@ -167,7 +167,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override(IConverter) validReserve(SafeReserveToken.NATIVE_TOKEN_ADDRESS) {}
+    receive() external payable override(IConverter) validReserve(ReserveToken.NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev checks whether or not the converter version is 28 or higher
@@ -777,7 +777,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
-            require(__reserveIds[SafeReserveToken.NATIVE_TOKEN_ADDRESS] != 0, "ERR_NO_ETH_RESERVE");
+            require(__reserveIds[ReserveToken.NATIVE_TOKEN_ADDRESS] != 0, "ERR_NO_ETH_RESERVE");
         }
 
         // save a local copy of the pool token
@@ -1104,7 +1104,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 poolTokenSupply = poolToken.totalSupply();
 
         // dispatch token rate update event for the reserve tokens
-        emit TokenRateUpdate(IERC20(address(_sourceToken)), IERC20(address(_targetToken)), _targetBalance, _sourceBalance);
+        emit TokenRateUpdate(
+            IERC20(address(_sourceToken)),
+            IERC20(address(_targetToken)),
+            _targetBalance,
+            _sourceBalance
+        );
 
         // dispatch token rate update events for the pool token
         emit TokenRateUpdate(poolToken, IERC20(address(_sourceToken)), _sourceBalance, poolTokenSupply);
