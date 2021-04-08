@@ -1021,24 +1021,30 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 addSpotRateD,
         bool validateAverageRate
     ) internal view returns (PackedRates memory) {
-        (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) =
-            reserveTokenRates(poolToken, reserveToken, validateAverageRate);
+        (
+            uint256 removeSpotRateN,
+            uint256 removeSpotRateD,
+            uint256 removeAverageRateN,
+            uint256 removeAverageRateD
+        ) = reserveTokenRates(poolToken, reserveToken, validateAverageRate);
 
         assert(
-            (addSpotRateN <= MAX_UINT128 && addSpotRateD <= MAX_UINT128) &&
-                (removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128) &&
-                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128)
+            addSpotRateN <= MAX_UINT128 &&
+            addSpotRateD <= MAX_UINT128 &&
+            removeSpotRateN <= MAX_UINT128 &&
+            removeSpotRateD <= MAX_UINT128 &&
+            removeAverageRateN <= MAX_UINT128 &&
+            removeAverageRateD <= MAX_UINT128
         );
 
-        return
-            PackedRates({
-                addSpotRateN: uint128(addSpotRateN),
-                addSpotRateD: uint128(addSpotRateD),
-                removeSpotRateN: uint128(removeSpotRateN),
-                removeSpotRateD: uint128(removeSpotRateD),
-                removeAverageRateN: uint128(removeAverageRateN),
-                removeAverageRateD: uint128(removeAverageRateD)
-            });
+        return PackedRates({
+            addSpotRateN: uint128(addSpotRateN),
+            addSpotRateD: uint128(addSpotRateD),
+            removeSpotRateN: uint128(removeSpotRateN),
+            removeSpotRateD: uint128(removeSpotRateD),
+            removeAverageRateN: uint128(removeAverageRateN),
+            removeAverageRateD: uint128(removeAverageRateD)
+        });
     }
 
     /**
