@@ -958,10 +958,16 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     /**
      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
+     * note that this function reverts if the deviation of the average rate from the spot rate is too high
      *
      * @param poolToken pool token
      * @param reserveToken reserve token
      * @param validateAverageRate true to validate the average rate; false otherwise
+     *
+     * @return spot rate numerator
+     * @return spot rate denominator
+     * @return average rate numerator
+     * @return average rate denominator
      */
     function reserveTokenRates(
         IDSToken poolToken,
