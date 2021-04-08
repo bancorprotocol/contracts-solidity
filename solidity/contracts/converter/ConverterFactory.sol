@@ -65,7 +65,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     function unregisterTypedConverterFactory(ITypedConverterFactory _factory) public ownerOnly {
         uint16 converterType = _factory.converterType();
         require(converterFactories[converterType] == _factory, "ERR_NOT_REGISTERED");
-        converterFactories[converterType] = ITypedConverterFactory(0);
+        delete converterFactories[converterType];
     }
 
     /**
@@ -77,7 +77,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     function unregisterTypedConverterAnchorFactory(ITypedConverterAnchorFactory _factory) public ownerOnly {
         uint16 converterType = _factory.converterType();
         require(anchorFactories[converterType] == _factory, "ERR_NOT_REGISTERED");
-        anchorFactories[converterType] = ITypedConverterAnchorFactory(0);
+        delete anchorFactories[converterType];
     }
 
     /**
@@ -89,7 +89,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     function unregisterTypedConverterCustomFactory(ITypedConverterCustomFactory _factory) public ownerOnly {
         uint16 converterType = _factory.converterType();
         require(customFactories[converterType] == _factory, "ERR_NOT_REGISTERED");
-        customFactories[converterType] = ITypedConverterCustomFactory(0);
+        delete customFactories[converterType];
     }
 
     /**
