@@ -1018,11 +1018,10 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) =
             reserveTokenRates(poolToken, reserveToken, validateAverageRate);
 
-        require(
+        assert(
             (addSpotRateN <= MAX_UINT128 && addSpotRateD <= MAX_UINT128) &&
                 (removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128) &&
-                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128),
-            "ERR_INVALID_RATE"
+                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128)
         );
 
         return
