@@ -615,6 +615,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // verify that the protected liquidity is not removed on the same block in which it was added
         require(liquidity.timestamp < time(), "ERR_TOO_EARLY");
 
+        // get the various rates between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = packRates(
+            liquidity.poolToken,
+            liquidity.reserveToken,
+            liquidity.reserveRateN,
+            liquidity.reserveRateD,
+            true
+        );
+
         if (portion == PPM_RESOLUTION) {
             // notify event subscribers
             notifyEventSubscribersOnRemovingLiquidity(
@@ -673,16 +682,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             _govToken.safeTransferFrom(provider, address(this), liquidity.reserveAmount);
             _govTokenGovernance.burn(liquidity.reserveAmount);
         }
-
-        // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates =
-            packRates(
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.reserveRateN,
-                liquidity.reserveRateD,
-                true
-            );
 
         // get the target token amount
         uint256 targetAmount =
@@ -959,48 +958,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
-     *
-     * @param poolToken pool token
-     * @param reserveToken reserve token
-     * @param validateAverageRate true to validate the average rate; false otherwise
-     */
-    function reserveTokenRates(
-        IDSToken poolToken,
-        IERC20 reserveToken,
-        bool validateAverageRate
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
-        IERC20 otherReserve = converterOtherReserve(converter, reserveToken);
-
-        (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, reserveToken);
-        (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(reserveToken);
-
-        require(
-            !validateAverageRate ||
-                averageRateInRange(
-                    spotRateN,
-                    spotRateD,
-                    averageRateN,
-                    averageRateD,
-                    _settings.averageRateMaxDeviation()
-                ),
-            "ERR_INVALID_RATE"
-        );
-
-        return (spotRateN, spotRateD, averageRateN, averageRateD);
-    }
-
-    /**
      * @dev returns the various rates between the reserves
      *
      * @param poolToken pool token
@@ -1017,13 +974,27 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 addSpotRateD,
         bool validateAverageRate
     ) internal view returns (PackedRates memory) {
-        (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) =
-            reserveTokenRates(poolToken, reserveToken, validateAverageRate);
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
+        IERC20 otherReserve = converterOtherReserve(converter, reserveToken);
+
+        (uint256 removeSpotRateN, uint256 removeSpotRateD) = converterReserveBalances(converter, otherReserve, reserveToken);
+        (uint256 removeAverageRateN, uint256 removeAverageRateD) = converter.recentAverageRate(reserveToken);
 
         require(
-            (addSpotRateN <= MAX_UINT128 && addSpotRateD <= MAX_UINT128) &&
-                (removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128) &&
-                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128),
+            addSpotRateN <= MAX_UINT128 &&
+            addSpotRateD <= MAX_UINT128 &&
+            removeSpotRateN <= MAX_UINT128 &&
+            removeSpotRateD <= MAX_UINT128 &&
+            removeAverageRateN <= MAX_UINT128 &&
+            removeAverageRateD <= MAX_UINT128 &&
+            (!validateAverageRate || averageRateInRange(
+                    removeSpotRateN,
+                    removeSpotRateD,
+                    removeAverageRateN,
+                    removeAverageRateD,
+                    _settings.averageRateMaxDeviation()
+                )
+            ),
             "ERR_INVALID_RATE"
         );
 
