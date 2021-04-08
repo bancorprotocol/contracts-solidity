@@ -910,9 +910,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             );
         }
 
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
-        IERC20 otherReserve = converterOtherReserve(converter, reserveToken);
-        (uint256 rateN, uint256 rateD) = converterReserveBalances(converter, otherReserve, reserveToken);
+        (uint256 rateN, uint256 rateD, , ) = reserveTokenRates(poolToken, reserveToken, true);
 
         _stats.increaseTotalAmounts(provider, poolToken, reserveToken, poolAmount, reserveAmount);
         _stats.addProviderPool(provider, poolToken);
