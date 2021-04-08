@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
 import "./interfaces/ITypedConverterFactory.sol";
