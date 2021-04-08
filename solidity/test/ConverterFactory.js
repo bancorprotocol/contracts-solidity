@@ -329,9 +329,9 @@ describe('ConverterFactory', () => {
                 expect(await converter.newOwner.call()).to.be.eql(owner);
 
                 expectEvent(res, 'NewConverter', {
-                    _type: converterType,
-                    _converter: converter.address,
-                    _owner: owner
+                    converterType: converterType,
+                    converter: converter.address,
+                    converterOwner: owner
                 });
             });
         });
