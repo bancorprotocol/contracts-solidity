@@ -431,6 +431,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // the system splits the pool tokens with the caller
         // increase the system's pool token balance and add protected liquidity for the caller
         _systemStore.incSystemBalance(poolToken, poolTokenAmount - poolTokenAmount / 2); // account for rounding errors
+
         return addProtectedLiquidity(owner, poolToken, baseToken, poolTokenAmount / 2, amount);
     }
 
@@ -707,6 +708,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             // mint network tokens for the caller and lock them
             mintNetworkTokens(address(_wallet), liquidity.poolToken, targetAmount);
             lockTokens(provider, targetAmount);
+
             return;
         }
 
