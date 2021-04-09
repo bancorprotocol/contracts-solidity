@@ -910,9 +910,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             );
         }
 
-        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
-        IERC20 otherReserve = converterOtherReserve(converter, reserveToken);
-        (uint256 rateN, uint256 rateD) = converterReserveBalances(converter, otherReserve, reserveToken);
+        (uint256 rateN, uint256 rateD, , ) = reserveTokenRates(poolToken, reserveToken, true);
 
         _stats.increaseTotalAmounts(provider, poolToken, reserveToken, poolAmount, reserveAmount);
         _stats.addProviderPool(provider, poolToken);
@@ -960,10 +958,16 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     /**
      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
+     * note that this function reverts if the deviation of the average rate from the spot rate is too high
      *
      * @param poolToken pool token
      * @param reserveToken reserve token
      * @param validateAverageRate true to validate the average rate; false otherwise
+     *
+     * @return spot rate numerator
+     * @return spot rate denominator
+     * @return average rate numerator
+     * @return average rate denominator
      */
     function reserveTokenRates(
         IDSToken poolToken,
@@ -1017,25 +1021,30 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 addSpotRateD,
         bool validateAverageRate
     ) internal view returns (PackedRates memory) {
-        (uint256 removeSpotRateN, uint256 removeSpotRateD, uint256 removeAverageRateN, uint256 removeAverageRateD) =
-            reserveTokenRates(poolToken, reserveToken, validateAverageRate);
+        (
+            uint256 removeSpotRateN,
+            uint256 removeSpotRateD,
+            uint256 removeAverageRateN,
+            uint256 removeAverageRateD
+        ) = reserveTokenRates(poolToken, reserveToken, validateAverageRate);
 
-        require(
-            (addSpotRateN <= MAX_UINT128 && addSpotRateD <= MAX_UINT128) &&
-                (removeSpotRateN <= MAX_UINT128 && removeSpotRateD <= MAX_UINT128) &&
-                (removeAverageRateN <= MAX_UINT128 && removeAverageRateD <= MAX_UINT128),
-            "ERR_INVALID_RATE"
+        assert(
+            addSpotRateN <= MAX_UINT128 &&
+            addSpotRateD <= MAX_UINT128 &&
+            removeSpotRateN <= MAX_UINT128 &&
+            removeSpotRateD <= MAX_UINT128 &&
+            removeAverageRateN <= MAX_UINT128 &&
+            removeAverageRateD <= MAX_UINT128
         );
 
-        return
-            PackedRates({
-                addSpotRateN: uint128(addSpotRateN),
-                addSpotRateD: uint128(addSpotRateD),
-                removeSpotRateN: uint128(removeSpotRateN),
-                removeSpotRateD: uint128(removeSpotRateD),
-                removeAverageRateN: uint128(removeAverageRateN),
-                removeAverageRateD: uint128(removeAverageRateD)
-            });
+        return PackedRates({
+            addSpotRateN: uint128(addSpotRateN),
+            addSpotRateD: uint128(addSpotRateD),
+            removeSpotRateN: uint128(removeSpotRateN),
+            removeSpotRateD: uint128(removeSpotRateD),
+            removeAverageRateN: uint128(removeAverageRateN),
+            removeAverageRateD: uint128(removeAverageRateD)
+        });
     }
 
     /**
