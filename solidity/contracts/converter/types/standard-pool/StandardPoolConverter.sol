@@ -832,7 +832,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(poolToken, IERC20(address(reserveToken)), newReserveBalances[i], newPoolTokenSupply);
+            emit TokenRateUpdate(address(poolToken), address(reserveToken), newReserveBalances[i], newPoolTokenSupply);
         }
 
         // set the reserve balances
@@ -930,7 +930,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(poolToken, IERC20(address(reserveToken)), newReserveBalances[i], newPoolTokenSupply);
+            emit TokenRateUpdate(address(poolToken), address(reserveToken), newReserveBalances[i], newPoolTokenSupply);
         }
 
         // set the reserve balances
@@ -1104,16 +1104,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 poolTokenSupply = poolToken.totalSupply();
 
         // dispatch token rate update event for the reserve tokens
-        emit TokenRateUpdate(
-            IERC20(address(_sourceToken)),
-            IERC20(address(_targetToken)),
-            _targetBalance,
-            _sourceBalance
-        );
+        emit TokenRateUpdate(address(_sourceToken), address(_targetToken), _targetBalance, _sourceBalance);
 
         // dispatch token rate update events for the pool token
-        emit TokenRateUpdate(poolToken, IERC20(address(_sourceToken)), _sourceBalance, poolTokenSupply);
-        emit TokenRateUpdate(poolToken, IERC20(address(_targetToken)), _targetBalance, poolTokenSupply);
+        emit TokenRateUpdate(address(poolToken), address(_sourceToken), _sourceBalance, poolTokenSupply);
+        emit TokenRateUpdate(address(poolToken), address(_targetToken), _targetBalance, poolTokenSupply);
     }
 
     function encodeReserveBalance(uint256 _balance, uint256 _id) private pure returns (uint256) {
