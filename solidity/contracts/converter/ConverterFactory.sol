@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterFactory.sol";
 import "./interfaces/ITypedConverterFactory.sol";
 import "./interfaces/ITypedConverterAnchorFactory.sol";
-import "./interfaces/ITypedConverterCustomFactory.sol";
 import "../utility/Owned.sol";
-import "../utility/interfaces/IContractRegistry.sol";
 import "../token/DSToken.sol";
 
 /*
@@ -25,7 +22,6 @@ contract ConverterFactory is IConverterFactory, Owned {
 
     mapping(uint16 => ITypedConverterFactory) private _converterFactories;
     mapping(uint16 => ITypedConverterAnchorFactory) private _anchorFactories;
-    mapping(uint16 => ITypedConverterCustomFactory) private _customFactories;
 
     /**
      * @dev returns the converter factory of a given converter type
@@ -50,17 +46,6 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-     * @dev returns the custom factory of a given converter type
-     *
-     * @param converterType converter type, see ConverterBase contract main doc
-     *
-     * @return the custom factory of the given converter type
-     */
-    function customFactories(uint16 converterType) external view returns (ITypedConverterCustomFactory) {
-        return _customFactories[converterType];
-    }
-
-    /**
      * @dev registers a specific typed converter factory
      * can only be called by the owner
      *
@@ -78,16 +63,6 @@ contract ConverterFactory is IConverterFactory, Owned {
      */
     function registerTypedConverterAnchorFactory(ITypedConverterAnchorFactory factory) external ownerOnly {
         _anchorFactories[factory.converterType()] = factory;
-    }
-
-    /**
-     * @dev registers a specific typed converter custom factory
-     * can only be called by the owner
-     *
-     * @param factory typed converter custom factory
-     */
-    function registerTypedConverterCustomFactory(ITypedConverterCustomFactory factory) external ownerOnly {
-        _customFactories[factory.converterType()] = factory;
     }
 
     /**
@@ -112,18 +87,6 @@ contract ConverterFactory is IConverterFactory, Owned {
         uint16 converterType = factory.converterType();
         require(_anchorFactories[converterType] == factory, "ERR_NOT_REGISTERED");
         delete _anchorFactories[converterType];
-    }
-
-    /**
-     * @dev unregisters a specific typed converter custom factory
-     * can only be called by the owner
-     *
-     * @param factory typed converter custom factory
-     */
-    function unregisterTypedConverterCustomFactory(ITypedConverterCustomFactory factory) external ownerOnly {
-        uint16 converterType = factory.converterType();
-        require(_customFactories[converterType] == factory, "ERR_NOT_REGISTERED");
-        delete _customFactories[converterType];
     }
 
     /**
