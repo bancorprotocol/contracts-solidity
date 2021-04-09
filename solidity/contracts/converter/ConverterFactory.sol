@@ -17,8 +17,8 @@ contract ConverterFactory is IConverterFactory, Owned {
     /**
      * @dev triggered when a new converter is created
      *
-     * @param converterType  converter type, see ConverterBase contract main doc
-     * @param converter      new converter address
+     * @param converterType converter type, see ConverterBase contract main doc
+     * @param converter new converter address
      * @param converterOwner converter owner address
      */
     event NewConverter(uint16 indexed converterType, IConverter indexed converter, address indexed converterOwner);
@@ -97,10 +97,10 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @dev creates a new converter anchor with the given arguments and transfers
      * the ownership to the caller
      *
-     * @param converterType   converter type, see ConverterBase contract main doc
-     * @param name            name
-     * @param symbol          symbol
-     * @param decimals        decimals
+     * @param converterType converter type, see ConverterBase contract main doc
+     * @param name name
+     * @param symbol symbol
+     * @param decimals decimals
      *
      * @return new converter anchor
      */
@@ -130,10 +130,10 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @dev creates a new converter with the given arguments and transfers
      * the ownership to the caller
      *
-     * @param converterType     converter type, see ConverterBase contract main doc
-     * @param anchor            anchor governed by the converter
-     * @param registry          address of a contract registry contract
-     * @param maxConversionFee  maximum conversion fee, represented in ppm
+     * @param converterType converter type, see ConverterBase contract main doc
+     * @param anchor anchor governed by the converter
+     * @param registry address of a contract registry contract
+     * @param maxConversionFee maximum conversion fee, represented in ppm
      *
      * @return new converter
      */
