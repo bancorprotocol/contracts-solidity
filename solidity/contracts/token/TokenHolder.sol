@@ -24,7 +24,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
      * @dev withdraws funds held by the contract and sends them to an account
      * can only be called by the owner
      *
-     * @param reserveToken reserve token contract address (with a special handling of NATIVE_TOKEN_ADDRESS)
+     * @param reserveToken reserve token contract address
      * @param to account to receive the new amount
      * @param amount amount to withdraw
      */
@@ -40,7 +40,7 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
      * @dev withdraws multiple funds held by the contract and sends them to an account
      * can only be called by the owner
      *
-     * @param reserveTokens reserve tokens contract addresses (with a special handling of NATIVE_TOKEN_ADDRESS)
+     * @param reserveTokens reserve tokens contract addresses
      * @param to account to receive the new amount
      * @param amounts amounts to withdraw
      */
