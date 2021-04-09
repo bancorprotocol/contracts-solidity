@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 /**
  * @dev This contract is used to represent reserve tokens, which are tokens that can either be regular ERC20 tokens or
  * native ETH (represented by the NATIVE_TOKEN_ADDRESS address)
