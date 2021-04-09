@@ -124,7 +124,7 @@ const deployContract = async <ParamsTypes extends typeof ContractFactory.prototy
     // If full arguments then last arg is override
     if (argsNumber == args.length) {
         let overrides = args.pop();
-        if (overrides != {} && overrides.from) {
+        if (overrides != undefined && overrides != {} && overrides.from) {
             signer = await ethers.getSigner(overrides.from);
         }
     }
@@ -178,9 +178,6 @@ export type ContractsType =
     | 'FixedRatePoolConverter'
     | 'LiquidityPoolV1ConverterFactory'
     | 'FixedRatePoolConverterFactory';
-
-// Need this cause ConverterV27OrLowerWithoutFallback is an empty contract and typechain doesn't build empty contracts
-const TmpFunc = (): any => {};
 
 export default {
     TestBancorFormula: deployOrAttach<TestBancorFormula, typeof TestBancorFormula__factory.prototype.deploy>(
@@ -441,9 +438,9 @@ export default {
         XTransferRerouter__factory.prototype.deploy.length
     ),
     //
-    ConverterV27OrLowerWithoutFallback: deployOrAttach<Contract, typeof TmpFunc>(
+    ConverterV27OrLowerWithoutFallback: deployOrAttach<Contract, typeof ContractFactory.prototype.deploy>(
         'ConverterV27OrLowerWithoutFallback',
-        TmpFunc.length
+        ContractFactory.prototype.deploy.length
     ),
     //
     VortexBurner: deployOrAttach<VortexBurner, typeof VortexBurner__factory.prototype.deploy>(
