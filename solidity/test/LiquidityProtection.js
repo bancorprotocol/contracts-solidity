@@ -757,6 +757,23 @@ describe('LiquidityProtection', () => {
                                         'ERR_MAX_AMOUNT_REACHED'
                                     );
                                 });
+
+                                it('should revert when attempting to add liquidity while the average rate is invalid', async () => {
+                                    const reserveAmount = new BN(1000);
+                                    await increaseRate(baseTokenAddress);
+                                    await liquidityProtectionSettings.setAverageRateMaxDeviation(1);
+                                    await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                                    await expectRevert(
+                                        addProtectedLiquidity(
+                                            poolToken.address,
+                                            baseToken,
+                                            baseTokenAddress,
+                                            reserveAmount,
+                                            isETHReserve
+                                        ),
+                                        'ERR_INVALID_RATE'
+                                    );
+                                });
                             });
                         }
 
@@ -945,6 +962,35 @@ describe('LiquidityProtection', () => {
                                         recipient
                                     ),
                                     'SafeMath: subtraction overflow'
+                                );
+                            });
+
+                            it('should revert when attempting to add liquidity while the average rate is invalid', async () => {
+                                let reserveAmount = new BN(5000);
+                                await baseToken.transfer(accounts[1], 5000);
+                                await addProtectedLiquidity(
+                                    poolToken.address,
+                                    baseToken,
+                                    baseTokenAddress,
+                                    reserveAmount,
+                                    false,
+                                    accounts[1]
+                                );
+
+                                await increaseRate(baseTokenAddress);
+                                await liquidityProtectionSettings.setAverageRateMaxDeviation(1);
+                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                                await expectRevert(
+                                    addProtectedLiquidity(
+                                        poolToken.address,
+                                        networkToken,
+                                        networkToken.address,
+                                        reserveAmount,
+                                        false,
+                                        owner,
+                                        recipient
+                                    ),
+                                    'ERR_INVALID_RATE'
                                 );
                             });
                         });
@@ -1343,7 +1389,7 @@ describe('LiquidityProtection', () => {
                             );
                         });
 
-                        it('should revert when attempting to remove while the average rate is invalid', async () => {
+                        it('should revert when attempting to remove liquidity while the average rate is invalid', async () => {
                             const reserveAmount = new BN(1000);
                             await addProtectedLiquidity(
                                 poolToken.address,
