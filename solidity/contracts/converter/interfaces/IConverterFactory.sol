@@ -22,6 +22,4 @@ interface IConverterFactory {
         IContractRegistry _registry,
         uint32 _maxConversionFee
     ) external returns (IConverter);
-
-    function customFactories(uint16 _type) external view returns (ITypedConverterCustomFactory);
 }

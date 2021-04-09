@@ -23,9 +23,42 @@ contract ConverterFactory is IConverterFactory, Owned {
      */
     event NewConverter(uint16 indexed converterType, IConverter indexed converter, address indexed converterOwner);
 
-    mapping(uint16 => ITypedConverterFactory) public converterFactories;
-    mapping(uint16 => ITypedConverterAnchorFactory) public anchorFactories;
-    mapping(uint16 => ITypedConverterCustomFactory) public override customFactories;
+    mapping(uint16 => ITypedConverterFactory) private _converterFactories;
+    mapping(uint16 => ITypedConverterAnchorFactory) private _anchorFactories;
+    mapping(uint16 => ITypedConverterCustomFactory) private _customFactories;
+
+    /**
+     * @dev returns the converter factory of a given converter type
+     *
+     * @param converterType converter type, see ConverterBase contract main doc
+     *
+     * @return the converter factory of the given converter type
+     */
+    function converterFactories(uint16 converterType) external view returns (ITypedConverterFactory) {
+        return _converterFactories[converterType];
+    }
+
+    /**
+     * @dev returns the anchor factory of a given converter type
+     *
+     * @param converterType converter type, see ConverterBase contract main doc
+     *
+     * @return the anchor factory of the given converter type
+     */
+    function anchorFactories(uint16 converterType) external view returns (ITypedConverterAnchorFactory) {
+        return _anchorFactories[converterType];
+    }
+
+    /**
+     * @dev returns the custom factory of a given converter type
+     *
+     * @param converterType converter type, see ConverterBase contract main doc
+     *
+     * @return the custom factory of the given converter type
+     */
+    function customFactories(uint16 converterType) external view returns (ITypedConverterCustomFactory) {
+        return _customFactories[converterType];
+    }
 
     /**
      * @dev registers a specific typed converter factory
@@ -34,7 +67,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @param factory typed converter factory
      */
     function registerTypedConverterFactory(ITypedConverterFactory factory) external ownerOnly {
-        converterFactories[factory.converterType()] = factory;
+        _converterFactories[factory.converterType()] = factory;
     }
 
     /**
@@ -44,7 +77,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @param factory typed converter anchor factory
      */
     function registerTypedConverterAnchorFactory(ITypedConverterAnchorFactory factory) external ownerOnly {
-        anchorFactories[factory.converterType()] = factory;
+        _anchorFactories[factory.converterType()] = factory;
     }
 
     /**
@@ -54,7 +87,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @param factory typed converter custom factory
      */
     function registerTypedConverterCustomFactory(ITypedConverterCustomFactory factory) external ownerOnly {
-        customFactories[factory.converterType()] = factory;
+        _customFactories[factory.converterType()] = factory;
     }
 
     /**
@@ -65,8 +98,8 @@ contract ConverterFactory is IConverterFactory, Owned {
      */
     function unregisterTypedConverterFactory(ITypedConverterFactory factory) external ownerOnly {
         uint16 converterType = factory.converterType();
-        require(converterFactories[converterType] == factory, "ERR_NOT_REGISTERED");
-        delete converterFactories[converterType];
+        require(_converterFactories[converterType] == factory, "ERR_NOT_REGISTERED");
+        delete _converterFactories[converterType];
     }
 
     /**
@@ -77,8 +110,8 @@ contract ConverterFactory is IConverterFactory, Owned {
      */
     function unregisterTypedConverterAnchorFactory(ITypedConverterAnchorFactory factory) external ownerOnly {
         uint16 converterType = factory.converterType();
-        require(anchorFactories[converterType] == factory, "ERR_NOT_REGISTERED");
-        delete anchorFactories[converterType];
+        require(_anchorFactories[converterType] == factory, "ERR_NOT_REGISTERED");
+        delete _anchorFactories[converterType];
     }
 
     /**
@@ -89,8 +122,8 @@ contract ConverterFactory is IConverterFactory, Owned {
      */
     function unregisterTypedConverterCustomFactory(ITypedConverterCustomFactory factory) external ownerOnly {
         uint16 converterType = factory.converterType();
-        require(customFactories[converterType] == factory, "ERR_NOT_REGISTERED");
-        delete customFactories[converterType];
+        require(_customFactories[converterType] == factory, "ERR_NOT_REGISTERED");
+        delete _customFactories[converterType];
     }
 
     /**
@@ -111,7 +144,7 @@ contract ConverterFactory is IConverterFactory, Owned {
         uint8 decimals
     ) public virtual override returns (IConverterAnchor) {
         IConverterAnchor anchor;
-        ITypedConverterAnchorFactory factory = anchorFactories[converterType];
+        ITypedConverterAnchorFactory factory = _anchorFactories[converterType];
 
         if (address(factory) == address(0)) {
             // create default anchor (DSToken)
@@ -143,7 +176,7 @@ contract ConverterFactory is IConverterFactory, Owned {
         IContractRegistry registry,
         uint32 maxConversionFee
     ) public virtual override returns (IConverter) {
-        IConverter converter = converterFactories[converterType].createConverter(anchor, registry, maxConversionFee);
+        IConverter converter = _converterFactories[converterType].createConverter(anchor, registry, maxConversionFee);
         converter.acceptOwnership();
         converter.transferOwnership(msg.sender);
 
