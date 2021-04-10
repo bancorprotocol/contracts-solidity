@@ -20,4 +20,4 @@ jobs:
 
             ### Test
             - name: Test
-              run: yarn testfix
+              run: yarn test
