@@ -29,21 +29,19 @@ const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const INITIAL_AMOUNT = 1000000;
 
-function decimalToInteger(value, decimals) {
+const decimalToInteger = (value, decimals) => {
     const parts = [...value.split('.'), ''];
     return parts[0] + parts[1].padEnd(decimals, '0');
-}
+};
 
-function percentageToPPM(value) {
-    return decimalToInteger(value.replace('%', ''), 4);
-}
+const percentageToPPM = (value) => decimalToInteger(value.replace('%', ''), 4);
 
 const FULL_PPM = percentageToPPM('100%');
 const HALF_PPM = percentageToPPM('50%');
 
 describe('LiquidityProtectionAverageRate', () => {
     for (const converterType of [1, 3]) {
-        describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
+        context(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
             const convert = async (sourceToken, targetToken, amount) => {
                 await sourceToken.approve(bancorNetwork.address, amount);
                 const path = [sourceToken.address, poolToken.address, targetToken.address];
