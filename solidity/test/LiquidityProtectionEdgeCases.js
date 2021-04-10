@@ -189,7 +189,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                 liquidityProtectionStats = await Contracts.LiquidityProtectionStats.deploy();
                 liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
                 liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
-                liquidityProtection = await Contracts.TestLiquidityProtection.deploy([
+                liquidityProtection = await Contracts.TestLiquidityProtection.deploy(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
@@ -198,7 +198,7 @@ describe('LiquidityProtectionEdgeCases', () => {
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                ]);
+                );
 
                 await liquidityProtectionStats.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
                 await liquidityProtectionSystemStore.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);

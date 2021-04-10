@@ -334,7 +334,7 @@ describe('LiquidityProtection', () => {
                 liquidityProtectionStats = await Contracts.LiquidityProtectionStats.deploy();
                 liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
                 liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
-                liquidityProtection = await Contracts.TestLiquidityProtection.deploy([
+                liquidityProtection = await Contracts.TestLiquidityProtection.deploy(
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
                     liquidityProtectionStats.address,
@@ -343,7 +343,7 @@ describe('LiquidityProtection', () => {
                     networkTokenGovernance.address,
                     govTokenGovernance.address,
                     checkpointStore.address
-                ]);
+                );
 
                 await liquidityProtectionSettings.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
                 await liquidityProtectionStats.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
@@ -1603,7 +1603,7 @@ describe('LiquidityProtection', () => {
                                             // eslint-disable-next-line max-len
                                             it('verifies that removeLiquidityReturn returns an amount that is smaller than the initial amount', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
 
@@ -1621,7 +1621,7 @@ describe('LiquidityProtection', () => {
                                             // eslint-disable-next-line max-len
                                             it('verifies that removeLiquidity returns an amount that is smaller than the initial amount', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
                                                 let protection = await liquidityProtectionStore.protectedLiquidity(
@@ -1660,7 +1660,7 @@ describe('LiquidityProtection', () => {
                                             // eslint-disable-next-line max-len
                                             it('verifies that removeLiquidityReturn returns an amount that is larger than the initial amount', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
 
@@ -1677,7 +1677,7 @@ describe('LiquidityProtection', () => {
 
                                             it('verifies that removeLiquidity returns an amount that is larger than the initial amount', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
                                                 let protection = await liquidityProtectionStore.protectedLiquidity(
@@ -1716,7 +1716,7 @@ describe('LiquidityProtection', () => {
                                             // eslint-disable-next-line max-len
                                             it('verifies that removeLiquidityReturn returns an amount that is almost equal to the initial amount', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
 
@@ -1734,7 +1734,7 @@ describe('LiquidityProtection', () => {
                                             // eslint-disable-next-line max-len
                                             it('verifies that removeLiquidity returns an amount that is almost equal to the initial amount', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
                                                 let protection = await liquidityProtectionStore.protectedLiquidity(
@@ -1775,7 +1775,7 @@ describe('LiquidityProtection', () => {
                                         if (shouldLock) {
                                             it('verifies that removeLiquidity locks network tokens for the caller', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
                                                 let protection = await liquidityProtectionStore.protectedLiquidity(
@@ -1801,7 +1801,7 @@ describe('LiquidityProtection', () => {
                                         } else {
                                             it('verifies that removeLiquidity does not lock network tokens for the caller', async () => {
                                                 const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                                    owner
+                                                    owner.address
                                                 );
                                                 const protectionId = protectionIds[protectionIds.length - 1];
                                                 let protection = await liquidityProtectionStore.protectedLiquidity(

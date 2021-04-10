@@ -35,7 +35,7 @@ describe('LiquidityProtectionStateless', () => {
         const govTokenGovernance = await Contracts.TestTokenGovernance.deploy(owner.address);
         const checkpointStore = await Contracts.TestCheckpointStore.deploy();
 
-        liquidityProtection = await Contracts.TestLiquidityProtection.deploy([
+        liquidityProtection = await Contracts.TestLiquidityProtection.deploy(
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             liquidityProtectionStats.address,
@@ -44,7 +44,7 @@ describe('LiquidityProtectionStateless', () => {
             networkTokenGovernance.address,
             govTokenGovernance.address,
             checkpointStore.address
-        ]);
+        );
     });
 
     describe('sanity part 1', () => {
