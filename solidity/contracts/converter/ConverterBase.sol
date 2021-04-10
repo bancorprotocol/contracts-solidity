@@ -14,7 +14,7 @@ import "../utility/ContractRegistryClient.sol";
 import "../utility/ReentrancyGuard.sol";
 import "../utility/interfaces/IWhitelist.sol";
 
-import "../token/SafeReserveToken.sol";
+import "../token/ReserveToken.sol";
 
 /**
  * @dev This contract contains the main logic for conversions between different ERC20 tokens.
@@ -43,7 +43,7 @@ import "../token/SafeReserveToken.sol";
  */
 abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
-    using SafeReserveToken for IReserveToken;
+    using ReserveToken for IReserveToken;
 
     struct Reserve {
         uint256 balance; // reserve balance
@@ -147,7 +147,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistr
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override(IConverter) validReserve(SafeReserveToken.NATIVE_TOKEN_ADDRESS) {}
+    receive() external payable override(IConverter) validReserve(ReserveToken.NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev checks whether or not the converter version is 28 or higher

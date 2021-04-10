@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/ILiquidityProtectionStore.sol";
 
-import "../token/SafeReserveToken.sol";
+import "../token/ReserveToken.sol";
 
 import "../utility/Owned.sol";
 import "../utility/Utils.sol";
@@ -17,7 +17,7 @@ import "../utility/Utils.sol";
  */
 contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     using SafeMath for uint256;
-    using SafeReserveToken for IReserveToken;
+    using ReserveToken for IReserveToken;
 
     struct ProtectedLiquidity {
         address provider; // liquidity provider

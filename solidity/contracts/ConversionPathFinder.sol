@@ -57,8 +57,8 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
     /**
      * @dev generates a conversion path between a given token and the anchor token
      *
-     * @param _reserveToken               address of the token
-     * @param _converterRegistry   address of the converter registry
+     * @param _reserveToken address of the token
+     * @param _converterRegistry address of the converter registry
      *
      * @return a path from the input token to the anchor token
      */

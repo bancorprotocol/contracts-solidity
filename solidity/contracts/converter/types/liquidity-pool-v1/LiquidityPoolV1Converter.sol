@@ -8,7 +8,7 @@ import "../../../utility/Time.sol";
 import "../../../utility/Types.sol";
 
 import "../../../token/interfaces/IDSToken.sol";
-import "../../../token/SafeReserveToken.sol";
+import "../../../token/ReserveToken.sol";
 
 /**
  * @dev This contract is a specialized version of a converter that manages
@@ -18,8 +18,8 @@ import "../../../token/SafeReserveToken.sol";
  * is 2 reserves with 50%/50% weights.
  */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
-    using SafeReserveToken for IReserveToken;
-    using SafeERC20Token for IERC20;
+    using ReserveToken for IReserveToken;
+    using SafeERC20 for IERC20;
     using MathEx for *;
 
     uint256 internal constant MAX_RATE_FACTOR_LOWER_BOUND = 1e30;
@@ -268,7 +268,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
-            require(reserves[SafeReserveToken.NATIVE_TOKEN_ADDRESS].isSet, "ERR_NO_ETH_RESERVE");
+            require(reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].isSet, "ERR_NO_ETH_RESERVE");
         }
 
         // get the total supply
@@ -328,9 +328,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
     function fund(uint256 _amount) public payable protected returns (uint256) {
         syncReserveBalances();
 
-        reserves[SafeReserveToken.NATIVE_TOKEN_ADDRESS].balance = reserves[SafeReserveToken.NATIVE_TOKEN_ADDRESS]
-            .balance
-            .sub(msg.value);
+        reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance = reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance.sub(
+            msg.value
+        );
 
         uint256 supply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
@@ -562,7 +562,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
 
             // ETH has already been transferred as part of the transaction
             //
-            // Please note that SafeReserveToken's safeTransferFrom will early return when invoked on the native ETH
+            // Please note that ReserveToken's safeTransferFrom will early return when invoked on the native ETH
             // token
             reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
 
@@ -594,9 +594,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
     ) private returns (uint256) {
         syncReserveBalances();
 
-        reserves[SafeReserveToken.NATIVE_TOKEN_ADDRESS].balance = reserves[SafeReserveToken.NATIVE_TOKEN_ADDRESS]
-            .balance
-            .sub(msg.value);
+        reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance = reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance.sub(
+            msg.value
+        );
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = getMinShare(formula, _totalSupply, _reserveTokens, _reserveAmounts);
@@ -613,7 +613,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
             if (!reserveToken.isNativeToken()) {
                 // ETH has already been transferred as part of the transaction
                 //
-                // Please note that SafeReserveToken's safeTransferFrom will early return when invoked on the native ETH
+                // Please note that ReserveToken's safeTransferFrom will early return when invoked on the native ETH
                 // token
                 reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
             } else if (_reserveAmounts[i] > reserveAmount) {
@@ -750,7 +750,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         // dispatch token rate update event for the reserve tokens
         uint256 rateN = targetReserveBalance.mul(sourceReserveWeight);
         uint256 rateD = sourceReserveBalance.mul(targetReserveWeight);
-        emit TokenRateUpdate(IERC20(address(_sourceToken)), IERC20(address(_targetToken)), rateN, rateD);
+        emit TokenRateUpdate(address(_sourceToken), address(_targetToken), rateN, rateD);
 
         // dispatch token rate update events for the pool token
         dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
@@ -772,8 +772,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         uint32 _reserveWeight
     ) private {
         emit TokenRateUpdate(
-            IDSToken(address(anchor)),
-            IERC20(address(_reserveToken)),
+            address(anchor),
+            address(_reserveToken),
             _reserveBalance.mul(PPM_RESOLUTION),
             _poolTokenSupply.mul(_reserveWeight)
         );

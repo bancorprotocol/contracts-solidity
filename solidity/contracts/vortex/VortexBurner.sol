@@ -15,7 +15,7 @@ import "../utility/Utils.sol";
 import "../utility/ReentrancyGuard.sol";
 
 import "../token/interfaces/ITokenHolder.sol";
-import "../token/SafeReserveToken.sol";
+import "../token/ReserveToken.sol";
 
 import "../INetworkSettings.sol";
 import "../IBancorNetwork.sol";
@@ -26,8 +26,9 @@ import "../IBancorNetwork.sol";
 contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     using SafeMath for uint256;
     using Math for uint256;
-    using SafeReserveToken for IReserveToken;
-    using SafeERC20Token for IERC20;
+    using ReserveToken for IReserveToken;
+    using SafeERC20 for IERC20;
+    using SafeERC20Ex for IERC20;
 
     struct Strategy {
         address[][] paths;
@@ -193,7 +194,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
                 value = amount;
             } else {
                 // if the source token is a regular token, approve the network to withdraw the token amount
-                reserveToken.ensureAllowance(address(network), amount);
+                reserveToken.ensureApprove(address(network), amount);
             }
 
             // perform the actual conversion and optionally send ETH to the network
@@ -208,7 +209,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // in case there are network tokens to burn, convert them to the governance token
         if (sourceAmount > 0) {
             // approve the network to withdraw the network token amount
-            _networkToken.ensureAllowance(address(network), sourceAmount);
+            _networkToken.ensureApprove(address(network), sourceAmount);
 
             // convert the entire network token amount to the governance token
             network.convertByPath(strategy.govPath, sourceAmount, 1, address(this), address(0), 0);

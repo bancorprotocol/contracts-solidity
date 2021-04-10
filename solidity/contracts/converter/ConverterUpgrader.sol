@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 
 import "../utility/ContractRegistryClient.sol";
 
-import "../token/SafeReserveToken.sol";
+import "../token/ReserveToken.sol";
 
 import "./interfaces/IConverter.sol";
 import "./interfaces/IConverterUpgrader.sol";
@@ -33,7 +33,7 @@ interface ILegacyConverterVersion45 is IConverter {
  * and then the upgrader 'upgrade' function should be executed directly.
  */
 contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
-    using SafeReserveToken for IReserveToken;
+    using ReserveToken for IReserveToken;
 
     /**
      * @dev triggered when the contract accept a converter ownership
@@ -246,24 +246,16 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     function transferReserveBalancesVersion45(ILegacyConverterVersion45 _oldConverter, IConverter _newConverter)
         private
     {
-        uint256 reserveBalance;
         uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
-
         for (uint16 i = 0; i < reserveTokenCount; i++) {
             IReserveToken reserveToken = _oldConverter.connectorTokens(i);
-            // Ether reserve
 
-            if (reserveToken.isNativeToken()) {
-                if (address(_oldConverter).balance > 0) {
+            uint256 reserveBalance = reserveToken.balanceOf(address(_oldConverter));
+            if (reserveBalance > 0) {
+                if (reserveToken.isNativeToken()) {
                     _oldConverter.withdrawETH(address(_newConverter));
-                }
-            }
-            // ERC20 reserve token
-            else {
-                IReserveToken connector = reserveToken;
-                reserveBalance = connector.balanceOf(address(_oldConverter));
-                if (reserveBalance > 0) {
-                    _oldConverter.withdrawTokens(connector, address(_newConverter), reserveBalance);
+                } else {
+                    _oldConverter.withdrawTokens(reserveToken, address(_newConverter), reserveBalance);
                 }
             }
         }

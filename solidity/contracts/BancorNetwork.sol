@@ -13,7 +13,8 @@ import "./utility/ReentrancyGuard.sol";
 
 import "./token/interfaces/IDSToken.sol";
 import "./token/TokenHolder.sol";
-import "./token/SafeReserveToken.sol";
+import "./token/SafeERC20Ex.sol";
+import "./token/ReserveToken.sol";
 
 import "./bancorx/interfaces/IBancorX.sol";
 
@@ -48,8 +49,9 @@ interface ILegacyConverter {
  */
 contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, ReentrancyGuard {
     using SafeMath for uint256;
-    using SafeReserveToken for IReserveToken;
-    using SafeERC20Token for IERC20;
+    using ReserveToken for IReserveToken;
+    using SafeERC20 for IERC20;
+    using SafeERC20Ex for IERC20;
 
     struct ConversionStep {
         IConverter converter;
@@ -248,7 +250,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         uint256 amount = convertByPath2(_path, _amount, _minReturn, payable(address(this)));
 
         // grant BancorX allowance
-        targetToken.ensureAllowance(address(bancorX), amount);
+        targetToken.ensureApprove(address(bancorX), amount);
 
         // transfer the resulting amount to BancorX
         bancorX.xTransfer(_targetBlockchain, _targetAccount, amount, _conversionId);
@@ -316,12 +318,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 if (i != 0 && _data[i - 1].beneficiary == address(this) && !stepData.sourceToken.isNativeToken()) {
                     stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
                 }
-            }
-            // older converter
-            // if the source token is the liquid token, no need to do any transfers as the converter controls it
-            else if (address(stepData.sourceToken) != address(stepData.anchor)) {
+            } else if (address(stepData.sourceToken) != address(stepData.anchor)) {
+                // if the source token is the liquid token, no need to do any transfers as the converter controls it
+
                 // grant allowance for it to transfer the tokens from the network contract
-                stepData.sourceToken.ensureAllowance(address(stepData.converter), fromAmount);
+                stepData.sourceToken.ensureApprove(address(stepData.converter), fromAmount);
             }
 
             // do the conversion

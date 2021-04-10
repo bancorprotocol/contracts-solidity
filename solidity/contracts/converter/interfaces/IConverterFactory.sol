@@ -2,7 +2,6 @@
 pragma solidity 0.6.12;
 import "./IConverter.sol";
 import "./IConverterAnchor.sol";
-import "./ITypedConverterCustomFactory.sol";
 import "../../utility/interfaces/IContractRegistry.sol";
 
 /*
@@ -10,18 +9,16 @@ import "../../utility/interfaces/IContractRegistry.sol";
 */
 interface IConverterFactory {
     function createAnchor(
-        uint16 _type,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals
+        uint16 converterType,
+        string memory name,
+        string memory symbol,
+        uint8 decimals
     ) external returns (IConverterAnchor);
 
     function createConverter(
-        uint16 _type,
-        IConverterAnchor _anchor,
-        IContractRegistry _registry,
-        uint32 _maxConversionFee
+        uint16 converterType,
+        IConverterAnchor anchor,
+        IContractRegistry registry,
+        uint32 maxConversionFee
     ) external returns (IConverter);
-
-    function customFactories(uint16 _type) external view returns (ITypedConverterCustomFactory);
 }
