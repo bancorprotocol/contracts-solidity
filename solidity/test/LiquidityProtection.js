@@ -4,7 +4,7 @@ const { expect } = require('../../chai-local');
 const { NATIVE_TOKEN_ADDRESS, registry, roles } = require('./helpers/Constants');
 const Decimal = require('decimal.js');
 
-const { ZERO_ADDRESS } = constants;
+const { ZERO_ADDRESS, MAX_UINT256 } = constants;
 const { duration, latest } = time;
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
@@ -34,7 +34,7 @@ const PPM_RESOLUTION = new BN(1000000);
 
 const RESERVE1_AMOUNT = new BN(1000000);
 const RESERVE2_AMOUNT = new BN(2500000);
-const TOTAL_SUPPLY = new BN(10).pow(new BN(24));
+const TOTAL_SUPPLY = new BN(10).pow(new BN(25));
 
 const PROTECTION_NO_PROTECTION = 0;
 const PROTECTION_PARTIAL_PROTECTION = 1;
@@ -54,7 +54,7 @@ const POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES = [
 
 describe('LiquidityProtection', () => {
     for (const converterType of [1, 3]) {
-        describe(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
+        context(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
             const initPool = async (isETH = false, whitelist = true, standard = true) => {
                 if (isETH) {
                     baseTokenAddress = NATIVE_TOKEN_ADDRESS;
@@ -202,21 +202,34 @@ describe('LiquidityProtection', () => {
                 return bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS);
             };
 
-            const generateFee = async () => {
-                await converter.setConversionFee(10000);
+            const generateFee = async (sourceToken, targetToken, conversionFee = new BN(10000)) => {
+                await converter.setConversionFee(conversionFee);
 
-                // convert back & forth
-                const prevBalance = await networkToken.balanceOf(owner);
+                const prevBalance = await targetToken.balanceOf(owner);
+                const sourceBalance = await converter.reserveBalance(sourceToken.address);
 
-                let amount = RESERVE1_AMOUNT.div(new BN(2));
-                await convert([baseTokenAddress, poolToken.address, networkToken.address], amount, 1);
+                await convert(
+                    [sourceToken.address, poolToken.address, targetToken.address],
+                    sourceBalance.div(new BN(2)),
+                    new BN(1)
+                );
 
-                const balance = await networkToken.balanceOf(owner);
+                const currBalance = await targetToken.balanceOf(owner);
 
-                amount = balance.sub(prevBalance);
-                await convert([networkToken.address, poolToken.address, baseTokenAddress], amount, 1);
+                await convert(
+                    [targetToken.address, poolToken.address, sourceToken.address],
+                    currBalance.sub(prevBalance),
+                    new BN(1)
+                );
 
-                await converter.setConversionFee(0);
+                await converter.setConversionFee(new BN(0));
+            };
+
+            const getNetworkTokenMaxAmount = async () => {
+                const totalSupply = await poolToken.totalSupply();
+                const reserveBalance = await converter.reserveBalance(networkToken.address);
+                const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
+                return systemBalance.mul(reserveBalance).div(totalSupply);
             };
 
             const getRate = async (reserveAddress) => {
@@ -966,7 +979,7 @@ describe('LiquidityProtection', () => {
                             });
 
                             it('should revert when attempting to add liquidity while the average rate is invalid', async () => {
-                                let reserveAmount = new BN(5000);
+                                const reserveAmount = new BN(5000);
                                 await baseToken.transfer(accounts[1], 5000);
                                 await addProtectedLiquidity(
                                     poolToken.address,
@@ -1619,7 +1632,7 @@ describe('LiquidityProtection', () => {
 
                 for (let reserve = 0; reserve < 2; reserve++) {
                     for (let rateChange = 0; rateChange < 3; rateChange++) {
-                        for (let withFee = 0; withFee < 2; withFee++) {
+                        for (const withFee of [true, false]) {
                             for (
                                 let protection = PROTECTION_NO_PROTECTION;
                                 protection <= PROTECTION_EXCESSIVE_PROTECTION;
@@ -1631,9 +1644,8 @@ describe('LiquidityProtection', () => {
                                     } and ${rateChangeText[rateChange]} ${withFee ? 'with fee' : 'without fee'}`,
                                     () => {
                                         const reserveAmount = new BN(5000);
-                                        let reserveToken;
-                                        let reserveAddress;
-                                        let otherReserveAddress;
+                                        let reserveToken1;
+                                        let reserveToken2;
                                         let timestamp;
 
                                         beforeEach(async () => {
@@ -1644,11 +1656,13 @@ describe('LiquidityProtection', () => {
                                                 reserveAmount
                                             );
 
-                                            reserveToken = baseToken;
-                                            reserveAddress = baseTokenAddress;
-                                            otherReserveAddress = networkToken.address;
+                                            if (reserve === 0) {
+                                                reserveToken1 = baseToken;
+                                                reserveToken2 = networkToken;
+                                            } else {
+                                                reserveToken1 = networkToken;
+                                                reserveToken2 = baseToken;
 
-                                            if (reserve !== 0) {
                                                 // adding more liquidity so that the system has enough pool tokens
                                                 await addProtectedLiquidity(
                                                     poolToken.address,
@@ -1662,22 +1676,16 @@ describe('LiquidityProtection', () => {
                                                     networkToken.address,
                                                     reserveAmount
                                                 );
-
-                                                [reserveToken, reserveAddress, otherReserveAddress] = [
-                                                    networkToken,
-                                                    otherReserveAddress,
-                                                    reserveAddress
-                                                ];
                                             }
 
                                             if (withFee) {
-                                                await generateFee();
+                                                await generateFee(reserveToken1, reserveToken2);
                                             }
 
                                             if (rateChange === 1) {
-                                                await increaseRate(reserveAddress);
+                                                await increaseRate(reserveToken1.address);
                                             } else if (rateChange === 2) {
-                                                await increaseRate(otherReserveAddress);
+                                                await increaseRate(reserveToken2.address);
                                             }
 
                                             timestamp = await getTimestamp(protection);
@@ -1721,8 +1729,8 @@ describe('LiquidityProtection', () => {
                                                 protection = getProtection(protection);
 
                                                 const prevBalance = await getBalance(
-                                                    reserveToken,
-                                                    reserveAddress,
+                                                    reserveToken1,
+                                                    reserveToken1.address,
                                                     owner
                                                 );
                                                 await govToken.approve(
@@ -1731,10 +1739,14 @@ describe('LiquidityProtection', () => {
                                                 );
                                                 await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                                 await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
-                                                const balance = await getBalance(reserveToken, reserveAddress, owner);
+                                                const balance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner
+                                                );
 
                                                 let lockedBalance = await getLockedBalance(owner);
-                                                if (reserveAddress === baseTokenAddress) {
+                                                if (reserveToken1.address === baseTokenAddress) {
                                                     const rate = await getRate(networkToken.address);
                                                     lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
                                                 }
@@ -1773,8 +1785,8 @@ describe('LiquidityProtection', () => {
                                                 protection = getProtection(protection);
 
                                                 const prevBalance = await getBalance(
-                                                    reserveToken,
-                                                    reserveAddress,
+                                                    reserveToken1,
+                                                    reserveToken1.address,
                                                     owner
                                                 );
                                                 await govToken.approve(
@@ -1783,10 +1795,14 @@ describe('LiquidityProtection', () => {
                                                 );
                                                 await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                                 await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
-                                                const balance = await getBalance(reserveToken, reserveAddress, owner);
+                                                const balance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner
+                                                );
 
                                                 let lockedBalance = await getLockedBalance(owner);
-                                                if (reserveAddress === baseTokenAddress) {
+                                                if (reserveToken1.address === baseTokenAddress) {
                                                     const rate = await getRate(networkToken.address);
                                                     lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
                                                 }
@@ -1826,8 +1842,8 @@ describe('LiquidityProtection', () => {
                                                 protection = getProtection(protection);
 
                                                 const prevBalance = await getBalance(
-                                                    reserveToken,
-                                                    reserveAddress,
+                                                    reserveToken1,
+                                                    reserveToken1.address,
                                                     owner
                                                 );
                                                 await govToken.approve(
@@ -1836,10 +1852,14 @@ describe('LiquidityProtection', () => {
                                                 );
                                                 await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
                                                 await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
-                                                const balance = await getBalance(reserveToken, reserveAddress, owner);
+                                                const balance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner
+                                                );
 
                                                 let lockedBalance = await getLockedBalance(owner);
-                                                if (reserveAddress === baseTokenAddress) {
+                                                if (reserveToken1.address === baseTokenAddress) {
                                                     const rate = await getRate(networkToken.address);
                                                     lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
                                                 }
@@ -2067,6 +2087,273 @@ describe('LiquidityProtection', () => {
                             });
                         }
                     });
+                }
+            });
+
+            describe('average rate', () => {
+                for (let minutesElapsed = 1; minutesElapsed <= 10; minutesElapsed += 1) {
+                    for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
+                        for (let maxDeviation = 1; maxDeviation <= 10; maxDeviation += 1) {
+                            context(
+                                `minutesElapsed = ${minutesElapsed}, convertPortion = ${convertPortion}%, maxDeviation = ${maxDeviation}%`,
+                                () => {
+                                    beforeEach(async () => {
+                                        await liquidityProtectionSettings.setAverageRateMaxDeviation(
+                                            new BN(maxDeviation).mul(PPM_RESOLUTION).div(new BN(100))
+                                        );
+                                        await baseToken.approve(converter.address, RESERVE1_AMOUNT);
+                                        await networkToken.approve(converter.address, RESERVE2_AMOUNT);
+
+                                        await converter.addLiquidity(
+                                            [baseToken.address, networkToken.address],
+                                            [RESERVE1_AMOUNT, RESERVE2_AMOUNT],
+                                            1
+                                        );
+
+                                        await convert(
+                                            [baseTokenAddress, poolToken.address, networkToken.address],
+                                            RESERVE1_AMOUNT.mul(new BN(convertPortion)).div(new BN(100)),
+                                            1
+                                        );
+
+                                        let time = await converter.currentTime();
+                                        time = time.add(new BN(minutesElapsed * 60));
+                                        await converter.setTime(time);
+                                    });
+
+                                    it('should properly calculate the average rate', async () => {
+                                        const averageRate = await converter.recentAverageRate(baseToken.address);
+                                        const actualRate = await Promise.all(
+                                            [networkToken, baseToken].map((reserveToken) => {
+                                                return reserveToken.balanceOf(converter.address);
+                                            })
+                                        );
+                                        const min = Decimal(actualRate[0].toString())
+                                            .div(actualRate[1].toString())
+                                            .mul(100 - maxDeviation)
+                                            .div(100);
+                                        const max = Decimal(actualRate[0].toString())
+                                            .div(actualRate[1].toString())
+                                            .mul(100)
+                                            .div(100 - maxDeviation);
+                                        const mid = Decimal(averageRate[0].toString()).div(averageRate[1].toString());
+                                        if (min.lte(mid) && mid.lte(max)) {
+                                            const reserveTokenRate = await liquidityProtection.averageRateTest(
+                                                poolToken.address,
+                                                baseToken.address
+                                            );
+                                            expect(reserveTokenRate[0]).to.be.bignumber.equal(averageRate[0]);
+                                            expect(reserveTokenRate[1]).to.be.bignumber.equal(averageRate[1]);
+                                        } else {
+                                            await expectRevert(
+                                                liquidityProtection.averageRateTest(
+                                                    poolToken.address,
+                                                    baseToken.address
+                                                ),
+                                                'ERR_INVALID_RATE'
+                                            );
+                                        }
+                                    });
+                                }
+                            );
+                        }
+                    }
+                }
+            });
+
+            describe('edge cases', () => {
+                const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
+                const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
+                const condOrAlmostEqual = (cond, actual, expected, maxError) => {
+                    if (!cond) {
+                        const error = Decimal(actual.toString()).div(expected.toString()).sub(1).abs();
+                        if (error.gt(maxError)) {
+                            return `error = ${error.toFixed(maxError.length)}`;
+                        }
+                    }
+                    return '';
+                };
+
+                const CONFIGURATIONS = [
+                    { increaseRate: false, generateFee: false },
+                    { increaseRate: false, generateFee: true },
+                    { increaseRate: true, generateFee: false }
+                ];
+
+                const NUM_OF_DAYS = [30, 100];
+                const DECIMAL_COMBINATIONS = cartesian([12, 24], [12, 24], [15, 21], [15, 21]);
+
+                beforeEach(async () => {
+                    await liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(new BN(0));
+                    await liquidityProtectionSettings.setNetworkTokenMintingLimit(poolToken.address, MAX_UINT256);
+
+                    await setTime(new BN(1));
+                });
+
+                for (const config of CONFIGURATIONS) {
+                    for (const numOfDays of NUM_OF_DAYS) {
+                        const timestamp = numOfDays * 24 * 60 * 60 + 1;
+                        for (const decimals of DECIMAL_COMBINATIONS) {
+                            const amounts = decimals.map((n) => new BN(10).pow(new BN(n)));
+
+                            let test;
+                            if (!config.increaseRate && !config.generateFee) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.eq(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.000000000000001', 3: '0.00000004' }[converterType]
+                                    );
+                            } else if (!config.increaseRate && config.generateFee) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.gt(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.0', 3: '0.0' }[converterType]
+                                    );
+                            } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.lt(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.0', 3: '0.0' }[converterType]
+                                    );
+                            } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.eq(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.000000000000001', 3: '0.00000005' }[converterType]
+                                    );
+                            } else {
+                                throw new Error('invalid configuration');
+                            }
+
+                            // eslint-disable-next-line max-len
+                            it(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
+                                await baseToken.approve(converter.address, amounts[0]);
+                                await networkToken.approve(converter.address, amounts[1]);
+                                await converter.addLiquidity(
+                                    [baseToken.address, networkToken.address],
+                                    [amounts[0], amounts[1]],
+                                    1
+                                );
+
+                                await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, amounts[2]);
+                                const amount = BN.min(amounts[3], await getNetworkTokenMaxAmount());
+                                await addProtectedLiquidity(
+                                    poolToken.address,
+                                    networkToken,
+                                    networkToken.address,
+                                    amount
+                                );
+
+                                if (config.increaseRate) {
+                                    await increaseRate(networkToken.address);
+                                }
+
+                                if (config.generateFee) {
+                                    await generateFee(baseToken, networkToken);
+                                }
+
+                                await setTime(timestamp);
+                                const actual = await liquidityProtection.removeLiquidityReturn(
+                                    0,
+                                    PPM_RESOLUTION,
+                                    timestamp
+                                );
+                                const error = test(actual[0], amounts[2]);
+                                expect(error).to.be.empty(error);
+                            });
+                        }
+                    }
+                }
+
+                for (const config of CONFIGURATIONS) {
+                    for (const numOfDays of NUM_OF_DAYS) {
+                        const timestamp = numOfDays * 24 * 60 * 60 + 1;
+                        for (const decimals of DECIMAL_COMBINATIONS) {
+                            const amounts = decimals.map((n) => new BN(10).pow(new BN(n)));
+
+                            let test;
+                            if (!config.increaseRate && !config.generateFee) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.eq(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.000000000000001', 3: '0.00000004' }[converterType]
+                                    );
+                            } else if (!config.increaseRate && config.generateFee) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.gt(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.002', 3: '0.002' }[converterType]
+                                    );
+                            } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.lt(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.0', 3: '0.0' }[converterType]
+                                    );
+                            } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
+                                test = (actual, expected) =>
+                                    condOrAlmostEqual(
+                                        actual.eq(expected),
+                                        actual,
+                                        expected,
+                                        { 1: '0.002', 3: '0.002' }[converterType]
+                                    );
+                            } else {
+                                throw new Error('invalid configuration');
+                            }
+
+                            // eslint-disable-next-line max-len
+                            it(`network token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
+                                await baseToken.approve(converter.address, amounts[0]);
+                                await networkToken.approve(converter.address, amounts[1]);
+                                await converter.addLiquidity(
+                                    [baseToken.address, networkToken.address],
+                                    [amounts[0], amounts[1]],
+                                    1
+                                );
+
+                                await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, amounts[2]);
+                                const amount = BN.min(amounts[3], await getNetworkTokenMaxAmount());
+                                await addProtectedLiquidity(
+                                    poolToken.address,
+                                    networkToken,
+                                    networkToken.address,
+                                    amount
+                                );
+
+                                if (config.increaseRate) {
+                                    await increaseRate(baseTokenAddress);
+                                }
+
+                                if (config.generateFee) {
+                                    await generateFee(networkToken, baseToken);
+                                }
+
+                                await setTime(timestamp);
+                                const actual = await liquidityProtection.removeLiquidityReturn(
+                                    1,
+                                    PPM_RESOLUTION,
+                                    timestamp
+                                );
+                                const error = test(actual[0], amount);
+                                expect(error).to.be.empty(error);
+                            });
+                        }
+                    }
                 }
             });
         });
