@@ -544,8 +544,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 liquidity.poolToken,
                 liquidity.reserveToken,
                 liquidity.reserveRateN,
-                liquidity.reserveRateD,
-                false
+                liquidity.reserveRateD
             );
 
         uint256 targetAmount =
@@ -621,9 +620,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 liquidity.poolToken,
                 liquidity.reserveToken,
                 liquidity.reserveRateN,
-                liquidity.reserveRateD,
-                true
+                liquidity.reserveRateD
             );
+
+        verifyRate(
+            packedRates.removeSpotRateN,
+            packedRates.removeSpotRateD,
+            packedRates.removeAverageRateN,
+            packedRates.removeAverageRateD
+        );
 
         if (portion == PPM_RESOLUTION) {
             // notify event subscribers
@@ -861,7 +866,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmount = reserveAmount.mul(poolRateD).div(poolRateN);
 
         // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = packRates(poolToken, reserveToken, reserveRateN, reserveRateD, false);
+        PackedRates memory packedRates = packRates(poolToken, reserveToken, reserveRateN, reserveRateD);
 
         // get the current return
         uint256 protectedReturn =
@@ -897,7 +902,19 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmount,
         uint256 reserveAmount
     ) internal returns (uint256) {
-        (uint256 rateN, uint256 rateD, , ) = reserveTokenRates(poolToken, reserveToken, true);
+        (
+            uint256 spotRateN,
+            uint256 spotRateD,
+            uint256 averageRateN,
+            uint256 averageRateD
+        ) = reserveTokenRates(poolToken, reserveToken);
+
+        verifyRate(
+            spotRateN,
+            spotRateD,
+            averageRateN,
+            averageRateD
+        );
 
         // notify event subscribers
         address[] memory subscribers = _settings.subscribers();
@@ -921,8 +938,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 reserveToken,
                 poolAmount,
                 reserveAmount,
-                rateN,
-                rateD,
+                spotRateN,
+                spotRateD,
                 time()
             );
     }
@@ -958,11 +975,9 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     /**
      * @dev returns the spot rate and average rate of 1 reserve token in the other reserve token units
-     * note that this function reverts if the deviation of the average rate from the spot rate is too high
      *
      * @param poolToken pool token
      * @param reserveToken reserve token
-     * @param validateAverageRate true to validate the average rate; false otherwise
      *
      * @return spot rate numerator
      * @return spot rate denominator
@@ -971,8 +986,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      */
     function reserveTokenRates(
         IDSToken poolToken,
-        IERC20 reserveToken,
-        bool validateAverageRate
+        IERC20 reserveToken
     )
         internal
         view
@@ -989,18 +1003,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(reserveToken);
 
-        require(
-            !validateAverageRate ||
-                averageRateInRange(
-                    spotRateN,
-                    spotRateD,
-                    averageRateN,
-                    averageRateD,
-                    _settings.averageRateMaxDeviation()
-                ),
-            "ERR_INVALID_RATE"
-        );
-
         return (spotRateN, spotRateD, averageRateN, averageRateD);
     }
 
@@ -1011,22 +1013,20 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param reserveToken reserve token
      * @param addSpotRateN add spot rate numerator
      * @param addSpotRateD add spot rate denominator
-     * @param validateAverageRate true to validate the average rate; false otherwise
      * @return see `struct PackedRates`
      */
     function packRates(
         IDSToken poolToken,
         IERC20 reserveToken,
         uint256 addSpotRateN,
-        uint256 addSpotRateD,
-        bool validateAverageRate
+        uint256 addSpotRateD
     ) internal view returns (PackedRates memory) {
         (
             uint256 removeSpotRateN,
             uint256 removeSpotRateD,
             uint256 removeAverageRateN,
             uint256 removeAverageRateD
-        ) = reserveTokenRates(poolToken, reserveToken, validateAverageRate);
+        ) = reserveTokenRates(poolToken, reserveToken);
 
         assert(
             addSpotRateN <= MAX_UINT128 &&
@@ -1048,27 +1048,25 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev returns whether or not the deviation of the average rate from the spot rate is within range
-     * for example, if the maximum permitted deviation is 5%, then return `95/100 <= average/spot <= 100/95`
+     * @dev verifies that the deviation of the average rate from the spot rate is within the permitted range
+     * for example, if the maximum permitted deviation is 5%, then verify `95/100 <= average/spot <= 100/95`
      *
      * @param spotRateN spot rate numerator
      * @param spotRateD spot rate denominator
      * @param averageRateN average rate numerator
      * @param averageRateD average rate denominator
-     * @param maxDeviation the maximum permitted deviation of the average rate from the spot rate
      */
-    function averageRateInRange(
+    function verifyRate(
         uint256 spotRateN,
         uint256 spotRateD,
         uint256 averageRateN,
-        uint256 averageRateD,
-        uint32 maxDeviation
-    ) internal pure returns (bool) {
-        uint256 ppmDelta = PPM_RESOLUTION - maxDeviation;
+        uint256 averageRateD
+    ) internal view {
+        uint256 ppmDelta = PPM_RESOLUTION - _settings.averageRateMaxDeviation();
         uint256 min = spotRateN.mul(averageRateD).mul(ppmDelta).mul(ppmDelta);
         uint256 mid = spotRateD.mul(averageRateN).mul(ppmDelta).mul(PPM_RESOLUTION);
         uint256 max = spotRateN.mul(averageRateD).mul(PPM_RESOLUTION).mul(PPM_RESOLUTION);
-        return min <= mid && mid <= max;
+        require(min <= mid && mid <= max, "ERR_INVALID_RATE");
     }
 
     /**
