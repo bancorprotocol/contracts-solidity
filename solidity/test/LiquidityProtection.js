@@ -2368,6 +2368,10 @@ describe('LiquidityProtection', () => {
                         });
 
                         describe('transferring liquidity', () => {
+                            beforeEach(async () => {
+                                await setTime(now.add(new BN(1)));
+                            });
+
                             it('should not publish events', async () => {
                                 const newOwner = accounts[8];
                                 await liquidityProtection.transferLiquidity(id, newOwner, {
@@ -2448,6 +2452,8 @@ describe('LiquidityProtection', () => {
                         describe('transferring liquidity', () => {
                             beforeEach(async () => {
                                 await eventsSubscriber.reset();
+
+                                await setTime(now.add(new BN(1)));
                             });
 
                             it('should publish events', async () => {
