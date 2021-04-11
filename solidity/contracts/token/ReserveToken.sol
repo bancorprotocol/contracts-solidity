@@ -18,11 +18,11 @@ library ReserveToken {
     IReserveToken public constant NATIVE_TOKEN_ADDRESS = IReserveToken(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     /**
-     * @dev returns whether the provided token represents an ERC20 token or ETH reserve
+     * @dev returns whether the provided token represents an ERC20 or ETH reserve
      *
      * @param reserveToken the address of the reserve token
      *
-     * @return whether the provided token represents an ERC20 token or ETH reserve
+     * @return whether the provided token represents an ERC20 or ETH reserve
      */
     function isNativeToken(IReserveToken reserveToken) internal pure returns (bool) {
         return reserveToken == NATIVE_TOKEN_ADDRESS;
