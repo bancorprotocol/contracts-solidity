@@ -68,7 +68,7 @@ library ReserveToken {
     }
 
     /**
-     * @dev transfers a specific amount of the reserve token
+     * @dev transfers a specific amount of the reserve token from a specific holder using the allowance mechanism
      * this function ignores a reserve token which represents an ETH reserve
      *
      * @param reserveToken the address of the reserve token
