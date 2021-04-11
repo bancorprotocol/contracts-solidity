@@ -9,13 +9,10 @@ require('@nomiclabs/hardhat-etherscan');
 require('solidity-coverage');
 require('hardhat-contract-sizer');
 
-import Networks from './.networks.json';
+var Config = require('./config.json');
 
 module.exports = {
     networks: {
-        // External networks
-        ...Networks,
-
         // Hardhat network
         hardhat: {
             gasPrice: 20000000000,
@@ -62,7 +59,15 @@ module.exports = {
                     balance: '10000000000000000000000000000'
                 }
             ]
+        },
+
+        // Mainnet network
+        mainnet: {
+            url: Config.networks.mainnet.NODE_ADDRESS
         }
+    },
+    etherscan: {
+        apiKey: Config.apiKeys.etherscan
     },
     paths: {
         sources: './solidity/contracts',
