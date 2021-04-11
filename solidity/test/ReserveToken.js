@@ -73,18 +73,6 @@ describe('ReserveToken', () => {
                 });
             }
 
-            it('should properly transfer all of the reserve token', async () => {
-                const prevSenderBalance = await getBalance(token, sender);
-                const prevRecipientBalance = await getBalance(token, recipient);
-
-                await reserveToken.safeTransferAll(token.address, recipient);
-
-                expect(await getBalance(token, sender)).to.be.bignumber.equal(new BN(0));
-                expect(await getBalance(token, recipient)).to.be.bignumber.equal(
-                    prevRecipientBalance.add(prevSenderBalance)
-                );
-            });
-
             if (hasETH) {
                 it('should ignore the request to transfer the reserve token on behalf of a different account', async () => {
                     const prevSenderBalance = await getBalance(token, sender);

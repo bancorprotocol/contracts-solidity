@@ -242,7 +242,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         for (uint256 i = 0; i < reserveCount; ++i) {
             IReserveToken reserveToken = __reserveTokens[i];
 
-            reserveToken.safeTransfer(_newConverter);
+            reserveToken.safeTransfer(_newConverter, reserveToken.balanceOf(address(this)));
 
             syncReserveBalance(reserveToken);
         }
