@@ -2505,7 +2505,7 @@ describe('LiquidityProtection', () => {
                 }
             });
 
-            describe.skip('stress tests', () => {
+            describe('stress tests', () => {
                 describe('average rate', () => {
                     for (let minutesElapsed = 1; minutesElapsed <= 10; minutesElapsed += 1) {
                         for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
