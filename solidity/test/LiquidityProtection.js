@@ -1085,76 +1085,6 @@ describe('LiquidityProtection', () => {
                 });
             });
 
-            describe('claim balance', () => {
-                beforeEach(async () => {
-                    await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, new BN(20000));
-                    await addProtectedLiquidity(poolToken.address, networkToken, networkToken.address, new BN(2000));
-                    const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
-                    const protectionId = protectionIds[protectionIds.length - 1];
-
-                    const portion = PPM_RESOLUTION.div(new BN(2));
-                    const amount = new BN(2000).mul(portion).div(PPM_RESOLUTION);
-                    await govToken.approve(liquidityProtection.address, amount);
-                    await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                    await liquidityProtection.removeLiquidity(protectionId, portion);
-                    await govToken.approve(liquidityProtection.address, amount);
-                    await liquidityProtection.removeLiquidity(protectionId, portion);
-                });
-
-                it('verifies that locked balance owner can claim locked tokens if sufficient time has passed', async () => {
-                    const timestamp = await getTimestamp(PROTECTION_FULL_PROTECTION);
-                    await setTime(timestamp);
-
-                    const prevBalance = await networkToken.balanceOf(owner);
-                    const lockedBalance = (await liquidityProtectionStore.lockedBalance(owner, 0))[0];
-                    const prevTotalLockedBalance = await getLockedBalance(owner);
-
-                    await liquidityProtection.claimBalance(0, 1);
-
-                    const balance = await networkToken.balanceOf(owner);
-                    expect(balance).to.be.bignumber.equal(prevBalance.add(lockedBalance));
-
-                    const totalLockedBalance = await getLockedBalance(owner);
-                    expect(totalLockedBalance).to.be.bignumber.equal(prevTotalLockedBalance.sub(lockedBalance));
-                });
-
-                it('verifies that locked balance owner can claim multiple locked tokens if sufficient time has passed', async () => {
-                    const timestamp = await getTimestamp(PROTECTION_FULL_PROTECTION);
-                    await setTime(timestamp);
-
-                    const prevBalance = await networkToken.balanceOf(owner);
-                    const prevTotalLockedBalance = await getLockedBalance(owner);
-
-                    await liquidityProtection.claimBalance(0, 2);
-
-                    const balance = await networkToken.balanceOf(owner);
-                    expect(balance).to.be.bignumber.equal(prevBalance.add(prevTotalLockedBalance));
-
-                    const totalLockedBalance = await getLockedBalance(owner);
-                    expect(totalLockedBalance).to.be.bignumber.equal(new BN(0));
-
-                    const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(owner);
-                    expect(lockedBalanceCount).to.be.bignumber.equal(new BN(0));
-                });
-
-                it('verifies that attempting to claim tokens that are still locked does not change any balance', async () => {
-                    const prevBalance = await networkToken.balanceOf(owner);
-                    const prevTotalLockedBalance = await getLockedBalance(owner);
-
-                    await liquidityProtection.claimBalance(0, 2);
-
-                    const balance = await networkToken.balanceOf(owner);
-                    expect(balance).to.be.bignumber.equal(prevBalance);
-
-                    const totalLockedBalance = await getLockedBalance(owner);
-                    expect(totalLockedBalance).to.be.bignumber.equal(prevTotalLockedBalance);
-                });
-
-                it('should revert when locked balance owner attempts claim tokens with invalid indices', async () => {
-                    await expectRevert(liquidityProtection.claimBalance(2, 3), 'ERR_INVALID_INDICES');
-                });
-            });
-
             describe('remove liquidity', () => {
                 for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
                     describe(`base token (${isETHReserve ? 'ETH' : 'ERC20'})`, () => {
@@ -1930,6 +1860,76 @@ describe('LiquidityProtection', () => {
                         }
                     }
                 }
+            });
+
+            describe('claim balance', () => {
+                beforeEach(async () => {
+                    await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, new BN(20000));
+                    await addProtectedLiquidity(poolToken.address, networkToken, networkToken.address, new BN(2000));
+                    const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner);
+                    const protectionId = protectionIds[protectionIds.length - 1];
+
+                    const portion = PPM_RESOLUTION.div(new BN(2));
+                    const amount = new BN(2000).mul(portion).div(PPM_RESOLUTION);
+                    await govToken.approve(liquidityProtection.address, amount);
+                    await liquidityProtection.setTime(now.add(duration.seconds(1)));
+                    await liquidityProtection.removeLiquidity(protectionId, portion);
+                    await govToken.approve(liquidityProtection.address, amount);
+                    await liquidityProtection.removeLiquidity(protectionId, portion);
+                });
+
+                it('verifies that locked balance owner can claim locked tokens if sufficient time has passed', async () => {
+                    const timestamp = await getTimestamp(PROTECTION_FULL_PROTECTION);
+                    await setTime(timestamp);
+
+                    const prevBalance = await networkToken.balanceOf(owner);
+                    const lockedBalance = (await liquidityProtectionStore.lockedBalance(owner, 0))[0];
+                    const prevTotalLockedBalance = await getLockedBalance(owner);
+
+                    await liquidityProtection.claimBalance(0, 1);
+
+                    const balance = await networkToken.balanceOf(owner);
+                    expect(balance).to.be.bignumber.equal(prevBalance.add(lockedBalance));
+
+                    const totalLockedBalance = await getLockedBalance(owner);
+                    expect(totalLockedBalance).to.be.bignumber.equal(prevTotalLockedBalance.sub(lockedBalance));
+                });
+
+                it('verifies that locked balance owner can claim multiple locked tokens if sufficient time has passed', async () => {
+                    const timestamp = await getTimestamp(PROTECTION_FULL_PROTECTION);
+                    await setTime(timestamp);
+
+                    const prevBalance = await networkToken.balanceOf(owner);
+                    const prevTotalLockedBalance = await getLockedBalance(owner);
+
+                    await liquidityProtection.claimBalance(0, 2);
+
+                    const balance = await networkToken.balanceOf(owner);
+                    expect(balance).to.be.bignumber.equal(prevBalance.add(prevTotalLockedBalance));
+
+                    const totalLockedBalance = await getLockedBalance(owner);
+                    expect(totalLockedBalance).to.be.bignumber.equal(new BN(0));
+
+                    const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(owner);
+                    expect(lockedBalanceCount).to.be.bignumber.equal(new BN(0));
+                });
+
+                it('verifies that attempting to claim tokens that are still locked does not change any balance', async () => {
+                    const prevBalance = await networkToken.balanceOf(owner);
+                    const prevTotalLockedBalance = await getLockedBalance(owner);
+
+                    await liquidityProtection.claimBalance(0, 2);
+
+                    const balance = await networkToken.balanceOf(owner);
+                    expect(balance).to.be.bignumber.equal(prevBalance);
+
+                    const totalLockedBalance = await getLockedBalance(owner);
+                    expect(totalLockedBalance).to.be.bignumber.equal(prevTotalLockedBalance);
+                });
+
+                it('should revert when locked balance owner attempts claim tokens with invalid indices', async () => {
+                    await expectRevert(liquidityProtection.claimBalance(2, 3), 'ERR_INVALID_INDICES');
+                });
             });
 
             describe('notifications', () => {
