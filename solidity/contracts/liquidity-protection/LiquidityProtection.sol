@@ -909,12 +909,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             uint256 averageRateD
         ) = reserveTokenRates(poolToken, reserveToken);
 
-        verifyRate(
-            spotRateN,
-            spotRateD,
-            averageRateN,
-            averageRateD
-        );
+        verifyRate(spotRateN, spotRateD, averageRateN, averageRateD);
 
         // notify event subscribers
         address[] memory subscribers = _settings.subscribers();
