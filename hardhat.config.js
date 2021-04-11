@@ -4,11 +4,19 @@ const { argv } = yargs(hideBin(process.argv));
 
 require('@nomiclabs/hardhat-waffle');
 require('@nomiclabs/hardhat-ethers');
+require('@nomiclabs/hardhat-etherscan');
 
 require('solidity-coverage');
+require('hardhat-contract-sizer');
+
+import Networks from './.networks.json';
 
 module.exports = {
     networks: {
+        // External networks
+        ...Networks,
+
+        // Hardhat network
         hardhat: {
             gasPrice: 20000000000,
             gas: 9500000,
@@ -78,5 +86,10 @@ module.exports = {
         before_timeout: 600000,
         timeout: 600000,
         useColors: true
+    },
+    contractSizer: {
+        alphaSort: true,
+        runOnCompile: false,
+        disambiguatePaths: false
     }
 };
