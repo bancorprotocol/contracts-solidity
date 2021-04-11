@@ -615,6 +615,16 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // verify that the protected liquidity is not removed on the same block in which it was added
         require(liquidity.timestamp < time(), "ERR_TOO_EARLY");
 
+        // get the various rates between the reserves upon adding liquidity and now
+        PackedRates memory packedRates =
+            packRates(
+                liquidity.poolToken,
+                liquidity.reserveToken,
+                liquidity.reserveRateN,
+                liquidity.reserveRateD,
+                true
+            );
+
         if (portion == PPM_RESOLUTION) {
             // notify event subscribers
             notifyEventSubscribersOnRemovingLiquidity(
@@ -673,16 +683,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             _govToken.safeTransferFrom(provider, address(this), liquidity.reserveAmount);
             _govTokenGovernance.burn(liquidity.reserveAmount);
         }
-
-        // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates =
-            packRates(
-                liquidity.poolToken,
-                liquidity.reserveToken,
-                liquidity.reserveRateN,
-                liquidity.reserveRateD,
-                true
-            );
 
         // get the target token amount
         uint256 targetAmount =
@@ -897,6 +897,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmount,
         uint256 reserveAmount
     ) internal returns (uint256) {
+        (uint256 rateN, uint256 rateD, , ) = reserveTokenRates(poolToken, reserveToken, true);
+
         // notify event subscribers
         address[] memory subscribers = _settings.subscribers();
         uint256 length = subscribers.length;
@@ -909,8 +911,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 reserveAmount
             );
         }
-
-        (uint256 rateN, uint256 rateD, , ) = reserveTokenRates(poolToken, reserveToken, true);
 
         _stats.increaseTotalAmounts(provider, poolToken, reserveToken, poolAmount, reserveAmount);
         _stats.addProviderPool(provider, poolToken);
