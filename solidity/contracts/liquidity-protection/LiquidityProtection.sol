@@ -624,7 +624,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         require(liquidity.timestamp < time(), "ERR_TOO_EARLY");
 
         if (portion == PPM_RESOLUTION) {
-            // notify event subscribers
             notifyEventSubscribersOnRemovingLiquidity(
                 id,
                 provider,
@@ -643,7 +642,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             liquidity.poolAmount = liquidity.poolAmount.mul(portion) / PPM_RESOLUTION;
             liquidity.reserveAmount = liquidity.reserveAmount.mul(portion) / PPM_RESOLUTION;
 
-            // notify event subscribers
             notifyEventSubscribersOnRemovingLiquidity(
                 id,
                 provider,
@@ -901,23 +899,13 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmount,
         uint256 reserveAmount
     ) internal returns (uint256) {
-        // notify event subscribers
-        address[] memory subscribers = _settings.subscribers();
-        uint256 length = subscribers.length;
-        for (uint256 i = 0; i < length; i++) {
-            ILiquidityProtectionEventsSubscriber(subscribers[i]).onAddingLiquidity(
-                provider,
-                poolToken,
-                reserveToken,
-                poolAmount,
-                reserveAmount
-            );
-        }
+        notifyEventSubscribersOnAddingLiquidity(provider, poolToken, reserveToken, poolAmount, reserveAmount);
 
         (uint256 rateN, uint256 rateD, , ) = reserveTokenRates(poolToken, reserveToken, true);
 
         _stats.increaseTotalAmounts(provider, poolToken, reserveToken, poolAmount, reserveAmount);
         _stats.addProviderPool(provider, poolToken);
+
         return
             _store.addProtectedLiquidity(
                 provider,
@@ -1309,7 +1297,45 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         _networkTokenGovernance.burn(amount);
     }
 
-    // utility to notify event subscribers on removing liquidity
+    /**
+     * @dev notify event subscribers on adding liquidity
+     *
+     * @param provider protected liquidity provider
+     * @param poolToken pool token
+     * @param reserveToken reserve token
+     * @param poolAmount amount of pool tokens to protect
+     * @param reserveAmount amount of reserve tokens to protect
+     */
+    function notifyEventSubscribersOnAddingLiquidity(
+        address provider,
+        IDSToken poolToken,
+        IReserveToken reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
+    ) private {
+        address[] memory subscribers = _settings.subscribers();
+        uint256 length = subscribers.length;
+        for (uint256 i = 0; i < length; i++) {
+            ILiquidityProtectionEventsSubscriber(subscribers[i]).onAddingLiquidity(
+                provider,
+                poolToken,
+                reserveToken,
+                poolAmount,
+                reserveAmount
+            );
+        }
+    }
+
+    /**
+     * @dev notify event subscribers on removing liquidity
+     *
+     * @param id protected liquidity id
+     * @param provider protected liquidity provider
+     * @param poolToken pool token
+     * @param reserveToken reserve token
+     * @param poolAmount amount of pool tokens to protect
+     * @param reserveAmount amount of reserve tokens to protect
+     */
     function notifyEventSubscribersOnRemovingLiquidity(
         uint256 id,
         address provider,
