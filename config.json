@@ -1,0 +1,11 @@
+{
+    "apiKeys": {
+        "etherscan": ""
+    },
+
+    "networks": {
+        "mainnet": {
+            "NODE_ADDRESS": ""
+        }
+    }
+}

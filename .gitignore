@@ -20,4 +20,4 @@ coverage.json
 allFiredEvents
 scTopics
 
-config.json
+# config.json
