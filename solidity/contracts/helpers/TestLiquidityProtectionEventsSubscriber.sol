@@ -7,13 +7,17 @@ import "../liquidity-protection/interfaces/ILiquidityProtectionEventsSubscriber.
  * @dev Liquidity protection events subscriber interface
  */
 contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSubscriber {
-    uint256 private _id;
-    address private _provider;
-    IConverterAnchor private _poolAnchor;
-    IReserveToken private _reserveToken;
-    uint256 private _poolAmount;
-    uint256 private _reserveAmount;
-    bool private _adding;
+    struct LiquidityProtectionEvent {
+        uint256 id;
+        address provider;
+        IConverterAnchor poolAnchor;
+        IReserveToken reserveToken;
+        uint256 poolAmount;
+        uint256 reserveAmount;
+        bool adding;
+    }
+
+    LiquidityProtectionEvent[] private _events;
 
     function onAddingLiquidity(
         address provider,
@@ -22,14 +26,17 @@ contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSu
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override {
-        _adding = true;
-
-        _id = 0;
-        _provider = provider;
-        _poolAnchor = poolAnchor;
-        _reserveToken = reserveToken;
-        _poolAmount = poolAmount;
-        _reserveAmount = reserveAmount;
+        _events.push(
+            LiquidityProtectionEvent({
+                id: 0,
+                provider: provider,
+                poolAnchor: poolAnchor,
+                reserveToken: reserveToken,
+                poolAmount: poolAmount,
+                reserveAmount: reserveAmount,
+                adding: true
+            })
+        );
     }
 
     function onRemovingLiquidity(
@@ -40,41 +47,42 @@ contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSu
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override {
-        _adding = false;
-
-        _id = id;
-        _provider = provider;
-        _poolAnchor = poolAnchor;
-        _reserveToken = reserveToken;
-        _poolAmount = poolAmount;
-        _reserveAmount = reserveAmount;
+        _events.push(
+            LiquidityProtectionEvent({
+                id: id,
+                provider: provider,
+                poolAnchor: poolAnchor,
+                reserveToken: reserveToken,
+                poolAmount: poolAmount,
+                reserveAmount: reserveAmount,
+                adding: false
+            })
+        );
     }
 
-    function id() external view returns (uint256) {
-        return _id;
+    function reset() external {
+        delete _events;
     }
 
-    function provider() external view returns (address) {
-        return _provider;
+    function events(uint256 id)
+        external
+        view
+        returns (
+            uint256,
+            address,
+            IConverterAnchor,
+            IReserveToken,
+            uint256,
+            uint256,
+            bool
+        )
+    {
+        LiquidityProtectionEvent memory e = _events[id];
+
+        return (e.id, e.provider, e.poolAnchor, e.reserveToken, e.poolAmount, e.reserveAmount, e.adding);
     }
 
-    function poolAnchor() external view returns (IConverterAnchor) {
-        return _poolAnchor;
-    }
-
-    function reserveToken() external view returns (IReserveToken) {
-        return _reserveToken;
-    }
-
-    function poolAmount() external view returns (uint256) {
-        return _poolAmount;
-    }
-
-    function reserveAmount() external view returns (uint256) {
-        return _reserveAmount;
-    }
-
-    function adding() external view returns (bool) {
-        return _adding;
+    function eventCount() external view returns (uint256) {
+        return _events.length;
     }
 }
