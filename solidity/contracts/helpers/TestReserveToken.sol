@@ -24,10 +24,6 @@ contract TestReserveToken {
         reserveToken.safeTransfer(to, amount);
     }
 
-    function safeTransferAll(IReserveToken reserveToken, address to) external {
-        reserveToken.safeTransfer(to);
-    }
-
     function safeTransferFrom(
         IReserveToken reserveToken,
         address from,

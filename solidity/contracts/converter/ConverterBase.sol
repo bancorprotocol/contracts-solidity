@@ -232,7 +232,7 @@ abstract contract ConverterBase is ConverterVersion, IConverter, ContractRegistr
         for (uint256 i = 0; i < reserveCount; ++i) {
             IReserveToken reserveToken = reserveTokens[i];
 
-            reserveToken.safeTransfer(_newConverter);
+            reserveToken.safeTransfer(_newConverter, reserveToken.balanceOf(address(this)));
 
             syncReserveBalance(reserveToken);
         }

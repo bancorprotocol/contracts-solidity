@@ -69,16 +69,6 @@ library ReserveToken {
     }
 
     /**
-     * @dev transfers the whole balance of the reserve token
-     *
-     * @param reserveToken the address of the reserve token
-     * @param to the destination address to transfer the amount to
-     */
-    function safeTransfer(IReserveToken reserveToken, address to) internal {
-        safeTransfer(reserveToken, to, balanceOf(reserveToken, address(this)));
-    }
-
-    /**
      * @dev transfers a specific amount of the reserve token
      * this function ignores a reserve token which represents an ETH reserve
      *
