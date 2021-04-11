@@ -73,16 +73,9 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     }
 
     function averageRateTest(IDSToken poolToken, IERC20 reserveToken) external view returns (uint256, uint256) {
-        (
-            uint256 spotRateN,
-            uint256 spotRateD,
-            uint256 averageRateN,
-            uint256 averageRateD
-        ) = reserveTokenRates(poolToken, reserveToken);
-
-        verifyRate(spotRateN, spotRateD, averageRateN, averageRateD);
-
-        return (averageRateN, averageRateD);
+        (Fraction memory spotRate, Fraction memory averageRate) = reserveTokenRates(poolToken, reserveToken);
+        verifyRate(spotRate.n, spotRate.d, averageRate.n, averageRate.d);
+        return (averageRate.n, averageRate.d);
     }
 
     function removeLiquidityTargetAmountTest(

@@ -902,14 +902,9 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmount,
         uint256 reserveAmount
     ) internal returns (uint256) {
-        (
-            uint256 spotRateN,
-            uint256 spotRateD,
-            uint256 averageRateN,
-            uint256 averageRateD
-        ) = reserveTokenRates(poolToken, reserveToken);
+        (Fraction memory spotRate, Fraction memory averageRate) = reserveTokenRates(poolToken, reserveToken);
 
-        verifyRate(spotRateN, spotRateD, averageRateN, averageRateD);
+        verifyRate(spotRate.n, spotRate.d, averageRate.n, averageRate.d);
 
         // notify event subscribers
         address[] memory subscribers = _settings.subscribers();
@@ -933,8 +928,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 reserveToken,
                 poolAmount,
                 reserveAmount,
-                spotRateN,
-                spotRateD,
+                spotRate.n,
+                spotRate.d,
                 time()
             );
     }
@@ -974,31 +969,20 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param poolToken pool token
      * @param reserveToken reserve token
      *
-     * @return spot rate numerator
-     * @return spot rate denominator
-     * @return average rate numerator
-     * @return average rate denominator
+     * @return spot rate
+     * @return average rate
      */
     function reserveTokenRates(
         IDSToken poolToken,
         IERC20 reserveToken
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (Fraction memory, Fraction memory) {
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(ownedBy(poolToken)));
         IERC20 otherReserve = converterOtherReserve(converter, reserveToken);
 
         (uint256 spotRateN, uint256 spotRateD) = converterReserveBalances(converter, otherReserve, reserveToken);
         (uint256 averageRateN, uint256 averageRateD) = converter.recentAverageRate(reserveToken);
 
-        return (spotRateN, spotRateD, averageRateN, averageRateD);
+        return (Fraction({ n: spotRateN, d: spotRateD }), Fraction({ n: averageRateN, d: averageRateD }));
     }
 
     /**
@@ -1017,28 +1001,26 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 addSpotRateD
     ) internal view returns (PackedRates memory) {
         (
-            uint256 removeSpotRateN,
-            uint256 removeSpotRateD,
-            uint256 removeAverageRateN,
-            uint256 removeAverageRateD
+            Fraction memory removeSpotRate,
+            Fraction memory removeAverageRate
         ) = reserveTokenRates(poolToken, reserveToken);
 
         assert(
             addSpotRateN <= MAX_UINT128 &&
             addSpotRateD <= MAX_UINT128 &&
-            removeSpotRateN <= MAX_UINT128 &&
-            removeSpotRateD <= MAX_UINT128 &&
-            removeAverageRateN <= MAX_UINT128 &&
-            removeAverageRateD <= MAX_UINT128
+            removeSpotRate.n <= MAX_UINT128 &&
+            removeSpotRate.d <= MAX_UINT128 &&
+            removeAverageRate.n <= MAX_UINT128 &&
+            removeAverageRate.d <= MAX_UINT128
         );
 
         return PackedRates({
             addSpotRateN: uint128(addSpotRateN),
             addSpotRateD: uint128(addSpotRateD),
-            removeSpotRateN: uint128(removeSpotRateN),
-            removeSpotRateD: uint128(removeSpotRateD),
-            removeAverageRateN: uint128(removeAverageRateN),
-            removeAverageRateD: uint128(removeAverageRateD)
+            removeSpotRateN: uint128(removeSpotRate.n),
+            removeSpotRateD: uint128(removeSpotRate.d),
+            removeAverageRateN: uint128(removeAverageRate.n),
+            removeAverageRateD: uint128(removeAverageRate.d)
         });
     }
 
