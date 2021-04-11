@@ -771,6 +771,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // remove the protected liquidity from the store and update the stats and the last removal checkpoint
         ProtectedLiquidity memory removedLiquidity = removeProtectedLiquidity(msg.sender, id, PPM_RESOLUTION);
 
+        // add protected liquidity to the store, updated the stats, and return the new id
         return
             addProtectedLiquidity(
                 newProvider,
