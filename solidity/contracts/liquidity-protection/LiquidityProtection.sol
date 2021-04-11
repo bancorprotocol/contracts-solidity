@@ -771,7 +771,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // remove the protected liquidity from the store and update the stats and the last removal checkpoint
         ProtectedLiquidity memory removedLiquidity = removeProtectedLiquidity(msg.sender, id, PPM_RESOLUTION);
 
-        // add protected liquidity to the store, updated the stats, and return the new id
+        // add protected liquidity to the store, update the stats, and return the new id
         return
             addProtectedLiquidity(
                 newProvider,
@@ -864,7 +864,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev adds protected liquidity to the store and updated the stats
+     * @dev adds protected liquidity to the store and updates the stats
      *
      * @param provider protected liquidity provider
      * @param poolToken pool token
