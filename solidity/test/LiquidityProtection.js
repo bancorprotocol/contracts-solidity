@@ -2045,158 +2045,255 @@ describe('LiquidityProtection', () => {
                     eventsSubscriber = await LiquidityProtectionEventsSubscriber.new();
                 });
 
+                const getEvents = async () => {
+                    const data = [];
+
+                    const count = (await eventsSubscriber.eventCount.call()).toNumber();
+                    for (let i = 0; i < count; ++i) {
+                        const event = await eventsSubscriber.events.call(i);
+                        data.push({
+                            id: event[0],
+                            provider: event[1],
+                            poolAnchor: event[2],
+                            reserveToken: event[3],
+                            poolAmount: event[4],
+                            reserveAmount: event[5],
+                            adding: event[6]
+                        });
+                    }
+
+                    return data;
+                };
+
+                const testNotifications = (isBaseReserveToken, isETHReserve, recipient) => {
+                    const reserveAmount = new BN(5000);
+                    let reserveToken;
+                    let reserveTokenAddress;
+                    let id;
+                    let protection;
+
+                    const init = async () => {
+                        await initPool(isETHReserve);
+
+                        if (isBaseReserveToken) {
+                            reserveToken = baseToken;
+                            reserveTokenAddress = isETHReserve ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
+
+                            await addProtectedLiquidity(
+                                poolToken.address,
+                                reserveToken,
+                                reserveTokenAddress,
+                                reserveAmount,
+                                isETHReserve,
+                                owner,
+                                recipient
+                            );
+                        } else {
+                            reserveToken = networkToken;
+                            reserveTokenAddress = networkToken.address;
+
+                            await baseToken.transfer(accounts[1], reserveAmount);
+                            await addProtectedLiquidity(
+                                poolToken.address,
+                                baseToken,
+                                baseTokenAddress,
+                                reserveAmount,
+                                false,
+                                accounts[1],
+                                accounts[1]
+                            );
+
+                            await eventsSubscriber.reset();
+
+                            await addProtectedLiquidity(
+                                poolToken.address,
+                                reserveToken,
+                                reserveTokenAddress,
+                                reserveAmount,
+                                false,
+                                owner,
+                                recipient
+                            );
+                        }
+
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds.call(recipient);
+                        id = protectionIds[0];
+                        protection = await liquidityProtectionStore.protectedLiquidity.call(id);
+                        protection = getProtection(protection);
+                    };
+
+                    context('without an events notifier', () => {
+                        beforeEach(async () => {
+                            await init();
+                        });
+
+                        describe('adding liquidity', () => {
+                            it('should not publish events', async () => {
+                                const events = await getEvents();
+                                expect(events).to.have.lengthOf(0);
+                            });
+                        });
+
+                        describe('removing liquidity', () => {
+                            beforeEach(async () => {
+                                await setTime(now.add(new BN(1)));
+
+                                if (!isBaseReserveToken) {
+                                    await govToken.approve(liquidityProtection.address, protection.reserveAmount, {
+                                        from: recipient
+                                    });
+                                }
+                            });
+
+                            it('should not publish events', async () => {
+                                await liquidityProtection.removeLiquidity(id, PPM_RESOLUTION, {
+                                    from: recipient
+                                });
+
+                                const events = await getEvents();
+                                expect(events).to.have.lengthOf(0);
+                            });
+                        });
+
+                        describe('transferring liquidity', () => {
+                            it('should not publish events', async () => {
+                                const newOwner = accounts[8];
+                                await liquidityProtection.transferLiquidity(id, newOwner, {
+                                    from: recipient
+                                });
+
+                                const events = await getEvents();
+                                expect(events).to.have.lengthOf(0);
+                            });
+                        });
+                    });
+
+                    context('with an events notifier', () => {
+                        beforeEach(async () => {
+                            await liquidityProtectionSettings.addSubscriber(eventsSubscriber.address, {
+                                from: owner
+                            });
+
+                            await init();
+                        });
+
+                        describe('adding liquidity', () => {
+                            it('should publish events', async () => {
+                                const totalSupply = await poolToken.totalSupply.call();
+                                const reserveBalance = await converter.reserveBalance.call(reserveTokenAddress);
+                                const rate = poolTokenRate(totalSupply, reserveBalance);
+
+                                const events = await getEvents();
+                                expect(events).to.have.lengthOf(1);
+
+                                const event = events[0];
+                                expect(event.adding).to.be.true();
+                                expect(event.id).to.be.bignumber.equal(new BN(0));
+                                expect(event.provider).to.eql(recipient);
+                                expect(event.poolAnchor).to.eql(poolToken.address);
+                                expect(event.reserveToken).to.eql(reserveTokenAddress);
+                                expect(event.poolAmount).to.be.bignumber.equal(reserveAmount.mul(rate.d).div(rate.n));
+                                expect(event.reserveAmount).to.be.bignumber.equal(reserveAmount);
+                            });
+                        });
+
+                        describe('removing liquidity', () => {
+                            beforeEach(async () => {
+                                await eventsSubscriber.reset();
+
+                                await setTime(now.add(new BN(1)));
+
+                                if (!isBaseReserveToken) {
+                                    await govToken.approve(liquidityProtection.address, protection.reserveAmount, {
+                                        from: recipient
+                                    });
+                                }
+                            });
+
+                            it('should publish events', async () => {
+                                const totalSupply = await poolToken.totalSupply.call();
+                                const reserveBalance = await converter.reserveBalance.call(reserveTokenAddress);
+                                const rate = poolTokenRate(totalSupply, reserveBalance);
+
+                                await liquidityProtection.removeLiquidity(id, PPM_RESOLUTION, {
+                                    from: recipient
+                                });
+
+                                const events = await getEvents();
+                                expect(events).to.have.lengthOf(1);
+
+                                const event = events[0];
+                                expect(event.adding).to.be.false();
+                                expect(event.id).to.be.bignumber.equal(id);
+                                expect(event.provider).to.eql(recipient);
+                                expect(event.poolAnchor).to.eql(poolToken.address);
+                                expect(event.reserveToken).to.eql(reserveTokenAddress);
+                                expect(event.poolAmount).to.be.bignumber.equal(reserveAmount.mul(rate.d).div(rate.n));
+                                expect(event.reserveAmount).to.be.bignumber.equal(reserveAmount);
+                            });
+                        });
+
+                        describe('transferring liquidity', () => {
+                            beforeEach(async () => {
+                                await eventsSubscriber.reset();
+                            });
+
+                            it('should publish events', async () => {
+                                const totalSupply = await poolToken.totalSupply.call();
+                                const reserveBalance = await converter.reserveBalance.call(reserveTokenAddress);
+                                const rate = poolTokenRate(totalSupply, reserveBalance);
+
+                                const newOwner = accounts[8];
+                                await liquidityProtection.transferLiquidity(id, newOwner, {
+                                    from: recipient
+                                });
+
+                                const events = await getEvents();
+                                expect(events).to.have.lengthOf(2);
+
+                                const removeEvent = events[0];
+                                expect(removeEvent.adding).to.be.false();
+                                expect(removeEvent.id).to.be.bignumber.equal(id);
+                                expect(removeEvent.provider).to.eql(recipient);
+                                expect(removeEvent.poolAnchor).to.eql(poolToken.address);
+                                expect(removeEvent.reserveToken).to.eql(reserveTokenAddress);
+                                expect(removeEvent.poolAmount).to.be.bignumber.equal(
+                                    reserveAmount.mul(rate.d).div(rate.n)
+                                );
+                                expect(removeEvent.reserveAmount).to.be.bignumber.equal(reserveAmount);
+
+                                const addEvent = events[1];
+                                expect(addEvent.adding).to.be.true();
+                                expect(addEvent.id).to.be.bignumber.equal(new BN(0));
+                                expect(addEvent.provider).to.eql(newOwner);
+                                expect(addEvent.poolAnchor).to.eql(poolToken.address);
+                                expect(addEvent.reserveToken).to.eql(reserveTokenAddress);
+                                expect(addEvent.poolAmount).to.be.bignumber.equal(
+                                    reserveAmount.mul(rate.d).div(rate.n)
+                                );
+                                expect(addEvent.reserveAmount).to.be.bignumber.equal(reserveAmount);
+                            });
+                        });
+                    });
+                };
+
                 // test both addLiquidity and addLiquidityFor
                 for (const recipient of [owner, accounts[3]]) {
                     context(recipient === owner ? 'for self' : 'for another account', async () => {
                         for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
                             describe(`base token (${isETHReserve ? 'ETH' : 'ERC20'})`, () => {
-                                beforeEach(async () => {
-                                    await initPool(isETHReserve);
-                                });
-
-                                context('without an events notifier', () => {
-                                    it('should not publish adding liquidity events', async () => {
-                                        const reserveAmount = new BN(1000);
-                                        await addProtectedLiquidity(
-                                            poolToken.address,
-                                            baseToken,
-                                            baseTokenAddress,
-                                            reserveAmount,
-                                            isETHReserve,
-                                            owner,
-                                            recipient
-                                        );
-
-                                        expect(await eventsSubscriber.adding.call()).to.be.false();
-                                        expect(await eventsSubscriber.id.call()).to.be.bignumber.equal(new BN(0));
-                                        expect(await eventsSubscriber.provider.call()).to.eql(ZERO_ADDRESS);
-                                        expect(await eventsSubscriber.poolAnchor.call()).to.eql(ZERO_ADDRESS);
-                                        expect(await eventsSubscriber.reserveToken.call()).to.eql(ZERO_ADDRESS);
-                                        expect(await eventsSubscriber.poolAmount.call()).to.be.bignumber.equal(
-                                            new BN(0)
-                                        );
-                                        expect(await eventsSubscriber.reserveAmount.call()).to.be.bignumber.equal(
-                                            new BN(0)
-                                        );
-                                    });
-
-                                    it('should not publish removing liquidity events', async () => {
-                                        const reserveAmount = new BN(1000);
-                                        await addProtectedLiquidity(
-                                            poolToken.address,
-                                            baseToken,
-                                            baseTokenAddress,
-                                            reserveAmount,
-                                            isETHReserve,
-                                            owner,
-                                            recipient
-                                        );
-                                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds.call(
-                                            recipient
-                                        );
-                                        const id = protectionIds[0];
-
-                                        await setTime(now.add(new BN(1)));
-                                        await liquidityProtection.removeLiquidity(id, PPM_RESOLUTION, {
-                                            from: recipient
-                                        });
-
-                                        expect(await eventsSubscriber.adding.call()).to.be.false();
-                                        expect(await eventsSubscriber.id.call()).to.be.bignumber.equal(new BN(0));
-                                        expect(await eventsSubscriber.provider.call()).to.eql(ZERO_ADDRESS);
-                                        expect(await eventsSubscriber.poolAnchor.call()).to.eql(ZERO_ADDRESS);
-                                        expect(await eventsSubscriber.reserveToken.call()).to.eql(ZERO_ADDRESS);
-                                        expect(await eventsSubscriber.poolAmount.call()).to.be.bignumber.equal(
-                                            new BN(0)
-                                        );
-                                        expect(await eventsSubscriber.reserveAmount.call()).to.be.bignumber.equal(
-                                            new BN(0)
-                                        );
-                                    });
-                                });
-
-                                context('with an events notifier', () => {
-                                    beforeEach(async () => {
-                                        await liquidityProtectionSettings.addSubscriber(eventsSubscriber.address, {
-                                            from: owner
-                                        });
-                                    });
-
-                                    it('should publish adding liquidity events', async () => {
-                                        const totalSupply = await poolToken.totalSupply.call();
-                                        const reserveBalance = await converter.reserveBalance.call(baseTokenAddress);
-                                        const rate = poolTokenRate(totalSupply, reserveBalance);
-
-                                        const reserveAmount = new BN(1000);
-                                        await addProtectedLiquidity(
-                                            poolToken.address,
-                                            baseToken,
-                                            baseTokenAddress,
-                                            reserveAmount,
-                                            isETHReserve,
-                                            owner,
-                                            recipient
-                                        );
-
-                                        expect(await eventsSubscriber.adding.call()).to.be.true();
-                                        expect(await eventsSubscriber.id.call()).to.be.bignumber.equal(new BN(0));
-                                        expect(await eventsSubscriber.provider.call()).to.eql(recipient);
-                                        expect(await eventsSubscriber.poolAnchor.call()).to.eql(poolToken.address);
-                                        expect(await eventsSubscriber.reserveToken.call()).to.eql(baseTokenAddress);
-                                        expect(await eventsSubscriber.poolAmount.call()).to.be.bignumber.equal(
-                                            reserveAmount.mul(rate.d).div(rate.n)
-                                        );
-                                        expect(await eventsSubscriber.reserveAmount.call()).to.be.bignumber.equal(
-                                            reserveAmount
-                                        );
-                                    });
-
-                                    it('should publish removing liquidity events', async () => {
-                                        const totalSupply = await poolToken.totalSupply.call();
-                                        const reserveBalance = await converter.reserveBalance.call(baseTokenAddress);
-                                        const rate = poolTokenRate(totalSupply, reserveBalance);
-
-                                        const reserveAmount = new BN(1000);
-                                        await addProtectedLiquidity(
-                                            poolToken.address,
-                                            baseToken,
-                                            baseTokenAddress,
-                                            reserveAmount,
-                                            isETHReserve,
-                                            owner,
-                                            recipient
-                                        );
-                                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds.call(
-                                            recipient
-                                        );
-                                        const id = protectionIds[0];
-
-                                        await setTime(now.add(new BN(1)));
-
-                                        await liquidityProtection.removeLiquidity(id, PPM_RESOLUTION, {
-                                            from: recipient
-                                        });
-
-                                        expect(await eventsSubscriber.adding.call()).to.be.false();
-                                        expect(await eventsSubscriber.id.call()).to.be.bignumber.equal(id);
-                                        expect(await eventsSubscriber.provider.call()).to.eql(recipient);
-                                        expect(await eventsSubscriber.poolAnchor.call()).to.eql(poolToken.address);
-                                        expect(await eventsSubscriber.reserveToken.call()).to.eql(baseTokenAddress);
-                                        expect(await eventsSubscriber.poolAmount.call()).to.be.bignumber.equal(
-                                            reserveAmount.mul(rate.d).div(rate.n)
-                                        );
-                                        expect(await eventsSubscriber.reserveAmount.call()).to.be.bignumber.equal(
-                                            reserveAmount
-                                        );
-                                    });
-                                });
+                                testNotifications(true, isETHReserve, recipient);
                             });
                         }
+
+                        describe('network token', () => {
+                            testNotifications(false, false, recipient);
+                        });
                     });
                 }
             });
 
-            describe('stress tests', () => {
+            describe.skip('stress tests', () => {
                 describe('average rate', () => {
                     for (let minutesElapsed = 1; minutesElapsed <= 10; minutesElapsed += 1) {
                         for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
