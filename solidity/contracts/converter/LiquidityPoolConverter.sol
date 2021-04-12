@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "./ConverterBase.sol";
 
 /**
@@ -23,7 +24,7 @@ abstract contract LiquidityPoolConverter is ConverterBase {
      */
     event LiquidityAdded(
         address indexed _provider,
-        IERC20 indexed _reserveToken,
+        IReserveToken indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
@@ -40,7 +41,7 @@ abstract contract LiquidityPoolConverter is ConverterBase {
      */
     event LiquidityRemoved(
         address indexed _provider,
-        IERC20 indexed _reserveToken,
+        IReserveToken indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply

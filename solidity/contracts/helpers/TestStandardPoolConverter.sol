@@ -15,7 +15,7 @@ contract TestStandardPoolConverter is StandardPoolConverter, TestTime {
 
     function removeLiquidityTest(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveMinReturnAmounts
     ) public {
         reserveAmountsRemoved = removeLiquidity(_amount, _reserveTokens, _reserveMinReturnAmounts);

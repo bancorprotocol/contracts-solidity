@@ -3,7 +3,6 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
@@ -13,8 +12,10 @@ import "../converter/interfaces/IConverter.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/Owned.sol";
 import "../utility/Utils.sol";
-import "../utility/TokenHolder.sol";
 import "../utility/ReentrancyGuard.sol";
+import "../utility/interfaces/ITokenHolder.sol";
+
+import "../token/ReserveToken.sol";
 
 import "../INetworkSettings.sol";
 import "../IBancorNetwork.sol";
@@ -25,7 +26,9 @@ import "../IBancorNetwork.sol";
 contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     using SafeMath for uint256;
     using Math for uint256;
+    using ReserveToken for IReserveToken;
     using SafeERC20 for IERC20;
+    using SafeERC20Ex for IERC20;
 
     struct Strategy {
         address[][] paths;
@@ -75,20 +78,20 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev triggered during conversion of a single token during the burning event
      *
-     * @param token the converted token
-     * @param sourceAmount the amount of the converted token
+     * @param reserveToken the converted reserve token
+     * @param sourceAmount the amount of the converted reserve token
      * @param targetAmount the network token amount the token were converted to
      */
-    event Converted(IERC20 token, uint256 sourceAmount, uint256 targetAmount);
+    event Converted(IReserveToken reserveToken, uint256 sourceAmount, uint256 targetAmount);
 
     /**
      * @dev triggered after a completed burning event
      *
-     * @param tokens the converted tokens
+     * @param reserveTokens the converted reserve tokens
      * @param sourceAmount the total network token amount the tokens were converted to
      * @param burnedAmount the total burned amount in the burning event
      */
-    event Burned(IERC20[] tokens, uint256 sourceAmount, uint256 burnedAmount);
+    event Burned(IReserveToken[] reserveTokens, uint256 sourceAmount, uint256 burnedAmount);
 
     /**
      * @dev initializes a new VortexBurner contract
@@ -155,16 +158,16 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev converts the provided tokens to governance tokens and burns them
      *
-     * @param tokens the tokens to convert
+     * @param reserveTokens the reserve tokens to convert
      */
-    function burn(IERC20[] calldata tokens) external protected {
+    function burn(IReserveToken[] calldata reserveTokens) external protected {
         ITokenHolder feeWallet = networkFeeWallet();
 
         // retrieve the burning strategy
-        Strategy memory strategy = burnStrategy(tokens, feeWallet);
+        Strategy memory strategy = burnStrategy(reserveTokens, feeWallet);
 
         // withdraw all token/ETH amounts to the contract
-        feeWallet.withdrawTokensMultiple(tokens, address(this), strategy.amounts);
+        feeWallet.withdrawTokensMultiple(reserveTokens, address(this), strategy.amounts);
 
         // convert all amounts to the network token and record conversion amounts
         IBancorNetwork network = bancorNetwork();
@@ -177,27 +180,27 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             }
 
             address[] memory path = strategy.paths[i];
-            IERC20 token = IERC20(path[0]);
+            IReserveToken reserveToken = IReserveToken(path[0]);
             uint256 value = 0;
 
-            if (token == _networkToken || token == _govToken) {
+            if (address(reserveToken) == address(_networkToken) || address(reserveToken) == address(_govToken)) {
                 // if the source token is the network or the governance token, we won't try to convert it, but rather
                 // include its amount in either the total amount of tokens to convert or burn.
                 continue;
             }
 
-            if (token == NATIVE_TOKEN_ADDRESS) {
+            if (reserveToken.isNativeToken()) {
                 // if the source token is actually an ETH reserve, make sure to pass its value to the network
                 value = amount;
             } else {
                 // if the source token is a regular token, approve the network to withdraw the token amount
-                ensureAllowance(token, network, amount);
+                reserveToken.ensureApprove(address(network), amount);
             }
 
             // perform the actual conversion and optionally send ETH to the network
             uint256 targetAmount = network.convertByPath{ value: value }(path, amount, 1, address(this), address(0), 0);
 
-            emit Converted(token, amount, targetAmount);
+            emit Converted(reserveToken, amount, targetAmount);
         }
 
         // calculate the burn reward and reduce it from the total amount to convert
@@ -206,7 +209,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         // in case there are network tokens to burn, convert them to the governance token
         if (sourceAmount > 0) {
             // approve the network to withdraw the network token amount
-            ensureAllowance(_networkToken, network, sourceAmount);
+            _networkToken.ensureApprove(address(network), sourceAmount);
 
             // convert the entire network token amount to the governance token
             network.convertByPath(strategy.govPath, sourceAmount, 1, address(this), address(0), 0);
@@ -227,7 +230,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             _networkToken.transfer(msg.sender, burnRewardAmount);
         }
 
-        emit Burned(tokens, sourceAmount + burnRewardAmount, govTokenBalance);
+        emit Burned(reserveTokens, sourceAmount + burnRewardAmount, govTokenBalance);
     }
 
     /**
@@ -249,46 +252,46 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev returns the burning strategy for the specified tokens
      *
-     * @param tokens the tokens to convert
+     * @param reserveTokens the reserve tokens to convert
      *
      * @return the the burning strategy for the specified tokens
      */
-    function burnStrategy(IERC20[] calldata tokens, ITokenHolder feeWallet) private view returns (Strategy memory) {
+    function burnStrategy(IReserveToken[] calldata reserveTokens, ITokenHolder feeWallet)
+        private
+        view
+        returns (Strategy memory)
+    {
         IConverterRegistry registry = converterRegistry();
 
         Strategy memory strategy =
             Strategy({
-                paths: new address[][](tokens.length),
-                amounts: new uint256[](tokens.length),
+                paths: new address[][](reserveTokens.length),
+                amounts: new uint256[](reserveTokens.length),
                 govPath: new address[](3)
             });
 
-        for (uint256 i = 0; i < tokens.length; ++i) {
-            IERC20 token = tokens[i];
+        for (uint256 i = 0; i < reserveTokens.length; ++i) {
+            IReserveToken reserveToken = reserveTokens[i];
 
             address[] memory path = new address[](3);
-            path[0] = address(token);
+            path[0] = address(reserveToken);
 
             // don't look up for a converter for either the network or the governance token, since they are going to be
             // handled in a special way during the burn itself
-            if (token != _networkToken && token != _govToken) {
-                path[1] = address(networkTokenConverterAnchor(token, registry));
+            if (address(reserveToken) != address(_networkToken) && address(reserveToken) != address(_govToken)) {
+                path[1] = address(networkTokenConverterAnchor(reserveToken, registry));
                 path[2] = address(_networkToken);
             }
 
             strategy.paths[i] = path;
 
             // make sure to retrieve the balance of either an ERC20 or an ETH reserve
-            if (token == NATIVE_TOKEN_ADDRESS) {
-                strategy.amounts[i] = address(feeWallet).balance;
-            } else {
-                strategy.amounts[i] = token.balanceOf(address(feeWallet));
-            }
+            strategy.amounts[i] = reserveToken.balanceOf(address(feeWallet));
         }
 
         // get the governance token converter path
         strategy.govPath[0] = address(_networkToken);
-        strategy.govPath[1] = address(networkTokenConverterAnchor(_govToken, registry));
+        strategy.govPath[1] = address(networkTokenConverterAnchor(IReserveToken(address(_govToken)), registry));
         strategy.govPath[2] = address(_govToken);
 
         return strategy;
@@ -310,20 +313,20 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev finds the converter anchor of the 50/50 standard pool converter between the specified token and the network token
      *
-     * @param token the source token
+     * @param reserveToken the source token
      * @param converterRegistry the converter registry
      *
      * @return the converter anchor of the 50/50 standard pool converter between the specified token
      */
-    function networkTokenConverterAnchor(IERC20 token, IConverterRegistry converterRegistry)
+    function networkTokenConverterAnchor(IReserveToken reserveToken, IConverterRegistry converterRegistry)
         private
         view
         returns (IConverterAnchor)
     {
         // initialize both the source and the target tokens
-        IERC20[] memory reserveTokens = new IERC20[](2);
-        reserveTokens[0] = _networkToken;
-        reserveTokens[1] = token;
+        IReserveToken[] memory reserveTokens = new IReserveToken[](2);
+        reserveTokens[0] = IReserveToken(address(_networkToken));
+        reserveTokens[1] = reserveToken;
 
         // make sure to only look up for 50/50 converters
         uint32[] memory standardReserveWeights = new uint32[](2);
@@ -340,28 +343,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         require(address(anchor) != address(0), "ERR_INVALID_RESERVE_TOKEN");
 
         return anchor;
-    }
-
-    /**
-     * @dev ensures that the network is able to pull the tokens from this contact
-     *
-     * @param token the source token
-     * @param network the address of the network contract
-     * @param amount the token amount to approve
-     */
-    function ensureAllowance(
-        IERC20 token,
-        IBancorNetwork network,
-        uint256 amount
-    ) private {
-        address networkAddress = address(network);
-        uint256 allowance = token.allowance(address(this), networkAddress);
-        if (allowance < amount) {
-            if (allowance > 0) {
-                token.safeApprove(networkAddress, 0);
-            }
-            token.safeApprove(networkAddress, amount);
-        }
     }
 
     /**

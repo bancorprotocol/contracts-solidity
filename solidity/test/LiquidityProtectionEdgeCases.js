@@ -290,7 +290,7 @@ describe('LiquidityProtectionEdgeCases', () => {
 
                             await addProtectedLiquidity(baseToken, amounts[2]);
                             const networkTokenMaxAmount = await getNetworkTokenMaxAmount();
-                            if (amounts[3].gt(networkTokenMaxAmount)) amounts[3] = networkTokenMaxAmount;
+                            amounts[3] = BN.min(amounts[3], networkTokenMaxAmount);
                             await addProtectedLiquidity(networkToken, amounts[3]);
 
                             if (config.increaseRate) {
@@ -364,7 +364,7 @@ describe('LiquidityProtectionEdgeCases', () => {
 
                             await addProtectedLiquidity(baseToken, amounts[2]);
                             const networkTokenMaxAmount = await getNetworkTokenMaxAmount();
-                            if (amounts[3].gt(networkTokenMaxAmount)) amounts[3] = networkTokenMaxAmount;
+                            amounts[3] = BN.min(amounts[3], networkTokenMaxAmount);
                             await addProtectedLiquidity(networkToken, amounts[3]);
 
                             if (config.increaseRate) {
