@@ -1,3 +1,4 @@
+const fs = require('fs');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const { argv } = yargs(hideBin(process.argv));
@@ -9,7 +10,22 @@ require('@nomiclabs/hardhat-etherscan');
 require('solidity-coverage');
 require('hardhat-contract-sizer');
 
-var Config = require('./config.json');
+// Set up configuration
+const defaultConfig = {
+    apiKeys: {
+        etherscan: ''
+    },
+
+    networks: {
+        mainnet: {
+            NODE_ADDRESS: ''
+        }
+    }
+};
+
+const configPath = __dirname + '/config.json';
+const Config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : defaultConfig;
+//
 
 module.exports = {
     networks: {
