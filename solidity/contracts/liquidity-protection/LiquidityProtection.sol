@@ -623,7 +623,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 liquidity.reserveRateD
             );
 
-        verifyRate(
+        // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
+        verifyRateDeviation(
             packedRates.removeSpotRateN,
             packedRates.removeSpotRateD,
             packedRates.removeAverageRateN,
@@ -902,9 +903,9 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmount,
         uint256 reserveAmount
     ) internal returns (uint256) {
+        // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
         (Fraction memory spotRate, Fraction memory averageRate) = reserveTokenRates(poolToken, reserveToken);
-
-        verifyRate(spotRate.n, spotRate.d, averageRate.n, averageRate.d);
+        verifyRateDeviation(spotRate.n, spotRate.d, averageRate.n, averageRate.d);
 
         // notify event subscribers
         address[] memory subscribers = _settings.subscribers();
@@ -1033,7 +1034,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param averageRateN average rate numerator
      * @param averageRateD average rate denominator
      */
-    function verifyRate(
+    function verifyRateDeviation(
         uint256 spotRateN,
         uint256 spotRateD,
         uint256 averageRateN,
