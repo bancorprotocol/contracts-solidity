@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "../utility/Owned.sol";
-import "../utility/Utils.sol";
-
 import "./interfaces/ITokenHolder.sol";
-import "./ReserveToken.sol";
+
+import "./Owned.sol";
+import "./Utils.sol";
+
+import "../token/ReserveToken.sol";
 
 /**
  * @dev This contract provides a safety mechanism for allowing the owner to

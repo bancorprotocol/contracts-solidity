@@ -13,8 +13,8 @@ import "../utility/ContractRegistryClient.sol";
 import "../utility/Owned.sol";
 import "../utility/Utils.sol";
 import "../utility/ReentrancyGuard.sol";
+import "../utility/interfaces/ITokenHolder.sol";
 
-import "../token/interfaces/ITokenHolder.sol";
 import "../token/ReserveToken.sol";
 
 import "../INetworkSettings.sol";

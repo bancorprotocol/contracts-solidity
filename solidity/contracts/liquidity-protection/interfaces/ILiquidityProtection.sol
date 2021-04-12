@@ -6,7 +6,8 @@ import "./ILiquidityProtectionStats.sol";
 import "./ILiquidityProtectionSettings.sol";
 import "./ILiquidityProtectionSystemStore.sol";
 
-import "../../token/interfaces/ITokenHolder.sol";
+import "../../utility/interfaces/ITokenHolder.sol";
+
 import "../../token/interfaces/IReserveToken.sol";
 
 import "../../converter/interfaces/IConverterAnchor.sol";
