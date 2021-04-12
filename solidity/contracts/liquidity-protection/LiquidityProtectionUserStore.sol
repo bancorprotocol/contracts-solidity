@@ -432,7 +432,6 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         override
         ownerOnly
         validAddress(provider)
-        notThis(provider)
         greaterThanZero(amount)
         greaterThanZero(expirationTime)
         returns (uint256)

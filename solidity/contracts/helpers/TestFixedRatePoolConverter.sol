@@ -5,7 +5,7 @@ import "../converter/types/fixed-rate-pool/FixedRatePoolConverter.sol";
 import "./TestTime.sol";
 
 contract TestFixedRatePoolConverter is FixedRatePoolConverter, TestTime {
-    uint256[] public reserveAmountsRemoved = new uint256[](2);
+    uint256[] public reserveAmountsRemoved;
 
     constructor(
         IDSToken _token,

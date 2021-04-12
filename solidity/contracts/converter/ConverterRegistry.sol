@@ -402,7 +402,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
         uint16 _type,
         IERC20[] memory _reserveTokens,
         uint32[] memory _reserveWeights
-    ) public view returns (IConverterAnchor) {
+    ) public view override returns (IConverterAnchor) {
         // verify that the input parameters represent a valid liquidity pool
         if (_reserveTokens.length == _reserveWeights.length && _reserveTokens.length > 1) {
             // get the anchors of the least frequent token (optimization)

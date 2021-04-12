@@ -40,4 +40,10 @@ interface IConverterRegistry {
         returns (IConverterAnchor);
 
     function isConvertibleTokenAnchor(IERC20 _convertibleToken, address _value) external view returns (bool);
+
+    function getLiquidityPoolByConfig(
+        uint16 _type,
+        IERC20[] memory _reserveTokens,
+        uint32[] memory _reserveWeights
+    ) external view returns (IConverterAnchor);
 }

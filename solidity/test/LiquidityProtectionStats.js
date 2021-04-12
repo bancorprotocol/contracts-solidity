@@ -1,4 +1,4 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
+const { accounts, contract } = require('@openzeppelin/test-environment');
 const { expectRevert } = require('@openzeppelin/test-helpers');
 const { roles } = require('./helpers/Constants');
 const { expect } = require('../../chai-local');
@@ -51,8 +51,8 @@ describe('LiquidityProtectionStats', () => {
     });
 
     it('should revert when a non owner attempts to remove a provider pool', async () => {
-        await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner }),
-            await expectRevert(liquidityProtectionStats.removeProviderPool(provider, poolToken), 'ERR_ACCESS_DENIED');
+        await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner });
+        await expectRevert(liquidityProtectionStats.removeProviderPool(provider, poolToken), 'ERR_ACCESS_DENIED');
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([poolToken]);
     });
 
@@ -120,15 +120,15 @@ describe('LiquidityProtectionStats', () => {
 
     it('should succeed when the owner attempts to add a provider pool', async () => {
         expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([]);
-        await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner }),
-            expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([poolToken]);
+        await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner });
+        expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([poolToken]);
     });
 
     it('should succeed when the owner attempts to remove a provider pool', async () => {
-        await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner }),
-            expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([poolToken]);
-        await liquidityProtectionStats.removeProviderPool(provider, poolToken, { from: owner }),
-            expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([]);
+        await liquidityProtectionStats.addProviderPool(provider, poolToken, { from: owner });
+        expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([poolToken]);
+        await liquidityProtectionStats.removeProviderPool(provider, poolToken, { from: owner });
+        expect(await liquidityProtectionStats.providerPools(provider)).to.be.deep.equal([]);
     });
 
     it('should succeed when a seeder attempts to seed pool amounts', async () => {

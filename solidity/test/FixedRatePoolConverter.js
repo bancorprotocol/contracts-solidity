@@ -17,6 +17,7 @@ const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
+const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 describe('FixedRatePoolConverter', () => {
     const createConverter = async (tokenAddress, registryAddress = contractRegistry.address, maxConversionFee = 0) => {
@@ -123,6 +124,9 @@ describe('FixedRatePoolConverter', () => {
 
         const factory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
+
+        const networkSettings = await NetworkSettings.new(defaultSender, 0);
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
         await factory.registerTypedConverterFactory((await FixedRatePoolConverterFactory.new()).address);
     });
@@ -444,42 +448,6 @@ describe('FixedRatePoolConverter', () => {
                 );
             });
 
-            it('verifies that addLiquidity with separate reserve balances gets the correct reserve balance amounts from the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await reserveToken.transfer(sender2, 123456789);
-                await reserveToken2.transfer(sender2, 123456789);
-
-                const supply = await token.totalSupply.call();
-                const percentage = new BN(19);
-                const prevReserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const prevReserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token2Amount = divCeil(prevReserve2Balance.mul(percentage), supply);
-
-                const amount = new BN(100000);
-                let value = 0;
-                if (isETHReserve) {
-                    value = amount;
-                } else {
-                    await reserveToken.approve(converter.address, amount, { from: sender2 });
-                }
-
-                await reserveToken2.approve(converter.address, amount, { from: sender2 });
-                await converter.methods['addLiquidity(uint256,uint256,uint256)'](amount, token2Amount, 1, {
-                    from: sender2,
-                    value
-                });
-
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-
-                expect(reserve1Balance).to.be.bignumber.equal(prevReserve1Balance.add(amount));
-                expect(reserve2Balance).to.be.bignumber.equal(prevReserve2Balance.add(token2Amount));
-            });
-
             it('verifies that removeLiquidity sends the correct reserve balance amounts to the caller', async () => {
                 const converter = await initConverter(false, isETHReserve);
 
@@ -606,39 +574,6 @@ describe('FixedRatePoolConverter', () => {
                         from: sender2
                     })
                 );
-            });
-
-            it('verifies that removeLiquidity with separate minimum return args sends the correct reserve balance amounts to the caller', async () => {
-                const converter = await initConverter(false, isETHReserve);
-
-                await token.transferOwnership(converter.address);
-                await converter.acceptTokenOwnership();
-
-                await token.transfer(sender2, 100);
-
-                const supply = await token.totalSupply.call();
-                const percentage = new BN(19);
-                const reserve1Balance = await converter.reserveBalance.call(getReserve1Address(isETHReserve));
-                const reserve2Balance = await converter.reserveBalance.call(reserveToken2.address);
-                const token1Amount = reserve1Balance.mul(percentage).div(supply);
-                const token2Amount = reserve2Balance.mul(percentage).div(supply);
-
-                const token1PrevBalance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
-                const token2PrevBalance = await reserveToken2.balanceOf.call(sender2);
-                const res = await converter.methods['removeLiquidity(uint256,uint256,uint256)'](19, 1, 1, {
-                    from: sender2
-                });
-
-                let transactionCost = new BN(0);
-                if (isETHReserve) {
-                    transactionCost = await getTransactionCost(res);
-                }
-
-                const token1Balance = await getBalance(reserveToken, getReserve1Address(isETHReserve), sender2);
-                const token2Balance = await reserveToken2.balanceOf.call(sender2);
-
-                expect(token1Balance).to.be.bignumber.equal(token1PrevBalance.add(token1Amount.sub(transactionCost)));
-                expect(token2Balance).to.be.bignumber.equal(token2PrevBalance.add(token2Amount));
             });
         });
     }
@@ -1015,19 +950,16 @@ describe('FixedRatePoolConverter', () => {
             );
         };
 
-        const getLiquidityReturns = async (firstTime, converter, reserveTokens, reserveAmounts) => {
+        const getLiquidityReturn = async (firstTime, converter, reserveTokens, reserveAmounts) => {
             if (firstTime) {
                 const length = Math.round(
                     reserveAmounts.map((reserveAmount) => reserveAmount.toString()).join('').length /
                         reserveAmounts.length
                 );
-                const retVal = new BN('1'.padEnd(length, '0'));
-                return reserveAmounts.map((reserveAmount, i) => retVal);
+                return new BN(10).pow(new BN(length - 1));
             }
 
-            return await Promise.all(
-                reserveAmounts.map((reserveAmount, i) => converter.addLiquidityReturn(reserveTokens[i], reserveAmount))
-            );
+            return await converter.addLiquidityReturn(reserveTokens, reserveAmounts);
         };
 
         const test = async (hasETH, rateN, rateD) => {
@@ -1058,7 +990,7 @@ describe('FixedRatePoolConverter', () => {
                     reserveTokens,
                     reserveAmounts
                 );
-                const liquidityReturns = await getLiquidityReturns(
+                const liquidityReturn = await getLiquidityReturn(
                     state.length == 0,
                     converter,
                     reserveTokens,
@@ -1091,9 +1023,7 @@ describe('FixedRatePoolConverter', () => {
                     }
                 }
 
-                for (const liquidityReturn of liquidityReturns) {
-                    expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
-                }
+                expect(liquidityReturn).to.be.bignumber.equal(supply.sub(prevSupply));
 
                 expected = actual;
                 prevSupply = supply;
