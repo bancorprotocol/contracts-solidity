@@ -275,7 +275,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         greaterThanZero(amount)
         returns (uint256)
     {
-        return addPosition(owner, poolAnchor, reserveToken, amount);
+        return addLiquidity(owner, poolAnchor, reserveToken, amount);
     }
 
     /**
@@ -302,7 +302,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         greaterThanZero(amount)
         returns (uint256)
     {
-        return addPosition(msg.sender, poolAnchor, reserveToken, amount);
+        return addLiquidity(msg.sender, poolAnchor, reserveToken, amount);
     }
 
     /**
@@ -316,7 +316,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * @return new position id
      */
-    function addPosition(
+    function addLiquidity(
         address owner,
         IConverterAnchor poolAnchor,
         IReserveToken reserveToken,
