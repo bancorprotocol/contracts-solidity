@@ -324,16 +324,16 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ) private returns (uint256) {
         if (isNetworkToken(reserveToken)) {
             verifyEthAmount(0);
-            return addNetworkTokenPosition(owner, poolAnchor, amount);
+            return addNetworkTokenLiquidity(owner, poolAnchor, amount);
         }
 
         // verify that ETH was passed with the call if needed
         verifyEthAmount(reserveToken.isNativeToken() ? amount : 0);
-        return addBaseTokenPosition(owner, poolAnchor, reserveToken, amount);
+        return addBaseTokenLiquidity(owner, poolAnchor, reserveToken, amount);
     }
 
     /**
-     * @dev adds network token position to a pool
+     * @dev adds network token liquidity to a pool
      * also mints new governance tokens for the caller
      *
      * @param owner liquidity owner
@@ -342,7 +342,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * @return new position id
      */
-    function addNetworkTokenPosition(
+    function addNetworkTokenLiquidity(
         address owner,
         IConverterAnchor poolAnchor,
         uint256 amount
@@ -374,7 +374,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev adds base token position to a pool
+     * @dev adds base token liquidity to a pool
      *
      * @param owner liquidity owner
      * @param poolAnchor anchor of the pool
@@ -383,7 +383,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * @return new position id
      */
-    function addBaseTokenPosition(
+    function addBaseTokenLiquidity(
         address owner,
         IConverterAnchor poolAnchor,
         IReserveToken baseToken,
