@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import "../../converter/interfaces/IConverterAnchor.sol";
+
 import "../../token/interfaces/IDSToken.sol";
+import "../../token/interfaces/IReserveToken.sol";
+
 import "../../utility/interfaces/IOwned.sol";
 
 /*
@@ -12,7 +13,7 @@ import "../../utility/interfaces/IOwned.sol";
 */
 interface ILiquidityProtectionStore is IOwned {
     function withdrawTokens(
-        IERC20 _token,
+        IReserveToken _token,
         address _to,
         uint256 _amount
     ) external;
@@ -23,7 +24,7 @@ interface ILiquidityProtectionStore is IOwned {
         returns (
             address,
             IDSToken,
-            IERC20,
+            IReserveToken,
             uint256,
             uint256,
             uint256,
@@ -34,7 +35,7 @@ interface ILiquidityProtectionStore is IOwned {
     function addProtectedLiquidity(
         address _provider,
         IDSToken _poolToken,
-        IERC20 _reserveToken,
+        IReserveToken _reserveToken,
         uint256 _poolAmount,
         uint256 _reserveAmount,
         uint256 _reserveRateN,
@@ -66,9 +67,9 @@ interface ILiquidityProtectionStore is IOwned {
 
     function removeLockedBalance(address _provider, uint256 _index) external;
 
-    function systemBalance(IERC20 _poolToken) external view returns (uint256);
+    function systemBalance(IReserveToken _poolToken) external view returns (uint256);
 
-    function incSystemBalance(IERC20 _poolToken, uint256 _poolAmount) external;
+    function incSystemBalance(IReserveToken _poolToken, uint256 _poolAmount) external;
 
-    function decSystemBalance(IERC20 _poolToken, uint256 _poolAmount) external;
+    function decSystemBalance(IReserveToken _poolToken, uint256 _poolAmount) external;
 }

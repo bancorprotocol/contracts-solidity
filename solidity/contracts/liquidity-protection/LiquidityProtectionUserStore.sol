@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/ILiquidityProtectionUserStore.sol";
+import "../token/ReserveToken.sol";
 import "../utility/Utils.sol";
 
 /**
@@ -13,6 +14,7 @@ import "../utility/Utils.sol";
  */
 contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessControl, Utils {
     using SafeMath for uint256;
+    using ReserveToken for IReserveToken;
 
     uint256 private constant MAX_UINT128 = 2**128 - 1;
     uint256 private constant MAX_UINT112 = 2**112 - 1;
@@ -26,7 +28,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         address provider; // liquidity provider
         uint256 index; // index in the provider liquidity ids array
         IDSToken poolToken; // pool token address
-        IERC20 reserveToken; // reserve token address
+        IReserveToken reserveToken; // reserve token address
         uint128 poolAmount; // pool token amount
         uint128 reserveAmount; // reserve token amount
         uint256 reserveRateInfo; // reserve rate details:
@@ -80,7 +82,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         uint256 id,
         address indexed provider,
         IDSToken indexed poolToken,
-        IERC20 indexed reserveToken,
+        IReserveToken indexed reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount
     );
@@ -99,7 +101,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         uint256 id,
         address indexed provider,
         IDSToken indexed poolToken,
-        IERC20 indexed reserveToken,
+        IReserveToken indexed reserveToken,
         int256 deltaPoolAmount,
         int256 deltaReserveAmount
     );
@@ -118,7 +120,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         uint256 id,
         address indexed provider,
         IDSToken indexed poolToken,
-        IERC20 indexed reserveToken,
+        IReserveToken indexed reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount
     );
@@ -204,7 +206,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         returns (
             address,
             IDSToken,
-            IERC20,
+            IReserveToken,
             uint256,
             uint256,
             uint256,
@@ -243,7 +245,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
     function addPosition(
         address provider,
         IDSToken poolToken,
-        IERC20 reserveToken,
+        IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount,
         uint256 reserveRateN,
@@ -306,7 +308,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         require(pos.provider != address(0), "ERR_INVALID_ID");
 
         IDSToken poolToken = pos.poolToken;
-        IERC20 reserveToken = pos.reserveToken;
+        IReserveToken reserveToken = pos.reserveToken;
         uint256 prevPoolAmount = uint256(pos.poolAmount);
         uint256 prevReserveAmount = uint256(pos.reserveAmount);
         pos.poolAmount = toUint128(newPoolAmount);
@@ -334,7 +336,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
 
         uint256 index = pos.index;
         IDSToken poolToken = pos.poolToken;
-        IERC20 reserveToken = pos.reserveToken;
+        IReserveToken reserveToken = pos.reserveToken;
         uint256 poolAmount = uint256(pos.poolAmount);
         uint256 reserveAmount = uint256(pos.reserveAmount);
         delete _positions[id];
@@ -542,7 +544,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
         uint256 id,
         address provider,
         IDSToken poolToken,
-        IERC20 reserveToken,
+        IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount,
         uint256 reserveRateN,
@@ -599,7 +601,7 @@ contract LiquidityProtectionUserStore is ILiquidityProtectionUserStore, AccessCo
                 }
                 pos.provider = providers[i];
                 pos.poolToken = IDSToken(poolTokens[i]);
-                pos.reserveToken = IERC20(reserveTokens[i]);
+                pos.reserveToken = IReserveToken(reserveTokens[i]);
                 pos.poolAmount = toUint128(poolAmounts[i]);
                 pos.reserveAmount = toUint128(reserveAmounts[i]);
                 pos.reserveRateInfo = encodeReserveRateInfo(reserveRateNs[i], reserveRateDs[i], timestamps[i]);

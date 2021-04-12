@@ -2,10 +2,13 @@
 pragma solidity 0.6.12;
 
 import "../../LiquidityPoolConverter.sol";
-import "../../../token/interfaces/IDSToken.sol";
+
 import "../../../utility/MathEx.sol";
 import "../../../utility/Time.sol";
 import "../../../utility/Types.sol";
+
+import "../../../token/interfaces/IDSToken.sol";
+import "../../../token/ReserveToken.sol";
 
 /**
  * @dev This contract is a specialized version of a converter that manages
@@ -15,6 +18,7 @@ import "../../../utility/Types.sol";
  * is 2 reserves with 50%/50% weights.
  */
 contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
+    using ReserveToken for IReserveToken;
     using SafeERC20 for IERC20;
     using MathEx for *;
 
@@ -71,7 +75,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @param _token   address of the reserve token
      * @param _weight  reserve weight, represented in ppm, 1-1000000
      */
-    function addReserve(IERC20 _token, uint32 _weight) public override ownerOnly {
+    function addReserve(IReserveToken _token, uint32 _weight) public override ownerOnly {
         super.addReserve(_token, _weight);
 
         isStandardPool =
@@ -91,8 +95,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return expected fee
      */
     function targetAmountAndFee(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _amount
     ) public view override active validReserve(_sourceToken) validReserve(_targetToken) returns (uint256, uint256) {
         // validate input
@@ -115,8 +119,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
     /**
      * @dev converts a specific amount of source tokens to target tokens
      *
-     * @param _sourceToken source ERC20 token
-     * @param _targetToken target ERC20 token
+     * @param _sourceToken source reserve token
+     * @param _targetToken target reserve token
      * @param _amount      amount of tokens to convert (in units of the source token)
      * @param _trader      address of the caller who executed the conversion
      * @param _beneficiary wallet to receive the conversion result
@@ -124,8 +128,8 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return amount of tokens received (in units of the target token)
      */
     function doConvert(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _amount,
         address _trader,
         address payable _beneficiary
@@ -146,7 +150,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         assert(amount < reserveBalance(_targetToken));
 
         // ensure that the input amount was already deposited
-        if (_sourceToken == NATIVE_TOKEN_ADDRESS) {
+        if (_sourceToken.isNativeToken()) {
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         } else {
             require(
@@ -160,11 +164,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         reserves[_targetToken].balance = reserves[_targetToken].balance.sub(amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        if (_targetToken == NATIVE_TOKEN_ADDRESS) {
-            _beneficiary.transfer(amount);
-        } else {
-            _targetToken.safeTransfer(_beneficiary, amount);
-        }
+        _targetToken.safeTransfer(_beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
@@ -183,7 +183,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
-    function recentAverageRate(IERC20 _token) external view validReserve(_token) returns (uint256, uint256) {
+    function recentAverageRate(IReserveToken _token) external view validReserve(_token) returns (uint256, uint256) {
         // verify that the pool is standard
         require(isStandardPool, "ERR_NON_STANDARD_POOL");
 
@@ -252,7 +252,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return amount of pool tokens issued
      */
     function addLiquidity(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _minReturn
     ) public payable protected active returns (uint256) {
@@ -261,14 +261,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            if (_reserveTokens[i] == NATIVE_TOKEN_ADDRESS) {
+            if (_reserveTokens[i].isNativeToken()) {
                 require(_reserveAmounts[i] == msg.value, "ERR_ETH_AMOUNT_MISMATCH");
             }
         }
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
-            require(reserves[NATIVE_TOKEN_ADDRESS].isSet, "ERR_NO_ETH_RESERVE");
+            require(reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].isSet, "ERR_NO_ETH_RESERVE");
         }
 
         // get the total supply
@@ -299,7 +299,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      */
     function removeLiquidity(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveMinReturnAmounts
     ) public protected active returns (uint256[] memory) {
         // verify the user input
@@ -327,7 +327,10 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      */
     function fund(uint256 _amount) public payable protected returns (uint256) {
         syncReserveBalances();
-        reserves[NATIVE_TOKEN_ADDRESS].balance = reserves[NATIVE_TOKEN_ADDRESS].balance.sub(msg.value);
+
+        reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance = reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance.sub(
+            msg.value
+        );
 
         uint256 supply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
@@ -336,12 +339,12 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         // _amount and the total supply in each reserve from the caller to the converter
         uint256 reserveCount = reserveTokens.length;
         for (uint256 i = 0; i < reserveCount; i++) {
-            IERC20 reserveToken = reserveTokens[i];
+            IReserveToken reserveToken = reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.fundCost(supply, rsvBalance, reserveRatio, _amount);
 
             // transfer funds from the caller in the reserve token
-            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
+            if (reserveToken.isNativeToken()) {
                 if (msg.value > reserveAmount) {
                     msg.sender.transfer(msg.value - reserveAmount);
                 } else {
@@ -393,7 +396,9 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         IDSToken(address(anchor)).destroy(msg.sender, _amount);
 
         uint256[] memory reserveMinReturnAmounts = new uint256[](reserveTokens.length);
-        for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++) reserveMinReturnAmounts[i] = 1;
+        for (uint256 i = 0; i < reserveMinReturnAmounts.length; i++) {
+            reserveMinReturnAmounts[i] = 1;
+        }
 
         return removeLiquidityFromPool(reserveTokens, reserveMinReturnAmounts, totalSupply, _amount);
     }
@@ -411,7 +416,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return the required amount of each one of the reserve tokens
      */
     function addLiquidityCost(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256 _reserveTokenIndex,
         uint256 _reserveAmount
     ) public view returns (uint256[] memory) {
@@ -419,12 +424,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
 
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-        uint256 amount = formula.fundSupplyAmount(
-            totalSupply,
-            reserves[_reserveTokens[_reserveTokenIndex]].balance,
-            reserveRatio,
-            _reserveAmount
-        );
+        uint256 amount =
+            formula.fundSupplyAmount(
+                totalSupply,
+                reserves[_reserveTokens[_reserveTokenIndex]].balance,
+                reserveRatio,
+                _reserveAmount
+            );
 
         for (uint256 i = 0; i < reserveAmounts.length; i++) {
             reserveAmounts[i] = formula.fundCost(
@@ -448,10 +454,11 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      *
      * @return the amount of pool tokens entitled for the given amounts of reserve tokens
      */
-    function addLiquidityReturn(
-        IERC20[] memory _reserveTokens,
-        uint256[] memory _reserveAmounts
-    ) public view returns (uint256) {
+    function addLiquidityReturn(IReserveToken[] memory _reserveTokens, uint256[] memory _reserveAmounts)
+        public
+        view
+        returns (uint256)
+    {
         uint256 totalSupply = IDSToken(address(anchor)).totalSupply();
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         return getMinShare(formula, totalSupply, _reserveTokens, _reserveAmounts);
@@ -465,7 +472,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      *
      * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
-    function removeLiquidityReturn(uint256 _amount, IERC20[] memory _reserveTokens)
+    function removeLiquidityReturn(uint256 _amount, IReserveToken[] memory _reserveTokens)
         public
         view
         returns (uint256[] memory)
@@ -484,7 +491,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @param _amount          token amount
      */
     function verifyLiquidityInput(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _amount
     ) private view {
@@ -523,7 +530,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return amount of pool tokens issued
      */
     function addLiquidityToPool(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _totalSupply
     ) private returns (uint256) {
@@ -541,7 +548,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      *
      * @return amount of pool tokens issued
      */
-    function addLiquidityToEmptyPool(IERC20[] memory _reserveTokens, uint256[] memory _reserveAmounts)
+    function addLiquidityToEmptyPool(IReserveToken[] memory _reserveTokens, uint256[] memory _reserveAmounts)
         private
         returns (uint256)
     {
@@ -550,13 +557,14 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
 
         // transfer each one of the reserve amounts from the user to the pool
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            IERC20 reserveToken = _reserveTokens[i];
+            IReserveToken reserveToken = _reserveTokens[i];
             uint256 reserveAmount = _reserveAmounts[i];
 
-            if (reserveToken != NATIVE_TOKEN_ADDRESS) {
-                // ETH has already been transferred as part of the transaction
-                reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
-            }
+            // ETH has already been transferred as part of the transaction
+            //
+            // Please note that ReserveToken's safeTransferFrom will early return when invoked on the native ETH
+            // token
+            reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
 
             reserves[reserveToken].balance = reserveAmount;
 
@@ -580,27 +588,33 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return amount of pool tokens issued
      */
     function addLiquidityToNonEmptyPool(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _totalSupply
     ) private returns (uint256) {
         syncReserveBalances();
-        reserves[NATIVE_TOKEN_ADDRESS].balance = reserves[NATIVE_TOKEN_ADDRESS].balance.sub(msg.value);
+
+        reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance = reserves[ReserveToken.NATIVE_TOKEN_ADDRESS].balance.sub(
+            msg.value
+        );
 
         IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
         uint256 amount = getMinShare(formula, _totalSupply, _reserveTokens, _reserveAmounts);
         uint256 newPoolTokenSupply = _totalSupply.add(amount);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            IERC20 reserveToken = _reserveTokens[i];
+            IReserveToken reserveToken = _reserveTokens[i];
             uint256 rsvBalance = reserves[reserveToken].balance;
             uint256 reserveAmount = formula.fundCost(_totalSupply, rsvBalance, reserveRatio, amount);
             require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
-            if (reserveToken != NATIVE_TOKEN_ADDRESS) {
+            if (!reserveToken.isNativeToken()) {
                 // ETH has already been transferred as part of the transaction
+                //
+                // Please note that ReserveToken's safeTransferFrom will early return when invoked on the native ETH
+                // token
                 reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
             } else if (_reserveAmounts[i] > reserveAmount) {
                 // transfer the extra amount of ETH back to the user
@@ -636,7 +650,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @return the amount of each reserve token granted for the given amount of pool tokens
      */
     function removeLiquidityFromPool(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveMinReturnAmounts,
         uint256 _totalSupply,
         uint256 _amount
@@ -648,7 +662,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, _reserveTokens, _totalSupply, formula);
 
         for (uint256 i = 0; i < _reserveTokens.length; i++) {
-            IERC20 reserveToken = _reserveTokens[i];
+            IReserveToken reserveToken = _reserveTokens[i];
             uint256 reserveAmount = reserveAmounts[i];
             require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_TARGET_AMOUNT");
 
@@ -656,11 +670,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
             reserves[reserveToken].balance = newReserveBalance;
 
             // transfer each one of the reserve amounts from the pool to the user
-            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
-                msg.sender.transfer(reserveAmount);
-            } else {
-                reserveToken.safeTransfer(msg.sender, reserveAmount);
-            }
+            reserveToken.safeTransfer(msg.sender, reserveAmount);
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalance, newPoolTokenSupply);
 
@@ -689,25 +699,27 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      */
     function removeLiquidityReserveAmounts(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256 _totalSupply,
         IBancorFormula _formula
     ) private view returns (uint256[] memory) {
         uint256[] memory reserveAmounts = new uint256[](_reserveTokens.length);
-        for (uint256 i = 0; i < reserveAmounts.length; i++)
+        for (uint256 i = 0; i < reserveAmounts.length; i++) {
             reserveAmounts[i] = _formula.liquidateReserveAmount(
                 _totalSupply,
                 reserves[_reserveTokens[i]].balance,
                 reserveRatio,
                 _amount
             );
+        }
+
         return reserveAmounts;
     }
 
     function getMinShare(
         IBancorFormula formula,
         uint256 _totalSupply,
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveAmounts
     ) private view returns (uint256) {
         uint256 minIndex = 0;
@@ -728,7 +740,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      * @param _sourceToken address of the source reserve token
      * @param _targetToken address of the target reserve token
      */
-    function dispatchTokenRateUpdateEvents(IERC20 _sourceToken, IERC20 _targetToken) private {
+    function dispatchTokenRateUpdateEvents(IReserveToken _sourceToken, IReserveToken _targetToken) private {
         uint256 poolTokenSupply = IDSToken(address(anchor)).totalSupply();
         uint256 sourceReserveBalance = reserveBalance(_sourceToken);
         uint256 targetReserveBalance = reserveBalance(_targetToken);
@@ -738,7 +750,7 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
         // dispatch token rate update event for the reserve tokens
         uint256 rateN = targetReserveBalance.mul(sourceReserveWeight);
         uint256 rateD = sourceReserveBalance.mul(targetReserveWeight);
-        emit TokenRateUpdate(_sourceToken, _targetToken, rateN, rateD);
+        emit TokenRateUpdate(address(_sourceToken), address(_targetToken), rateN, rateD);
 
         // dispatch token rate update events for the pool token
         dispatchPoolTokenRateUpdateEvent(poolTokenSupply, _sourceToken, sourceReserveBalance, sourceReserveWeight);
@@ -755,13 +767,13 @@ contract LiquidityPoolV1Converter is LiquidityPoolConverter, Time {
      */
     function dispatchPoolTokenRateUpdateEvent(
         uint256 _poolTokenSupply,
-        IERC20 _reserveToken,
+        IReserveToken _reserveToken,
         uint256 _reserveBalance,
         uint32 _reserveWeight
     ) private {
         emit TokenRateUpdate(
-            IDSToken(address(anchor)),
-            _reserveToken,
+            address(anchor),
+            address(_reserveToken),
             _reserveBalance.mul(PPM_RESOLUTION),
             _poolTokenSupply.mul(_reserveWeight)
         );

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 import "../../token/interfaces/IDSToken.sol";
+import "../../token/interfaces/IReserveToken.sol";
 
 /*
     Liquidity Protection User Store interface
@@ -12,7 +13,7 @@ interface ILiquidityProtectionUserStore {
         returns (
             address,
             IDSToken,
-            IERC20,
+            IReserveToken,
             uint256,
             uint256,
             uint256,
@@ -23,7 +24,7 @@ interface ILiquidityProtectionUserStore {
     function addPosition(
         address provider,
         IDSToken poolToken,
-        IERC20 reserveToken,
+        IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount,
         uint256 reserveRateN,
@@ -59,7 +60,7 @@ interface ILiquidityProtectionUserStore {
         uint256 id,
         address provider,
         IDSToken poolToken,
-        IERC20 reserveToken,
+        IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount,
         uint256 reserveRateN,

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/ILiquidityProtectionSystemStore.sol";
+
 import "../utility/Utils.sol";
 
 /**
@@ -74,8 +75,8 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @dev increases the system balance for a given token
      * can be executed only by an owner
      *
-     * @param token     token address
-     * @param amount    token amount
+     * @param token token address
+     * @param amount token amount
      */
     function incSystemBalance(IERC20 token, uint256 amount) external override ownerOnly validAddress(address(token)) {
         uint256 prevAmount = _systemBalances[token];
@@ -89,8 +90,8 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
      * @dev decreases the system balance for a given token
      * can be executed only by an owner
      *
-     * @param token     token address
-     * @param amount    token amount
+     * @param token token address
+     * @param amount token amount
      */
     function decSystemBalance(IERC20 token, uint256 amount) external override ownerOnly validAddress(address(token)) {
         uint256 prevAmount = _systemBalances[token];

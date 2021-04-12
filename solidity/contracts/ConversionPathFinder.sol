@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "./IConversionPathFinder.sol";
+
 import "./utility/ContractRegistryClient.sol";
+
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
 import "./converter/interfaces/IConverterRegistry.sol";
@@ -39,7 +42,12 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
      *
      * @return a path from the source token to the target token
      */
-    function findPath(IERC20 _sourceToken, IERC20 _targetToken) external view override returns (address[] memory) {
+    function findPath(IReserveToken _sourceToken, IReserveToken _targetToken)
+        external
+        view
+        override
+        returns (address[] memory)
+    {
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
         address[] memory sourcePath = getPath(_sourceToken, converterRegistry);
         address[] memory targetPath = getPath(_targetToken, converterRegistry);
@@ -49,26 +57,37 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
     /**
      * @dev generates a conversion path between a given token and the anchor token
      *
-     * @param _token               address of the token
-     * @param _converterRegistry   address of the converter registry
+     * @param _reserveToken address of the token
+     * @param _converterRegistry address of the converter registry
      *
      * @return a path from the input token to the anchor token
      */
-    function getPath(IERC20 _token, IConverterRegistry _converterRegistry) private view returns (address[] memory) {
-        if (_token == anchorToken) return getInitialArray(address(_token));
+    function getPath(IReserveToken _reserveToken, IConverterRegistry _converterRegistry)
+        private
+        view
+        returns (address[] memory)
+    {
+        if (address(_reserveToken) == address(anchorToken)) {
+            return getInitialArray(address(_reserveToken));
+        }
 
         address[] memory anchors;
-        if (_converterRegistry.isAnchor(address(_token))) anchors = getInitialArray(address(_token));
-        else anchors = _converterRegistry.getConvertibleTokenAnchors(_token);
+        if (_converterRegistry.isAnchor(address(_reserveToken))) {
+            anchors = getInitialArray(address(_reserveToken));
+        } else {
+            anchors = _converterRegistry.getConvertibleTokenAnchors(_reserveToken);
+        }
 
         for (uint256 n = 0; n < anchors.length; n++) {
             IConverter converter = IConverter(payable(IConverterAnchor(anchors[n]).owner()));
             uint256 connectorTokenCount = converter.connectorTokenCount();
             for (uint256 i = 0; i < connectorTokenCount; i++) {
-                IERC20 connectorToken = converter.connectorTokens(i);
-                if (connectorToken != _token) {
+                IReserveToken connectorToken = converter.connectorTokens(i);
+                if (connectorToken != _reserveToken) {
                     address[] memory path = getPath(connectorToken, _converterRegistry);
-                    if (path.length > 0) return getExtendedArray(address(_token), anchors[n], path);
+                    if (path.length > 0) {
+                        return getExtendedArray(address(_reserveToken), anchors[n], path);
+                    }
                 }
             }
         }
@@ -98,13 +117,19 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
             }
 
             address[] memory path = new address[](i + j + 1);
-            for (uint256 m = 0; m <= i; m++) path[m] = _sourcePath[m];
-            for (uint256 n = j; n > 0; n--) path[path.length - n] = _targetPath[n - 1];
+            for (uint256 m = 0; m <= i; m++) {
+                path[m] = _sourcePath[m];
+            }
+            for (uint256 n = j; n > 0; n--) {
+                path[path.length - n] = _targetPath[n - 1];
+            }
 
             uint256 length = 0;
             for (uint256 p = 0; p < path.length; p += 1) {
                 for (uint256 q = p + 2; q < path.length - (p % 2); q += 2) {
-                    if (path[p] == path[q]) p = q;
+                    if (path[p] == path[q]) {
+                        p = q;
+                    }
                 }
                 path[length++] = path[p];
             }
@@ -145,7 +170,9 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
         address[] memory array = new address[](2 + _array.length);
         array[0] = _item0;
         array[1] = _item1;
-        for (uint256 i = 0; i < _array.length; i++) array[2 + i] = _array[i];
+        for (uint256 i = 0; i < _array.length; i++) {
+            array[2 + i] = _array[i];
+        }
         return array;
     }
 
@@ -159,7 +186,9 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
      */
     function getPartialArray(address[] memory _array, uint256 _length) private pure returns (address[] memory) {
         address[] memory array = new address[](_length);
-        for (uint256 i = 0; i < _length; i++) array[i] = _array[i];
+        for (uint256 i = 0; i < _length; i++) {
+            array[i] = _array[i];
+        }
         return array;
     }
 }
