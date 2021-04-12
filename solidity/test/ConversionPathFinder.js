@@ -18,13 +18,7 @@ const ANCHOR_TOKEN_SYMBOL = 'ETH';
 
 /* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
-    reserves: [
-        { symbol: 'BNT' },
-        { symbol: 'AAA' },
-        { symbol: 'BBB' },
-        { symbol: 'CCC' },
-        { symbol: 'DDD' }
-    ],
+    reserves: [{ symbol: 'BNT' }, { symbol: 'AAA' }, { symbol: 'BBB' }, { symbol: 'CCC' }, { symbol: 'DDD' }],
     converters: [
         { symbol: 'ETHBNT', reserves: [{ symbol: 'ETH' }, { symbol: 'BNT' }] },
         { symbol: 'AAABNT', reserves: [{ symbol: 'AAA' }, { symbol: 'BNT' }] },

@@ -2,18 +2,21 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../../ConverterVersion.sol";
 import "../../interfaces/IConverter.sol";
 import "../../interfaces/IConverterAnchor.sol";
 import "../../interfaces/IConverterUpgrader.sol";
-import "../../../INetworkSettings.sol";
-import "../../../token/interfaces/IDSToken.sol";
+
 import "../../../utility/MathEx.sol";
 import "../../../utility/ContractRegistryClient.sol";
 import "../../../utility/ReentrancyGuard.sol";
 import "../../../utility/Time.sol";
+
+import "../../../token/interfaces/IDSToken.sol";
+import "../../../token/ReserveToken.sol";
+
+import "../../../INetworkSettings.sol";
 
 /**
  * @dev This contract is a specialized version of the converter, which is
@@ -21,6 +24,7 @@ import "../../../utility/Time.sol";
  */
 contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistryClient, ReentrancyGuard, Time {
     using SafeMath for uint256;
+    using ReserveToken for IReserveToken;
     using SafeERC20 for IERC20;
     using MathEx for *;
 
@@ -31,8 +35,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     uint256 private __reserveBalances;
     uint256 private _reserveBalancesProduct;
-    IERC20[] private __reserveTokens;
-    mapping(IERC20 => uint256) private __reserveIds;
+    IReserveToken[] private __reserveTokens;
+    mapping(IReserveToken => uint256) private __reserveIds;
 
     IConverterAnchor public override anchor; // converter anchor contract
     uint32 public override maxConversionFee; // maximum conversion fee, represented in ppm, 0...1000000
@@ -56,7 +60,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     event LiquidityAdded(
         address indexed _provider,
-        IERC20 indexed _reserveToken,
+        IReserveToken indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
@@ -73,7 +77,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     event LiquidityRemoved(
         address indexed _provider,
-        IERC20 indexed _reserveToken,
+        IReserveToken indexed _reserveToken,
         uint256 _amount,
         uint256 _newBalance,
         uint256 _newSupply
@@ -118,13 +122,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     // validates a reserve token address - verifies that the address belongs to one of the reserve tokens
-    modifier validReserve(IERC20 _address) {
+    modifier validReserve(IReserveToken _address) {
         _validReserve(_address);
         _;
     }
 
     // error message binary size optimization
-    function _validReserve(IERC20 _address) internal view {
+    function _validReserve(IReserveToken _address) internal view {
         require(__reserveIds[_address] != 0, "ERR_INVALID_RESERVE");
     }
 
@@ -163,7 +167,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev deposits ether
      * can only be called if the converter has an ETH reserve
      */
-    receive() external payable override(IConverter) validReserve(NATIVE_TOKEN_ADDRESS) {}
+    receive() external payable override(IConverter) validReserve(ReserveToken.NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev checks whether or not the converter version is 28 or higher
@@ -236,16 +240,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     {
         uint256 reserveCount = __reserveTokens.length;
         for (uint256 i = 0; i < reserveCount; ++i) {
-            IERC20 reserveToken = __reserveTokens[i];
+            IReserveToken reserveToken = __reserveTokens[i];
 
-            uint256 amount;
-            if (reserveToken == NATIVE_TOKEN_ADDRESS) {
-                amount = address(this).balance;
-            } else {
-                amount = reserveToken.balanceOf(address(this));
-            }
-
-            safeTransfer(reserveToken, _newConverter, amount);
+            reserveToken.safeTransfer(_newConverter, reserveToken.balanceOf(address(this)));
 
             syncReserveBalance(reserveToken);
         }
@@ -270,13 +267,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev executed by the upgrader at the end of the upgrade process to handle custom pool logic
      */
-    function onUpgradeComplete()
-        external
-        override
-        protected
-        ownerOnly
-        only(CONVERTER_UPGRADER)
-    {
+    function onUpgradeComplete() external override protected ownerOnly only(CONVERTER_UPGRADER) {
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
         _reserveBalancesProduct = reserveBalance0 * reserveBalance1;
     }
@@ -296,7 +287,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return array of reserve tokens
      */
-    function reserveTokens() public view returns (IERC20[] memory) {
+    function reserveTokens() public view returns (IReserveToken[] memory) {
         return __reserveTokens;
     }
 
@@ -307,7 +298,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param _token   address of the reserve token
      * @param _weight  reserve weight, represented in ppm, 1-1000000
      */
-    function addReserve(IERC20 _token, uint32 _weight)
+    function addReserve(IReserveToken _token, uint32 _weight)
         public
         virtual
         override
@@ -328,11 +319,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev returns the reserve's weight
      * added in version 28
      *
-     * @param _reserveToken    reserve token contract address
+     * @param _reserveToken reserve token contract address
      *
      * @return reserve weight
      */
-    function reserveWeight(IERC20 _reserveToken) public view validReserve(_reserveToken) returns (uint32) {
+    function reserveWeight(IReserveToken _reserveToken) public view validReserve(_reserveToken) returns (uint32) {
         return PPM_RESOLUTION / 2;
     }
 
@@ -343,7 +334,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return the balance of the given reserve token
      */
-    function reserveBalance(IERC20 _reserveToken) public view override returns (uint256) {
+    function reserveBalance(IReserveToken _reserveToken) public view override returns (uint256) {
         uint256 reserveId = __reserveIds[_reserveToken];
         require(reserveId != 0, "ERR_INVALID_RESERVE");
         return reserveBalance(reserveId);
@@ -386,9 +377,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (ITokenHolder wallet, uint256 fee0, uint256 fee1) = networkWalletAndFees(reserveBalance0, reserveBalance1);
         reserveBalance0 -= fee0;
         reserveBalance1 -= fee1;
+
         setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
-        safeTransfer(__reserveTokens[0], address(wallet), fee0);
-        safeTransfer(__reserveTokens[1], address(wallet), fee1);
+
+        __reserveTokens[0].safeTransfer(address(wallet), fee0);
+        __reserveTokens[1].safeTransfer(address(wallet), fee1);
+
         return (reserveBalance0, reserveBalance1);
     }
 
@@ -399,7 +393,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return reserve balances minus their corresponding fees
      */
-    function baseReserveBalances(IERC20[] memory _reserveTokens) internal view returns (uint256[2] memory) {
+    function baseReserveBalances(IReserveToken[] memory _reserveTokens) internal view returns (uint256[2] memory) {
         uint256 reserveId0 = __reserveIds[_reserveTokens[0]];
         uint256 reserveId1 = __reserveIds[_reserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
@@ -411,8 +405,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev converts a specific amount of source tokens to target tokens
      * can only be called by the bancor network contract
      *
-     * @param _sourceToken source ERC20 token
-     * @param _targetToken target ERC20 token
+     * @param _sourceToken source reserve token
+     * @param _targetToken target reserve token
      * @param _amount      amount of tokens to convert (in units of the source token)
      * @param _trader      address of the caller who executed the conversion
      * @param _beneficiary wallet to receive the conversion result
@@ -420,8 +414,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return amount of tokens received (in units of the target token)
      */
     function convert(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _amount,
         address _trader,
         address payable _beneficiary
@@ -509,11 +503,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param _reserveToken    address of the reserve token
      */
-    function syncReserveBalance(IERC20 _reserveToken) internal {
+    function syncReserveBalance(IReserveToken _reserveToken) internal {
         uint256 reserveId = __reserveIds[_reserveToken];
-        uint256 balance =
-            _reserveToken == NATIVE_TOKEN_ADDRESS ? address(this).balance : _reserveToken.balanceOf(address(this));
-        setReserveBalance(reserveId, balance);
+
+        setReserveBalance(reserveId, _reserveToken.balanceOf(address(this)));
     }
 
     /**
@@ -522,16 +515,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param _value   amount of ether to exclude from the ether reserve balance (if relevant)
      */
     function syncReserveBalances(uint256 _value) internal {
-        IERC20 _reserveToken0 = __reserveTokens[0];
-        IERC20 _reserveToken1 = __reserveTokens[1];
-        uint256 balance0 =
-            _reserveToken0 == NATIVE_TOKEN_ADDRESS
-                ? address(this).balance - _value
-                : _reserveToken0.balanceOf(address(this));
-        uint256 balance1 =
-            _reserveToken1 == NATIVE_TOKEN_ADDRESS
-                ? address(this).balance - _value
-                : _reserveToken1.balanceOf(address(this));
+        IReserveToken _reserveToken0 = __reserveTokens[0];
+        IReserveToken _reserveToken1 = __reserveTokens[1];
+        uint256 balance0 = _reserveToken0.balanceOf(address(this)) - (_reserveToken0.isNativeToken() ? _value : 0);
+        uint256 balance1 = _reserveToken1.balanceOf(address(this)) - (_reserveToken1.isNativeToken() ? _value : 0);
+
         setReserveBalances(1, 2, balance0, balance1);
     }
 
@@ -545,8 +533,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param _returnAmount    amount returned (in the target token)
      */
     function dispatchConversionEvent(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         address _trader,
         uint256 _amount,
         uint256 _returnAmount,
@@ -566,8 +554,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return expected fee in units of the target reserve token
      */
     function targetAmountAndFee(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _amount
     ) public view virtual override active returns (uint256, uint256) {
         uint256 sourceId = __reserveIds[_sourceToken];
@@ -589,8 +577,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return expected fee in units of the target reserve token
      */
     function targetAmountAndFee(
-        IERC20, /* _sourceToken */
-        IERC20, /* _targetToken */
+        IReserveToken, /* _sourceToken */
+        IReserveToken, /* _targetToken */
         uint256 _sourceBalance,
         uint256 _targetBalance,
         uint256 _amount
@@ -613,8 +601,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return expected fee in units of the target reserve token
      */
     function sourceAmountAndFee(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _amount
     ) public view virtual active returns (uint256, uint256) {
         uint256 sourceId = __reserveIds[_sourceToken];
@@ -632,8 +620,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev converts a specific amount of source tokens to target tokens
      *
-     * @param _sourceToken source ERC20 token
-     * @param _targetToken target ERC20 token
+     * @param _sourceToken source reserve token
+     * @param _targetToken target reserve token
      * @param _amount      amount of tokens to convert (in units of the source token)
      * @param _trader      address of the caller who executed the conversion
      * @param _beneficiary wallet to receive the conversion result
@@ -641,8 +629,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return amount of tokens received (in units of the target token)
      */
     function doConvert(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _amount,
         address _trader,
         address payable _beneficiary
@@ -666,12 +654,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         assert(amount < targetBalance);
 
         // ensure that the input amount was already deposited
-        uint256 actualSourceBalance;
-        if (_sourceToken == NATIVE_TOKEN_ADDRESS) {
-            actualSourceBalance = address(this).balance;
+        uint256 actualSourceBalance = _sourceToken.balanceOf(address(this));
+        if (_sourceToken.isNativeToken()) {
             require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
         } else {
-            actualSourceBalance = _sourceToken.balanceOf(address(this));
             require(msg.value == 0 && actualSourceBalance.sub(sourceBalance) >= _amount, "ERR_INVALID_AMOUNT");
         }
 
@@ -679,7 +665,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         setReserveBalances(sourceId, targetId, actualSourceBalance, targetBalance - amount);
 
         // transfer funds to the beneficiary in the to reserve token
-        safeTransfer(_targetToken, _beneficiary, amount);
+        _targetToken.safeTransfer(_beneficiary, amount);
 
         // dispatch the conversion event
         dispatchConversionEvent(_sourceToken, _targetToken, _trader, _amount, amount, fee);
@@ -693,12 +679,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev returns the recent average rate of 1 `_token` in the other reserve token units
      *
-     * @param _token   token to get the rate for
+     * @param _token token to get the rate for
      *
      * @return recent average rate between the reserves (numerator)
      * @return recent average rate between the reserves (denominator)
      */
-    function recentAverageRate(IERC20 _token) external view validReserve(_token) returns (uint256, uint256) {
+    function recentAverageRate(IReserveToken _token) external view validReserve(_token) returns (uint256, uint256) {
         // get the recent average rate of reserve 0
         uint256 rate = calcRecentAverageRate(averageRateInfo);
 
@@ -775,7 +761,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return amount of pool tokens issued
      */
     function addLiquidity(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _minReturn
     ) public payable protected active returns (uint256) {
@@ -783,15 +769,15 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         verifyLiquidityInput(_reserveTokens, _reserveAmounts, _minReturn);
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
-        for (uint256 i = 0; i < 2; i++) {
-            if (_reserveTokens[i] == NATIVE_TOKEN_ADDRESS) {
-                require(_reserveAmounts[i] == msg.value, "ERR_ETH_AMOUNT_MISMATCH");
-            }
-        }
+        require(
+            (!_reserveTokens[0].isNativeToken() || _reserveAmounts[0] == msg.value) &&
+                (!_reserveTokens[1].isNativeToken() || _reserveAmounts[1] == msg.value),
+            "ERR_ETH_AMOUNT_MISMATCH"
+        );
 
         // if the input value of ETH is larger than zero, then verify that one of the reserves is ETH
         if (msg.value > 0) {
-            require(__reserveIds[NATIVE_TOKEN_ADDRESS] != 0, "ERR_NO_ETH_RESERVE");
+            require(__reserveIds[ReserveToken.NATIVE_TOKEN_ADDRESS] != 0, "ERR_NO_ETH_RESERVE");
         }
 
         // save a local copy of the pool token
@@ -826,18 +812,18 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         uint256 newPoolTokenSupply = totalSupply.add(amount);
         for (uint256 i = 0; i < 2; i++) {
-            IERC20 reserveToken = _reserveTokens[i];
+            IReserveToken reserveToken = _reserveTokens[i];
             uint256 reserveAmount = reserveAmounts[i];
             require(reserveAmount > 0, "ERR_ZERO_TARGET_AMOUNT");
             assert(reserveAmount <= _reserveAmounts[i]);
 
             // transfer each one of the reserve amounts from the user to the pool
-            if (reserveToken != NATIVE_TOKEN_ADDRESS) {
+            if (!reserveToken.isNativeToken()) {
                 // ETH has already been transferred as part of the transaction
                 reserveToken.safeTransferFrom(msg.sender, address(this), reserveAmount);
             } else if (_reserveAmounts[i] > reserveAmount) {
                 // transfer the extra amount of ETH back to the user
-                msg.sender.transfer(_reserveAmounts[i] - reserveAmount);
+                reserveToken.safeTransfer(msg.sender, _reserveAmounts[i] - reserveAmount);
             }
 
             // save the new reserve balance
@@ -846,7 +832,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             emit LiquidityAdded(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(poolToken, reserveToken, newReserveBalances[i], newPoolTokenSupply);
+            emit TokenRateUpdate(address(poolToken), address(reserveToken), newReserveBalances[i], newPoolTokenSupply);
         }
 
         // set the reserve balances
@@ -877,7 +863,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return amount of reserve tokens to transfer from the caller
      */
     function addLiquidityAmounts(
-        IERC20[] memory, /* _reserveTokens */
+        IReserveToken[] memory, /* _reserveTokens */
         uint256[] memory _reserveAmounts,
         uint256[2] memory _reserveBalances,
         uint256 _totalSupply
@@ -905,7 +891,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     function removeLiquidity(
         uint256 _amount,
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveMinReturnAmounts
     ) public protected active returns (uint256[] memory) {
         // verify the user input
@@ -931,7 +917,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[] memory reserveAmounts = removeLiquidityReserveAmounts(_amount, totalSupply, prevReserveBalances);
 
         for (uint256 i = 0; i < 2; i++) {
-            IERC20 reserveToken = _reserveTokens[i];
+            IReserveToken reserveToken = _reserveTokens[i];
             uint256 reserveAmount = reserveAmounts[i];
             require(reserveAmount >= _reserveMinReturnAmounts[i], "ERR_ZERO_TARGET_AMOUNT");
 
@@ -939,12 +925,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             newReserveBalances[i] = prevReserveBalances[i].sub(reserveAmount);
 
             // transfer each one of the reserve amounts from the pool to the user
-            safeTransfer(reserveToken, msg.sender, reserveAmount);
+            reserveToken.safeTransfer(msg.sender, reserveAmount);
 
             emit LiquidityRemoved(msg.sender, reserveToken, reserveAmount, newReserveBalances[i], newPoolTokenSupply);
 
             // dispatch the `TokenRateUpdate` event for the pool token
-            emit TokenRateUpdate(poolToken, reserveToken, newReserveBalances[i], newPoolTokenSupply);
+            emit TokenRateUpdate(address(poolToken), address(reserveToken), newReserveBalances[i], newPoolTokenSupply);
         }
 
         // set the reserve balances
@@ -976,7 +962,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return the required amount of each one of the reserve tokens
      */
     function addLiquidityCost(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256 _reserveTokenIndex,
         uint256 _reserveAmount
     ) public view returns (uint256[] memory) {
@@ -1000,7 +986,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return the amount of pool tokens entitled for the given amounts of reserve tokens
      */
-    function addLiquidityReturn(IERC20[] memory _reserveTokens, uint256[] memory _reserveAmounts)
+    function addLiquidityReturn(IReserveToken[] memory _reserveTokens, uint256[] memory _reserveAmounts)
         public
         view
         returns (uint256)
@@ -1019,7 +1005,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
-    function removeLiquidityReturn(uint256 _amount, IERC20[] memory _reserveTokens)
+    function removeLiquidityReturn(uint256 _amount, IReserveToken[] memory _reserveTokens)
         public
         view
         returns (uint256[] memory)
@@ -1041,7 +1027,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @return true if the function has rearranged the input arrays; false otherwise
      */
     function verifyLiquidityInput(
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint256[] memory _reserveAmounts,
         uint256 _amount
     ) private view returns (bool) {
@@ -1051,16 +1037,18 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 reserve1Id = __reserveIds[_reserveTokens[1]];
 
         if (reserve0Id == 2 && reserve1Id == 1) {
-            IERC20 tempReserveToken = _reserveTokens[0];
+            IReserveToken tempReserveToken = _reserveTokens[0];
             _reserveTokens[0] = _reserveTokens[1];
             _reserveTokens[1] = tempReserveToken;
             uint256 tempReserveAmount = _reserveAmounts[0];
             _reserveAmounts[0] = _reserveAmounts[1];
             _reserveAmounts[1] = tempReserveAmount;
+
             return true;
         }
 
         require(reserve0Id == 1 && reserve1Id == 2, "ERR_INVALID_RESERVE");
+
         return false;
     }
 
@@ -1104,8 +1092,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param _targetBalance   balance of the target reserve token
      */
     function dispatchTokenRateUpdateEvents(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _sourceBalance,
         uint256 _targetBalance
     ) private {
@@ -1116,11 +1104,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 poolTokenSupply = poolToken.totalSupply();
 
         // dispatch token rate update event for the reserve tokens
-        emit TokenRateUpdate(_sourceToken, _targetToken, _targetBalance, _sourceBalance);
+        emit TokenRateUpdate(address(_sourceToken), address(_targetToken), _targetBalance, _sourceBalance);
 
         // dispatch token rate update events for the pool token
-        emit TokenRateUpdate(poolToken, _sourceToken, _sourceBalance, poolTokenSupply);
-        emit TokenRateUpdate(poolToken, _targetToken, _targetBalance, poolTokenSupply);
+        emit TokenRateUpdate(address(poolToken), address(_sourceToken), _sourceBalance, poolTokenSupply);
+        emit TokenRateUpdate(address(poolToken), address(_targetToken), _targetBalance, poolTokenSupply);
     }
 
     function encodeReserveBalance(uint256 _balance, uint256 _id) private pure returns (uint256) {
@@ -1300,29 +1288,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev transfers funds held by the contract and sends them to an account
-     *
-     * @param token ERC20 token contract address
-     * @param to account to receive the new amount
-     * @param amount amount to withdraw
-     */
-    function safeTransfer(
-        IERC20 token,
-        address to,
-        uint256 amount
-    ) private {
-        if (amount == 0) {
-            return;
-        }
-
-        if (token == NATIVE_TOKEN_ADDRESS) {
-            payable(to).transfer(amount);
-        } else {
-            token.safeTransfer(to, amount);
-        }
-    }
-
-    /**
      * @dev deprecated since version 28, backward compatibility - use only for earlier versions
      */
     function token() public view override returns (IConverterAnchor) {
@@ -1346,7 +1311,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev deprecated, backward compatibility
      */
-    function connectors(IERC20 _address)
+    function connectors(IReserveToken _address)
         public
         view
         override
@@ -1368,7 +1333,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev deprecated, backward compatibility
      */
-    function connectorTokens(uint256 _index) public view override returns (IERC20) {
+    function connectorTokens(uint256 _index) public view override returns (IReserveToken) {
         return __reserveTokens[_index];
     }
 
@@ -1382,7 +1347,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev deprecated, backward compatibility
      */
-    function getConnectorBalance(IERC20 _connectorToken) public view override returns (uint256) {
+    function getConnectorBalance(IReserveToken _connectorToken) public view override returns (uint256) {
         return reserveBalance(_connectorToken);
     }
 
@@ -1390,8 +1355,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev deprecated, backward compatibility
      */
     function getReturn(
-        IERC20 _sourceToken,
-        IERC20 _targetToken,
+        IReserveToken _sourceToken,
+        IReserveToken _targetToken,
         uint256 _amount
     ) public view returns (uint256, uint256) {
         return targetAmountAndFee(_sourceToken, _targetToken, _amount);

@@ -301,7 +301,7 @@ describe('LiquidityProtection', () => {
                 const converterFactory = await ConverterFactory.new();
                 await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
-        
+
                 const bancorFormula = await BancorFormula.new();
                 await bancorFormula.init();
 

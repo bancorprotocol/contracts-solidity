@@ -68,7 +68,9 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
         // check if any change is needed
         address currentAddress = items[_contractName].contractAddress;
-        if (_contractAddress == currentAddress) return;
+        if (_contractAddress == currentAddress) {
+            return;
+        }
 
         if (currentAddress == address(0)) {
             // update the item's index in the list

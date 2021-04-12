@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../converter/interfaces/IConverterAnchor.sol";
+
+import "../../token/interfaces/IReserveToken.sol";
 
 import "./ILiquidityProtectionEventsSubscriber.sol";
-import "../../converter/interfaces/IConverterAnchor.sol";
 
 /*
     Liquidity Protection Store Settings interface
@@ -24,7 +25,7 @@ interface ILiquidityProtectionSettings {
 
     function networkTokenMintingLimits(IConverterAnchor poolAnchor) external view returns (uint256);
 
-    function addLiquidityDisabled(IConverterAnchor poolAnchor, IERC20 reserveToken) external view returns (bool);
+    function addLiquidityDisabled(IConverterAnchor poolAnchor, IReserveToken reserveToken) external view returns (bool);
 
     function minProtectionDelay() external view returns (uint256);
 
