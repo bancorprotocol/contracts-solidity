@@ -1042,6 +1042,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param reserveToken reserve token
      * @param addSpotRateN add spot rate numerator
      * @param addSpotRateD add spot rate denominator
+     *
      * @return see `struct PackedRates`
      */
     function packRates(
@@ -1224,6 +1225,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * @param prevRate previous rate between the reserves
      * @param newRate new rate between the reserves
+     *
      * @return impermanent loss (as a ratio)
      */
     function impLoss(Fraction memory prevRate, Fraction memory newRate) internal pure returns (Fraction memory) {
