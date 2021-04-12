@@ -192,7 +192,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     /**
      * @dev returns the LP system store
      *
-     * @return the LP settings
+     * @return the LP system store
      */
     function systemStore() external view override returns (ILiquidityProtectionSystemStore) {
         return _systemStore;

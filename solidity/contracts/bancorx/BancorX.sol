@@ -5,9 +5,10 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/IBancorXUpgrader.sol";
 import "./interfaces/IBancorX.sol";
-import "../utility/ContractRegistryClient.sol";
 
-import "../token/TokenHolder.sol";
+import "../utility/ContractRegistryClient.sol";
+import "../utility/TokenHolder.sol";
+
 import "../token/SafeERC20Ex.sol";
 
 /**
