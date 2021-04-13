@@ -252,7 +252,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev adds protected liquidity to a pool for a specific recipient
      * also mints new governance tokens for the caller if the caller adds network tokens
      *
-     * @param owner liquidity owner
+     * @param owner position owner
      * @param poolAnchor anchor of the pool
      * @param reserveToken reserve token to add to the pool
      * @param amount amount of tokens to add to the pool
@@ -309,7 +309,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev adds protected liquidity to a pool for a specific recipient
      * also mints new governance tokens for the caller if the caller adds network tokens
      *
-     * @param owner liquidity owner
+     * @param owner position owner
      * @param poolAnchor anchor of the pool
      * @param reserveToken reserve token to add to the pool
      * @param amount amount of tokens to add to the pool
@@ -336,7 +336,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev adds network token liquidity to a pool
      * also mints new governance tokens for the caller
      *
-     * @param owner liquidity owner
+     * @param owner position owner
      * @param poolAnchor anchor of the pool
      * @param amount amount of tokens to add to the pool
      *
@@ -376,7 +376,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     /**
      * @dev adds base token liquidity to a pool
      *
-     * @param owner liquidity owner
+     * @param owner position owner
      * @param poolAnchor anchor of the pool
      * @param baseToken the base reserve token of the pool
      * @param amount amount of tokens to add to the pool
@@ -512,7 +512,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * it's also possible to provide the remove liquidity time to get an estimation
      * for the return at that given point
      *
-     * @param id the id of the position
+     * @param id position id
      * @param portion portion of liquidity to remove, in PPM
      * @param removeTimestamp time at which the liquidity is removed
      *
@@ -588,7 +588,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev removes protected liquidity from a pool
      * also burns governance tokens from the caller if the caller removes network tokens
      *
-     * @param id the id of the position
+     * @param id position id
      * @param portion portion of liquidity to remove, in PPM
      */
     function removeLiquidity(uint256 id, uint32 portion) external override protected validPortion(portion) {
@@ -596,11 +596,11 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev removes position from a pool
+     * @dev removes a position from a pool
      * also burns governance tokens from the caller if the caller removes network tokens
      *
      * @param provider liquidity provider
-     * @param id the id of the position
+     * @param id position id
      * @param portion portion of liquidity to remove, in PPM
      */
     function removeLiquidity(
@@ -750,9 +750,9 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev transfers position to a new provider
+     * @dev transfers a position to a new provider
      *
-     * @param id the id of the position
+     * @param id position id
      * @param newProvider new provider
      *
      * @return new position id
@@ -904,7 +904,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev removes the position from the store and updates the stats and the last removal checkpoint
      *
      * @param provider the provider
-     * @param id the id of the position
+     * @param id position id
      * @param portion portion of the position to remove, in PPM
      *
      * @return a Position struct representing the removed liquidity
@@ -1139,7 +1139,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     /**
      * @dev returns a position from the store
      *
-     * @param id the id of the position
+     * @param id position id
      *
      * @return a position
      */
@@ -1162,7 +1162,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     /**
      * @dev returns a position from the store
      *
-     * @param id the id of the position
+     * @param id position id
      * @param provider authorized provider
      *
      * @return a position
@@ -1349,7 +1349,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     /**
      * @dev notify event subscribers on removing liquidity
      *
-     * @param id the id of the position
+     * @param id position id
      * @param provider liquidity provider
      * @param poolToken pool token
      * @param reserveToken reserve token
