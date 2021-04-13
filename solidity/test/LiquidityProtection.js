@@ -3347,31 +3347,37 @@ describe('LiquidityProtection', () => {
 
                 it('remove positions', async () => {
                     for (let i = 0; i < providers.length; i++) {
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal(
-                            `["${i}"]`
-                        );
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal(`["${i}"]`);
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal('[]');
                         await liquidityProtection.removeLiquidity(i, PPM_RESOLUTION, { from: providers[i] });
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal(
-                            '[]'
-                        );
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal('[]');
                     }
                 });
 
                 it('update positions', async () => {
                     for (let i = 0; i < providers.length; i++) {
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal(
-                            `["${i}"]`
-                        );
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal(`["${i}"]`);
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal('[]');
                         await liquidityProtection.removeLiquidity(i, PPM_RESOLUTION.divn(2), { from: providers[i] });
-                        expect(JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))).to.be.equal(
-                            '[]'
-                        );
-                        expect(JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))).to.be.equal(
-                            `["${i}"]`
-                        );
+                        expect(
+                            JSON.stringify(await liquidityProtectionStore.protectedLiquidityIds(providers[i]))
+                        ).to.be.equal('[]');
+                        expect(
+                            JSON.stringify(await liquidityProtectionUserStore.positionIds(providers[i]))
+                        ).to.be.equal(`["${i}"]`);
                     }
                 });
             });
