@@ -288,7 +288,7 @@ describe('LiquidityProtection', () => {
                 let lockedBalance = new BN(0);
                 const lockedCount = await liquidityProtectionUserStore.lockedBalanceCount(account);
                 for (let i = 0; i < lockedCount; i++) {
-                    const balance = (await liquidityProtectionUserStore.lockedBalanceCount(account, i))[0];
+                    const balance = (await liquidityProtectionUserStore.lockedBalance(account, i))[0];
                     lockedBalance = lockedBalance.add(balance);
                 }
 
@@ -2030,7 +2030,7 @@ describe('LiquidityProtection', () => {
                     await setTime(timestamp);
 
                     const prevBalance = await networkToken.balanceOf(owner);
-                    const lockedBalance = (await liquidityProtectionUserStore.lockedBalanceCount(owner, 0))[0];
+                    const lockedBalance = (await liquidityProtectionUserStore.lockedBalance(owner, 0))[0];
                     const prevTotalLockedBalance = await getLockedBalance(owner);
 
                     await liquidityProtection.claimBalance(0, 1);
