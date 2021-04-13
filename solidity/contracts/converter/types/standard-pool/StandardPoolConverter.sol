@@ -265,7 +265,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function setConversionFee(uint32 fee) external override ownerOnly {
         require(fee <= _maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
 
-        emit ConversionFeeUpdate(fee, _conversionFee);
+        emit ConversionFeeUpdate(_conversionFee, fee);
         _conversionFee = fee;
     }
 
