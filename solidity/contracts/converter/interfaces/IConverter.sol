@@ -60,6 +60,10 @@ interface IConverter is IOwned {
 
     function acceptTokenOwnership() external;
 
+    function reserveTokenCount() external view returns (uint16);
+
+    function reserveTokens() external view returns (IReserveToken[] memory);
+
     function connectors(IReserveToken _address)
         external
         view
