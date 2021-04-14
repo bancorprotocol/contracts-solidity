@@ -107,7 +107,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     // error message binary size optimization
-    function _active() internal view {
+    function _active() private view {
         require(isActive(), "ERR_INACTIVE");
     }
 
@@ -119,7 +119,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     // error message binary size optimization
-    function _inactive() internal view {
+    function _inactive() private view {
         require(!isActive(), "ERR_ACTIVE");
     }
 
@@ -131,7 +131,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     // error message binary size optimization
-    function _validReserve(IReserveToken reserveToken) internal view {
+    function _validReserve(IReserveToken reserveToken) private view {
         require(_reserveIds[reserveToken] != 0, "ERR_INVALID_RESERVE");
     }
 
@@ -143,7 +143,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     // error message binary size optimization
-    function _validConversionFee(uint32 fee) internal pure {
+    function _validConversionFee(uint32 fee) private pure {
         require(fee <= PPM_RESOLUTION, "ERR_INVALID_CONVERSION_FEE");
     }
 
@@ -155,7 +155,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     // error message binary size optimization
-    function _validReserveWeight(uint32 weight) internal pure {
+    function _validReserveWeight(uint32 weight) private pure {
         require(weight == PPM_RESOLUTION / 2, "ERR_INVALID_RESERVE_WEIGHT");
     }
 
@@ -322,7 +322,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return number of reserve tokens
      */
-    function reserveTokenCount() external view override returns (uint16) {
+    function reserveTokenCount() public view override returns (uint16) {
         return uint16(_reserveTokens.length);
     }
 
@@ -353,7 +353,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     {
         // validate input
         require(address(token) != address(_anchor) && _reserveIds[token] == 0, "ERR_INVALID_RESERVE");
-        require(_reserveTokens.length < 2, "ERR_INVALID_RESERVE_COUNT");
+        require(reserveTokenCount() < 2, "ERR_INVALID_RESERVE_COUNT");
 
         _reserveTokens.push(token);
         _reserveIds[token] = _reserveTokens.length;
@@ -416,7 +416,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return new reserve balances
      */
-    function processNetworkFees(uint256 value) internal returns (uint256, uint256) {
+    function processNetworkFees(uint256 value) private returns (uint256, uint256) {
         syncReserveBalances(value);
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
         (ITokenHolder wallet, uint256 fee0, uint256 fee1) = networkWalletAndFees(reserveBalance0, reserveBalance1);
@@ -438,7 +438,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return reserve balances minus their corresponding fees
      */
-    function baseReserveBalances(IReserveToken[] memory baseReserveTokens) internal view returns (uint256[2] memory) {
+    function baseReserveBalances(IReserveToken[] memory baseReserveTokens) private view returns (uint256[2] memory) {
         uint256 reserveId0 = _reserveIds[baseReserveTokens[0]];
         uint256 reserveId1 = _reserveIds[baseReserveTokens[1]];
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(reserveId0, reserveId1);
@@ -478,7 +478,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return conversion fee
      */
-    function calculateFee(uint256 targetAmount) internal view returns (uint256) {
+    function calculateFee(uint256 targetAmount) private view returns (uint256) {
         return targetAmount.mul(_conversionFee) / PPM_RESOLUTION;
     }
 
@@ -489,7 +489,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return conversion fee
      */
-    function calculateFeeInv(uint256 targetAmount) internal view returns (uint256) {
+    function calculateFeeInv(uint256 targetAmount) private view returns (uint256) {
         return targetAmount.mul(_conversionFee).div(PPM_RESOLUTION - _conversionFee);
     }
 
@@ -498,7 +498,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param reserveId reserve id
      */
-    function reserveBalance(uint256 reserveId) internal view returns (uint256) {
+    function reserveBalance(uint256 reserveId) private view returns (uint256) {
         return decodeReserveBalance(_reserveBalances, reserveId);
     }
 
@@ -508,7 +508,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param sourceId source reserve id
      * @param targetId target reserve id
      */
-    function reserveBalances(uint256 sourceId, uint256 targetId) internal view returns (uint256, uint256) {
+    function reserveBalances(uint256 sourceId, uint256 targetId) private view returns (uint256, uint256) {
         require((sourceId == 1 && targetId == 2) || (sourceId == 2 && targetId == 1), "ERR_INVALID_RESERVES");
 
         return decodeReserveBalances(_reserveBalances, sourceId, targetId);
@@ -520,7 +520,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param reserveId reserve id
      * @param balance reserve balance
      */
-    function setReserveBalance(uint256 reserveId, uint256 balance) internal {
+    function setReserveBalance(uint256 reserveId, uint256 balance) private {
         require(balance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
 
         uint256 otherBalance = decodeReserveBalance(_reserveBalances, 3 - reserveId);
@@ -540,7 +540,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 targetId,
         uint256 sourceBalance,
         uint256 targetBalance
-    ) internal {
+    ) private {
         require(sourceBalance <= MAX_UINT128 && targetBalance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
 
         _reserveBalances = encodeReserveBalances(sourceBalance, sourceId, targetBalance, targetId);
@@ -551,7 +551,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param reserveToken address of the reserve token
      */
-    function syncReserveBalance(IReserveToken reserveToken) internal {
+    function syncReserveBalance(IReserveToken reserveToken) private {
         uint256 reserveId = _reserveIds[reserveToken];
 
         setReserveBalance(reserveId, reserveToken.balanceOf(address(this)));
@@ -562,7 +562,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param value amount of ether to exclude from the ether reserve balance (if relevant)
      */
-    function syncReserveBalances(uint256 value) internal {
+    function syncReserveBalances(uint256 value) private {
         IReserveToken _reserveToken0 = _reserveTokens[0];
         IReserveToken _reserveToken1 = _reserveTokens[1];
         uint256 balance0 = _reserveToken0.balanceOf(address(this)) - (_reserveToken0.isNativeToken() ? value : 0);
@@ -588,7 +588,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 amount,
         uint256 returnAmount,
         uint256 feeAmount
-    ) internal {
+    ) private {
         emit Conversion(sourceToken, targetToken, trader, amount, returnAmount, int256(feeAmount));
     }
 
@@ -631,7 +631,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 sourceBalance,
         uint256 targetBalance,
         uint256 amount
-    ) internal view virtual returns (uint256, uint256) {
+    ) private view returns (uint256, uint256) {
         uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, amount);
 
         uint256 fee = calculateFee(targetAmount);
@@ -683,7 +683,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 amount,
         address trader,
         address payable beneficiary
-    ) internal returns (uint256) {
+    ) private returns (uint256) {
         // update the recent average rate
         updateRecentAverageRate();
 
@@ -750,7 +750,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev updates the recent average rate if needed
      */
-    function updateRecentAverageRate() internal {
+    function updateRecentAverageRate() private {
         uint256 averageRateInfo1 = _averageRateInfo;
         uint256 averageRateInfo2 = calcRecentAverageRate(averageRateInfo1);
         if (averageRateInfo1 != averageRateInfo2) {
@@ -765,7 +765,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return recent average rate between the reserves
      */
-    function calcRecentAverageRate(uint256 averageRateInfoData) internal view returns (uint256) {
+    function calcRecentAverageRate(uint256 averageRateInfoData) private view returns (uint256) {
         // get the previous average rate and its update-time
         uint256 prevAverageRateT = decodeAverageRateT(averageRateInfoData);
         uint256 prevAverageRateN = decodeAverageRateN(averageRateInfoData);
@@ -917,7 +917,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[] memory amounts,
         uint256[2] memory balances,
         uint256 totalSupply
-    ) internal view virtual returns (uint256, uint256[2] memory) {
+    ) private view returns (uint256, uint256[2] memory) {
         this;
 
         uint256 index = amounts[0].mul(balances[1]) < amounts[1].mul(balances[0]) ? 0 : 1;
@@ -1112,7 +1112,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @return true if both reserve amounts are larger than zero; false otherwise
      */
-    function validReserveAmounts(uint256[] memory amounts) internal pure virtual returns (bool) {
+    function validReserveAmounts(uint256[] memory amounts) private pure returns (bool) {
         return amounts[0] > 0 && amounts[1] > 0;
     }
 
@@ -1392,7 +1392,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @dev deprecated, backward compatibility
      */
     function connectorTokenCount() external view override returns (uint16) {
-        return uint16(_reserveTokens.length);
+        return reserveTokenCount();
     }
 
     /**
