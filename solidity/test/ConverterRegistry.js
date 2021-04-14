@@ -52,17 +52,17 @@ describe('ConverterRegistry', () => {
         const anchor = await converter.token.call();
         const count = await converter.connectorTokenCount.call();
 
-        expectEvent(res, `ConverterAnchor${suffix}`, { _anchor: anchor });
+        expectEvent(res, `ConverterAnchor${suffix}`, { anchor });
 
         if (count.gt(new BN(1))) {
-            expectEvent(res, `LiquidityPool${suffix}`, { _liquidityPool: anchor });
+            expectEvent(res, `LiquidityPool${suffix}`, { liquidityPool: anchor });
         } else {
-            expectEvent(res, `ConvertibleToken${suffix}`, { _convertibleToken: anchor, _smartToken: anchor });
+            expectEvent(res, `ConvertibleToken${suffix}`, { convertibleToken: anchor, smartToken: anchor });
         }
 
         for (let i = 0; count.gt(new BN(i)); ++i) {
             const connectorToken = await converter.connectorTokens.call(i);
-            expectEvent(res, `ConvertibleToken${suffix}`, { _convertibleToken: connectorToken, _smartToken: anchor });
+            expectEvent(res, `ConvertibleToken${suffix}`, { convertibleToken: connectorToken, smartToken: anchor });
         }
     };
 
