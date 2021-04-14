@@ -7,14 +7,16 @@ const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const IConverterAnchor = contract.fromArtifact('IConverterAnchor');
-const ConverterBase = contract.fromArtifact('ConverterBase');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
+const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConversionPathFinder = contract.fromArtifact('ConversionPathFinder');
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
+const STANDARD_CONVERTER_TYPE = 3;
+const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
 
 /* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
@@ -64,7 +66,7 @@ const getPath = async (token, anchorToken, converterRegistry) => {
     for (const anchor of anchors) {
         const converterAnchor = await IConverterAnchor.at(anchor);
         const converterAnchorOwner = await converterAnchor.owner.call();
-        const converter = await ConverterBase.at(converterAnchorOwner);
+        const converter = await StandardPoolConverter.at(converterAnchorOwner);
         const connectorTokenCount = await converter.connectorTokenCount.call();
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await converter.connectorTokens.call(i);
@@ -133,7 +135,7 @@ describe('ConversionPathFinder', () => {
         converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
         pathFinder = await ConversionPathFinder.new(contractRegistry.address);
 
-        await converterFactory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
         await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
@@ -149,16 +151,16 @@ describe('ConversionPathFinder', () => {
         for (const converter of LAYOUT.converters) {
             const tokens = converter.reserves.map((reserve) => addresses[reserve.symbol]);
             await converterRegistry.newConverter(
-                1,
+                STANDARD_CONVERTER_TYPE,
                 'name',
                 converter.symbol,
                 0,
                 0,
                 tokens,
-                tokens.map((token) => 1)
+                STANDARD_CONVERTER_WEIGHTS
             );
             const anchor = await IConverterAnchor.at((await converterRegistry.getAnchors.call()).slice(-1)[0]);
-            const converterBase = await ConverterBase.at(await anchor.owner.call());
+            const converterBase = await StandardPoolConverter.at(await anchor.owner.call());
             await converterBase.acceptOwnership();
             addresses[converter.symbol] = anchor.address;
         }

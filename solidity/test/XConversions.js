@@ -4,7 +4,7 @@ const { expectRevert, BN, balance } = require('@openzeppelin/test-helpers');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
 const BancorX = contract.fromArtifact('BancorX');
 const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
@@ -84,8 +84,8 @@ describe('XConversions', () => {
         await poolToken2.issue(owner, web3.utils.toWei(new BN(200)));
         await poolToken2.issue(owner, web3.utils.toWei(new BN(200)));
 
-        erc20TokenConverter1 = await LiquidityPoolV1Converter.new(poolToken1.address, contractRegistry.address, 30000);
-        erc20TokenConverter2 = await LiquidityPoolV1Converter.new(poolToken2.address, contractRegistry.address, 30000);
+        erc20TokenConverter1 = await StandardPoolConverter.new(poolToken1.address, contractRegistry.address, 30000);
+        erc20TokenConverter2 = await StandardPoolConverter.new(poolToken2.address, contractRegistry.address, 30000);
 
         await erc20TokenConverter1.addReserve(bntToken.address, 500000);
         await erc20TokenConverter1.addReserve(NATIVE_TOKEN_ADDRESS, 500000);

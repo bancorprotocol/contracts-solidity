@@ -14,7 +14,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     /**
      * @dev triggered when a new converter is created
      *
-     * @param converterType converter type, see ConverterBase contract main doc
+     * @param converterType converter type
      * @param converter new converter address
      * @param converterOwner converter owner address
      */
@@ -26,7 +26,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     /**
      * @dev returns the converter factory of a given converter type
      *
-     * @param converterType converter type, see ConverterBase contract main doc
+     * @param converterType converter type
      *
      * @return the converter factory of the given converter type
      */
@@ -37,7 +37,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     /**
      * @dev returns the anchor factory of a given converter type
      *
-     * @param converterType converter type, see ConverterBase contract main doc
+     * @param converterType converter type
      *
      * @return the anchor factory of the given converter type
      */
@@ -93,7 +93,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @dev creates a new converter anchor with the given arguments and transfers
      * the ownership to the caller
      *
-     * @param converterType converter type, see ConverterBase contract main doc
+     * @param converterType converter type
      * @param name name
      * @param symbol symbol
      * @param decimals decimals
@@ -126,7 +126,7 @@ contract ConverterFactory is IConverterFactory, Owned {
      * @dev creates a new converter with the given arguments and transfers
      * the ownership to the caller
      *
-     * @param converterType converter type, see ConverterBase contract main doc
+     * @param converterType converter type
      * @param anchor anchor governed by the converter
      * @param registry address of a contract registry contract
      * @param maxConversionFee maximum conversion fee, represented in ppm

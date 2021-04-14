@@ -14,14 +14,14 @@ const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConversionPathFinder = contract.fromArtifact('ConversionPathFinder');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 const TestNonStandardToken = contract.fromArtifact('TestNonStandardToken');
-const ConverterHelper = require('./helpers/Converter');
+const ConverterHelper = require('./helpers/ConverterHelper');
 const TestBancorNetwork = contract.fromArtifact('TestBancorNetwork');
 const ConverterV27OrLowerWithoutFallback = contract.fromArtifact('ConverterV27OrLowerWithoutFallback');
 const ConverterV27OrLowerWithFallback = contract.fromArtifact('ConverterV27OrLowerWithFallback');
 const ConverterV28OrHigherWithoutFallback = contract.fromArtifact('ConverterV28OrHigherWithoutFallback');
 const ConverterV28OrHigherWithFallback = contract.fromArtifact('ConverterV28OrHigherWithFallback');
 
-const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
+const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
 const DSToken = contract.fromArtifact('DSToken');
@@ -137,7 +137,6 @@ describe('BancorNetwork', () => {
     let pathsTokens;
     let paths;
     const sender = defaultSender;
-    const nonOwner = accounts[1];
     const sender2 = accounts[2];
 
     const OLD_CONVERTER_VERSION = 9;
@@ -192,28 +191,28 @@ describe('BancorNetwork', () => {
 
             await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
 
-            converter1 = await LiquidityPoolV1Converter.new(anchor1.address, contractRegistry.address, 0);
+            converter1 = await StandardPoolConverter.new(anchor1.address, contractRegistry.address, 0);
             await converter1.addReserve(bntToken.address, 500000);
             await converter1.addReserve(NATIVE_TOKEN_ADDRESS, 500000);
 
-            converter2 = await LiquidityPoolV1Converter.new(anchor2.address, contractRegistry.address, 0);
-            await converter2.addReserve(bntToken.address, 300000);
-            await converter2.addReserve(erc20Token1.address, 150000);
+            converter2 = await StandardPoolConverter.new(anchor2.address, contractRegistry.address, 0);
+            await converter2.addReserve(bntToken.address, 500000);
+            await converter2.addReserve(erc20Token1.address, 500000);
 
             converter3 = await ConverterHelper.new(
                 1,
+                OLD_CONVERTER_VERSION,
                 anchor3.address,
                 contractRegistry.address,
                 0,
                 bntToken.address,
-                350000,
-                OLD_CONVERTER_VERSION
+                350000
             );
             await converter3.addConnector(erc20Token2.address, 100000, false);
 
-            converter4 = await LiquidityPoolV1Converter.new(anchor4.address, contractRegistry.address, 0);
-            await converter4.addReserve(bntToken.address, 220000);
-            await converter4.addReserve(erc20Token3.address, 220000);
+            converter4 = await StandardPoolConverter.new(anchor4.address, contractRegistry.address, 0);
+            await converter4.addReserve(bntToken.address, 500000);
+            await converter4.addReserve(erc20Token3.address, 500000);
 
             await bntToken.transfer(converter1.address, 40000);
             await bntToken.transfer(converter2.address, 70000);

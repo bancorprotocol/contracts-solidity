@@ -1,5 +1,5 @@
 const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, constants, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
@@ -17,12 +17,8 @@ const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
 
-const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
-const FixedRatePoolConverter = contract.fromArtifact('FixedRatePoolConverter');
-const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
-const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 
 describe('Converter', () => {
@@ -33,68 +29,26 @@ describe('Converter', () => {
         maxConversionFee = 0
     ) => {
         switch (type) {
-            case 1:
-                return LiquidityPoolV1Converter.new(anchorAddress, registryAddress, maxConversionFee);
             case 3:
                 return StandardPoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
-            case 4:
-                return FixedRatePoolConverter.new(anchorAddress, registryAddress, maxConversionFee);
+            default:
+                throw new Error(`Unsupported type ${type}`);
         }
     };
 
     const getConverterName = (type) => {
         switch (type) {
-            case 1:
-                return 'LiquidityPoolV1Converter';
             case 3:
                 return 'StandardPoolConverter';
-            case 4:
-                return 'FixedRatePoolConverter';
+            default:
+                throw new Error(`Unsupported type ${type}`);
         }
-
-        return 'Unknown';
-    };
-
-    const getConverterReserveAddresses = (type, isETHReserve) => {
-        switch (type) {
-            case 1:
-                return [getReserve1Address(isETHReserve), reserveToken2.address];
-            case 3:
-            case 4:
-                return [getReserve1Address(isETHReserve), reserveToken2.address];
-        }
-
-        return 'Unknown';
-    };
-
-    const getConverterReserveWeights = (type) => {
-        switch (type) {
-            case 1:
-                return [250000, 150000];
-            case 3:
-            case 4:
-                return [500000, 500000];
-        }
-
-        return 'Unknown';
-    };
-
-    const getConverterTargetAmountAndFeeError = (type) => {
-        switch (type) {
-            case 1:
-                return 'ERR_SAME_SOURCE_TARGET';
-            case 3:
-            case 4:
-                return 'ERR_INVALID_RESERVES';
-        }
-
-        return 'Unknown';
     };
 
     const initConverter = async (type, activate, isETHReserve, maxConversionFee = 0) => {
         await createAnchor();
-        const reserveAddresses = getConverterReserveAddresses(type, isETHReserve);
-        const reserveWeights = getConverterReserveWeights(type);
+        const reserveAddresses = [getReserve1Address(isETHReserve), reserveToken2.address];
+        const reserveWeights = [500000, 500000];
 
         const converter = await createConverter(type, anchorAddress, contractRegistry.address, maxConversionFee);
 
@@ -166,9 +120,7 @@ describe('Converter', () => {
         const networkSettings = await NetworkSettings.new(defaultSender, 0);
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
 
-        await factory.registerTypedConverterFactory((await LiquidityPoolV1ConverterFactory.new()).address);
         await factory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
-        await factory.registerTypedConverterFactory((await FixedRatePoolConverterFactory.new()).address);
     });
 
     beforeEach(async () => {
@@ -182,7 +134,7 @@ describe('Converter', () => {
         reserveToken2 = await TestNonStandardToken.new('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
-    for (const type of [1, 3, 4]) {
+    for (const type of [3]) {
         it('verifies that converterType returns the correct type', async () => {
             const converter = await initConverter(type, true, true);
             const converterType = await converter.converterType.call();
@@ -244,8 +196,8 @@ describe('Converter', () => {
                         'TST',
                         2,
                         1000,
-                        getConverterReserveAddresses(type, isETHReserve),
-                        getConverterReserveWeights(type)
+                        [getReserve1Address(isETHReserve), reserveToken2.address],
+                        [500000, 500000]
                     );
                 });
 
@@ -315,7 +267,7 @@ describe('Converter', () => {
                     const newFee = new BN(30000);
 
                     const res = await converter.setConversionFee(newFee);
-                    expectEvent(res, 'ConversionFeeUpdate', { _prevFee: new BN(0), _newFee: newFee });
+                    expectEvent(res, 'ConversionFeeUpdate', { prevFee: new BN(0), newFee });
                 });
 
                 it('verifies that an event is fired when the owner updates the fee multiple times', async () => {
@@ -326,7 +278,7 @@ describe('Converter', () => {
                         const newFee = new BN(10000 * i);
 
                         const res = await converter.setConversionFee(newFee);
-                        expectEvent(res, 'ConversionFeeUpdate', { _prevFee: prevFee, _newFee: newFee });
+                        expectEvent(res, 'ConversionFeeUpdate', { prevFee, newFee });
 
                         prevFee = newFee;
                     }
@@ -514,7 +466,7 @@ describe('Converter', () => {
                             getReserve1Address(isETHReserve),
                             500
                         ),
-                        getConverterTargetAmountAndFeeError(type)
+                        'ERR_INVALID_RESERVES'
                     );
                 });
 

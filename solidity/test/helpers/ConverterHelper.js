@@ -8,19 +8,16 @@ const truffleContract = require('@truffle/contract');
 
 const { ZERO_ADDRESS } = constants;
 
-const Converter = contract.fromArtifact('ConverterBase');
-const LiquidityPoolV1Converter = contract.fromArtifact('LiquidityPoolV1Converter');
 const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
-const FixedRatePoolConverter = contract.fromArtifact('FixedRatePoolConverter');
 
 module.exports.new = async (
     type,
+    version,
     tokenAddress,
     registryAddress,
     maxConversionFee,
-    reserveTokenAddress,
-    weight,
-    version
+    reserveTokenAddress = ZERO_ADDRESS,
+    weight
 ) => {
     if (version) {
         let contractName = `../bin/converter_v${version}`;
@@ -48,11 +45,16 @@ module.exports.new = async (
         return Converter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
 
-    const converterType = {
-        1: LiquidityPoolV1Converter,
-        3: StandardPoolConverter,
-        4: FixedRatePoolConverter
-    }[type];
+    let converterType;
+    switch (type) {
+        case 3:
+            converterType = StandardPoolConverter;
+            break;
+
+        default:
+            throw new Error(`Unsupported converter type ${type}`);
+    }
+
     const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
     if (reserveTokenAddress !== ZERO_ADDRESS) {
         await converter.addReserve(reserveTokenAddress, weight);
@@ -68,5 +70,5 @@ module.exports.at = async (address, version) => {
         return converter.at(address);
     }
 
-    return Converter.at(address);
+    return StandardPoolConverter.at(address);
 };
