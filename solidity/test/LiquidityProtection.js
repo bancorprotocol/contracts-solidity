@@ -2079,7 +2079,7 @@ describe('LiquidityProtection', () => {
                 });
             });
 
-            describe('transfer liquidity', () => {
+            describe('transfer position', () => {
                 const testTransfer = (isBaseReserveToken, isETHReserve, recipient) => {
                     let protectionId;
                     const newOwner = accounts[5];
@@ -2137,7 +2137,7 @@ describe('LiquidityProtection', () => {
                         await setTime(now.add(duration.days(3)));
                     });
 
-                    it('should allow the provider to transfer liquidity to another provider', async () => {
+                    it('should allow the provider to transfer position to another provider', async () => {
                         let protection = await liquidityProtectionUserStore.position.call(protectionId);
                         protection = getProtection(protection);
 
@@ -2156,7 +2156,7 @@ describe('LiquidityProtection', () => {
                         );
                         const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
 
-                        await liquidityProtection.transferLiquidity(protectionId, newOwner, {
+                        await liquidityProtection.transferPosition(protectionId, newOwner, {
                             from: recipient
                         });
 
@@ -2203,7 +2203,7 @@ describe('LiquidityProtection', () => {
                     it('should update the last removal check point when transferring liquidity', async () => {
                         expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(new BN(0));
 
-                        await liquidityProtection.transferLiquidity(protectionId, newOwner, {
+                        await liquidityProtection.transferPosition(protectionId, newOwner, {
                             from: recipient
                         });
 
@@ -2211,10 +2211,10 @@ describe('LiquidityProtection', () => {
                         expect(await checkpointStore.checkpoint.call(newOwner)).to.be.bignumber.equal(new BN(0));
                     });
 
-                    it('should revert when attempting to transfer liquidity that belongs to another account', async () => {
+                    it('should revert when attempting to transfer position that belongs to another account', async () => {
                         const nonOwner = accounts[8];
                         await expectRevert(
-                            liquidityProtection.transferLiquidity(protectionId, newOwner, {
+                            liquidityProtection.transferPosition(protectionId, newOwner, {
                                 from: nonOwner
                             }),
                             'ERR_ACCESS_DENIED'
@@ -2222,16 +2222,16 @@ describe('LiquidityProtection', () => {
                     });
                 };
 
-                it('should revert when attempting to transfer liquidity to a zero address', async () => {
+                it('should revert when attempting to transfer position to a zero address', async () => {
                     await expectRevert(
-                        liquidityProtection.transferLiquidity(new BN(0), ZERO_ADDRESS),
+                        liquidityProtection.transferPosition(new BN(0), ZERO_ADDRESS),
                         'ERR_INVALID_ADDRESS'
                     );
                 });
 
-                it('should revert when attempting to transfer liquidity that does not exist', async () => {
+                it('should revert when attempting to transfer position that does not exist', async () => {
                     await expectRevert(
-                        liquidityProtection.transferLiquidity(new BN(1234), accounts[3]),
+                        liquidityProtection.transferPosition(new BN(1234), accounts[3]),
                         'ERR_ACCESS_DENIED'
                     );
                 });
@@ -2376,7 +2376,7 @@ describe('LiquidityProtection', () => {
 
                             it('should not publish events', async () => {
                                 const newOwner = accounts[8];
-                                await liquidityProtection.transferLiquidity(id, newOwner, {
+                                await liquidityProtection.transferPosition(id, newOwner, {
                                     from: recipient
                                 });
 
@@ -2464,7 +2464,7 @@ describe('LiquidityProtection', () => {
                                 const rate = poolTokenRate(totalSupply, reserveBalance);
 
                                 const newOwner = accounts[8];
-                                await liquidityProtection.transferLiquidity(id, newOwner, {
+                                await liquidityProtection.transferPosition(id, newOwner, {
                                     from: recipient
                                 });
 
