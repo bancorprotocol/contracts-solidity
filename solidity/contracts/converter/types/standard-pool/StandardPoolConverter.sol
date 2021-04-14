@@ -917,9 +917,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256[] memory amounts,
         uint256[2] memory balances,
         uint256 totalSupply
-    ) private view returns (uint256, uint256[2] memory) {
-        this;
-
+    ) private pure returns (uint256, uint256[2] memory) {
         uint256 index = amounts[0].mul(balances[1]) < amounts[1].mul(balances[0]) ? 0 : 1;
         uint256 amount = fundSupplyAmount(totalSupply, balances[index], amounts[index]);
 

@@ -516,8 +516,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
      *
      * @return true if the given configuration depicts a standard pool, false otherwise
      */
-    function isStandardPool(uint32[] memory _reserveWeights) internal view virtual returns (bool) {
-        this; // silent state mutability warning without generating additional bytecode
+    function isStandardPool(uint32[] memory _reserveWeights) internal pure virtual returns (bool) {
         return
             _reserveWeights.length == 2 &&
             _reserveWeights[0] == PPM_RESOLUTION / 2 &&
