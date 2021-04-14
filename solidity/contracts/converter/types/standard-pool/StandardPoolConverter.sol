@@ -351,7 +351,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         validExternalAddress(address(token))
         validReserveWeight(weight)
     {
-        // validate input
         require(address(token) != address(_anchor) && _reserveIds[token] == 0, "ERR_INVALID_RESERVE");
         require(reserveTokenCount() < 2, "ERR_INVALID_RESERVE_COUNT");
 
@@ -1227,7 +1226,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 targetReserveBalance,
         uint256 amount
     ) private pure returns (uint256) {
-        // validate input
         require(sourceReserveBalance > 0 && targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
         return targetReserveBalance.mul(amount) / sourceReserveBalance.add(amount);
