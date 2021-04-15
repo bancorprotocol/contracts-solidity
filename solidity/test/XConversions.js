@@ -9,7 +9,6 @@ const BancorX = contract.fromArtifact('BancorX');
 const DSToken = contract.fromArtifact('DSToken');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
-const BancorFormula = contract.fromArtifact('BancorFormula');
 const TestStandardToken = contract.fromArtifact('TestStandardToken');
 
 const MAX_LOCK_LIMIT = new BN('1000000000000000000000'); // 1000 bnt
@@ -25,7 +24,6 @@ const MIN_RETURN = new BN(1);
 const TX_ID = new BN(0);
 
 describe('XConversions', () => {
-    let bancorFormula;
     let contractRegistry;
     let bancorX;
     let bancorNetwork;
@@ -46,10 +44,7 @@ describe('XConversions', () => {
 
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        bancorFormula = await BancorFormula.new();
         contractRegistry = await ContractRegistry.new();
-
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     beforeEach(async () => {
@@ -72,7 +67,6 @@ describe('XConversions', () => {
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
         await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
 

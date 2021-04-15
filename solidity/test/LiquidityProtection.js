@@ -9,7 +9,6 @@ const { duration, latest } = time;
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
 const DSToken = contract.fromArtifact('DSToken');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
@@ -348,15 +347,11 @@ describe('LiquidityProtection', () => {
                 const converterFactory = await ConverterFactory.new();
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
-                const bancorFormula = await BancorFormula.new();
-                await bancorFormula.init();
-
                 const networkSettings = await NetworkSettings.new(defaultSender, 0);
 
                 await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
                 await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
-                await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
                 await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
             });

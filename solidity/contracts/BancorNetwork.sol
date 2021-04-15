@@ -7,7 +7,6 @@ import "./IBancorNetwork.sol";
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
-import "./converter/interfaces/IBancorFormula.sol";
 import "./utility/ContractRegistryClient.sol";
 import "./utility/ReentrancyGuard.sol";
 import "./utility/TokenHolder.sol";
@@ -116,63 +115,18 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
      * @return expected target amount
      */
     function rateByPath(address[] memory _path, uint256 _amount) public view override returns (uint256) {
-        uint256 amount;
-        uint256 fee;
-        uint256 supply;
-        uint256 balance;
-        uint32 weight;
-        IConverter converter;
-        IBancorFormula formula = IBancorFormula(addressOf(BANCOR_FORMULA));
-
-        amount = _amount;
-
         // verify that the number of elements is larger than 2 and odd
         require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
+
+        uint256 amount = _amount;
 
         // iterate over the conversion path
         for (uint256 i = 2; i < _path.length; i += 2) {
             IReserveToken sourceToken = IReserveToken(_path[i - 2]);
             address anchor = _path[i - 1];
             IReserveToken targetToken = IReserveToken(_path[i]);
-
-            converter = IConverter(payable(IConverterAnchor(anchor).owner()));
-
-            if (address(targetToken) == anchor) {
-                // buy the anchor
-                // check if the current anchor has changed
-                if (i < 3 || anchor != _path[i - 3]) {
-                    supply = IDSToken(anchor).totalSupply();
-                }
-
-                // get the amount & the conversion fee
-                balance = converter.getConnectorBalance(sourceToken);
-                (, weight, , , ) = converter.connectors(sourceToken);
-                amount = formula.purchaseTargetAmount(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(PPM_RESOLUTION);
-                amount -= fee;
-
-                // update the anchor supply for the next iteration
-                supply = supply.add(amount);
-            } else if (address(sourceToken) == anchor) {
-                // sell the anchor
-                // check if the current anchor has changed
-                if (i < 3 || anchor != _path[i - 3]) {
-                    supply = IDSToken(anchor).totalSupply();
-                }
-
-                // get the amount & the conversion fee
-                balance = converter.getConnectorBalance(targetToken);
-                (, weight, , , ) = converter.connectors(targetToken);
-                amount = formula.saleTargetAmount(supply, balance, weight, amount);
-                fee = amount.mul(converter.conversionFee()).div(PPM_RESOLUTION);
-                amount -= fee;
-
-                // update the anchor supply for the next iteration
-                supply = supply.sub(amount);
-            } else {
-                // cross reserve conversion
-                (amount, fee) = getReturn(converter, sourceToken, targetToken, amount);
-            }
+            IConverter converter = IConverter(payable(IConverterAnchor(anchor).owner()));
+            (amount, ) = getReturn(converter, sourceToken, targetToken, amount);
         }
 
         return amount;

@@ -10,7 +10,6 @@ import "./interfaces/IContractRegistry.sol";
 contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant CONTRACT_REGISTRY = "ContractRegistry";
     bytes32 internal constant BANCOR_NETWORK = "BancorNetwork";
-    bytes32 internal constant BANCOR_FORMULA = "BancorFormula";
     bytes32 internal constant CONVERTER_FACTORY = "ConverterFactory";
     bytes32 internal constant CONVERSION_PATH_FINDER = "ConversionPathFinder";
     bytes32 internal constant CONVERTER_UPGRADER = "BancorConverterUpgrader";

@@ -8,7 +8,6 @@ const {
         CONVERTER_FACTORY,
         CONVERTER_REGISTRY,
         CONVERTER_REGISTRY_DATA,
-        BANCOR_FORMULA,
         BANCOR_NETWORK
     }
 } = require('./helpers/Constants');
@@ -16,7 +15,6 @@ const {
 const { ZERO_ADDRESS } = constants;
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
 const DSToken = contract.fromArtifact('DSToken');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
@@ -56,10 +54,6 @@ describe('VortexBurner', () => {
         contractRegistry = await ContractRegistry.new();
         bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
-        const bancorFormula = await BancorFormula.new();
-        await bancorFormula.init();
-
-        await contractRegistry.registerAddress(BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(BANCOR_NETWORK, bancorNetwork.address);
 
         networkSettings = await NetworkSettings.new(defaultSender, new BN(0));

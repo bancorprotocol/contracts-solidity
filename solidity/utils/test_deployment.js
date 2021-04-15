@@ -161,7 +161,6 @@ const run = async () => {
     // main contracts
     const contractRegistry = await web3Func(deploy, 'contractRegistry', 'ContractRegistry', []);
     const converterFactory = await web3Func(deploy, 'converterFactory', 'ConverterFactory', []);
-    const bancorFormula = await web3Func(deploy, 'bancorFormula', 'BancorFormula', []);
     const bancorNetwork = await web3Func(deploy, 'bancorNetwork', 'BancorNetwork', [contractRegistry._address]);
     const conversionPathFinder = await web3Func(deploy, 'conversionPathFinder', 'ConversionPathFinder', [
         contractRegistry._address
@@ -203,9 +202,6 @@ const run = async () => {
     );
     await execute(
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('ConverterFactory'), converterFactory._address)
-    );
-    await execute(
-        contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorFormula'), bancorFormula._address)
     );
     await execute(
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorNetwork'), bancorNetwork._address)
@@ -319,7 +315,6 @@ const run = async () => {
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BNTToken'), reserves.BNT.address));
     await execute(conversionPathFinder.methods.setAnchorToken(reserves.BNT.address));
-    await execute(bancorFormula.methods.init());
 
     const bntTokenGovernance = await web3Func(deploy, 'bntTokenGovernance', 'TokenGovernance', [reserves.BNT.address]);
     const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [
