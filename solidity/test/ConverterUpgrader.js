@@ -206,15 +206,20 @@ describe('ConverterUpgrader', () => {
     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
     const product = cartesian(initFuncs, [...LEGACY_VERSIONS, null], [false, true]);
-    const combinations = product.filter(
-        ([init, version]) =>
+    const combinations = product.filter(([init, version]) => {
+        if (
             // Test type 1 with an ETH reserve only on version 45
-            !(init === initLegacyConverterWithETHReserve && version !== 45) &&
+            (init === initLegacyConverterWithETHReserve && version !== 45) ||
             // Test type 1 only with legacy versions
-            !(init === initLegacyConverterWith2Reserves && !version) &&
+            (init === initLegacyConverterWith2Reserves && !version) ||
             // Test type 3 with an ETH reserve only with the latest version
-            !(init === initStandardConverterWithETHReserve && version)
-    );
+            (init === initStandardConverterWithETHReserve && version)
+        ) {
+            return false;
+        }
+
+        return true;
+    });
 
     for (const [init, version, activate] of combinations) {
         describe(`${init.name}(version = ${version || 'latest'}, activate = ${activate}):`, () => {
