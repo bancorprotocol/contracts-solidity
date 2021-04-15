@@ -2,7 +2,7 @@ const { defaultSender, contract, web3 } = require('@openzeppelin/test-environmen
 const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
-const ConverterHelper = require('./helpers/Converter');
+const ConverterHelper = require('./helpers/ConverterHelper');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
@@ -25,25 +25,29 @@ const TOKEN_TOTAL_SUPPLY = new BN(20000);
 
 const LEGACY_VERSIONS = [9, 10, 11, 23, 45];
 
+const LEGACY_CONVERTER_TYPE = 1;
+const STANDARD_CONVERTER_TYPE = 3;
+const STANDARD_CONVERTER_WEIGHT = 500_000;
+
 describe('ConverterUpgrader', () => {
     const initWith2Reserves = async (type, deployer, version, activate) => {
         const anchor = await DSToken.new('Token1', 'TKN1', 0);
         const converter = await ConverterHelper.new(
             type,
+            version,
             anchor.address,
             contractRegistry.address,
             MAX_CONVERSION_FEE,
             reserveToken1.address,
-            500000,
-            version
+            STANDARD_CONVERTER_WEIGHT
         );
         const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version && version < 45) {
-            await converter.addConnector(reserveToken2.address, 500000, false);
+            await converter.addConnector(reserveToken2.address, STANDARD_CONVERTER_WEIGHT, false);
         } else {
-            await converter.addReserve(reserveToken2.address, 500000);
+            await converter.addReserve(reserveToken2.address, STANDARD_CONVERTER_WEIGHT);
         }
 
         await converter.setConversionFee(CONVERSION_FEE);
@@ -59,32 +63,33 @@ describe('ConverterUpgrader', () => {
         return [upgrader, converter];
     };
 
-    const initType1With2Reserves = async (deployer, version, activate) => {
-        return await initWith2Reserves(1, deployer, version, activate);
+    const initLegacyConverterWith2Reserves = async (deployer, version, activate) => {
+        return await initWith2Reserves(LEGACY_CONVERTER_TYPE, deployer, version, activate);
     };
 
-    const initType3With2Reserves = async (deployer, version, activate) => {
-        return await initWith2Reserves(3, deployer, version, activate);
+    const initStandardConverterWith2Reserves = async (deployer, version, activate) => {
+        return await initWith2Reserves(STANDARD_CONVERTER_TYPE, deployer, version, activate);
     };
 
     const initWithETHReserve = async (type, deployer, version, activate) => {
-        if (version) {
+        if (version && version < 45) {
             throw new Error(`Converter version ${version} does not support ETH-reserve`);
         }
 
         const anchor = await DSToken.new('Token1', 'TKN1', 0);
         const converter = await ConverterHelper.new(
             type,
+            version,
             anchor.address,
             contractRegistry.address,
             MAX_CONVERSION_FEE,
             reserveToken1.address,
-            500000
+            STANDARD_CONVERTER_WEIGHT
         );
         const upgrader = await ConverterUpgrader.new(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
-        await converter.addReserve(NATIVE_TOKEN_ADDRESS, 500000);
+        await converter.addReserve(NATIVE_TOKEN_ADDRESS, STANDARD_CONVERTER_WEIGHT);
         await converter.setConversionFee(CONVERSION_FEE);
         await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
@@ -98,12 +103,12 @@ describe('ConverterUpgrader', () => {
         return [upgrader, converter];
     };
 
-    const initType1WithETHReserve = async (deployer, version, activate) => {
-        return await initWithETHReserve(1, deployer, version, activate);
+    const initLegacyConverterWithETHReserve = async (deployer, version, activate) => {
+        return await initWithETHReserve(LEGACY_CONVERTER_TYPE, deployer, version, activate);
     };
 
-    const initType3WithETHReserve = async (deployer, version, activate) => {
-        return await initWithETHReserve(3, deployer, version, activate);
+    const initStandardConverterWithETHReserve = async (deployer, version, activate) => {
+        return await initWithETHReserve(STANDARD_CONVERTER_TYPE, deployer, version, activate);
     };
 
     const upgradeConverter = async (upgrader, converter, options = {}) => {
@@ -141,7 +146,9 @@ describe('ConverterUpgrader', () => {
     const getConverterState = async (converter) => {
         const token = await converter.token.call();
         const anchor = await DSToken.at(token);
+
         const state = {
+            type: new BN(await converter.converterType.call()),
             owner: await converter.owner.call(),
             token,
             tokenOwner: await anchor.owner.call(),
@@ -190,19 +197,29 @@ describe('ConverterUpgrader', () => {
     });
 
     const initFuncs = [
-        initType1With2Reserves,
-        initType3With2Reserves,
-        initType1WithETHReserve,
-        initType3WithETHReserve
+        initLegacyConverterWith2Reserves,
+        initStandardConverterWith2Reserves,
+        initLegacyConverterWithETHReserve,
+        initStandardConverterWithETHReserve
     ];
 
     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
     const product = cartesian(initFuncs, [...LEGACY_VERSIONS, null], [false, true]);
-    const combinations = product.filter(
-        ([init, version]) =>
-            !(init === initType1WithETHReserve && version) && !(init === initType3WithETHReserve && version)
-    );
+    const combinations = product.filter(([init, version]) => {
+        if (
+            // Test type 1 with an ETH reserve only on version 45
+            (init === initLegacyConverterWithETHReserve && version !== 45) ||
+            // Test type 1 only with legacy versions
+            (init === initLegacyConverterWith2Reserves && !version) ||
+            // Test type 3 with an ETH reserve only with the latest version
+            (init === initStandardConverterWithETHReserve && version)
+        ) {
+            return false;
+        }
+
+        return true;
+    });
 
     for (const [init, version, activate] of combinations) {
         describe(`${init.name}(version = ${version || 'latest'}, activate = ${activate}):`, () => {
@@ -210,12 +227,12 @@ describe('ConverterUpgrader', () => {
                 let reserveTokens;
 
                 switch (init) {
-                    case initType1With2Reserves:
-                    case initType3With2Reserves:
+                    case initLegacyConverterWith2Reserves:
+                    case initStandardConverterWith2Reserves:
                         reserveTokens = [reserveToken1.address, reserveToken2.address];
                         break;
-                    case initType1WithETHReserve:
-                    case initType3WithETHReserve:
+                    case initLegacyConverterWithETHReserve:
+                    case initStandardConverterWithETHReserve:
                         reserveTokens = [reserveToken1.address, NATIVE_TOKEN_ADDRESS];
                         break;
                 }
@@ -253,6 +270,8 @@ describe('ConverterUpgrader', () => {
                 const newConverter = await upgradeConverter(upgrader, oldConverter);
 
                 const oldConverterCurrentState = await getConverterState(oldConverter);
+
+                expect(oldConverterCurrentState.type).to.be.bignumber.equal(oldConverterInitialState.type);
                 expect(oldConverterCurrentState.owner).to.be.eql(deployer);
                 expect(oldConverterCurrentState.newOwner).to.be.eql(ZERO_ADDRESS);
                 expect(oldConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
@@ -271,6 +290,7 @@ describe('ConverterUpgrader', () => {
                 }
 
                 const newConverterCurrentState = await getConverterState(newConverter);
+                expect(newConverterCurrentState.type).to.be.bignumber.equal(new BN(STANDARD_CONVERTER_TYPE));
                 expect(newConverterCurrentState.owner).to.be.eql(upgrader.address);
                 expect(newConverterCurrentState.newOwner).to.be.eql(deployer);
                 expect(newConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);

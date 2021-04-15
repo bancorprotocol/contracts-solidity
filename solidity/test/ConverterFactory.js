@@ -4,17 +4,13 @@ const { expect } = require('../../chai-local');
 
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('TestConverterFactory');
-const LiquidityPoolV1ConverterFactory = contract.fromArtifact('LiquidityPoolV1ConverterFactory');
+const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
-const FixedRatePoolConverterFactory = contract.fromArtifact('FixedRatePoolConverterFactory');
 const TypedConverterAnchorFactory = contract.fromArtifact('TestTypedConverterAnchorFactory');
-const ConverterBase = contract.fromArtifact('ConverterBase');
 const DSToken = contract.fromArtifact('DSToken');
 
 const Factories = {
-    LiquidityPoolV1ConverterFactory,
-    StandardPoolConverterFactory,
-    FixedRatePoolConverterFactory
+    StandardPoolConverterFactory
 };
 
 describe('ConverterFactory', () => {
@@ -196,7 +192,7 @@ describe('ConverterFactory', () => {
                 );
             });
 
-            it('should create an achor using an existing factory', async () => {
+            it('should create an anchor using an existing factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
 
                 const name = 'Anchor1';
@@ -211,7 +207,7 @@ describe('ConverterFactory', () => {
                 expect(await anchor.newOwner.call()).to.be.eql(owner);
             });
 
-            it('should create an achor using custom settings', async () => {
+            it('should create an anchor using custom settings', async () => {
                 const name = 'Anchor1';
                 await converterFactory.createAnchor(11, name, 'ANCHOR1', 2);
 
@@ -238,7 +234,7 @@ describe('ConverterFactory', () => {
                     MAX_CONVERSION_FEE
                 );
                 const converterAddress = await converterFactory.createdConverter.call();
-                const converter = await ConverterBase.at(converterAddress);
+                const converter = await StandardPoolConverter.at(converterAddress);
 
                 expect(await converter.anchor.call()).to.be.eql(anchor.address);
                 expect(await converter.registry.call()).to.be.eql(contractRegistry.address);

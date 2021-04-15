@@ -12,11 +12,9 @@ const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
 const DSToken = contract.fromArtifact('DSToken');
-const ConverterRegistry = contract.fromArtifact('TestConverterRegistry');
+const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
-const LiquidityPoolV1Converter = contract.fromArtifact('TestLiquidityPoolV1Converter');
 const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
 const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
@@ -52,9 +50,21 @@ const POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES = [
     { baseBalance: 7000000, networkBalance: 1000000 }
 ];
 
+const STANDARD_CONVERTER_TYPE = 3;
+const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
+
 describe('LiquidityProtection', () => {
-    for (const converterType of [1, 3]) {
-        context(`${converterType === 1 ? 'LiquidityPoolV1Converter' : 'StandardPoolConverter'}`, () => {
+    const getConverterName = (type) => {
+        switch (type) {
+            case STANDARD_CONVERTER_TYPE:
+                return 'StandardPoolConverter';
+            default:
+                throw new Error(`Unsupported type ${type}`);
+        }
+    };
+
+    for (const converterType of [STANDARD_CONVERTER_TYPE]) {
+        context(getConverterName(converterType), () => {
             const initPool = async (isETH = false, whitelist = true, standard = true) => {
                 if (isETH) {
                     baseTokenAddress = NATIVE_TOKEN_ADDRESS;
@@ -65,11 +75,6 @@ describe('LiquidityProtection', () => {
                     baseTokenAddress = baseToken.address;
                 }
 
-                let weights = [500000, 500000];
-                if (converterType === 1 && !standard) {
-                    weights = [450000, 550000];
-                }
-
                 await converterRegistry.newConverter(
                     converterType,
                     'PT',
@@ -77,17 +82,22 @@ describe('LiquidityProtection', () => {
                     18,
                     PPM_RESOLUTION,
                     [baseTokenAddress, networkToken.address],
-                    weights
+                    STANDARD_CONVERTER_WEIGHTS
                 );
                 const anchorCount = await converterRegistry.getAnchorCount.call();
                 const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
                 poolToken = await DSToken.at(poolTokenAddress);
                 const converterAddress = await poolToken.owner.call();
-                if (converterType === 1) {
-                    converter = await LiquidityPoolV1Converter.at(converterAddress);
-                } else {
-                    converter = await StandardPoolConverter.at(converterAddress);
+
+                switch (converterType) {
+                    case STANDARD_CONVERTER_TYPE:
+                        converter = await StandardPoolConverter.at(converterAddress);
+                        break;
+
+                    default:
+                        throw new Error(`Unsupported converter type ${converterType}`);
                 }
+
                 await setTime(now);
                 await converter.acceptOwnership();
                 await networkToken.approve(converter.address, RESERVE2_AMOUNT);
@@ -334,10 +344,8 @@ describe('LiquidityProtection', () => {
                 converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
                 bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
-                const liquidityPoolV1ConverterFactory = await LiquidityPoolV1ConverterFactory.new();
                 const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
                 const converterFactory = await ConverterFactory.new();
-                await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
                 const bancorFormula = await BancorFormula.new();
@@ -351,8 +359,6 @@ describe('LiquidityProtection', () => {
                 await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
                 await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
                 await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
-
-                await converterRegistry.enableTypeChanging(false);
             });
 
             beforeEach(async () => {
