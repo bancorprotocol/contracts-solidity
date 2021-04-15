@@ -9,7 +9,6 @@ const { ZERO_ADDRESS } = constants;
 
 const { ROLE_OWNER } = roles;
 
-const BancorFormula = contract.fromArtifact('BancorFormula');
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
@@ -73,10 +72,6 @@ describe('LiquidityProtectionSettings', () => {
 
         const bancorNetwork = await BancorNetwork.new(contractRegistry.address);
 
-        const bancorFormula = await BancorFormula.new();
-        await bancorFormula.init();
-
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);

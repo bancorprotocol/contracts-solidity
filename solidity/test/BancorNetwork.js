@@ -6,7 +6,6 @@ const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
 const BancorNetwork = contract.fromArtifact('BancorNetwork');
-const BancorFormula = contract.fromArtifact('BancorFormula');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
@@ -145,10 +144,6 @@ describe('BancorNetwork', () => {
     before(async () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await ContractRegistry.new();
-
-        const bancorFormula = await BancorFormula.new();
-        await bancorFormula.init();
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
 
         const converterFactory = await ConverterFactory.new();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
