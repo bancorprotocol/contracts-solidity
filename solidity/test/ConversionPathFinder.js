@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const { Contract } = require('hardhat/internal/hardhat-network/stack-traces/model');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
@@ -55,7 +54,7 @@ const getPath = async (token, anchorToken, converterRegistry) => {
     const isAnchor = await converterRegistry.isAnchor(token);
     const anchors = isAnchor ? [token] : await converterRegistry.getConvertibleTokenAnchors(token);
     for (const anchor of anchors) {
-        const converterAnchor = await Contract.IConverterAnchor.attach(anchor);
+        const converterAnchor = await Contracts.IConverterAnchor.attach(anchor);
         const converterAnchorOwner = await converterAnchor.owner();
         const converter = await Contracts.StandardPoolConverter.attach(converterAnchorOwner);
         const connectorTokenCount = await converter.connectorTokenCount();
@@ -156,7 +155,7 @@ describe('ConversionPathFinder', () => {
                 tokens,
                 STANDARD_CONVERTER_WEIGHTS
             );
-            const anchor = await Contracts.IConverterAnchor.at((await converterRegistry.getAnchors()).slice(-1)[0]);
+            const anchor = await Contracts.IConverterAnchor.attach((await converterRegistry.getAnchors()).slice(-1)[0]);
             const converterBase = await Contracts.StandardPoolConverter.attach(await anchor.owner());
             await converterBase.acceptOwnership();
             addresses[converter.symbol] = anchor.address;

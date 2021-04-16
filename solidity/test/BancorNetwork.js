@@ -1,11 +1,12 @@
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
-const ConverterHelper = require('./helpers/Converter');
+const ConverterHelper = require('./helpers/ConverterHelper');
 const BancorFormula = require('./helpers/BancorFormula');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
+const Constants = require('./helpers/Constants');
 const Contracts = require('./helpers/Contracts');
 
 let network;
@@ -160,7 +161,7 @@ describe('BancorNetwork', () => {
             // support old converters
             const bancorFormula = await BancorFormula.new();
             await bancorFormula.init();
-            await contractRegistry.registerAddress(web3.utils.asciiToHex('BancorFormula'), bancorFormula.address);
+            await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
 
             bntToken = await Contracts.TestStandardToken.deploy('BNT', 'BNT', 2, BigNumber.from(10000000));
             erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ERC1', 2, BigNumber.from(1000000));
@@ -186,8 +187,8 @@ describe('BancorNetwork', () => {
             await converter1.addReserve(NATIVE_TOKEN_ADDRESS, BigNumber.from(500000));
 
             converter2 = await Contracts.StandardPoolConverter.deploy(anchor2.address, contractRegistry.address, 0);
-            await converter2.addReserve(bntToken.address, BigNumber.from(300000));
-            await converter2.addReserve(erc20Token1.address, BigNumber.from(150000));
+            await converter2.addReserve(bntToken.address, BigNumber.from(500000));
+            await converter2.addReserve(erc20Token1.address, BigNumber.from(500000));
 
             converter3 = await ConverterHelper.new(
                 1,
@@ -201,8 +202,8 @@ describe('BancorNetwork', () => {
             await converter3.addConnector(erc20Token2.address, BigNumber.from(100000), false);
 
             converter4 = await Contracts.StandardPoolConverter.deploy(anchor4.address, contractRegistry.address, 0);
-            await converter4.addReserve(bntToken.address, BigNumber.from(220000));
-            await converter4.addReserve(erc20Token3.address, BigNumber.from(220000));
+            await converter4.addReserve(bntToken.address, BigNumber.from(500000));
+            await converter4.addReserve(erc20Token3.address, BigNumber.from(500000));
 
             await bntToken.transfer(converter1.address, BigNumber.from(40000));
             await bntToken.transfer(converter2.address, BigNumber.from(70000));

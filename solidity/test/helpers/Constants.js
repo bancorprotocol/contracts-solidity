@@ -1,4 +1,4 @@
-const { BigNumber } = require('ethers');
+const { BigNumber, ethers } = require('ethers');
 
 module.exports = {
     registry: {
@@ -13,7 +13,10 @@ module.exports = {
         BNT_TOKEN: ethers.utils.formatBytes32String('BNTToken'),
         BANCOR_X: ethers.utils.formatBytes32String('BancorX'),
         BANCOR_X_UPGRADER: ethers.utils.formatBytes32String('BancorXUpgrader'),
-        NETWORK_SETTINGS: ethers.utils.formatBytes32String('NetworkSettings')
+        NETWORK_SETTINGS: ethers.utils.formatBytes32String('NetworkSettings'),
+
+        //
+        BANCOR_FORMULA: ethers.utils.formatBytes32String('BancorFormula')
     },
 
     roles: {

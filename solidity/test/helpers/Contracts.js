@@ -18,10 +18,7 @@ const deployContract = async (contractName, ...args) => {
 };
 
 const attachContract = async (contractName, address) => {
-    if (contracts[contractName] === undefined) {
-        contracts[contractName] = await ethers.getContractFactory(contractName);
-    }
-    return await contracts[contractName].attach(address);
+    return await ethers.getContractAt(contractName, address);
 };
 
 const deployOrAttach = (contractName) => {
@@ -93,5 +90,6 @@ module.exports = {
     VortexBurner: deployOrAttach('VortexBurner'),
     TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
     TestReserveToken: deployOrAttach('TestReserveToken'),
-    TestLiquidityProtectionEventsSubscriber: deployOrAttach('TestLiquidityProtectionEventsSubscriber')
+    TestLiquidityProtectionEventsSubscriber: deployOrAttach('TestLiquidityProtectionEventsSubscriber'),
+    IConverterAnchor: deployOrAttach('IConverterAnchor')
 };
