@@ -2,6 +2,8 @@ const { accounts, defaultSender, contract, web3 } = require('@openzeppelin/test-
 const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
 const { expect } = require('../../chai-local');
 
+const BancorFormula = require('./helpers/BancorFormula');
+
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 const { ZERO_ADDRESS } = constants;
 
@@ -166,6 +168,11 @@ describe('BancorNetwork', () => {
 
             const pathFinder = await ConversionPathFinder.new(contractRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERSION_PATH_FINDER, pathFinder.address);
+
+            // support old converters
+            const bancorFormula = await BancorFormula.new();
+            await bancorFormula.init();
+            await contractRegistry.registerAddress(web3.utils.asciiToHex('BancorFormula'), bancorFormula.address);
 
             bntToken = await TestStandardToken.new('BNT', 'BNT', 2, 10000000);
             erc20Token1 = await TestStandardToken.new('TKN1', 'ERC1', 2, 1000000);
