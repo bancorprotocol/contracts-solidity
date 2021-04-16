@@ -77,6 +77,6 @@
     },
     "snyk": true,
     "dependencies": {
-        "hardhat": "^2.1.1"
+        "hardhat": "2.2.0"
     }
 }
