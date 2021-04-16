@@ -45,8 +45,6 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 
 -   node 10.16.0
 -   yarn 1.22.0
--   python 3.7.3
--   web3.py 4.9.2
 
 ### Installation
 
@@ -57,7 +55,6 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 -   Verifying all the contracts:
     -   `yarn test` (quick testing)
     -   `yarn coverage` (full coverage)
--   [Verifying the BancorFormula contract](solidity/python/README.md)
 
 ### [Utilities](solidity/utils/README.md)
 

@@ -90,5 +90,8 @@ module.exports = {
     TestReentrancyGuardAttacker: deployOrAttach('TestReentrancyGuardAttacker'),
     TestReentrancyGuard: deployOrAttach('TestReentrancyGuard'),
     XTransferRerouter: deployOrAttach('XTransferRerouter'),
-    VortexBurner: deployOrAttach('VortexBurner')
+    VortexBurner: deployOrAttach('VortexBurner'),
+    TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
+    TestReserveToken: deployOrAttach('TestReserveToken'),
+    TestLiquidityProtectionEventsSubscriber: deployOrAttach('TestLiquidityProtectionEventsSubscriber')
 };

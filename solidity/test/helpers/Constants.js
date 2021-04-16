@@ -4,7 +4,6 @@ module.exports = {
     registry: {
         CONTRACT_REGISTRY: ethers.utils.formatBytes32String('ContractRegistry'),
         BANCOR_NETWORK: ethers.utils.formatBytes32String('BancorNetwork'),
-        BANCOR_FORMULA: ethers.utils.formatBytes32String('BancorFormula'),
         NETWORK_SETTINGS: ethers.utils.formatBytes32String('NetworkSettings'),
         CONVERTER_FACTORY: ethers.utils.formatBytes32String('ConverterFactory'),
         CONVERSION_PATH_FINDER: ethers.utils.formatBytes32String('ConversionPathFinder'),

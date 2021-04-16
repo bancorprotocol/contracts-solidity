@@ -2,6 +2,8 @@ const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
 const ConverterHelper = require('./helpers/Converter');
+const BancorFormula = require('./helpers/BancorFormula');
+
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
 const Contracts = require('./helpers/Contracts');
@@ -133,10 +135,6 @@ describe('BancorNetwork', () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        const bancorFormula = await Contracts.BancorFormula.deploy();
-        await bancorFormula.init();
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
-
         const converterFactory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
 
@@ -159,6 +157,11 @@ describe('BancorNetwork', () => {
             const pathFinder = await Contracts.ConversionPathFinder.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERSION_PATH_FINDER, pathFinder.address);
 
+            // support old converters
+            const bancorFormula = await BancorFormula.new();
+            await bancorFormula.init();
+            await contractRegistry.registerAddress(web3.utils.asciiToHex('BancorFormula'), bancorFormula.address);
+
             bntToken = await Contracts.TestStandardToken.deploy('BNT', 'BNT', 2, BigNumber.from(10000000));
             erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ERC1', 2, BigNumber.from(1000000));
             erc20Token2 = await Contracts.TestNonStandardToken.deploy('TKN2', 'ERC2', 2, BigNumber.from(2000000));
@@ -178,26 +181,26 @@ describe('BancorNetwork', () => {
 
             await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
 
-            converter1 = await Contracts.LiquidityPoolV1Converter.deploy(anchor1.address, contractRegistry.address, 0);
+            converter1 = await Contracts.StandardPoolConverter.deploy(anchor1.address, contractRegistry.address, 0);
             await converter1.addReserve(bntToken.address, BigNumber.from(500000));
             await converter1.addReserve(NATIVE_TOKEN_ADDRESS, BigNumber.from(500000));
 
-            converter2 = await Contracts.LiquidityPoolV1Converter.deploy(anchor2.address, contractRegistry.address, 0);
+            converter2 = await Contracts.StandardPoolConverter.deploy(anchor2.address, contractRegistry.address, 0);
             await converter2.addReserve(bntToken.address, BigNumber.from(300000));
             await converter2.addReserve(erc20Token1.address, BigNumber.from(150000));
 
             converter3 = await ConverterHelper.new(
                 1,
+                OLD_CONVERTER_VERSION,
                 anchor3.address,
                 contractRegistry.address,
                 0,
                 bntToken.address,
-                BigNumber.from(350000),
-                OLD_CONVERTER_VERSION
+                BigNumber.from(350000)
             );
             await converter3.addConnector(erc20Token2.address, BigNumber.from(100000), false);
 
-            converter4 = await Contracts.LiquidityPoolV1Converter.deploy(anchor4.address, contractRegistry.address, 0);
+            converter4 = await Contracts.StandardPoolConverter.deploy(anchor4.address, contractRegistry.address, 0);
             await converter4.addReserve(bntToken.address, BigNumber.from(220000));
             await converter4.addReserve(erc20Token3.address, BigNumber.from(220000));
 

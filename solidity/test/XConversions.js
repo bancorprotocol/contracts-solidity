@@ -50,10 +50,7 @@ describe('XConversions', () => {
         sender2 = accounts[6];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        bancorFormula = await Contracts.BancorFormula.deploy();
         contractRegistry = await Contracts.ContractRegistry.deploy();
-
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     beforeEach(async () => {
@@ -76,7 +73,6 @@ describe('XConversions', () => {
         bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.BNT_TOKEN, bntToken.address);
-        await contractRegistry.registerAddress(registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
         await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
 
@@ -88,12 +84,12 @@ describe('XConversions', () => {
         await poolToken2.issue(owner.address, ethers.utils.parseEther('200'));
         await poolToken2.issue(owner.address, ethers.utils.parseEther('200'));
 
-        erc20TokenConverter1 = await Contracts.LiquidityPoolV1Converter.deploy(
+        erc20TokenConverter1 = await Contracts.StandardPoolConverter.deploy(
             poolToken1.address,
             contractRegistry.address,
             30000
         );
-        erc20TokenConverter2 = await Contracts.LiquidityPoolV1Converter.deploy(
+        erc20TokenConverter2 = await Contracts.StandardPoolConverter.deploy(
             poolToken2.address,
             contractRegistry.address,
             30000

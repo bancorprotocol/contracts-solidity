@@ -6,38 +6,33 @@ import "../converter/ConverterRegistry.sol";
     Utils test helper that exposes the converter registry functions
 */
 contract TestConverterRegistry is ConverterRegistry {
-    IConverter public createdConverter;
-    bool public typeChangingEnabled = true;
+    IConverter private _createdConverter;
 
-    constructor(IContractRegistry _registry) public ConverterRegistry(_registry) {}
+    constructor(IContractRegistry registry) public ConverterRegistry(registry) {}
 
     function newConverter(
-        uint16 _type,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        uint32 _maxConversionFee,
-        IERC20[] memory _reserveTokens,
-        uint32[] memory _reserveWeights
+        uint16 converterType,
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
+        uint32 maxConversionFee,
+        IReserveToken[] memory reserveTokens,
+        uint32[] memory reserveWeights
     ) public override returns (IConverter) {
-        createdConverter = super.newConverter(
-            _type,
-            _name,
-            _symbol,
-            _decimals,
-            _maxConversionFee,
-            _reserveTokens,
-            _reserveWeights
+        _createdConverter = super.newConverter(
+            converterType,
+            name,
+            symbol,
+            decimals,
+            maxConversionFee,
+            reserveTokens,
+            reserveWeights
         );
 
-        return createdConverter;
+        return _createdConverter;
     }
 
-    function isStandardPool(uint32[] memory _reserveWeights) internal view override returns (bool) {
-        return typeChangingEnabled && super.isStandardPool(_reserveWeights);
-    }
-
-    function enableTypeChanging(bool _state) external {
-        typeChangingEnabled = _state;
+    function createdConverter() external view returns (IConverter) {
+        return _createdConverter;
     }
 }

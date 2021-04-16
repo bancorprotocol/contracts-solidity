@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../token/interfaces/IReserveToken.sol";
 
 import "./IConverterAnchor.sol";
 
@@ -26,24 +26,24 @@ interface IConverterRegistry {
 
     function getConvertibleTokens() external view returns (address[] memory);
 
-    function getConvertibleToken(uint256 _index) external view returns (IERC20);
+    function getConvertibleToken(uint256 _index) external view returns (IReserveToken);
 
     function isConvertibleToken(address _value) external view returns (bool);
 
-    function getConvertibleTokenAnchorCount(IERC20 _convertibleToken) external view returns (uint256);
+    function getConvertibleTokenAnchorCount(IReserveToken _convertibleToken) external view returns (uint256);
 
-    function getConvertibleTokenAnchors(IERC20 _convertibleToken) external view returns (address[] memory);
+    function getConvertibleTokenAnchors(IReserveToken _convertibleToken) external view returns (address[] memory);
 
-    function getConvertibleTokenAnchor(IERC20 _convertibleToken, uint256 _index)
+    function getConvertibleTokenAnchor(IReserveToken _convertibleToken, uint256 _index)
         external
         view
         returns (IConverterAnchor);
 
-    function isConvertibleTokenAnchor(IERC20 _convertibleToken, address _value) external view returns (bool);
+    function isConvertibleTokenAnchor(IReserveToken _convertibleToken, address _value) external view returns (bool);
 
     function getLiquidityPoolByConfig(
         uint16 _type,
-        IERC20[] memory _reserveTokens,
+        IReserveToken[] memory _reserveTokens,
         uint32[] memory _reserveWeights
     ) external view returns (IConverterAnchor);
 }

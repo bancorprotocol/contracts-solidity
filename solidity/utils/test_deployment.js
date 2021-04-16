@@ -161,7 +161,6 @@ const run = async () => {
     // main contracts
     const contractRegistry = await web3Func(deploy, 'contractRegistry', 'ContractRegistry', []);
     const converterFactory = await web3Func(deploy, 'converterFactory', 'ConverterFactory', []);
-    const bancorFormula = await web3Func(deploy, 'bancorFormula', 'BancorFormula', []);
     const bancorNetwork = await web3Func(deploy, 'bancorNetwork', 'BancorNetwork', [contractRegistry._address]);
     const conversionPathFinder = await web3Func(deploy, 'conversionPathFinder', 'ConversionPathFinder', [
         contractRegistry._address
@@ -182,12 +181,6 @@ const run = async () => {
         0
     ]);
 
-    const liquidityPoolV1ConverterFactory = await web3Func(
-        deploy,
-        'liquidityPoolV1ConverterFactory',
-        'LiquidityPoolV1ConverterFactory',
-        []
-    );
     const standardPoolConverterFactory = await web3Func(
         deploy,
         'standardPoolConverterFactory',
@@ -197,14 +190,8 @@ const run = async () => {
 
     // contract deployment for etherscan verification only
     const poolToken1 = await web3Func(deploy, 'poolToken1', 'DSToken', ['Token1', 'TKN1', 18]);
-    const poolToken2 = await web3Func(deploy, 'poolToken2', 'DSToken', ['Token2', 'TKN2', 18]);
-    await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [
-        poolToken2._address,
-        contractRegistry._address,
-        1000
-    ]);
     await web3Func(deploy, 'standardPoolConverter', 'StandardPoolConverter', [
-        poolToken2._address,
+        poolToken1._address,
         contractRegistry._address,
         1000
     ]);
@@ -215,9 +202,6 @@ const run = async () => {
     );
     await execute(
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('ConverterFactory'), converterFactory._address)
-    );
-    await execute(
-        contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorFormula'), bancorFormula._address)
     );
     await execute(
         contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BancorNetwork'), bancorNetwork._address)
@@ -252,7 +236,6 @@ const run = async () => {
     );
 
     // initialize converter factory
-    await execute(converterFactory.methods.registerTypedConverterFactory(liquidityPoolV1ConverterFactory._address));
     await execute(converterFactory.methods.registerTypedConverterFactory(standardPoolConverterFactory._address));
 
     for (const reserve of getConfig().reserves) {
@@ -282,7 +265,7 @@ const run = async () => {
         const decimals = converter.decimals;
         const fee = percentageToPPM(converter.fee);
         const tokens = converter.reserves.map((reserve) => reserves[reserve.symbol].address);
-        const weights = converter.reserves.map((reserve) => percentageToPPM(reserve.weight));
+        const weights = [percentageToPPM('50%'), percentageToPPM('50%')];
         const amounts = converter.reserves.map((reserve) =>
             decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals)
         );
@@ -306,22 +289,22 @@ const run = async () => {
             await converterRegistry.methods.getAnchor(index).call()
         );
 
-        const converterBase = deployed(web3, 'ConverterBase', await converterAnchor.methods.owner().call());
-        await execute(converterBase.methods.acceptOwnership());
-        await execute(converterBase.methods.setConversionFee(fee));
+        const standardConverter = deployed(web3, 'StandardPoolConverter', await converterAnchor.methods.owner().call());
+        await execute(standardConverter.methods.acceptOwnership());
+        await execute(standardConverter.methods.setConversionFee(fee));
 
         if (amounts.every((amount) => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {
                 const reserve = converter.reserves[i];
                 if (reserve.symbol !== 'ETH') {
                     const deployedToken = deployed(web3, 'ERC20', tokens[i]);
-                    await execute(deployedToken.methods.approve(converterBase._address, amounts[i]));
+                    await execute(deployedToken.methods.approve(standardConverter._address, amounts[i]));
                 }
             }
 
-            const deployedConverterType = { 1: 'LiquidityPoolV1Converter', 3: 'StandardPoolConverter' }[type];
-            const deployedConverter = deployed(web3, deployedConverterType, converterBase._address);
-            await execute(deployedConverter.methods['addLiquidity(address[],uint256[],uint256)'](tokens, amounts, 1), value);
+            const deployedConverterType = { 3: 'StandardPoolConverter' }[type];
+            const deployedConverter = deployed(web3, deployedConverterType, standardConverter._address);
+            await execute(deployedConverter.methods.addLiquidity(tokens, amounts, 1), value);
         }
 
         reserves[converter.symbol] = {
@@ -332,7 +315,6 @@ const run = async () => {
 
     await execute(contractRegistry.methods.registerAddress(Web3.utils.asciiToHex('BNTToken'), reserves.BNT.address));
     await execute(conversionPathFinder.methods.setAnchorToken(reserves.BNT.address));
-    await execute(bancorFormula.methods.init());
 
     const bntTokenGovernance = await web3Func(deploy, 'bntTokenGovernance', 'TokenGovernance', [reserves.BNT.address]);
     const vbntTokenGovernance = await web3Func(deploy, 'vbntTokenGovernance', 'TokenGovernance', [

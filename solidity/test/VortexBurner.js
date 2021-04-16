@@ -474,7 +474,7 @@ describe('VortexBurner', () => {
                                             );
 
                                             for (let i = 0; i < convertibleTokens.length; ++i) {
-                                                expect(events[i].args.token).to.equal(convertibleTokens[i]);
+                                                expect(events[i].args.reserveToken).to.equal(convertibleTokens[i]);
                                                 expect(events[i].args.sourceAmount).to.equal(amounts[i]);
                                                 expect(events[i].args.targetAmount).to.equal(
                                                     networkTokenConversionAmounts[i]
