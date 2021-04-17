@@ -2231,12 +2231,13 @@ describe('LiquidityProtection', () => {
                     return data;
                 };
 
-                const testNotifications = (isBaseReserveToken, isETHReserve, recipient) => {
+                const testNotifications = (isBaseReserveToken, isETHReserve, recipientNb) => {
                     const reserveAmount = BigNumber.from(5000);
                     let reserveToken;
                     let reserveTokenAddress;
                     let id;
                     let protection;
+                    let recipient;
 
                     const init = async () => {
                         await initPool(isETHReserve);
@@ -2282,13 +2283,16 @@ describe('LiquidityProtection', () => {
                             );
                         }
 
-                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient);
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient.address);
                         id = protectionIds[0];
                         protection = await liquidityProtectionStore.protectedLiquidity(id);
                         protection = getProtection(protection);
                     };
 
                     context('without an events notifier', () => {
+                        before(async () => {
+                            recipient = accounts[recipientNb];
+                        });
                         beforeEach(async () => {
                             await init();
                         });
@@ -2335,6 +2339,10 @@ describe('LiquidityProtection', () => {
                     });
 
                     context('with an events notifier', () => {
+                        before(async () => {
+                            recipient = accounts[recipientNb];
+                        });
+
                         beforeEach(async () => {
                             await liquidityProtectionSettings.connect(owner).addSubscriber(eventsSubscriber.address);
 
@@ -2353,7 +2361,7 @@ describe('LiquidityProtection', () => {
                                 const event = events[0];
                                 expect(event.adding).to.be.true;
                                 expect(event.id).to.be.equal(BigNumber.from(0));
-                                expect(event.provider).to.eql(recipient);
+                                expect(event.provider).to.eql(recipient.address);
                                 expect(event.poolAnchor).to.eql(poolToken.address);
                                 expect(event.reserveToken).to.eql(reserveTokenAddress);
                                 expect(event.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
@@ -2387,7 +2395,7 @@ describe('LiquidityProtection', () => {
                                 const event = events[0];
                                 expect(event.adding).to.be.false;
                                 expect(event.id).to.be.equal(id);
-                                expect(event.provider).to.eql(recipient);
+                                expect(event.provider).to.eql(recipient.address);
                                 expect(event.poolAnchor).to.eql(poolToken.address);
                                 expect(event.reserveToken).to.eql(reserveTokenAddress);
                                 expect(event.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
@@ -2416,7 +2424,7 @@ describe('LiquidityProtection', () => {
                                 const removeEvent = events[0];
                                 expect(removeEvent.adding).to.be.false;
                                 expect(removeEvent.id).to.be.equal(id);
-                                expect(removeEvent.provider).to.eql(recipient);
+                                expect(removeEvent.provider).to.eql(recipient.address);
                                 expect(removeEvent.poolAnchor).to.eql(poolToken.address);
                                 expect(removeEvent.reserveToken).to.eql(reserveTokenAddress);
                                 expect(removeEvent.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
@@ -2435,23 +2443,19 @@ describe('LiquidityProtection', () => {
                     });
                 };
 
-                let recipient;
                 const accountsTmp = [0, 3];
 
                 // test both addLiquidity and addLiquidityFor
                 for (const accountTmp of accountsTmp) {
                     context(accountTmp === 0 ? 'for self' : 'for another account', async () => {
-                        beforeEach(async () => {
-                            recipient = accounts[accountsTmp];
-                        });
                         for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
                             describe(`base token (${isETHReserve ? 'ETH' : 'ERC20'})`, () => {
-                                testNotifications(true, isETHReserve, recipient);
+                                testNotifications(true, isETHReserve, accountTmp);
                             });
                         }
 
                         describe('network token', () => {
-                            testNotifications(false, false, recipient);
+                            testNotifications(false, false, accountTmp);
                         });
                     });
                 }
@@ -2585,7 +2589,7 @@ describe('LiquidityProtection', () => {
                                                                         .join('')
                                                                         .slice(1, -1);
                                                                     it(`test ${testNum} out of ${numOfTest}: ${testDesc}`, async () => {
-                                                                        const actual = await liquidityProtection.removeLiquidityTargetAmountTest(
+                                                                        const actual = await liquidityProtection.callStatic.removeLiquidityTargetAmountTest(
                                                                             poolTokenRateN,
                                                                             poolTokenRateD,
                                                                             poolAmount,
@@ -2887,6 +2891,7 @@ describe('LiquidityProtection', () => {
                             maxAbsoluteError: Infinity,
                             maxRelativeError: Infinity
                         };
+
                         removeLiquidityTargetAmountTest(amounts, durations, deviation, range);
                     });
 
