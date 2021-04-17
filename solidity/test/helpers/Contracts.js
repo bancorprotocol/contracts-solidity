@@ -3,8 +3,8 @@ let contracts = {};
 const deployContract = async (contractName, ...args) => {
     let signer = (await ethers.getSigners())[0];
 
-    if (typeof args[args.length - 1] === 'object' && args[args.length - 1].constructor.name === 'SignerWithAddress') {
-        signer = args[args.length - 1];
+    if (typeof args[args.length - 1] === 'object' && args[args.length - 1].from) {
+        signer = args[args.length - 1].from;
         args.pop();
     }
 
