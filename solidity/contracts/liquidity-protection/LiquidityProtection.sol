@@ -73,6 +73,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
+    uint8 private constant FUNC_SELECTOR_LENGTH = 4;
 
     ILiquidityProtectionSettings private immutable _settings;
     ILiquidityProtectionStore private immutable _store;
@@ -786,7 +787,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 newId = transferPosition(msg.sender, id, newProvider);
 
         // make sure that we're not trying to call into the zero address or a fallback function
-        require(target != address(0) && data.length > 0, "ERR_INVALID_CALL_DATA");
+        require(target != address(0) && data.length >= FUNC_SELECTOR_LENGTH, "ERR_INVALID_CALL_DATA");
 
         Address.functionCall(target, data, "ERR_CALL_FAILED");
 

@@ -2235,7 +2235,7 @@ describe('LiquidityProtection', () => {
                                     protectionId,
                                     newOwner,
                                     ZERO_ADDRESS,
-                                    '0x1234',
+                                    liquidityProtection.contract.methods.store().encodeABI(),
                                     {
                                         from: recipient
                                     }
@@ -2255,6 +2255,21 @@ describe('LiquidityProtection', () => {
                                 ),
                                 'ERR_INVALID_CALL_DATA'
                             );
+
+                            for (const invalidCallData of [[], '0x1234', '0x123456']) {
+                                await expectRevert(
+                                    liquidityProtection.transferPositionAndCall(
+                                        protectionId,
+                                        newOwner,
+                                        testCall.address,
+                                        invalidCallData,
+                                        {
+                                            from: recipient
+                                        }
+                                    ),
+                                    'ERR_INVALID_CALL_DATA'
+                                );
+                            }
                         });
 
                         it('should revert when the callback reverts', async () => {
