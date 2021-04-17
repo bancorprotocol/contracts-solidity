@@ -2033,15 +2033,17 @@ describe('LiquidityProtection', () => {
             });
 
             describe('transfer position', () => {
-                const testTransfer = (isBaseReserveToken, isETHReserve, recipient) => {
+                const testTransfer = (isBaseReserveToken, isETHReserve, recipientNb) => {
                     let protectionId;
                     let newOwner;
                     const reserveAmount = BigNumber.from(5000);
                     let reserveToken;
                     let reserveTokenAddress;
+                    let recipient;
 
                     before(async () => {
                         newOwner = accounts[5];
+                        recipient = accounts[recipientNb];
                     });
 
                     beforeEach(async () => {
@@ -2086,7 +2088,7 @@ describe('LiquidityProtection', () => {
                             );
                         }
 
-                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient);
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient.address);
                         expect(protectionIds.length).to.eql(1);
 
                         protectionId = protectionIds[0];
@@ -2113,18 +2115,18 @@ describe('LiquidityProtection', () => {
                         );
                         const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
 
-                        await liquidityProtection.connect(recipient).transferPosition(protectionId, newOwner);
+                        await liquidityProtection.connect(recipient).transferPosition(protectionId, newOwner.address);
 
-                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient);
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient.address);
                         expect(protectionIds).not.to.have.members([protectionId]);
 
-                        const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(newOwner);
+                        const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(newOwner.address);
                         expect(protectionIds2.length).to.eql(1);
 
                         let protection2 = await liquidityProtectionStore.protectedLiquidity(protectionIds2[0]);
                         protection2 = getProtection(protection2);
 
-                        expect(protection2.provider).to.eql(newOwner);
+                        expect(protection2.provider).to.eql(newOwner.address);
                         expect(protection.poolToken).to.eql(protection2.poolToken);
                         expect(protection.reserveToken).to.eql(protection2.reserveToken);
                         expect(protection.poolAmount).to.be.equal(protection2.poolAmount);
@@ -2156,18 +2158,18 @@ describe('LiquidityProtection', () => {
                     });
 
                     it('should update the last removal check point when transferring liquidity', async () => {
-                        expect(await checkpointStore.checkpoint(recipient)).to.be.equal(BigNumber.from(0));
+                        expect(await checkpointStore.checkpoint(recipient.address)).to.be.equal(BigNumber.from(0));
 
-                        await liquidityProtection.connect(recipient).transferPosition(protectionId, newOwner);
+                        await liquidityProtection.connect(recipient).transferPosition(protectionId, newOwner.address);
 
-                        expect(await checkpointStore.checkpoint(recipient)).to.be.equal(now);
-                        expect(await checkpointStore.checkpoint(newOwner)).to.be.equal(BigNumber.from(0));
+                        expect(await checkpointStore.checkpoint(recipient.address)).to.be.equal(now);
+                        expect(await checkpointStore.checkpoint(newOwner.address)).to.be.equal(BigNumber.from(0));
                     });
 
                     it('should revert when attempting to transfer position that belongs to another account', async () => {
                         const nonOwner = accounts[8];
                         await expect(
-                            liquidityProtection.connect(nonOwner).transferPosition(protectionId, newOwner)
+                            liquidityProtection.connect(nonOwner).transferPosition(protectionId, newOwner.address)
                         ).to.be.revertedWith('ERR_ACCESS_DENIED');
                     });
                 };
@@ -2186,21 +2188,17 @@ describe('LiquidityProtection', () => {
 
                 // test both addLiquidity and addLiquidityFor
                 const testAccounts = [0, 3];
-                let recipient;
 
                 for (const testAccount of testAccounts) {
                     context(testAccount === 0 ? 'for self' : 'for another account', async () => {
-                        beforeEach(async () => {
-                            recipient = accounts[testAccount];
-                        });
                         for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
                             describe(`base token (${isETHReserve ? 'ETH' : 'ERC20'})`, () => {
-                                testTransfer(true, isETHReserve, recipient);
+                                testTransfer(true, isETHReserve, testAccount);
                             });
                         }
 
                         describe('network token', () => {
-                            testTransfer(false, false, recipient);
+                            testTransfer(false, false, testAccount);
                         });
                     });
                 }
@@ -2328,7 +2326,7 @@ describe('LiquidityProtection', () => {
 
                             it('should not publish events', async () => {
                                 const newOwner = accounts[8];
-                                await liquidityProtection.connect(recipient).transferPosition(id, newOwner);
+                                await liquidityProtection.connect(recipient).transferPosition(id, newOwner.address);
 
                                 const events = await getEvents();
                                 expect(events).to.have.lengthOf(0);
@@ -2410,7 +2408,7 @@ describe('LiquidityProtection', () => {
                                 const rate = poolTokenRate(totalSupply, reserveBalance);
 
                                 const newOwner = accounts[8];
-                                await liquidityProtection.connect(recipient).transferPosition(id, newOwner);
+                                await liquidityProtection.connect(recipient).transferPosition(id, newOwner.address);
 
                                 const events = await getEvents();
                                 expect(events).to.have.lengthOf(2);
@@ -2427,7 +2425,7 @@ describe('LiquidityProtection', () => {
                                 const addEvent = events[1];
                                 expect(addEvent.adding).to.be.true;
                                 expect(addEvent.id).to.be.equal(BigNumber.from(0));
-                                expect(addEvent.provider).to.eql(newOwner);
+                                expect(addEvent.provider).to.eql(newOwner.address);
                                 expect(addEvent.poolAnchor).to.eql(poolToken.address);
                                 expect(addEvent.reserveToken).to.eql(reserveTokenAddress);
                                 expect(addEvent.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
