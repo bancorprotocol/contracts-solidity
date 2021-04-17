@@ -11,7 +11,7 @@ The main contracts are the BancorNetwork contract (entry point to the system) an
 
 ## Config
 
-In order to use some of our plugins we need a config.json file.
+In order to use some plugins or API keys we need a config.json file.
 
 ```json
 {
@@ -21,7 +21,7 @@ In order to use some of our plugins we need a config.json file.
 
     "networks": {
         "mainnet": {
-            "NODE_ADDRESS": ""
+            "url": ""
         }
     }
 }

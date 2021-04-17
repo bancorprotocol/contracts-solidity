@@ -10,24 +10,20 @@ require('@nomiclabs/hardhat-etherscan');
 require('solidity-coverage');
 require('hardhat-contract-sizer');
 
-// Set up configuration
-const defaultConfig = {
-    apiKeys: {
-        etherscan: ''
-    },
+// Load Config
+const configPath = __dirname + '/config.json';
+const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
 
-    networks: {
-        mainnet: {
-            NODE_ADDRESS: ''
-        }
-    }
+const loadAPIKey = (apiKeyName) => {
+    return config.apiKeys ? (config.apiKeys[apiKeyName] ? config.apiKeys[apiKeyName] : '') : '';
 };
 
-const configPath = __dirname + '/config.json';
-const Config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : defaultConfig;
-//
+// Config
+const configNetworks = config.networks || {};
+const APIKeyEtherscan = loadAPIKey('etherscan');
 
 module.exports = {
+    // Network Config
     networks: {
         // Hardhat network
         hardhat: {
@@ -77,20 +73,11 @@ module.exports = {
             ]
         },
 
-        // Mainnet network
-        mainnet: {
-            url: Config.networks.mainnet.NODE_ADDRESS
-        }
+        // Load the rest of the Network config from a file
+        ...configNetworks
     },
-    etherscan: {
-        apiKey: Config.apiKeys.etherscan
-    },
-    paths: {
-        sources: './solidity/contracts',
-        tests: './solidity/test',
-        cache: './cache',
-        artifacts: './solidity/build/contracts'
-    },
+
+    // Solidity Config
     solidity: {
         version: '0.6.12',
         settings: {
@@ -100,6 +87,26 @@ module.exports = {
             }
         }
     },
+
+    // Plugins Config
+    etherscan: {
+        apiKey: APIKeyEtherscan
+    },
+    contractSizer: {
+        alphaSort: true,
+        runOnCompile: false,
+        disambiguatePaths: false
+    },
+
+    // System Config
+    paths: {
+        sources: './solidity/contracts',
+        tests: './solidity/test',
+        cache: './cache',
+        artifacts: './solidity/build/contracts'
+    },
+
+    // Test Config
     mocha: {
         spec: argv.spec || 'solidity/test',
         exit: true,
@@ -108,10 +115,5 @@ module.exports = {
         timeout: 600000,
         useColors: true,
         bail: true
-    },
-    contractSizer: {
-        alphaSort: true,
-        runOnCompile: false,
-        disambiguatePaths: false
     }
 };
