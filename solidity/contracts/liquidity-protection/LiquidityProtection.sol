@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
@@ -753,7 +754,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev transfers a position to a new provider
      *
      * @param id position id
-     * @param newProvider new provider
+     * @param newProvider the new provider
      *
      * @return new position id
      */
@@ -763,8 +764,53 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         validAddress(newProvider)
         returns (uint256)
     {
+        return transferPosition(msg.sender, id, newProvider);
+    }
+
+    /**
+     * @dev transfers a position to a new provider and optionally notifies another contract
+     *
+     * @param id position id
+     * @param newProvider the new provider
+     * @param target the contract to notify
+     * @param data the data to call the contract with
+     *
+     * @return new position id
+     */
+    function transferPositionAndCall(
+        uint256 id,
+        address newProvider,
+        address target,
+        bytes memory data
+    ) external protected validAddress(newProvider) returns (uint256) {
+        uint256 newId = transferPosition(msg.sender, id, newProvider);
+
+        // make sure that we're not trying to call into the zero address or a fallback function
+        require(target != address(0) && data.length > 0, "ERR_INVALID_CALL_DATA");
+
+        Address.functionCall(target, data, "ERR_CALL_FAILED");
+
+        return newId;
+    }
+
+    // bytes calldata data
+
+    /**
+     * @dev transfers a position to a new provider
+     *
+     * @param provider the existing provider
+     * @param id position id
+     * @param newProvider the new provider
+     *
+     * @return new position id
+     */
+    function transferPosition(
+        address provider,
+        uint256 id,
+        address newProvider
+    ) internal returns (uint256) {
         // remove the position from the store and update the stats and the last removal checkpoint
-        Position memory removedPos = removePosition(msg.sender, id, PPM_RESOLUTION);
+        Position memory removedPos = removePosition(provider, id, PPM_RESOLUTION);
 
         // add the position to the store, update the stats, and return the new id
         return

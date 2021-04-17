@@ -29,6 +29,7 @@ const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
 const NetworkSettings = contract.fromArtifact('NetworkSettings');
+const TestCall = contract.fromArtifact('TestCall');
 
 const PPM_RESOLUTION = new BN(1000000);
 
@@ -2079,6 +2080,74 @@ describe('LiquidityProtection', () => {
 
             describe('transfer position', () => {
                 const testTransfer = (isBaseReserveToken, isETHReserve, recipient) => {
+                    const verifyTransfer = async (transferFunc) => {
+                        let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
+                        protection = getProtection(protection);
+
+                        expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(new BN(0));
+                        expect(await checkpointStore.checkpoint.call(newOwner)).to.be.bignumber.equal(new BN(0));
+
+                        const prevPoolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
+                        const prevRecipientStats = await getProviderStats(
+                            recipient,
+                            poolToken,
+                            reserveToken,
+                            isETHReserve
+                        );
+                        const prevNewOwnerStats = await getProviderStats(
+                            newOwner,
+                            poolToken,
+                            reserveToken,
+                            isETHReserve
+                        );
+                        const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
+
+                        await transferFunc();
+
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient);
+                        expect(protectionIds).not.to.have.members([protectionId]);
+
+                        const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(newOwner);
+                        expect(protectionIds2.length).to.eql(1);
+
+                        let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds2[0]);
+                        protection2 = getProtection(protection2);
+
+                        expect(protection2.provider).to.eql(newOwner);
+                        expect(protection.poolToken).to.eql(protection2.poolToken);
+                        expect(protection.reserveToken).to.eql(protection2.reserveToken);
+                        expect(protection.poolAmount).to.be.bignumber.equal(protection2.poolAmount);
+                        expect(protection.reserveAmount).to.be.bignumber.equal(protection2.reserveAmount);
+                        expect(protection.reserveRateN).to.be.bignumber.equal(protection2.reserveRateN);
+                        expect(protection.reserveRateD).to.be.bignumber.equal(protection2.reserveRateD);
+                        expect(protection.timestamp).to.be.bignumber.equal(protection2.timestamp);
+
+                        // verify system balance
+                        const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
+                        expect(systemBalance).to.be.bignumber.equal(prevSystemBalance);
+
+                        // verify stats
+                        const poolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
+                        expect(poolStats.totalPoolAmount).to.be.bignumber.equal(prevPoolStats.totalPoolAmount);
+                        expect(poolStats.totalReserveAmount).to.be.bignumber.equal(prevPoolStats.totalReserveAmount);
+
+                        const recipientStats = await getProviderStats(recipient, poolToken, reserveToken, isETHReserve);
+                        expect(recipientStats.totalProviderAmount).to.be.bignumber.equal(
+                            prevRecipientStats.totalProviderAmount.sub(protection.reserveAmount)
+                        );
+                        expect(recipientStats.providerPools).to.eql([protection.poolToken]);
+
+                        const newOwnerStats = await getProviderStats(newOwner, poolToken, reserveToken, isETHReserve);
+                        expect(newOwnerStats.totalProviderAmount).to.be.bignumber.equal(
+                            prevNewOwnerStats.totalProviderAmount.add(protection2.reserveAmount)
+                        );
+                        expect(newOwnerStats.providerPools).to.eql([protection2.poolToken]);
+
+                        // verify removal checkpoints
+                        expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(now);
+                        expect(await checkpointStore.checkpoint.call(newOwner)).to.be.bignumber.equal(new BN(0));
+                    };
+
                     let protectionId;
                     const newOwner = accounts[5];
                     const reserveAmount = new BN(5000);
@@ -2136,73 +2205,11 @@ describe('LiquidityProtection', () => {
                     });
 
                     it('should allow the provider to transfer position to another provider', async () => {
-                        let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
-                        protection = getProtection(protection);
-
-                        expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(new BN(0));
-                        expect(await checkpointStore.checkpoint.call(newOwner)).to.be.bignumber.equal(new BN(0));
-
-                        const prevPoolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
-                        const prevRecipientStats = await getProviderStats(
-                            recipient,
-                            poolToken,
-                            reserveToken,
-                            isETHReserve
+                        await verifyTransfer(async () =>
+                            liquidityProtection.transferPosition(protectionId, newOwner, {
+                                from: recipient
+                            })
                         );
-                        const prevNewOwnerStats = await getProviderStats(
-                            newOwner,
-                            poolToken,
-                            reserveToken,
-                            isETHReserve
-                        );
-                        const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-
-                        await liquidityProtection.transferPosition(protectionId, newOwner, {
-                            from: recipient
-                        });
-
-                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(recipient);
-                        expect(protectionIds).not.to.have.members([protectionId]);
-
-                        const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(newOwner);
-                        expect(protectionIds2.length).to.eql(1);
-
-                        let protection2 = await liquidityProtectionStore.protectedLiquidity.call(protectionIds2[0]);
-                        protection2 = getProtection(protection2);
-
-                        expect(protection2.provider).to.eql(newOwner);
-                        expect(protection.poolToken).to.eql(protection2.poolToken);
-                        expect(protection.reserveToken).to.eql(protection2.reserveToken);
-                        expect(protection.poolAmount).to.be.bignumber.equal(protection2.poolAmount);
-                        expect(protection.reserveAmount).to.be.bignumber.equal(protection2.reserveAmount);
-                        expect(protection.reserveRateN).to.be.bignumber.equal(protection2.reserveRateN);
-                        expect(protection.reserveRateD).to.be.bignumber.equal(protection2.reserveRateD);
-                        expect(protection.timestamp).to.be.bignumber.equal(protection2.timestamp);
-
-                        // verify system balance
-                        const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                        expect(systemBalance).to.be.bignumber.equal(prevSystemBalance);
-
-                        // verify stats
-                        const poolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
-                        expect(poolStats.totalPoolAmount).to.be.bignumber.equal(prevPoolStats.totalPoolAmount);
-                        expect(poolStats.totalReserveAmount).to.be.bignumber.equal(prevPoolStats.totalReserveAmount);
-
-                        const recipientStats = await getProviderStats(recipient, poolToken, reserveToken, isETHReserve);
-                        expect(recipientStats.totalProviderAmount).to.be.bignumber.equal(
-                            prevRecipientStats.totalProviderAmount.sub(protection.reserveAmount)
-                        );
-                        expect(recipientStats.providerPools).to.eql([protection.poolToken]);
-
-                        const newOwnerStats = await getProviderStats(newOwner, poolToken, reserveToken, isETHReserve);
-                        expect(newOwnerStats.totalProviderAmount).to.be.bignumber.equal(
-                            prevNewOwnerStats.totalProviderAmount.add(protection2.reserveAmount)
-                        );
-                        expect(newOwnerStats.providerPools).to.eql([protection2.poolToken]);
-
-                        // verify removal checkpoints
-                        expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(now);
-                        expect(await checkpointStore.checkpoint.call(newOwner)).to.be.bignumber.equal(new BN(0));
                     });
 
                     it('should revert when attempting to transfer position that belongs to another account', async () => {
@@ -2213,6 +2220,95 @@ describe('LiquidityProtection', () => {
                             }),
                             'ERR_ACCESS_DENIED'
                         );
+                    });
+
+                    describe('notification', () => {
+                        let testCall;
+
+                        beforeEach(async () => {
+                            testCall = await TestCall.new();
+                        });
+
+                        it('should revert when called with invalid call data', async () => {
+                            await expectRevert(
+                                liquidityProtection.transferPositionAndCall(
+                                    protectionId,
+                                    newOwner,
+                                    ZERO_ADDRESS,
+                                    '0x1234',
+                                    {
+                                        from: recipient
+                                    }
+                                ),
+                                'ERR_INVALID_CALL_DATA'
+                            );
+
+                            await expectRevert(
+                                liquidityProtection.transferPositionAndCall(
+                                    protectionId,
+                                    newOwner,
+                                    testCall.address,
+                                    [],
+                                    {
+                                        from: recipient
+                                    }
+                                ),
+                                'ERR_INVALID_CALL_DATA'
+                            );
+                        });
+
+                        it('should revert when the callback reverts', async () => {
+                            await expectRevert(
+                                liquidityProtection.transferPositionAndCall(
+                                    protectionId,
+                                    newOwner,
+                                    testCall.address,
+                                    testCall.contract.methods.error().encodeABI(),
+                                    {
+                                        from: recipient
+                                    }
+                                ),
+                                'ERR_REVERT'
+                            );
+                        });
+
+                        it('should revert when calling an invalid method', async () => {
+                            await expectRevert(
+                                liquidityProtection.transferPositionAndCall(
+                                    protectionId,
+                                    newOwner,
+                                    testCall.address,
+                                    liquidityProtection.contract.methods.store().encodeABI(),
+                                    {
+                                        from: recipient
+                                    }
+                                ),
+                                'ERR_CALL_FAILED'
+                            );
+                        });
+
+                        it('should support state changing function', async () => {
+                            expect(await testCall.num.call()).to.be.bignumber.equal(new BN(0));
+                            expect(await testCall.str.call()).to.be.eql('');
+
+                            const newNum = new BN(12345);
+                            const newStr = 'Hello World!';
+
+                            await verifyTransfer(async () =>
+                                liquidityProtection.transferPositionAndCall(
+                                    protectionId,
+                                    newOwner,
+                                    testCall.address,
+                                    testCall.contract.methods.set(newNum, newStr).encodeABI(),
+                                    {
+                                        from: recipient
+                                    }
+                                )
+                            );
+
+                            expect(await testCall.num.call()).to.be.bignumber.equal(newNum);
+                            expect(await testCall.str.call()).to.be.eql(newStr);
+                        });
                     });
                 };
 
