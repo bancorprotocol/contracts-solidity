@@ -2139,6 +2139,9 @@ describe('LiquidityProtection', () => {
                         let protection = await liquidityProtectionStore.protectedLiquidity.call(protectionId);
                         protection = getProtection(protection);
 
+                        expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(new BN(0));
+                        expect(await checkpointStore.checkpoint.call(newOwner)).to.be.bignumber.equal(new BN(0));
+
                         const prevPoolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
                         const prevRecipientStats = await getProviderStats(
                             recipient,
@@ -2196,15 +2199,8 @@ describe('LiquidityProtection', () => {
                             prevNewOwnerStats.totalProviderAmount.add(protection2.reserveAmount)
                         );
                         expect(newOwnerStats.providerPools).to.eql([protection2.poolToken]);
-                    });
 
-                    it('should update the last removal check point when transferring liquidity', async () => {
-                        expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(new BN(0));
-
-                        await liquidityProtection.transferPosition(protectionId, newOwner, {
-                            from: recipient
-                        });
-
+                        // verify removal checkpoints
                         expect(await checkpointStore.checkpoint.call(recipient)).to.be.bignumber.equal(now);
                         expect(await checkpointStore.checkpoint.call(newOwner)).to.be.bignumber.equal(new BN(0));
                     });
