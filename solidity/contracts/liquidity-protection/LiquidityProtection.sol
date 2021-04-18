@@ -784,17 +784,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         address target,
         bytes memory data
     ) external protected validAddress(newProvider) validAddress(target) returns (uint256) {
-        uint256 newId = transferPosition(msg.sender, id, newProvider);
-
         // make sure that we're not trying to call into the zero address or a fallback function
         require(data.length >= FUNC_SELECTOR_LENGTH, "ERR_INVALID_CALL_DATA");
+
+        uint256 newId = transferPosition(msg.sender, id, newProvider);
 
         Address.functionCall(target, data, "ERR_CALL_FAILED");
 
         return newId;
     }
-
-    // bytes calldata data
 
     /**
      * @dev transfers a position to a new provider
