@@ -3212,7 +3212,7 @@ describe('LiquidityProtection', () => {
                                         timestamp
                                     );
                                     const error = test(actual[0], amount);
-                                    expect(error).to.be.empty(error);
+                                    expect(error).to.be.empty;
                                 });
                             }
                         }
