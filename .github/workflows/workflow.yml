@@ -24,7 +24,4 @@ jobs:
 
             ### Testing
             - name: Basic Test
-              run: yarn test-base
-
-            - name: Extended Test
-              run: yarn test-extended
+              run: yarn test-all
