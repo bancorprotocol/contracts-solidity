@@ -23,5 +23,5 @@ jobs:
               run: yarn build
 
             ### Testing
-            - name: Basic Test
+            - name: Test
               run: yarn test-all
