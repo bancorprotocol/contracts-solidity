@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS } = require('./helpers/Constants');

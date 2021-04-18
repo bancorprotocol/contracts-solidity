@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const { argv } = yargs(hideBin(process.argv));
@@ -11,7 +12,7 @@ require('solidity-coverage');
 require('hardhat-contract-sizer');
 
 // Load Config
-const configPath = __dirname + '/config.json';
+const configPath = path.join(__dirname, '/config.json');
 const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
 
 const loadAPIKey = (apiKeyName) => {

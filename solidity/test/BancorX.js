@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { advanceBlock } = require('./helpers/Time');
@@ -24,7 +25,9 @@ let defaultSender;
 let reporter1;
 let reporter2;
 let reporter3;
+
 let nonOwner;
+let accounts;
 
 describe('BancorX', () => {
     before(async () => {

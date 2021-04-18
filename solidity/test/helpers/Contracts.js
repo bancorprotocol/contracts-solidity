@@ -1,4 +1,6 @@
-let contracts = {};
+const { ethers } = require('hardhat');
+
+const contracts = {};
 
 const deployContract = async (contractName, ...args) => {
     let signer = (await ethers.getSigners())[0];
@@ -53,7 +55,6 @@ module.exports = {
     DSToken: deployOrAttach('DSToken'),
     BancorX: deployOrAttach('BancorX'),
     TestContractRegistryClient: deployOrAttach('TestContractRegistryClient'),
-    ConversionPathFinder: deployOrAttach('ConversionPathFinder'),
     ConverterRegistryData: deployOrAttach('ConverterRegistryData'),
     LiquidityPoolV1ConverterFactory: deployOrAttach('LiquidityPoolV1ConverterFactory'),
     ConverterUpgrader: deployOrAttach('ConverterUpgrader'),
@@ -90,6 +91,5 @@ module.exports = {
     VortexBurner: deployOrAttach('VortexBurner'),
     TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
     TestReserveToken: deployOrAttach('TestReserveToken'),
-    TestLiquidityProtectionEventsSubscriber: deployOrAttach('TestLiquidityProtectionEventsSubscriber'),
     IConverterAnchor: deployOrAttach('IConverterAnchor')
 };

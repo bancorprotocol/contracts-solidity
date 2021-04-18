@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const ConverterHelper = require('./helpers/ConverterHelper');
@@ -29,6 +30,7 @@ let paths;
 
 let sender;
 let sender2;
+let accounts;
 
 const OLD_CONVERTER_VERSION = 9;
 const MIN_RETURN = BigNumber.from(1);
@@ -116,7 +118,7 @@ describe('BancorNetwork', () => {
 
     const getBalance = async (token, address, account) => {
         if (address === NATIVE_TOKEN_ADDRESS) {
-            return balance.current(account);
+            return ethers.providers.getBalance(account);
         }
 
         return token.balanceOf(account);

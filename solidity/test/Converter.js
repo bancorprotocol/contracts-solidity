@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
@@ -17,6 +18,8 @@ let upgrader;
 let owner;
 let nonOwner;
 let receiver;
+
+let accounts;
 
 describe('Converter', () => {
     const createConverter = async (
@@ -83,16 +86,8 @@ describe('Converter', () => {
         return isETH ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
     };
 
-    const getBalance = async (token, address, account) => {
-        if (address === NATIVE_TOKEN_ADDRESS) {
-            return ethers.provider.getBalance(account);
-        }
-
-        return token.balanceOf(account);
-    };
-
     const convert = async (path, amount, minReturn, options = undefined) => {
-        if (options != undefined) {
+        if (options !== undefined) {
             return await bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS, options);
         }
         return await bancorNetwork.convertByPath2(path, amount, minReturn, ZERO_ADDRESS);

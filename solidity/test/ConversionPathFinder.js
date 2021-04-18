@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
@@ -7,6 +8,16 @@ const Contracts = require('./helpers/Contracts');
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 const STANDARD_CONVERTER_TYPE = 3;
 const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
+
+let contractRegistry;
+let converterFactory;
+let converterRegistry;
+let converterRegistryData;
+let pathFinder;
+let anchorToken;
+
+let nonOwner;
+let accounts;
 
 /* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
@@ -104,14 +115,6 @@ const getShortestPath = (sourcePath, targetPath) => {
 
     return path.slice(0, length);
 };
-
-let contractRegistry;
-let converterFactory;
-let converterRegistry;
-let converterRegistryData;
-let pathFinder;
-let anchorToken;
-let nonOwner;
 
 describe('ConversionPathFinder', () => {
     const addresses = { ETH: NATIVE_TOKEN_ADDRESS };

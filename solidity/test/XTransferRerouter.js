@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const Contracts = require('./helpers/Contracts');
@@ -10,6 +11,7 @@ let accounts;
 let nonOwner;
 let receiver;
 let txId;
+let owner;
 
 describe('XTransferRerouter', () => {
     before(async () => {

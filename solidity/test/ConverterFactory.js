@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const Constants = require('./helpers/Constants');
@@ -16,6 +17,7 @@ let factory;
 
 let owner;
 let nonOwner;
+let accounts;
 
 describe('ConverterFactory', () => {
     before(async () => {

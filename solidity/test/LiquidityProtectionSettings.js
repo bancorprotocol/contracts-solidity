@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, roles } = require('./helpers/Constants');
@@ -12,8 +13,13 @@ let contractRegistry;
 let converterRegistry;
 let networkToken;
 let poolToken;
+let baseToken;
 let subscriber;
 let settings;
+
+let accounts;
+let owner;
+let nonOwner;
 
 const STANDARD_CONVERTER_TYPE = 3;
 const STANDARD_POOL_CONVERTER_WEIGHT = 500_000;
@@ -42,10 +48,6 @@ const initLegacyConverter = async (reserveTokens, weights) => {
 
     return { poolToken };
 };
-
-let accounts;
-let owner;
-let nonOwner;
 
 describe('LiquidityProtectionSettings', () => {
     before(async () => {

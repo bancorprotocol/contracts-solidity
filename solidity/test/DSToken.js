@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { ZERO_ADDRESS } = require('./helpers/Constants');
@@ -14,6 +15,7 @@ let token;
 let owner;
 let receiver;
 let nonOwner;
+let accounts;
 
 describe('DSToken', () => {
     before(async () => {

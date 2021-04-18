@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { roles } = require('./helpers/Constants');
 
 const Contracts = require('./helpers/Contracts');
@@ -10,6 +11,7 @@ let seeder;
 let provider;
 let poolToken;
 let reserveToken;
+let accounts;
 
 describe('LiquidityProtectionStats', () => {
     before(async () => {

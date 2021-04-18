@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
 const { roles } = require('./helpers/Constants');
 
@@ -9,6 +10,7 @@ let liquidityProtectionSystemStore;
 let owner;
 let token;
 let anchor;
+let accounts;
 
 describe('LiquidityProtectionSystemStore', () => {
     before(async () => {

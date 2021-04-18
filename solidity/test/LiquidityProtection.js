@@ -1,11 +1,12 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { ZERO_ADDRESS, registry, roles, MAX_UINT256, NATIVE_TOKEN_ADDRESS } = require('./helpers/Constants');
 const { duration, latest } = require('./helpers/Time');
 
 const Contracts = require('./helpers/Contracts');
-const { Decimal } = require('./helpers/MathUtils');
+const { Decimal, min } = require('./helpers/MathUtils');
 
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
@@ -3100,7 +3101,7 @@ describe('LiquidityProtection', () => {
                                         baseTokenAddress,
                                         amounts[2]
                                     );
-                                    const amount = BN.min(amounts[3], await getNetworkTokenMaxAmount());
+                                    const amount = min(amounts[3], await getNetworkTokenMaxAmount());
                                     await addProtectedLiquidity(
                                         poolToken.address,
                                         networkToken,
@@ -3188,7 +3189,7 @@ describe('LiquidityProtection', () => {
                                         baseTokenAddress,
                                         amounts[2]
                                     );
-                                    const amount = BN.min(amounts[3], await getNetworkTokenMaxAmount());
+                                    const amount = min(amounts[3], await getNetworkTokenMaxAmount());
                                     await addProtectedLiquidity(
                                         poolToken.address,
                                         networkToken,

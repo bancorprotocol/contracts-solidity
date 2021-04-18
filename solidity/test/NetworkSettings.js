@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { ZERO_ADDRESS } = require('./helpers/Constants');
@@ -12,6 +13,7 @@ const invalidPortion = BigNumber.from(1000001);
 let nonOwner;
 let address1;
 let address2;
+let accounts;
 
 describe('NetworkSettings', () => {
     before(async () => {

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { ethers } = require('hardhat');
 
 const { ContractFactory } = require('ethers');
 const { ZERO_ADDRESS } = require('./Constants');
@@ -15,7 +16,7 @@ module.exports.new = async (
     reserveTokenAddress = ZERO_ADDRESS,
     weight
 ) => {
-    accounts = await ethers.getSigners();
+    const accounts = await ethers.getSigners();
 
     if (version) {
         let contractName = `../bin/converter_v${version}`;

@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const Contracts = require('./helpers/Contracts');
@@ -12,6 +13,7 @@ let nonOwner;
 let provider;
 let poolToken;
 let reserveToken;
+let accounts;
 
 describe('LiquidityProtectionStore', () => {
     before(async () => {
@@ -189,31 +191,35 @@ describe('LiquidityProtectionStore', () => {
 
     describe('locked balances range verification', () => {
         it('should revert when start-index is equal to end-index', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
+            }
             await expect(
                 liquidityProtectionStore.connect(owner).lockedBalanceRange(provider.address, 0, 0)
             ).to.be.revertedWith('ERR_INVALID_INDICES');
         });
 
         it('should revert when start-index is larger than end-index', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
+            }
             await expect(
                 liquidityProtectionStore.connect(owner).lockedBalanceRange(provider.address, 1, 0)
             ).to.be.revertedWith('ERR_INVALID_INDICES');
         });
 
         it('should succeed when start-index is smaller than end-index', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
+            }
             const range = await liquidityProtectionStore.lockedBalanceRange(provider.address, 3, 8);
             for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 4));
         });
 
         it('should succeed when end-index is larger than the total number of items', async () => {
-            for (let amount = 1; amount <= 10; amount++)
+            for (let amount = 1; amount <= 10; amount++) {
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
+            }
             const range = await liquidityProtectionStore.lockedBalanceRange(provider.address, 8, 1000);
             for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 9));
         });

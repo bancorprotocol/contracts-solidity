@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
@@ -17,7 +18,6 @@ const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c00000000000000
 const MIN_RETURN = BigNumber.from(1);
 const TX_ID = BigNumber.from(0);
 
-let bancorFormula;
 let contractRegistry;
 
 let bancorX;
@@ -37,6 +37,7 @@ let reporter2;
 let reporter3;
 let sender;
 let sender2;
+let accounts;
 
 describe('XConversions', () => {
     before(async () => {

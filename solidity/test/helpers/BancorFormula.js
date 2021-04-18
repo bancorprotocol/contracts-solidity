@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { ethers } = require('hardhat');
 const path = require('path');
 
 const { ContractFactory } = require('ethers');

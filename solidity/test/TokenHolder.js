@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS } = require('./helpers/Constants');
@@ -10,6 +11,7 @@ let token;
 let token2;
 let receiver;
 let nonOwner;
+let accounts;
 
 describe('TokenHolder', () => {
     before(async () => {

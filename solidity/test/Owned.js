@@ -1,10 +1,12 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
 const Contracts = require('./helpers/Contracts');
 
 let contract;
 let owner;
 let newOwner;
+let accounts;
 
 describe('Owned', () => {
     before(async () => {

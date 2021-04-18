@@ -1,9 +1,10 @@
 const { expect } = require('chai');
+const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { Decimal, divCeil } = require('./helpers/MathUtils.js');
+const { Decimal } = require('./helpers/MathUtils.js');
 const { latest, duration } = require('./helpers/Time');
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, MAX_UINT256 } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
 const Contracts = require('./helpers/Contracts');
 
@@ -11,6 +12,7 @@ let now;
 let bancorNetwork;
 let converterUpgrader;
 let contractRegistry;
+let networkSettings;
 let sender;
 let networkFeeWallet;
 let accounts;
@@ -170,7 +172,7 @@ describe('StandardPoolConverter', () => {
         const address = account.address || account;
 
         if (typeof reserveToken === 'string') {
-            const token = await TestStandardToken.at(reserveToken);
+            const token = await Contracts.TestStandardToken.attach(reserveToken);
             let res = await token.approve(address, 0, options);
             transactionCost = transactionCost.add(await getTransactionCost(res));
 
@@ -249,7 +251,7 @@ describe('StandardPoolConverter', () => {
             res = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''));
             await converter.acceptOwnership();
         }
-        let tx = await res.wait();
+        const tx = await res.wait();
         const logs = tx.logs.filter((log) => log.event === 'ConverterUpgrade');
         expect(logs.length).to.be.at.most(1);
 
@@ -633,13 +635,13 @@ describe('StandardPoolConverter', () => {
                     }
 
                     return await Promise.all(
-                        reserveAmounts.map((reserveAmount, i) =>
-                            converter.addLiquidityCost(
+                        reserveAmounts.map((reserveAmount, i) => {
+                            return converter.addLiquidityCost(
                                 reserveTokens.map((reserveToken) => reserveToken.address || reserveToken),
                                 i,
                                 reserveAmount
-                            )
-                        )
+                            );
+                        })
                     );
                 };
 

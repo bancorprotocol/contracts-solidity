@@ -26,6 +26,7 @@ let networkFeeWallet;
 let vortex;
 
 let owner;
+let newOwner;
 let nonOwner;
 let accounts;
 
