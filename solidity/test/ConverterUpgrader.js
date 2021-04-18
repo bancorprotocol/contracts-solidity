@@ -137,7 +137,7 @@ describe('ConverterUpgrader', () => {
         const anchor = await Contracts.DSToken.attach(token);
 
         const state = {
-            type: await converter.callStatic.converterType(),
+            type: await converter.converterType(),
             owner: await converter.owner(),
             token,
             tokenOwner: await anchor.owner(),

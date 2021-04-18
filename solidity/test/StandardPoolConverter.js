@@ -320,13 +320,13 @@ describe('StandardPoolConverter', () => {
                             });
 
                             it('verifies sourceAmountAndFee', async () => {
-                                const targetAmountAndFee = await converter.callStatic.targetAmountAndFee(
+                                const targetAmountAndFee = await converter.targetAmountAndFee(
                                     reserveToken1.address,
                                     reserveToken2.address,
                                     amount
                                 );
 
-                                const sourceAmountAndFee = await converter.callStatic.sourceAmountAndFee(
+                                const sourceAmountAndFee = await converter.sourceAmountAndFee(
                                     reserveToken1.address,
                                     reserveToken2.address,
                                     targetAmountAndFee[0]
@@ -362,11 +362,7 @@ describe('StandardPoolConverter', () => {
                 it('verifies that convert returns valid amount and fee after converting', async () => {
                     const amount = BigNumber.from(500);
                     const purchaseAmount = (
-                        await converter.callStatic.targetAmountAndFee(
-                            reserveToken1.address,
-                            reserveToken2.address,
-                            amount
-                        )
+                        await converter.targetAmountAndFee(reserveToken1.address, reserveToken2.address, amount)
                     )[0];
 
                     const { res } = await convert([reserveToken1, poolToken, reserveToken2], amount, MIN_RETURN);
@@ -474,30 +470,28 @@ describe('StandardPoolConverter', () => {
                 };
 
                 const getCurrentRate = async (reserveToken1, reserveToken2) => {
-                    const balance1 = await converter.callStatic.reserveBalance(reserveToken1.address || reserveToken1);
-                    const balance2 = await converter.callStatic.reserveBalance(reserveToken2.address || reserveToken2);
+                    const balance1 = await converter.reserveBalance(reserveToken1.address || reserveToken1);
+                    const balance2 = await converter.reserveBalance(reserveToken2.address || reserveToken2);
                     return { n: balance2, d: balance1 };
                 };
 
                 const getAverageRate = async (reserveToken) => {
-                    const averageRate = await converter.callStatic.recentAverageRate(
-                        reserveToken.address || reserveToken
-                    );
+                    const averageRate = await converter.recentAverageRate(reserveToken.address || reserveToken);
                     return { n: averageRate[0], d: averageRate[1] };
                 };
 
                 const getPrevAverageRate = async () => {
-                    const averageRateInfo = await converter.callStatic.averageRateInfo();
+                    const averageRateInfo = await converter.averageRateInfo();
                     return { n: averageRateInfo.shr(112).mask(112), d: averageRateInfo.mask(112) };
                 };
 
                 const getPrevAverageRateUpdateTime = async () => {
-                    const averageRateInfo = await converter.callStatic.averageRateInfo();
+                    const averageRateInfo = await converter.averageRateInfo();
                     return averageRateInfo.shr(224);
                 };
 
                 it('should revert when requesting the average rate for a non reserve token', async () => {
-                    await expect(converter.callStatic.recentAverageRate(accounts[7].address)).to.be.revertedWith(
+                    await expect(converter.recentAverageRate(accounts[7].address)).to.be.revertedWith(
                         'ERR_INVALID_RESERVE'
                     );
                 });
