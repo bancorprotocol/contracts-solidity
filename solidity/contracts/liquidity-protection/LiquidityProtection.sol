@@ -794,8 +794,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         return newId;
     }
 
-    // bytes calldata data
-
     /**
      * @dev transfers a position to a new provider
      *
