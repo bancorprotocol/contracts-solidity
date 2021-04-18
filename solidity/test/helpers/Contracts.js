@@ -91,5 +91,6 @@ module.exports = {
     VortexBurner: deployOrAttach('VortexBurner'),
     TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
     TestReserveToken: deployOrAttach('TestReserveToken'),
-    IConverterAnchor: deployOrAttach('IConverterAnchor')
+    IConverterAnchor: deployOrAttach('IConverterAnchor'),
+    TestCall: deployOrAttach('TestCall')
 };
