@@ -21,7 +21,7 @@
         "build": "hardhat compile",
         "test": " NODE_OPTIONS='--max-old-space-size=8192' hardhat test",
         "test-base": "FILES=`find solidity/test/ -type f \\( -iname '*.js' -not -iname '*.extended.js' \\)`; for f in $FILES; do yarn test $f; if [ $? != 0 ]; then exit 1; fi; done; echo 'Success, no error !'",
-        "test-all": "for f in solidity/test/*.js; do yarn test $f; if [ $? != 0 ]; then exit 1; fi; done; echo 'Success, no error !'",
+        "test-extended": "for f in solidity/test/*.extended.js; do yarn test $f; if [ $? != 0 ]; then exit 1; fi; done; echo 'Success, no error !'",
         "size": "hardhat size-contracts",
         "verify": "hardhat verify",
         "coverage": "hardhat coverage",

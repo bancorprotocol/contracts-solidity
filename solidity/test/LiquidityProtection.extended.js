@@ -43,7 +43,7 @@ let owner;
 let governor;
 let accounts;
 
-describe('LiquidityProtection', () => {
+describe('LiquidityProtection - Extended', () => {
     const getConverterName = (type) => {
         switch (type) {
             case STANDARD_CONVERTER_TYPE:
