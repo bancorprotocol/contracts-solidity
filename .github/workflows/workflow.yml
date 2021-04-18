@@ -22,6 +22,6 @@ jobs:
             - name: Build
               run: yarn build
 
-            ### Test
+            ### Test-Base
             - name: Test
-              run: yarn test-all
+              run: yarn test-base
