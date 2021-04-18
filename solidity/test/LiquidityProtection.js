@@ -3013,7 +3013,7 @@ describe('LiquidityProtection', () => {
                     });
                 });
 
-                describe('edge cases', () => {
+                describe.only('edge cases', () => {
                     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
                     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
                     const condOrAlmostEqual = (cond, actual, expected, maxError) => {
@@ -3124,7 +3124,7 @@ describe('LiquidityProtection', () => {
                                         timestamp
                                     );
                                     const error = test(actual[0], amounts[2]);
-                                    expect(error).to.be.empty(error);
+                                    expect(error).to.be.empty;
                                 });
                             }
                         }
@@ -3212,7 +3212,7 @@ describe('LiquidityProtection', () => {
                                         timestamp
                                     );
                                     const error = test(actual[0], amount);
-                                    expect(error).to.be.empty(error);
+                                    expect(error).to.be.empty;
                                 });
                             }
                         }
