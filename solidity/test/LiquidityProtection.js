@@ -2033,7 +2033,7 @@ describe('LiquidityProtection', () => {
                 });
             });
 
-            describe.only('transfer position', () => {
+            describe('transfer position', () => {
                 let recipient;
                 const testTransfer = (isBaseReserveToken, isETHReserve, recipientNb) => {
                     before(async () => {
