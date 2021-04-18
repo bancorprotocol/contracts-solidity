@@ -2240,7 +2240,7 @@ describe('LiquidityProtection', () => {
                                         from: recipient
                                     }
                                 ),
-                                'ERR_INVALID_CALL_DATA'
+                                'ERR_INVALID_ADDRESS'
                             );
 
                             await expectRevert(
