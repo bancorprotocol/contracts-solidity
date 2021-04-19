@@ -4,6 +4,7 @@ import { BigNumber } from 'ethers';
 
 import Constants from './helpers/Constants';
 
+import ConverterHelper from './helpers/Converter';
 import Contracts from './helpers/Contracts';
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
@@ -12,6 +13,7 @@ let contractRegistry: any;
 let converterRegistry: any;
 let networkToken: any;
 let poolToken: any;
+let baseToken: any;
 let subscriber: any;
 let settings: any;
 
@@ -19,7 +21,34 @@ let accounts: any;
 let owner: any;
 let nonOwner: any;
 
-// TODO hardhat error
+const STANDARD_CONVERTER_TYPE = 3;
+const STANDARD_POOL_CONVERTER_WEIGHT = 500_000;
+const STANDARD_POOL_CONVERTER_WEIGHTS = [STANDARD_POOL_CONVERTER_WEIGHT, STANDARD_POOL_CONVERTER_WEIGHT];
+const LEGACY_CONVERTER_TYPE = 1;
+const LEGACY_CONVERTER_VERSION = 45;
+
+const initLegacyConverter = async (reserveTokens: any, weights: any) => {
+    const poolToken = await Contracts.DSToken.deploy('Token1', 'TKN1', 0);
+    const converter = await ConverterHelper.deploy(
+        LEGACY_CONVERTER_TYPE,
+        LEGACY_CONVERTER_VERSION,
+        poolToken.address,
+        contractRegistry.address,
+        PPM_RESOLUTION
+    );
+
+    for (let i = 0; i < reserveTokens.length; ++i) {
+        await converter.addReserve(reserveTokens[i], weights[i]);
+    }
+
+    await poolToken.transferOwnership(converter.address);
+    await converter.acceptTokenOwnership();
+
+    await converterRegistry.addConverter(converter.address);
+
+    return { poolToken };
+};
+
 describe('LiquidityProtectionSettings', () => {
     before(async () => {
         accounts = await ethers.getSigners();
@@ -30,47 +59,46 @@ describe('LiquidityProtectionSettings', () => {
         contractRegistry = await Contracts.ContractRegistry.deploy();
         networkToken = await Contracts.DSToken.deploy('BNT', 'BNT', 18);
 
-        const baseToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
-        const weights = [500000, 500000];
+        baseToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
 
-        converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
-        const converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
+        const converterFactory = await Contracts.ConverterFactory.deploy();
+        await converterFactory.registerTypedConverterFactory(
+            (await Contracts.TestStandardPoolConverterFactory.deploy()).address
+        );
+
         const bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
 
-        const liquidityPoolV1ConverterFactory = await Contracts.LiquidityPoolV1ConverterFactory.deploy();
-        const standardPoolConverterFactory = await Contracts.StandardPoolConverterFactory.deploy();
-        const converterFactory = await Contracts.ConverterFactory.deploy();
-        await converterFactory.registerTypedConverterFactory(liquidityPoolV1ConverterFactory.address);
-        await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
-
-        const bancorFormula = await Contracts.BancorFormula.deploy();
-        await bancorFormula.init();
+        await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
 
         await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
+
+        subscriber = await Contracts.TestLiquidityProtectionEventsSubscriber.deploy();
+    });
+
+    beforeEach(async () => {
+        converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
+
+        const converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
+
         await contractRegistry.registerAddress(Constants.registry.CONVERTER_REGISTRY, converterRegistry.address);
         await contractRegistry.registerAddress(
             Constants.registry.CONVERTER_REGISTRY_DATA,
             converterRegistryData.address
         );
-        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
-        await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
 
         await converterRegistry.newConverter(
-            1,
+            STANDARD_CONVERTER_TYPE,
             'PT',
             'PT',
             18,
             PPM_RESOLUTION,
             [baseToken.address, networkToken.address],
-            weights
+            STANDARD_POOL_CONVERTER_WEIGHTS
         );
         const anchorCount = await converterRegistry.getAnchorCount();
         const poolTokenAddress = await converterRegistry.getAnchor(anchorCount - 1);
         poolToken = await Contracts.DSToken.attach(poolTokenAddress);
-        subscriber = await Contracts.TestLiquidityProtectionEventsSubscriber.deploy();
-    });
 
-    beforeEach(async () => {
         settings = await Contracts.LiquidityProtectionSettings.deploy(networkToken.address, contractRegistry.address);
     });
 
@@ -218,52 +246,33 @@ describe('LiquidityProtectionSettings', () => {
 
         it('verifies that isPoolSupported returns false for a pool with 3 reserves', async () => {
             const reserveToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
-            await converterRegistry.newConverter(
-                1,
-                'PT',
-                'PT',
-                18,
-                5000,
+
+            const { poolToken } = await initLegacyConverter(
                 [Constants.NATIVE_TOKEN_ADDRESS, networkToken.address, reserveToken.address],
                 [100000, 100000, 100000]
             );
-            const anchorCount = await converterRegistry.getAnchorCount();
-            const poolTokenAddress = await converterRegistry.getAnchor(anchorCount - 1);
 
-            expect(await settings.isPoolSupported(poolTokenAddress)).to.be.false;
+            expect(await settings.isPoolSupported(poolToken.address)).to.be.false;
         });
 
         it('verifies that isPoolSupported returns false for a pool that does not have the network token as reserve', async () => {
             const reserveToken = await Contracts.DSToken.deploy('RSV1', 'RSV1', 18);
-            await converterRegistry.newConverter(
-                1,
-                'PT',
-                'PT',
-                18,
-                5000,
+
+            const { poolToken } = await initLegacyConverter(
                 [Constants.NATIVE_TOKEN_ADDRESS, reserveToken.address],
                 [500000, 500000]
             );
-            const anchorCount = await converterRegistry.getAnchorCount();
-            const poolTokenAddress = await converterRegistry.getAnchor(anchorCount - 1);
 
-            expect(await settings.isPoolSupported(poolTokenAddress)).to.be.false;
+            expect(await settings.isPoolSupported(poolToken.address)).to.be.false;
         });
 
         it('verifies that isPoolSupported returns false for a pool with reserve weights that are not 50%/50%', async () => {
-            await converterRegistry.newConverter(
-                1,
-                'PT',
-                'PT',
-                18,
-                5000,
+            const { poolToken } = await initLegacyConverter(
                 [Constants.NATIVE_TOKEN_ADDRESS, networkToken.address],
                 [450000, 550000]
             );
-            const anchorCount = await converterRegistry.getAnchorCount();
-            const poolTokenAddress = await converterRegistry.getAnchor(anchorCount - 1);
 
-            expect(await settings.isPoolSupported(poolTokenAddress)).to.be.false;
+            expect(await settings.isPoolSupported(poolToken.address)).to.be.false;
         });
     });
 

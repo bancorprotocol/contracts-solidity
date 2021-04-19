@@ -21,3 +21,5 @@ coverageEnv
 coverage.json
 allFiredEvents
 scTopics
+
+config.json

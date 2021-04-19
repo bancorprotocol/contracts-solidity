@@ -13,7 +13,9 @@ import {
 
 import Utils from './helpers/Utils';
 
-import ConverterHelper from './helpers/Converter';
+import Converter from './helpers/Converter';
+import BancorFormula from './helpers/BancorFormula';
+
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 
@@ -26,10 +28,10 @@ let anchor1: DSToken;
 let anchor2: DSToken;
 let anchor3: DSToken;
 let anchor4: DSToken;
-let converter1;
-let converter2;
-let converter3;
-let converter4;
+let converter1: any;
+let converter2: any;
+let converter3: any;
+let converter4: any;
 let bancorNetwork: BancorNetwork;
 let contractRegistry: ContractRegistry;
 let pathsTokens: any;
@@ -132,10 +134,6 @@ describe('BancorNetwork', () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        const bancorFormula = await Contracts.BancorFormula.deploy();
-        await bancorFormula.init();
-        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
-
         const converterFactory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
 
@@ -161,6 +159,11 @@ describe('BancorNetwork', () => {
             const pathFinder = await Contracts.ConversionPathFinder.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(Constants.registry.CONVERSION_PATH_FINDER, pathFinder.address);
 
+            // support old converters
+            const bancorFormula = await BancorFormula.deploy();
+            await bancorFormula.init();
+            await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
+
             bntToken = await Contracts.TestStandardToken.deploy('BNT', 'BNT', 2, BigNumber.from(10000000));
             erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ERC1', 2, BigNumber.from(1000000));
             erc20Token2 = await Contracts.TestNonStandardToken.deploy('TKN2', 'ERC2', 2, BigNumber.from(2000000));
@@ -180,28 +183,28 @@ describe('BancorNetwork', () => {
 
             await contractRegistry.registerAddress(Constants.registry.BNT_TOKEN, bntToken.address);
 
-            converter1 = await Contracts.LiquidityPoolV1Converter.deploy(anchor1.address, contractRegistry.address, 0);
+            converter1 = await Contracts.StandardPoolConverter.deploy(anchor1.address, contractRegistry.address, 0);
             await converter1.addReserve(bntToken.address, BigNumber.from(500000));
             await converter1.addReserve(Constants.NATIVE_TOKEN_ADDRESS, BigNumber.from(500000));
 
-            converter2 = await Contracts.LiquidityPoolV1Converter.deploy(anchor2.address, contractRegistry.address, 0);
-            await converter2.addReserve(bntToken.address, BigNumber.from(300000));
-            await converter2.addReserve(erc20Token1.address, BigNumber.from(150000));
+            converter2 = await Contracts.StandardPoolConverter.deploy(anchor2.address, contractRegistry.address, 0);
+            await converter2.addReserve(bntToken.address, BigNumber.from(500000));
+            await converter2.addReserve(erc20Token1.address, BigNumber.from(500000));
 
-            converter3 = await ConverterHelper.deploy(
+            converter3 = await Converter.deploy(
                 1,
+                OLD_CONVERTER_VERSION,
                 anchor3.address,
                 contractRegistry.address,
                 0,
                 bntToken.address,
-                BigNumber.from(350000),
-                OLD_CONVERTER_VERSION
+                BigNumber.from(350000)
             );
             await converter3.addConnector(erc20Token2.address, BigNumber.from(100000), false);
 
-            converter4 = await Contracts.LiquidityPoolV1Converter.deploy(anchor4.address, contractRegistry.address, 0);
-            await converter4.addReserve(bntToken.address, BigNumber.from(220000));
-            await converter4.addReserve(erc20Token3.address, BigNumber.from(220000));
+            converter4 = await Contracts.StandardPoolConverter.deploy(anchor4.address, contractRegistry.address, 0);
+            await converter4.addReserve(bntToken.address, BigNumber.from(500000));
+            await converter4.addReserve(erc20Token3.address, BigNumber.from(500000));
 
             await bntToken.transfer(converter1.address, BigNumber.from(40000));
             await bntToken.transfer(converter2.address, BigNumber.from(70000));

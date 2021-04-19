@@ -66,12 +66,10 @@ Here is an example of the initial configuration file which should be provided to
             "reserves": [
                 {
                     "symbol": "ETH",
-                    "weight": "50%",
                     "balance": "21"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": "50%",
                     "balance": "3092"
                 }
             ]
@@ -84,30 +82,26 @@ Here is an example of the initial configuration file which should be provided to
             "reserves": [
                 {
                     "symbol": "XXX",
-                    "weight": "50%",
                     "balance": "582"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": "50%",
                     "balance": "2817"
                 }
             ]
         },
         {
-            "type": 1,
+            "type": 3,
             "symbol": "YYYBNT",
             "decimals": 18,
             "fee": "0.2%",
             "reserves": [
                 {
                     "symbol": "YYY",
-                    "weight": "40%",
                     "balance": "312"
                 },
                 {
                     "symbol": "BNT",
-                    "weight": "60%",
                     "balance": "270"
                 }
             ]

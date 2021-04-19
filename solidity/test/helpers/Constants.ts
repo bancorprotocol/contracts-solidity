@@ -1,11 +1,10 @@
-import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
+import { BigNumber } from 'ethers';
 
 export default {
     registry: {
         CONTRACT_REGISTRY: ethers.utils.formatBytes32String('ContractRegistry'),
         BANCOR_NETWORK: ethers.utils.formatBytes32String('BancorNetwork'),
-        BANCOR_FORMULA: ethers.utils.formatBytes32String('BancorFormula'),
         NETWORK_SETTINGS: ethers.utils.formatBytes32String('NetworkSettings'),
         CONVERTER_FACTORY: ethers.utils.formatBytes32String('ConverterFactory'),
         CONVERSION_PATH_FINDER: ethers.utils.formatBytes32String('ConversionPathFinder'),
@@ -14,7 +13,10 @@ export default {
         CONVERTER_REGISTRY_DATA: ethers.utils.formatBytes32String('BancorConverterRegistryData'),
         BNT_TOKEN: ethers.utils.formatBytes32String('BNTToken'),
         BANCOR_X: ethers.utils.formatBytes32String('BancorX'),
-        BANCOR_X_UPGRADER: ethers.utils.formatBytes32String('BancorXUpgrader')
+        BANCOR_X_UPGRADER: ethers.utils.formatBytes32String('BancorXUpgrader'),
+
+        //
+        BANCOR_FORMULA: ethers.utils.formatBytes32String('BancorFormula')
     },
 
     roles: {

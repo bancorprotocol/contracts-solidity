@@ -2,23 +2,24 @@ import { ethers } from 'hardhat';
 import fs from 'fs';
 import path from 'path';
 
-import { ContractFactory } from 'ethers';
+import { BigNumber, ContractFactory } from 'ethers';
 import Constants from './Constants';
 
-import Contracts, { ContractsType } from './Contracts';
+import Contracts from './Contracts';
+import { StandardPoolConverter } from '../../../typechain';
 
 export type ConverterType = 1 | 3 | 4;
 
 const deploy = async (
-    type: ConverterType,
+    type: any,
+    version: any,
     tokenAddress: any,
     registryAddress: any,
     maxConversionFee: any,
-    reserveTokenAddress: any,
-    weight: any,
-    version?: any
+    reserveTokenAddress = Constants.ZERO_ADDRESS,
+    weight = BigNumber.from(0)
 ) => {
-    let accounts = await ethers.getSigners();
+    const accounts = await ethers.getSigners();
 
     if (version) {
         let contractName = `../bin/converter_v${version}`;
@@ -42,12 +43,16 @@ const deploy = async (
         return Converter.deploy(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
 
-    const converterType: ContractsType = {
-        1: 'LiquidityPoolV1Converter' as ContractsType,
-        3: 'StandardPoolConverter' as ContractsType,
-        4: 'FixedRatePoolConverter' as ContractsType
-    }[type];
-    const converter = await Contracts[converterType].deploy(tokenAddress, registryAddress, maxConversionFee);
+    let converter: StandardPoolConverter;
+    switch (type) {
+        case 3:
+            converter = await Contracts.StandardPoolConverter.deploy(tokenAddress, registryAddress, maxConversionFee);
+            break;
+
+        default:
+            throw new Error(`Unsupported converter type ${type}`);
+    }
+
     if (reserveTokenAddress !== Constants.ZERO_ADDRESS) {
         await converter.addReserve(reserveTokenAddress, weight);
     }
@@ -61,7 +66,7 @@ const at = async (address: any, version?: any) => {
         return await ethers.getContractAt(JSON.parse(abi.toString()), address);
     }
 
-    return await ethers.getContractAt('ConverterBase', address);
+    return await Contracts.StandardPoolConverter.attach(address);
 };
 
 export default {

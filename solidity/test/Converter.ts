@@ -31,78 +31,39 @@ let owner: SignerWithAddress;
 let nonOwner: SignerWithAddress;
 let receiver: SignerWithAddress;
 
-// TODO hardhat error
 describe('Converter', () => {
     const createConverter = async (
-        type: ConverterType,
+        type: any,
         anchorAddress: string,
         registryAddress = contractRegistry.address,
         maxConversionFee: BigNumber = BigNumber.from(0)
     ) => {
         switch (type) {
-            case 1:
-                return await Contracts.LiquidityPoolV1Converter.deploy(
-                    anchorAddress,
-                    registryAddress,
-                    maxConversionFee
-                );
             case 3:
-                return await Contracts.StandardPoolConverter.deploy(anchorAddress, registryAddress, maxConversionFee);
-            case 4:
-                return await Contracts.FixedRatePoolConverter.deploy(anchorAddress, registryAddress, maxConversionFee);
+                return Contracts.StandardPoolConverter.deploy(anchorAddress, registryAddress, maxConversionFee);
+            default:
+                throw new Error(`Unsupported type ${type}`);
         }
     };
 
-    const getConverterName = (type: ConverterType) => {
+    const getConverterName = (type: any) => {
         switch (type) {
-            case 1:
-                return 'LiquidityPoolV1Converter';
             case 3:
                 return 'StandardPoolConverter';
-            case 4:
-                return 'FixedRatePoolConverter';
-        }
-    };
-
-    const getConverterReserveAddresses = (type: ConverterType, isETHReserve: Boolean | Number) => {
-        switch (type) {
-            case 1:
-                return [getReserve1Address(isETHReserve), reserveToken2.address];
-            case 3:
-            case 4:
-                return [getReserve1Address(isETHReserve), reserveToken2.address];
-        }
-    };
-
-    const getConverterReserveWeights = (type: ConverterType) => {
-        switch (type) {
-            case 1:
-                return [250000, 150000];
-            case 3:
-            case 4:
-                return [500000, 500000];
-        }
-    };
-
-    const getConverterTargetAmountAndFeeError = (type: ConverterType) => {
-        switch (type) {
-            case 1:
-                return 'ERR_SAME_SOURCE_TARGET';
-            case 3:
-            case 4:
-                return 'ERR_INVALID_RESERVES';
+            default:
+                throw new Error(`Unsupported type ${type}`);
         }
     };
 
     const initConverter = async (
-        type: ConverterType,
+        type: any,
         activate: Boolean,
         isETHReserve: Boolean | Number,
         maxConversionFee: BigNumber = BigNumber.from(0)
     ) => {
         await createAnchor();
-        const reserveAddresses = getConverterReserveAddresses(type, isETHReserve);
-        const reserveWeights = getConverterReserveWeights(type);
+        const reserveAddresses = [getReserve1Address(isETHReserve), reserveToken2.address];
+        const reserveWeights = [500000, 500000];
 
         const converter = await createConverter(type, anchorAddress, contractRegistry.address, maxConversionFee);
 
@@ -161,19 +122,13 @@ describe('Converter', () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        const bancorFormula = await Contracts.BancorFormula.deploy();
-        await bancorFormula.init();
-        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
-
         factory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, factory.address);
 
         const networkSettings = await Contracts.NetworkSettings.deploy(owner.address, 0);
         await contractRegistry.registerAddress(Constants.registry.NETWORK_SETTINGS, networkSettings.address);
 
-        await factory.registerTypedConverterFactory((await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address);
         await factory.registerTypedConverterFactory((await Contracts.StandardPoolConverterFactory.deploy()).address);
-        await factory.registerTypedConverterFactory((await Contracts.FixedRatePoolConverterFactory.deploy()).address);
     });
 
     beforeEach(async () => {
@@ -187,7 +142,7 @@ describe('Converter', () => {
         reserveToken2 = await Contracts.TestNonStandardToken.deploy('ERC Token 2', 'ERC2', 18, 2000000000);
     });
 
-    for (const type of [1 as ConverterType, 3 as ConverterType, 4 as ConverterType]) {
+    for (const type of [3]) {
         it('verifies that converterType returns the correct type', async () => {
             const converter = await initConverter(type as ConverterType, true, true);
             const converterType = await converter.converterType();
@@ -259,8 +214,8 @@ describe('Converter', () => {
                         'TST',
                         2,
                         1000,
-                        getConverterReserveAddresses(type, isETHReserve),
-                        getConverterReserveWeights(type)
+                        [getReserve1Address(isETHReserve), reserveToken2.address],
+                        [500000, 500000]
                     );
                 });
 
@@ -523,7 +478,7 @@ describe('Converter', () => {
                             getReserve1Address(isETHReserve),
                             500
                         )
-                    ).to.be.revertedWith(getConverterTargetAmountAndFeeError(type));
+                    ).to.be.revertedWith('ERR_INVALID_RESERVES');
                 });
 
                 it('should revert when attempting to convert with an invalid source token address', async () => {

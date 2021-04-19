@@ -4,16 +4,8 @@ import { BigNumber } from 'ethers';
 
 import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
-import { ConverterPath } from './helpers/Types';
 
-import {
-    BancorFormula,
-    BancorNetwork,
-    BancorX,
-    ContractRegistry,
-    LiquidityPoolV1Converter,
-    TestStandardToken
-} from '../../typechain';
+import { BancorNetwork, BancorX, ContractRegistry, TestStandardToken, StandardPoolConverter } from '../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
@@ -28,20 +20,19 @@ const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c00000000000000
 const MIN_RETURN = BigNumber.from(1);
 const TX_ID = BigNumber.from(0);
 
-let bancorFormula: BancorFormula;
 let contractRegistry: ContractRegistry;
 let bancorX: BancorX;
 let bancorNetwork: BancorNetwork;
 
 let bntToken: TestStandardToken;
 let erc20Token: TestStandardToken;
-let erc20TokenConverter1: LiquidityPoolV1Converter;
-let erc20TokenConverter2: LiquidityPoolV1Converter;
+let erc20TokenConverter1: StandardPoolConverter;
+let erc20TokenConverter2: StandardPoolConverter;
 
-let ethBntPath: ConverterPath;
-let bntEthPath: ConverterPath;
-let erc20TokenBntPath: ConverterPath;
-let bntErc20Path: ConverterPath;
+let ethBntPath: any;
+let bntEthPath: any;
+let erc20TokenBntPath: any;
+let bntErc20Path: any;
 
 let accounts: SignerWithAddress[];
 let owner: SignerWithAddress;
@@ -63,10 +54,7 @@ describe('XConversions', () => {
         sender2 = accounts[6];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
-        bancorFormula = await Contracts.BancorFormula.deploy();
         contractRegistry = await Contracts.ContractRegistry.deploy();
-
-        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
     });
 
     beforeEach(async () => {
@@ -89,7 +77,6 @@ describe('XConversions', () => {
         bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
 
         await contractRegistry.registerAddress(Constants.registry.BNT_TOKEN, bntToken.address);
-        await contractRegistry.registerAddress(Constants.registry.BANCOR_FORMULA, bancorFormula.address);
         await contractRegistry.registerAddress(Constants.registry.BANCOR_NETWORK, bancorNetwork.address);
         await contractRegistry.registerAddress(Constants.registry.BANCOR_X, bancorX.address);
 
@@ -101,12 +88,12 @@ describe('XConversions', () => {
         await poolToken2.issue(owner.address, ethers.utils.parseEther('200'));
         await poolToken2.issue(owner.address, ethers.utils.parseEther('200'));
 
-        erc20TokenConverter1 = await Contracts.LiquidityPoolV1Converter.deploy(
+        erc20TokenConverter1 = await Contracts.StandardPoolConverter.deploy(
             poolToken1.address,
             contractRegistry.address,
             30000
         );
-        erc20TokenConverter2 = await Contracts.LiquidityPoolV1Converter.deploy(
+        erc20TokenConverter2 = await Contracts.StandardPoolConverter.deploy(
             poolToken2.address,
             contractRegistry.address,
             30000

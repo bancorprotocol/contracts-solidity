@@ -7,6 +7,17 @@ import Constants from './helpers/Constants';
 import Contracts from './helpers/Contracts';
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
+const STANDARD_CONVERTER_TYPE = 3;
+const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
+
+let accounts: SignerWithAddress[];
+let contractRegistry: ContractRegistry;
+let converterFactory: ConverterFactory;
+let converterRegistry: ConverterRegistry;
+let converterRegistryData: ConverterRegistryData;
+let pathFinder: any;
+let anchorToken: string;
+let nonOwner: SignerWithAddress;
 
 /* eslint-disable no-multi-spaces,comma-spacing */
 const LAYOUT = {
@@ -54,9 +65,9 @@ const getPath = async (token: any, anchorToken: any, converterRegistry: any): Pr
     const isAnchor = await converterRegistry.isAnchor(token);
     const anchors = isAnchor ? [token] : await converterRegistry.getConvertibleTokenAnchors(token);
     for (const anchor of anchors) {
-        const converterAnchor = await ethers.getContractAt('IConverterAnchor', anchor);
+        const converterAnchor = await Contracts.IConverterAnchor.attach(anchor);
         const converterAnchorOwner = await converterAnchor.owner();
-        const converter = await ethers.getContractAt('ConverterBase', converterAnchorOwner);
+        const converter = await Contracts.StandardPoolConverter.attach(converterAnchorOwner);
         const connectorTokenCount = await converter.connectorTokenCount();
         for (let i = 0; i < connectorTokenCount; i++) {
             const connectorToken = await converter.connectorTokens(i);
@@ -105,15 +116,6 @@ const getShortestPath = (sourcePath: any, targetPath: any) => {
     return path.slice(0, length);
 };
 
-let accounts: SignerWithAddress[];
-let contractRegistry: ContractRegistry;
-let converterFactory: ConverterFactory;
-let converterRegistry: ConverterRegistry;
-let converterRegistryData: ConverterRegistryData;
-let pathFinder: any;
-let anchorToken: string;
-let nonOwner: SignerWithAddress;
-
 describe('ConversionPathFinder', () => {
     let addresses = { ETH: Constants.NATIVE_TOKEN_ADDRESS } as any;
 
@@ -131,7 +133,7 @@ describe('ConversionPathFinder', () => {
         pathFinder = await Contracts.ConversionPathFinder.deploy(contractRegistry.address);
 
         await converterFactory.registerTypedConverterFactory(
-            (await Contracts.LiquidityPoolV1ConverterFactory.deploy()).address
+            (await Contracts.StandardPoolConverterFactory.deploy()).address
         );
 
         await contractRegistry.registerAddress(Constants.registry.CONVERTER_FACTORY, converterFactory.address);
@@ -151,19 +153,16 @@ describe('ConversionPathFinder', () => {
         for (const converter of LAYOUT.converters) {
             const tokens = converter.reserves.map((reserve) => addresses[reserve.symbol]);
             await converterRegistry.newConverter(
-                1,
+                STANDARD_CONVERTER_TYPE,
                 'name',
                 converter.symbol,
                 0,
                 0,
                 tokens,
-                tokens.map((token) => 1)
+                STANDARD_CONVERTER_WEIGHTS
             );
-            const anchor = await ethers.getContractAt(
-                'IConverterAnchor',
-                (await converterRegistry.getAnchors()).slice(-1)[0]
-            );
-            const converterBase = await ethers.getContractAt('ConverterBase', await anchor.owner());
+            const anchor = await Contracts.IConverterAnchor.attach((await converterRegistry.getAnchors()).slice(-1)[0]);
+            const converterBase = await Contracts.StandardPoolConverter.attach(await anchor.owner());
             await converterBase.acceptOwnership();
             addresses[converter.symbol] = anchor.address;
         }

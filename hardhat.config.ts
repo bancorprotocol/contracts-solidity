@@ -1,14 +1,34 @@
+import fs from 'fs';
+import path from 'path';
+
+// Main plugins
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-etherscan';
 
 // Extra plugins
 import 'solidity-coverage';
 import 'hardhat-typechain';
+import 'hardhat-contract-sizer';
 
 import { HardhatUserConfig } from 'hardhat/config';
 
+// Load Config
+const configPath = path.join(__dirname, '/config.json');
+const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
+
+const loadAPIKey = (apiKeyName: string) => {
+    return config.apiKeys ? (config.apiKeys[apiKeyName] ? config.apiKeys[apiKeyName] : '') : '';
+};
+
+// Config
+const configNetworks = config.networks || {};
+const APIKeyEtherscan = loadAPIKey('etherscan');
+
 const Config: HardhatUserConfig = {
+    // Network Config
     networks: {
+        // Hardhat network
         hardhat: {
             gasPrice: 20000000000,
             gas: 9500000,
@@ -54,14 +74,13 @@ const Config: HardhatUserConfig = {
                     balance: '10000000000000000000000000000'
                 }
             ]
-        }
+        },
+
+        // Load the rest of the Network config from a file
+        ...configNetworks
     },
-    paths: {
-        sources: './solidity/contracts',
-        tests: './solidity/test',
-        cache: './cache',
-        artifacts: './build'
-    },
+
+    // Solidity Config
     solidity: {
         version: '0.6.12',
         settings: {
@@ -71,6 +90,26 @@ const Config: HardhatUserConfig = {
             }
         }
     },
+
+    // Plugins Config
+    etherscan: {
+        apiKey: APIKeyEtherscan
+    },
+    contractSizer: {
+        alphaSort: true,
+        runOnCompile: false,
+        disambiguatePaths: false
+    },
+
+    // System Config
+    paths: {
+        sources: './solidity/contracts',
+        tests: './solidity/test',
+        cache: './cache',
+        artifacts: './solidity/build/contracts'
+    },
+
+    // Test Config
     mocha: {
         timeout: 600000,
         color: true,

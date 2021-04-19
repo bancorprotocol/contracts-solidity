@@ -35,7 +35,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     mapping(IConverterAnchor => uint256) private _networkTokenMintingLimits;
 
     // permission of adding liquidity for a given reserve on a given pool
-    mapping(IConverterAnchor => mapping(IERC20 => bool)) private _addLiquidityDisabled;
+    mapping(IConverterAnchor => mapping(IReserveToken => bool)) private _addLiquidityDisabled;
 
     // number of seconds until any protection is in effect
     uint256 private _minProtectionDelay = 30 days;
@@ -55,51 +55,51 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     /**
      * @dev triggered when the pool whitelist is updated
      *
-     * @param poolAnchor    pool anchor
-     * @param added         true if the pool was added to the whitelist, false if it was removed
+     * @param poolAnchor pool anchor
+     * @param added true if the pool was added to the whitelist, false if it was removed
      */
     event PoolWhitelistUpdated(IConverterAnchor indexed poolAnchor, bool added);
 
     /**
      * @dev triggered when a subscriber is added or removed
      *
-     * @param subscriber    subscriber
-     * @param added         true if the subscriber was added, false if it was removed
+     * @param subscriber subscriber
+     * @param added true if the subscriber was added, false if it was removed
      */
     event SubscriberUpdated(ILiquidityProtectionEventsSubscriber indexed subscriber, bool added);
 
     /**
      * @dev triggered when the minimum amount of network token liquidity to allow minting is updated
      *
-     * @param prevMin   previous minimum amount of network token liquidity for minting
-     * @param newMin    new minimum amount of network token liquidity for minting
+     * @param prevMin previous minimum amount of network token liquidity for minting
+     * @param newMin new minimum amount of network token liquidity for minting
      */
     event MinNetworkTokenLiquidityForMintingUpdated(uint256 prevMin, uint256 newMin);
 
     /**
      * @dev triggered when the default network token minting limit is updated
      *
-     * @param prevDefault   previous default network token minting limit
-     * @param newDefault    new default network token minting limit
+     * @param prevDefault previous default network token minting limit
+     * @param newDefault new default network token minting limit
      */
     event DefaultNetworkTokenMintingLimitUpdated(uint256 prevDefault, uint256 newDefault);
 
     /**
      * @dev triggered when a pool network token minting limit is updated
      *
-     * @param poolAnchor    pool anchor
-     * @param prevLimit     previous limit
-     * @param newLimit      new limit
+     * @param poolAnchor pool anchor
+     * @param prevLimit previous limit
+     * @param newLimit new limit
      */
     event NetworkTokenMintingLimitUpdated(IConverterAnchor indexed poolAnchor, uint256 prevLimit, uint256 newLimit);
 
     /**
      * @dev triggered when the protection delays are updated
      *
-     * @param prevMinProtectionDelay    previous seconds until the protection starts
-     * @param newMinProtectionDelay     new seconds until the protection starts
-     * @param prevMaxProtectionDelay    previous seconds until full protection
-     * @param newMaxProtectionDelay     new seconds until full protection
+     * @param prevMinProtectionDelay previous seconds until the protection starts
+     * @param newMinProtectionDelay new seconds until the protection starts
+     * @param prevMaxProtectionDelay previous seconds until full protection
+     * @param newMaxProtectionDelay new seconds until full protection
      */
     event ProtectionDelaysUpdated(
         uint256 prevMinProtectionDelay,
@@ -111,46 +111,46 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     /**
      * @dev triggered when the minimum network token compensation is updated
      *
-     * @param prevMinNetworkCompensation    previous minimum network token compensation
-     * @param newMinNetworkCompensation     new minimum network token compensation
+     * @param prevMinNetworkCompensation previous minimum network token compensation
+     * @param newMinNetworkCompensation new minimum network token compensation
      */
     event MinNetworkCompensationUpdated(uint256 prevMinNetworkCompensation, uint256 newMinNetworkCompensation);
 
     /**
      * @dev triggered when the network token lock duration is updated
      *
-     * @param prevLockDuration  previous network token lock duration, in seconds
-     * @param newLockDuration   new network token lock duration, in seconds
+     * @param prevLockDuration previous network token lock duration, in seconds
+     * @param newLockDuration new network token lock duration, in seconds
      */
     event LockDurationUpdated(uint256 prevLockDuration, uint256 newLockDuration);
 
     /**
      * @dev triggered when the maximum deviation of the average rate from the spot rate is updated
      *
-     * @param prevAverageRateMaxDeviation   previous maximum deviation of the average rate from the spot rate
-     * @param newAverageRateMaxDeviation    new maximum deviation of the average rate from the spot rate
+     * @param prevAverageRateMaxDeviation previous maximum deviation of the average rate from the spot rate
+     * @param newAverageRateMaxDeviation new maximum deviation of the average rate from the spot rate
      */
     event AverageRateMaxDeviationUpdated(uint32 prevAverageRateMaxDeviation, uint32 newAverageRateMaxDeviation);
 
     /**
      * @dev triggered when adding liquidity is disabled or enabled for a given reserve on a given pool
      *
-     * @param poolAnchor    pool anchor
-     * @param reserveToken  reserve token
-     * @param disabled      true if disabled, false otherwise
+     * @param poolAnchor pool anchor
+     * @param reserveToken reserve token
+     * @param disabled true if disabled, false otherwise
      */
-    event AddLiquidityDisabled(IConverterAnchor indexed poolAnchor, IERC20 indexed reserveToken, bool disabled);
+    event AddLiquidityDisabled(IConverterAnchor indexed poolAnchor, IReserveToken indexed reserveToken, bool disabled);
 
     /**
      * @dev initializes a new LiquidityProtectionSettings contract
      *
-     * @param registry  contract registry
-     * @param token     the network token
+     * @param registry contract registry
+     * @param networkToken the network token
      */
-    constructor(IERC20 token, IContractRegistry registry)
+    constructor(IERC20 networkToken, IContractRegistry registry)
         public
         ContractRegistryClient(registry)
-        validExternalAddress(address(token))
+        validExternalAddress(address(networkToken))
     {
         // set up administrative roles.
         _setRoleAdmin(ROLE_OWNER, ROLE_OWNER);
@@ -158,7 +158,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         // allow the deployer to initially govern the contract.
         _setupRole(ROLE_OWNER, msg.sender);
 
-        _networkToken = token;
+        _networkToken = networkToken;
     }
 
     modifier onlyOwner() {
@@ -201,7 +201,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     /**
      * @dev returns the network token minting limit for a given pool
      *
-     * @param poolAnchor    pool anchor
+     * @param poolAnchor pool anchor
      * @return the network token minting limit for a given pool
      */
     function networkTokenMintingLimits(IConverterAnchor poolAnchor) external view override returns (uint256) {
@@ -211,11 +211,11 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     /**
      * @dev returns the permission of adding liquidity for a given reserve on a given pool
      *
-     * @param poolAnchor    pool anchor
-     * @param reserveToken  reserve token
+     * @param poolAnchor pool anchor
+     * @param reserveToken reserve token
      * @return true if adding liquidity is disabled, false otherwise
      */
-    function addLiquidityDisabled(IConverterAnchor poolAnchor, IERC20 reserveToken)
+    function addLiquidityDisabled(IConverterAnchor poolAnchor, IReserveToken reserveToken)
         external
         view
         override
@@ -273,7 +273,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev adds a pool to the whitelist
      * can only be called by the contract owner
      *
-     * @param poolAnchor    pool anchor
+     * @param poolAnchor pool anchor
      */
     function addPoolToWhitelist(IConverterAnchor poolAnchor)
         external
@@ -289,7 +289,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev removes a pool from the whitelist
      * can only be called by the contract owner
      *
-     * @param poolAnchor    pool anchor
+     * @param poolAnchor pool anchor
      */
     function removePoolFromWhitelist(IConverterAnchor poolAnchor) external onlyOwner {
         require(_poolWhitelist.remove(address(poolAnchor)), "ERR_POOL_NOT_WHITELISTED");
@@ -300,7 +300,8 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     /**
      * @dev checks whether a given pool is whitelisted
      *
-     * @param poolAnchor    pool anchor
+     * @param poolAnchor pool anchor
+     *
      * @return true if the given pool is whitelisted, false otherwise
      */
     function isPoolWhitelisted(IConverterAnchor poolAnchor) external view override returns (bool) {
@@ -325,7 +326,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev adds a subscriber
      * can only be called by the contract owner
      *
-     * @param subscriber    subscriber address
+     * @param subscriber subscriber address
      */
     function addSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
         external
@@ -367,7 +368,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev updates the minimum amount of network token liquidity to allow minting
      * can only be called by the contract owner
      *
-     * @param amount   the minimum amount of network token liquidity to allow minting
+     * @param amount the minimum amount of network token liquidity to allow minting
      */
     function setMinNetworkTokenLiquidityForMinting(uint256 amount) external onlyOwner() {
         emit MinNetworkTokenLiquidityForMintingUpdated(_minNetworkTokenLiquidityForMinting, amount);
@@ -379,7 +380,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev updates the default amount of network token that the system can mint into each pool
      * can only be called by the contract owner
      *
-     * @param amount    the default amount of network token that the system can mint into each pool
+     * @param amount the default amount of network token that the system can mint into each pool
      */
     function setDefaultNetworkTokenMintingLimit(uint256 amount) external onlyOwner() {
         emit DefaultNetworkTokenMintingLimitUpdated(_defaultNetworkTokenMintingLimit, amount);
@@ -391,8 +392,8 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev updates the amount of network tokens that the system can mint into a specific pool
      * can only be called by the contract owner
      *
-     * @param poolAnchor    pool anchor
-     * @param amount        the amount of network tokens that the system can mint into a specific pool
+     * @param poolAnchor pool anchor
+     * @param amount the amount of network tokens that the system can mint into a specific pool
      */
     function setNetworkTokenMintingLimit(IConverterAnchor poolAnchor, uint256 amount)
         external
@@ -408,8 +409,8 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev updates the protection delays
      * can only be called by the contract owner
      *
-     * @param minDelay   seconds until the protection starts
-     * @param maxDelay   seconds until full protection
+     * @param minDelay seconds until the protection starts
+     * @param maxDelay seconds until full protection
      */
     function setProtectionDelays(uint256 minDelay, uint256 maxDelay) external onlyOwner() {
         require(minDelay < maxDelay, "ERR_INVALID_PROTECTION_DELAY");
@@ -424,7 +425,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev updates the minimum amount of network token compensation
      * can only be called by the contract owner
      *
-     * @param amount    the minimum amount of network token compensation
+     * @param amount the minimum amount of network token compensation
      */
     function setMinNetworkCompensation(uint256 amount) external onlyOwner() {
         emit MinNetworkCompensationUpdated(_minNetworkCompensation, amount);
@@ -436,7 +437,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev updates the network token lock duration
      * can only be called by the contract owner
      *
-     * @param duration  network token lock duration, in seconds
+     * @param duration network token lock duration, in seconds
      */
     function setLockDuration(uint256 duration) external onlyOwner() {
         emit LockDurationUpdated(_lockDuration, duration);
@@ -460,13 +461,13 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @dev disables or enables adding liquidity for a given reserve on a given pool
      * can only be called by the contract owner
      *
-     * @param poolAnchor    pool anchor
-     * @param reserveToken  reserve token
-     * @param disable       true to disable, false otherwise
+     * @param poolAnchor pool anchor
+     * @param reserveToken reserve token
+     * @param disable true to disable, false otherwise
      */
     function disableAddLiquidity(
         IConverterAnchor poolAnchor,
-        IERC20 reserveToken,
+        IReserveToken reserveToken,
         bool disable
     ) external onlyOwner() {
         emit AddLiquidityDisabled(poolAnchor, reserveToken, disable);
@@ -479,12 +480,11 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * only standard pools are supported (2 reserves, 50%/50% weights)
      * note that the pool should still be whitelisted
      *
-     * @param poolAnchor    anchor of the pool
+     * @param poolAnchor anchor of the pool
+     *
      * @return true if the pool is supported, false otherwise
      */
     function isPoolSupported(IConverterAnchor poolAnchor) external view override returns (bool) {
-        IERC20 tmpNetworkToken = _networkToken;
-
         // verify that the pool exists in the registry
         IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
         require(converterRegistry.isAnchor(address(poolAnchor)), "ERR_INVALID_ANCHOR");
@@ -498,9 +498,9 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         }
 
         // verify that one of the reserves is the network token
-        IERC20 reserve0Token = converter.connectorTokens(0);
-        IERC20 reserve1Token = converter.connectorTokens(1);
-        if (reserve0Token != tmpNetworkToken && reserve1Token != tmpNetworkToken) {
+        IReserveToken reserve0Token = converter.connectorTokens(0);
+        IReserveToken reserve1Token = converter.connectorTokens(1);
+        if (!isNetworkToken(reserve0Token) && !isNetworkToken(reserve1Token)) {
             return false;
         }
 
@@ -516,8 +516,17 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     }
 
     // utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
-    function converterReserveWeight(IConverter converter, IERC20 reserveToken) private view returns (uint32) {
+    function converterReserveWeight(IConverter converter, IReserveToken reserveToken) private view returns (uint32) {
         (, uint32 weight, , , ) = converter.connectors(reserveToken);
         return weight;
+    }
+
+    /**
+     * @dev returns whether the provided reserve token is the network token
+     *
+     * @return whether the provided reserve token is the network token
+     */
+    function isNetworkToken(IReserveToken reserveToken) private view returns (bool) {
+        return address(reserveToken) == address(_networkToken);
     }
 }

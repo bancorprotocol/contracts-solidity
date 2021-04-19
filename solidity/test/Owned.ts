@@ -5,7 +5,7 @@ import Contracts from './helpers/Contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { Owned } from '../../typechain';
 
-let owned: Owned;
+let contract: Owned;
 
 let accounts: SignerWithAddress[];
 let owner: SignerWithAddress;
@@ -22,54 +22,54 @@ describe('Owned', () => {
     });
 
     beforeEach(async () => {
-        owned = await Contracts.Owned.deploy();
+        contract = await Contracts.Owned.deploy();
     });
 
     it('verifies the owner after construction', async () => {
-        expect(await owned.owner()).to.be.eql(accounts[0].address);
+        expect(await contract.owner()).to.be.eql(accounts[0].address);
     });
 
     it('verifies the new owner after ownership transfer', async () => {
-        await owned.transferOwnership(newOwner.address);
-        await owned.connect(newOwner).acceptOwnership();
+        await contract.transferOwnership(newOwner.address);
+        await contract.connect(newOwner).acceptOwnership();
 
-        expect(await owned.owner()).to.be.eql(newOwner.address);
+        expect(await contract.owner()).to.be.eql(newOwner.address);
     });
 
     it('verifies that ownership transfer fires an OwnerUpdate event', async () => {
-        await owned.transferOwnership(newOwner.address);
-        expect(await owned.connect(newOwner).acceptOwnership())
-            .to.emit(owned, 'OwnerUpdate')
+        await contract.transferOwnership(newOwner.address);
+        expect(await contract.connect(newOwner).acceptOwnership())
+            .to.emit(contract, 'OwnerUpdate')
             .withArgs(owner.address, newOwner.address);
     });
 
     it('verifies that newOwner is cleared after ownership transfer', async () => {
-        await owned.transferOwnership(newOwner.address);
-        await owned.connect(newOwner).acceptOwnership();
+        await contract.transferOwnership(newOwner.address);
+        await contract.connect(newOwner).acceptOwnership();
 
-        expect(await owned.newOwner()).to.be.eql(ethers.constants.AddressZero);
+        expect(await contract.newOwner()).to.be.eql(ethers.constants.AddressZero);
     });
 
     it('verifies that no ownership transfer takes places before the new owner accepted it', async () => {
-        await owned.transferOwnership(newOwner.address);
+        await contract.transferOwnership(newOwner.address);
 
-        expect(await owned.owner()).to.be.eql(owner.address);
+        expect(await contract.owner()).to.be.eql(owner.address);
     });
 
     it('verifies that only the owner can initiate ownership transfer', async () => {
-        await expect(owned.connect(nonOwner).transferOwnership(newOwner.address)).to.be.revertedWith(
+        await expect(contract.connect(nonOwner).transferOwnership(newOwner.address)).to.be.revertedWith(
             'ERR_ACCESS_DENIED'
         );
     });
 
     it('verifies that the owner can cancel ownership transfer before the new owner accepted it', async () => {
-        await owned.transferOwnership(newOwner.address);
-        await owned.transferOwnership(ethers.constants.AddressZero);
+        await contract.transferOwnership(newOwner.address);
+        await contract.transferOwnership(ethers.constants.AddressZero);
 
-        expect(await owned.newOwner()).to.be.eql(ethers.constants.AddressZero);
+        expect(await contract.newOwner()).to.be.eql(ethers.constants.AddressZero);
     });
 
     it("verifies that it's not possible to transfer ownership to the same owner", async () => {
-        await expect(owned.transferOwnership(owner.address)).to.be.revertedWith('ERR_SAME_OWNER');
+        await expect(contract.transferOwnership(owner.address)).to.be.revertedWith('ERR_SAME_OWNER');
     });
 });

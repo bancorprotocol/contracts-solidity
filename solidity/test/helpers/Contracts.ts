@@ -1,11 +1,8 @@
-import { Signer } from '@ethersproject/abstract-signer';
 import { Contract, ContractFactory } from '@ethersproject/contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 import { ethers } from 'hardhat';
 
 import {
-    BancorFormula,
-    BancorFormula__factory,
     BancorNetwork,
     BancorNetwork__factory,
     BancorX,
@@ -16,8 +13,6 @@ import {
     ContractRegistry__factory,
     ConversionPathFinder,
     ConversionPathFinder__factory,
-    ConverterBase,
-    ConverterBase__factory,
     ConverterFactory,
     ConverterFactory__factory,
     ConverterRegistry,
@@ -34,14 +29,8 @@ import {
     ConverterV28OrHigherWithoutFallback__factory,
     DSToken,
     DSToken__factory,
-    FixedRatePoolConverter,
-    FixedRatePoolConverterFactory,
-    FixedRatePoolConverterFactory__factory,
-    FixedRatePoolConverter__factory,
-    LiquidityPoolV1Converter,
-    LiquidityPoolV1ConverterFactory,
-    LiquidityPoolV1ConverterFactory__factory,
-    LiquidityPoolV1Converter__factory,
+    IConverterAnchor,
+    IConverterAnchor__factory,
     LiquidityProtection,
     LiquidityProtectionSettings,
     LiquidityProtectionSettings__factory,
@@ -60,10 +49,10 @@ import {
     StandardPoolConverterFactory,
     StandardPoolConverterFactory__factory,
     StandardPoolConverter__factory,
-    TestBancorFormula,
-    TestBancorFormula__factory,
     TestBancorNetwork,
     TestBancorNetwork__factory,
+    TestCall,
+    TestCall__factory,
     TestCheckpointStore,
     TestCheckpointStore__factory,
     TestContractRegistryClient,
@@ -72,12 +61,6 @@ import {
     TestConverterFactory__factory,
     TestConverterRegistry,
     TestConverterRegistry__factory,
-    TestFixedRatePoolConverter,
-    TestFixedRatePoolConverter__factory,
-    TestLiquidityPoolV1Converter,
-    TestLiquidityPoolV1ConverterFactory,
-    TestLiquidityPoolV1ConverterFactory__factory,
-    TestLiquidityPoolV1Converter__factory,
     TestLiquidityProtection,
     TestLiquidityProtectionEventsSubscriber,
     TestLiquidityProtectionEventsSubscriber__factory,
@@ -90,6 +73,10 @@ import {
     TestReentrancyGuardAttacker,
     TestReentrancyGuardAttacker__factory,
     TestReentrancyGuard__factory,
+    TestReserveToken,
+    TestReserveToken__factory,
+    TestSafeERC20Ex,
+    TestSafeERC20Ex__factory,
     TestStandardPoolConverter,
     TestStandardPoolConverterFactory,
     TestStandardPoolConverterFactory__factory,
@@ -150,7 +137,7 @@ const attachContract = async <T extends Promise<Contract>>(
 const deployOrAttach = <T extends Contract, ParamsTypes extends typeof ContractFactory.prototype.deploy>(
     contractName: string,
     argsNumber: number
-) => {
+): ContractType => {
     return {
         deploy: async (...parameters: Parameters<ParamsTypes>): Promise<T> => {
             return await deployContract<ParamsTypes, Promise<T>>(contractName, argsNumber, parameters);
@@ -169,30 +156,15 @@ const attachOnly = <T extends Contract>(contractName: string) => {
     };
 };
 
-export type ContractsType =
-    | 'TestBancorFormula'
-    | 'BancorNetwork'
-    | 'StandardPoolConverterFactory'
-    | 'LiquidityPoolV1Converter'
-    | 'StandardPoolConverter'
-    | 'FixedRatePoolConverter'
-    | 'LiquidityPoolV1ConverterFactory'
-    | 'FixedRatePoolConverterFactory';
+export type ContractType = {
+    deploy: Function;
+    attach: Function;
+};
 
 export default {
-    TestBancorFormula: deployOrAttach<TestBancorFormula, typeof TestBancorFormula__factory.prototype.deploy>(
-        'TestBancorFormula',
-        TestBancorFormula__factory.prototype.deploy.length
-    ),
-    //
     BancorNetwork: deployOrAttach<BancorNetwork, typeof BancorNetwork__factory.prototype.deploy>(
         'BancorNetwork',
         BancorNetwork__factory.prototype.deploy.length
-    ),
-    //
-    BancorFormula: deployOrAttach<BancorFormula, typeof BancorFormula__factory.prototype.deploy>(
-        'BancorFormula',
-        BancorFormula__factory.prototype.deploy.length
     ),
     //
     NetworkSettings: deployOrAttach<NetworkSettings, typeof NetworkSettings__factory.prototype.deploy>(
@@ -245,11 +217,6 @@ export default {
         typeof ConverterV28OrHigherWithFallback__factory.prototype.deploy
     >('ConverterV28OrHigherWithFallback', ConverterV28OrHigherWithFallback__factory.prototype.deploy.length),
     //
-    LiquidityPoolV1Converter: deployOrAttach<
-        LiquidityPoolV1Converter,
-        typeof LiquidityPoolV1Converter__factory.prototype.deploy
-    >('LiquidityPoolV1Converter', LiquidityPoolV1Converter__factory.prototype.deploy.length),
-    //
     TestCheckpointStore: deployOrAttach<TestCheckpointStore, typeof TestCheckpointStore__factory.prototype.deploy>(
         'TestCheckpointStore',
         TestCheckpointStore__factory.prototype.deploy.length
@@ -280,11 +247,6 @@ export default {
         typeof ConverterRegistryData__factory.prototype.deploy
     >('ConverterRegistryData', ConverterRegistryData__factory.prototype.deploy.length),
     //
-    LiquidityPoolV1ConverterFactory: deployOrAttach<
-        LiquidityPoolV1ConverterFactory,
-        typeof LiquidityPoolV1ConverterFactory__factory.prototype.deploy
-    >('LiquidityPoolV1ConverterFactory', LiquidityPoolV1ConverterFactory__factory.prototype.deploy.length),
-    //
     ConverterUpgrader: deployOrAttach<ConverterUpgrader, typeof ConverterUpgrader__factory.prototype.deploy>(
         'ConverterUpgrader',
         ConverterUpgrader__factory.prototype.deploy.length
@@ -295,20 +257,10 @@ export default {
         typeof StandardPoolConverter__factory.prototype.deploy
     >('StandardPoolConverter', StandardPoolConverter__factory.prototype.deploy.length),
     //
-    FixedRatePoolConverter: deployOrAttach<
-        FixedRatePoolConverter,
-        typeof FixedRatePoolConverter__factory.prototype.deploy
-    >('FixedRatePoolConverter', FixedRatePoolConverter__factory.prototype.deploy.length),
-    //
     StandardPoolConverterFactory: deployOrAttach<
         StandardPoolConverterFactory,
         typeof StandardPoolConverterFactory__factory.prototype.deploy
     >('StandardPoolConverterFactory', StandardPoolConverterFactory__factory.prototype.deploy.length),
-    //
-    FixedRatePoolConverterFactory: deployOrAttach<
-        FixedRatePoolConverterFactory,
-        typeof FixedRatePoolConverterFactory__factory.prototype.deploy
-    >('FixedRatePoolConverterFactory', FixedRatePoolConverterFactory__factory.prototype.deploy.length),
     //
     TestTypedConverterAnchorFactory: deployOrAttach<
         TestTypedConverterAnchorFactory,
@@ -325,25 +277,10 @@ export default {
         typeof TestConverterRegistry__factory.prototype.deploy
     >('TestConverterRegistry', TestConverterRegistry__factory.prototype.deploy.length),
     //
-    TestFixedRatePoolConverter: deployOrAttach<
-        TestFixedRatePoolConverter,
-        typeof TestFixedRatePoolConverter__factory.prototype.deploy
-    >('TestFixedRatePoolConverter', TestFixedRatePoolConverter__factory.prototype.deploy.length),
-    //
     Whitelist: deployOrAttach<Whitelist, typeof Whitelist__factory.prototype.deploy>(
         'Whitelist',
         Whitelist__factory.prototype.deploy.length
     ),
-    //
-    TestLiquidityPoolV1Converter: deployOrAttach<
-        TestLiquidityPoolV1Converter,
-        typeof TestLiquidityPoolV1Converter__factory.prototype.deploy
-    >('TestLiquidityPoolV1Converter', TestLiquidityPoolV1Converter__factory.prototype.deploy.length),
-    //
-    TestLiquidityPoolV1ConverterFactory: deployOrAttach<
-        TestLiquidityPoolV1ConverterFactory,
-        typeof TestLiquidityPoolV1ConverterFactory__factory.prototype.deploy
-    >('TestLiquidityPoolV1ConverterFactory', TestLiquidityPoolV1ConverterFactory__factory.prototype.deploy.length),
     //
     TestStandardPoolConverterFactory: deployOrAttach<
         TestStandardPoolConverterFactory,
@@ -447,9 +384,22 @@ export default {
         'VortexBurner',
         VortexBurner__factory.prototype.deploy.length
     ),
+    //
+    TestSafeERC20Ex: deployOrAttach<TestSafeERC20Ex, typeof TestSafeERC20Ex__factory.prototype.deploy>(
+        'TestSafeERC20Ex',
+        TestSafeERC20Ex__factory.prototype.deploy.length
+    ),
+    //
+    TestReserveToken: deployOrAttach<TestReserveToken, typeof TestReserveToken__factory.prototype.deploy>(
+        'TestReserveToken',
+        TestReserveToken__factory.prototype.deploy.length
+    ),
+    //
+    TestCall: deployOrAttach<TestCall, typeof TestCall__factory.prototype.deploy>(
+        'TestCall',
+        TestCall__factory.prototype.deploy.length
+    ),
 
-    /////////////////
-    // Attach only //
-    /////////////////
-    ConverterBase: attachOnly<ConverterBase>('ConverterBase')
+    // Attach Only
+    IConverterAnchor: attachOnly<IConverterAnchor>('IConverterAnchor')
 };

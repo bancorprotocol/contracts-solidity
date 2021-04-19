@@ -41,9 +41,10 @@ contract Whitelist is IWhitelist, Owned, Utils {
      * @param _address address to add
      */
     function addAddress(address _address) public ownerOnly validAddress(_address) {
-        if (whitelist[_address])
-            // checks if the address is already whitelisted
+        // checks if the address is already whitelisted
+        if (whitelist[_address]) {
             return;
+        }
 
         whitelist[_address] = true;
         emit AddressAddition(_address);
@@ -66,9 +67,10 @@ contract Whitelist is IWhitelist, Owned, Utils {
      * @param _address address to remove
      */
     function removeAddress(address _address) public ownerOnly {
-        if (!whitelist[_address])
-            // checks if the address is actually whitelisted
+        // checks if the address is actually whitelisted
+        if (!whitelist[_address]) {
             return;
+        }
 
         whitelist[_address] = false;
         emit AddressRemoval(_address);

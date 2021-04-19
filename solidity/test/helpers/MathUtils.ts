@@ -61,7 +61,7 @@ function weightedAverageForFractions(a: any, b: any, c: any, d: any, p: any, q: 
 }
 
 function divCeil(a: any, b: any) {
-    let ans = a.div(b);
+    const ans = a.div(b);
 
     if (ans === 0) {
         return 0;
@@ -80,16 +80,16 @@ function divRound(a: any, num: any) {
     a = toBN(a);
     num = toBN(num);
 
-    var dm = a.divmod(num);
+    const dm = a.divmod(num);
 
     // Fast case - exact division
     if (dm.mod.isZero()) return toBigNumber(dm.div);
 
-    var mod = dm.div.negative !== 0 ? dm.mod.isub(num) : dm.mod;
+    const mod = dm.div.negative !== 0 ? dm.mod.isub(num) : dm.mod;
 
-    var half = num.ushrn(1);
-    var r2 = num.andln(1);
-    var cmp = mod.cmp(half);
+    const half = num.ushrn(1);
+    const r2 = num.andln(1);
+    const cmp = mod.cmp(half);
 
     // Round down
     if (cmp < 0 || (r2 === 1 && cmp === 0)) return toBigNumber(dm.div);
@@ -120,7 +120,7 @@ function toHex(value: any): any {
 
         // Cannot have mulitple negative signs (e.g. "--0x04")
         if (value[0] === '-') {
-            // logger.throwArgumentError('invalid hex', 'value', value);
+            throw 'invalid hex value' + value;
         }
 
         // Call toHex on the positive component
