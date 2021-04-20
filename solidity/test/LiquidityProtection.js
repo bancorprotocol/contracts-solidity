@@ -2176,8 +2176,7 @@ describe('LiquidityProtection', () => {
                         ).to.be.revertedWith('ERR_ACCESS_DENIED');
                     });
 
-                    // Don't know how to encoreABI of functions in ethersjs
-                    describe.skip('notification', () => {
+                    describe('notification', () => {
                         let testCall;
 
                         beforeEach(async () => {
@@ -2190,16 +2189,20 @@ describe('LiquidityProtection', () => {
                                     .connect(recipient)
                                     .transferPositionAndCall(
                                         protectionId,
-                                        newOwner,
+                                        newOwner.address,
                                         ZERO_ADDRESS,
-                                        liquidityProtection.methods.store().encodeABI()
+                                        ethers.utils.formatBytes32String(
+                                            liquidityProtection.interface
+                                                .getFunction('store')
+                                                .format(ethers.utils.FormatTypes.sighash)
+                                        )
                                     )
                             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
 
                             await expect(
                                 liquidityProtection
                                     .connect(recipient)
-                                    .transferPositionAndCall(protectionId, newOwner, testCall.address, [])
+                                    .transferPositionAndCall(protectionId, newOwner.address, testCall.address, [])
                             ).to.be.revertedWith('ERR_INVALID_CALL_DATA');
 
                             for (const invalidCallData of [[], '0x1234', '0x123456']) {
@@ -2208,7 +2211,7 @@ describe('LiquidityProtection', () => {
                                         .connect(recipient)
                                         .transferPositionAndCall(
                                             protectionId,
-                                            newOwner,
+                                            newOwner.address,
                                             testCall.address,
                                             invalidCallData
                                         )
@@ -2222,11 +2225,15 @@ describe('LiquidityProtection', () => {
                                     .connect(recipient)
                                     .transferPositionAndCall(
                                         protectionId,
-                                        newOwner,
+                                        newOwner.address,
                                         testCall.address,
-                                        testCall.contract.methods.error().encodeABI()
+                                        ethers.utils.formatBytes32String(
+                                            testCall.interface
+                                                .getFunction('error')
+                                                .format(ethers.utils.FormatTypes.sighash)
+                                        )
                                     )
-                            ).to.be.revertedWith('ERR_REVERT');
+                            ).to.be.revertedWith('ERR_CALL_FAILED');
                         });
 
                         it('should revert when calling an invalid method', async () => {
@@ -2235,13 +2242,18 @@ describe('LiquidityProtection', () => {
                                     .connect(recipient)
                                     .transferPositionAndCall(
                                         protectionId,
-                                        newOwner,
+                                        newOwner.address,
                                         testCall.address,
-                                        liquidityProtection.contract.methods.store().encodeABI()
+                                        ethers.utils.formatBytes32String(
+                                            liquidityProtection.interface
+                                                .getFunction('store')
+                                                .format(ethers.utils.FormatTypes.sighash)
+                                        )
                                     )
                             ).to.be.revertedWith('ERR_CALL_FAILED');
                         });
 
+                        // @TODO
                         it('should support state changing function', async () => {
                             expect(await testCall.num()).to.be.equal(BigNumber.from(0));
                             expect(await testCall.str()).to.be.eql('');
@@ -2249,14 +2261,21 @@ describe('LiquidityProtection', () => {
                             const newNum = BigNumber.from(12345);
                             const newStr = 'Hello World!';
 
+                            console.log(testCall.interface.getFunction('set'));
+
                             await verifyTransfer(async () =>
                                 liquidityProtection
                                     .connect(recipient)
                                     .transferPositionAndCall(
                                         protectionId,
-                                        newOwner,
+                                        newOwner.address,
                                         testCall.address,
-                                        testCall.contract.methods.set(newNum, newStr).encodeABI()
+                                        ethers.utils.formatBytes32String(
+                                            testCall.interface
+                                                .getFunction('set')
+                                                .methods.set(newNum, newStr)
+                                                .encodeABI()
+                                        )
                                     )
                             );
 
