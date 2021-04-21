@@ -14,7 +14,7 @@ module.exports = {
         BANCOR_X: ethers.utils.formatBytes32String('BancorX'),
         BANCOR_X_UPGRADER: ethers.utils.formatBytes32String('BancorXUpgrader'),
 
-        //
+        // Needed for legacy tests
         BANCOR_FORMULA: ethers.utils.formatBytes32String('BancorFormula')
     },
 

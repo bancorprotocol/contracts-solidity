@@ -47,7 +47,6 @@ Token network structure:
     TKN2          BNT      TKN3
 */
 
-// Error: invalid BigNumber value
 describe('BancorNetwork', () => {
     const initPaths = (tokens) => {
         const bntToken = tokens[0];
@@ -280,14 +279,14 @@ describe('BancorNetwork', () => {
                         amount,
                         MIN_RETURN,
                         ZERO_ADDRESS,
-                        { value: value }
+                        { value }
                     );
                     const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
                         ZERO_ADDRESS,
-                        { value: value }
+                        { value }
                     );
                     const postBalance = await getBalance(targetToken, targetSymbol, sender.address);
 
@@ -319,14 +318,14 @@ describe('BancorNetwork', () => {
                         amount,
                         MIN_RETURN,
                         beneficiary,
-                        { value: value }
+                        { value }
                     );
                     const res = await bancorNetwork.convertByPath2(
                         paths[sourceSymbol][targetSymbol],
                         amount,
                         MIN_RETURN,
                         beneficiary,
-                        { value: value }
+                        { value }
                     );
                     const postBalance = await getBalance(targetToken, targetSymbol, beneficiary.address);
 
@@ -358,7 +357,7 @@ describe('BancorNetwork', () => {
                         amount,
                         MIN_RETURN,
                         ZERO_ADDRESS,
-                        { value: value }
+                        { value }
                     );
                     const postBalance = await getBalance(targetToken, targetSymbol, sender.address);
 
@@ -390,7 +389,7 @@ describe('BancorNetwork', () => {
                             amount,
                             expectedReturn.add(BigNumber.from(1)),
                             ZERO_ADDRESS,
-                            { value: value }
+                            { value }
                         )
                     ).to.be.revertedWith('ERR_RETURN_TOO_LOW');
                 });
@@ -444,7 +443,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.convertFor(invalidPath, value, MIN_RETURN, sender2.address, { value: value })
+                bancorNetwork.convertFor(invalidPath, value, MIN_RETURN, sender2.address, { value })
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
@@ -453,7 +452,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.convertFor(invalidPath, value, MIN_RETURN, sender2.address, { value: value })
+                bancorNetwork.convertFor(invalidPath, value, MIN_RETURN, sender2.address, { value })
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
@@ -469,7 +468,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.connect(sender).convert(path, value.add(BigNumber.from(5)), MIN_RETURN, { value: value })
+                bancorNetwork.connect(sender).convert(path, value.add(BigNumber.from(5)), MIN_RETURN, { value })
             ).to.be.revertedWith('ERR_ETH_AMOUNT_MISMATCH');
         });
 
@@ -478,7 +477,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.connect(sender).convert(invalidPath, value, MIN_RETURN, { value: value })
+                bancorNetwork.connect(sender).convert(invalidPath, value, MIN_RETURN, { value })
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
@@ -487,7 +486,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(
-                bancorNetwork.connect(sender).convert(invalidPath, value, MIN_RETURN, { value: value })
+                bancorNetwork.connect(sender).convert(invalidPath, value, MIN_RETURN, { value })
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
@@ -584,7 +583,7 @@ describe('BancorNetwork', () => {
                 sender2.address,
                 ZERO_ADDRESS,
                 0,
-                { value: value }
+                { value }
             );
             await bancorNetwork.convertFor2(path, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0, {
                 value: value

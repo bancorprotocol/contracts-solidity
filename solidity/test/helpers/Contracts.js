@@ -10,13 +10,14 @@ const deployContract = async (contractName, ...args) => {
         args.pop();
     }
 
-    if (contracts[contractName + signer.address] === undefined) {
-        contracts[contractName + signer.address] = await ethers.getContractFactory(contractName, signer);
+    const contractKey = contractName + signer.address;
+    if (contracts[contractKey] === undefined) {
+        contracts[contractKey] = await ethers.getContractFactory(contractName, signer);
     }
 
     return args === undefined || args.length === 0
-        ? await contracts[contractName + signer.address].deploy()
-        : await contracts[contractName + signer.address].deploy(...args);
+        ? await contracts[contractKey].deploy()
+        : await contracts[contractKey].deploy(...args);
 };
 
 const attachContract = async (contractName, address) => {
@@ -35,62 +36,62 @@ const deployOrAttach = (contractName) => {
 };
 
 module.exports = {
-    TestBancorFormula: deployOrAttach('TestBancorFormula'),
-    BancorNetwork: deployOrAttach('BancorNetwork'),
     BancorFormula: deployOrAttach('BancorFormula'),
-    NetworkSettings: deployOrAttach('NetworkSettings'),
-    ContractRegistry: deployOrAttach('ContractRegistry'),
-    ConverterRegistry: deployOrAttach('ConverterRegistry'),
-    ConverterFactory: deployOrAttach('ConverterFactory'),
-    ConversionPathFinder: deployOrAttach('ConversionPathFinder'),
-    TestStandardToken: deployOrAttach('TestStandardToken'),
-    TestNonStandardToken: deployOrAttach('TestNonStandardToken'),
-    TestBancorNetwork: deployOrAttach('TestBancorNetwork'),
-    ConverterV27OrLowerWithoutFallback: deployOrAttach('ConverterV27OrLowerWithoutFallback'),
-    ConverterV27OrLowerWithFallback: deployOrAttach('ConverterV27OrLowerWithFallback'),
-    ConverterV28OrHigherWithoutFallback: deployOrAttach('ConverterV28OrHigherWithoutFallback'),
-    ConverterV28OrHigherWithFallback: deployOrAttach('ConverterV28OrHigherWithFallback'),
-    LiquidityPoolV1Converter: deployOrAttach('LiquidityPoolV1Converter'),
-    TestCheckpointStore: deployOrAttach('TestCheckpointStore'),
-    DSToken: deployOrAttach('DSToken'),
+    BancorNetwork: deployOrAttach('BancorNetwork'),
     BancorX: deployOrAttach('BancorX'),
-    TestContractRegistryClient: deployOrAttach('TestContractRegistryClient'),
+    CheckpointStore: deployOrAttach('CheckpointStore'),
+    ContractRegistry: deployOrAttach('ContractRegistry'),
+    ConversionPathFinder: deployOrAttach('ConversionPathFinder'),
+    ConverterFactory: deployOrAttach('ConverterFactory'),
+    ConverterRegistry: deployOrAttach('ConverterRegistry'),
     ConverterRegistryData: deployOrAttach('ConverterRegistryData'),
-    LiquidityPoolV1ConverterFactory: deployOrAttach('LiquidityPoolV1ConverterFactory'),
     ConverterUpgrader: deployOrAttach('ConverterUpgrader'),
-    StandardPoolConverter: deployOrAttach('StandardPoolConverter'),
+    ConverterV27OrLowerWithFallback: deployOrAttach('ConverterV27OrLowerWithFallback'),
+    ConverterV27OrLowerWithoutFallback: deployOrAttach('ConverterV27OrLowerWithoutFallback'),
+    ConverterV28OrHigherWithFallback: deployOrAttach('ConverterV28OrHigherWithFallback'),
+    ConverterV28OrHigherWithoutFallback: deployOrAttach('ConverterV28OrHigherWithoutFallback'),
+    DSToken: deployOrAttach('DSToken'),
     FixedRatePoolConverter: deployOrAttach('FixedRatePoolConverter'),
-    StandardPoolConverterFactory: deployOrAttach('StandardPoolConverterFactory'),
     FixedRatePoolConverterFactory: deployOrAttach('FixedRatePoolConverterFactory'),
-    TestTypedConverterAnchorFactory: deployOrAttach('TestTypedConverterAnchorFactory'),
+    IConverterAnchor: deployOrAttach('IConverterAnchor'),
+    LiquidityPoolV1Converter: deployOrAttach('LiquidityPoolV1Converter'),
+    LiquidityPoolV1ConverterFactory: deployOrAttach('LiquidityPoolV1ConverterFactory'),
+    LiquidityProtection: deployOrAttach('LiquidityProtection'),
+    LiquidityProtectionSettings: deployOrAttach('LiquidityProtectionSettings'),
+    LiquidityProtectionSettingsMigrator: deployOrAttach('LiquidityProtectionSettingsMigrator'),
+    LiquidityProtectionStats: deployOrAttach('LiquidityProtectionStats'),
+    LiquidityProtectionStore: deployOrAttach('LiquidityProtectionStore'),
+    LiquidityProtectionSystemStore: deployOrAttach('LiquidityProtectionSystemStore'),
+    NetworkSettings: deployOrAttach('NetworkSettings'),
+    Owned: deployOrAttach('Owned'),
+    StandardPoolConverter: deployOrAttach('StandardPoolConverter'),
+    StandardPoolConverterFactory: deployOrAttach('StandardPoolConverterFactory'),
+    TestBancorNetwork: deployOrAttach('TestBancorNetwork'),
+    TestCall: deployOrAttach('TestCall'),
+    TestCheckpointStore: deployOrAttach('TestCheckpointStore'),
+    TestContractRegistryClient: deployOrAttach('TestContractRegistryClient'),
     TestConverterFactory: deployOrAttach('TestConverterFactory'),
     TestConverterRegistry: deployOrAttach('TestConverterRegistry'),
     TestFixedRatePoolConverter: deployOrAttach('TestFixedRatePoolConverter'),
-    Whitelist: deployOrAttach('Whitelist'),
     TestLiquidityPoolV1Converter: deployOrAttach('TestLiquidityPoolV1Converter'),
     TestLiquidityPoolV1ConverterFactory: deployOrAttach('TestLiquidityPoolV1ConverterFactory'),
-    TestStandardPoolConverterFactory: deployOrAttach('TestStandardPoolConverterFactory'),
-    TestTokenGovernance: deployOrAttach('TestTokenGovernance'),
-    LiquidityProtectionSettings: deployOrAttach('LiquidityProtectionSettings'),
-    LiquidityProtectionStore: deployOrAttach('LiquidityProtectionStore'),
-    LiquidityProtectionStats: deployOrAttach('LiquidityProtectionStats'),
-    LiquidityProtectionSystemStore: deployOrAttach('LiquidityProtectionSystemStore'),
     TestLiquidityProtection: deployOrAttach('TestLiquidityProtection'),
-    TokenHolder: deployOrAttach('TokenHolder'),
     TestLiquidityProtectionEventsSubscriber: deployOrAttach('TestLiquidityProtectionEventsSubscriber'),
-    TestStandardPoolConverter: deployOrAttach('TestStandardPoolConverter'),
-    TokenGovernance: deployOrAttach('TokenGovernance'),
-    CheckpointStore: deployOrAttach('CheckpointStore'),
-    LiquidityProtection: deployOrAttach('LiquidityProtection'),
-    LiquidityProtectionSettingsMigrator: deployOrAttach('LiquidityProtectionSettingsMigrator'),
     TestMathEx: deployOrAttach('TestMathEx'),
-    Owned: deployOrAttach('Owned'),
-    TestReentrancyGuardAttacker: deployOrAttach('TestReentrancyGuardAttacker'),
+    TestNonStandardToken: deployOrAttach('TestNonStandardToken'),
     TestReentrancyGuard: deployOrAttach('TestReentrancyGuard'),
-    XTransferRerouter: deployOrAttach('XTransferRerouter'),
-    VortexBurner: deployOrAttach('VortexBurner'),
-    TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
+    TestReentrancyGuardAttacker: deployOrAttach('TestReentrancyGuardAttacker'),
     TestReserveToken: deployOrAttach('TestReserveToken'),
-    IConverterAnchor: deployOrAttach('IConverterAnchor'),
-    TestCall: deployOrAttach('TestCall')
+    TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
+    TestStandardPoolConverter: deployOrAttach('TestStandardPoolConverter'),
+    TestStandardPoolConverterFactory: deployOrAttach('TestStandardPoolConverterFactory'),
+    TestStandardToken: deployOrAttach('TestStandardToken'),
+    TestTokenGovernance: deployOrAttach('TestTokenGovernance'),
+    TestTypedConverterAnchorFactory: deployOrAttach('TestTypedConverterAnchorFactory'),
+    TokenGovernance: deployOrAttach('TokenGovernance'),
+    TokenHolder: deployOrAttach('TokenHolder'),
+    VortexBurner: deployOrAttach('VortexBurner'),
+    Whitelist: deployOrAttach('Whitelist'),
+    XTransferRerouter: deployOrAttach('XTransferRerouter'),
+    TestBancorFormula: deployOrAttach('TestBancorFormula')
 };

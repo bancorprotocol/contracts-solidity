@@ -13,7 +13,6 @@ const latest = async () => {
 module.exports = {
     advanceBlock,
     latest,
-    //
     duration: {
         seconds: function (val) {
             return BigNumber.from(val);

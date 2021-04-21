@@ -59,7 +59,7 @@ let owner;
 let governor;
 let accounts;
 
-describe('LiquidityProtection', () => {
+describe.skip('LiquidityProtection', () => {
     const getConverterName = (type) => {
         switch (type) {
             case STANDARD_CONVERTER_TYPE:
@@ -156,7 +156,7 @@ describe('LiquidityProtection', () => {
 
                 return liquidityProtection
                     .connect(from)
-                    .addLiquidity(poolTokenAddress, tokenAddress, amount, { value: value });
+                    .addLiquidity(poolTokenAddress, tokenAddress, amount, { value });
             };
 
             const getProtection = (protection) => {

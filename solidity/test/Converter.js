@@ -502,7 +502,7 @@ describe('Converter', () => {
                             [getReserve1Address(isETHReserve), anchorAddress, getReserve1Address(isETHReserve)],
                             amount,
                             MIN_RETURN,
-                            { value: value }
+                            { value }
                         )
                     ).to.be.revertedWith('ERR_SAME_SOURCE_TARGET');
                 });
