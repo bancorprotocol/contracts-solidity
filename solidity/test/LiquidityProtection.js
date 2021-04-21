@@ -2191,11 +2191,7 @@ describe('LiquidityProtection', () => {
                                         protectionId,
                                         newOwner.address,
                                         ZERO_ADDRESS,
-                                        ethers.utils.formatBytes32String(
-                                            liquidityProtection.interface
-                                                .getFunction('store')
-                                                .format(ethers.utils.FormatTypes.sighash)
-                                        )
+                                        liquidityProtection.interface.encodeFunctionData('store')
                                     )
                             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
 
@@ -2227,13 +2223,9 @@ describe('LiquidityProtection', () => {
                                         protectionId,
                                         newOwner.address,
                                         testCall.address,
-                                        ethers.utils.formatBytes32String(
-                                            testCall.interface
-                                                .getFunction('error')
-                                                .format(ethers.utils.FormatTypes.sighash)
-                                        )
+                                        testCall.interface.encodeFunctionData('error')
                                     )
-                            ).to.be.revertedWith('ERR_CALL_FAILED');
+                            ).to.be.revertedWith('ERR_REVERT');
                         });
 
                         it('should revert when calling an invalid method', async () => {
@@ -2244,24 +2236,17 @@ describe('LiquidityProtection', () => {
                                         protectionId,
                                         newOwner.address,
                                         testCall.address,
-                                        ethers.utils.formatBytes32String(
-                                            liquidityProtection.interface
-                                                .getFunction('store')
-                                                .format(ethers.utils.FormatTypes.sighash)
-                                        )
+                                        liquidityProtection.interface.encodeFunctionData('store')
                                     )
                             ).to.be.revertedWith('ERR_CALL_FAILED');
                         });
 
-                        // @TODO
-                        it.skip('should support state changing function', async () => {
+                        it('should support state changing function', async () => {
                             expect(await testCall.num()).to.be.equal(BigNumber.from(0));
                             expect(await testCall.str()).to.be.eql('');
 
                             const newNum = BigNumber.from(12345);
                             const newStr = 'Hello World!';
-
-                            console.log(testCall.interface.getFunction('set'));
 
                             await verifyTransfer(async () =>
                                 liquidityProtection
@@ -2270,12 +2255,7 @@ describe('LiquidityProtection', () => {
                                         protectionId,
                                         newOwner.address,
                                         testCall.address,
-                                        ethers.utils.formatBytes32String(
-                                            testCall.interface
-                                                .getFunction('set')
-                                                .methods.set(newNum, newStr)
-                                                .encodeABI()
-                                        )
+                                        testCall.interface.encodeFunctionData('set', [newNum, newStr])
                                     )
                             );
 
