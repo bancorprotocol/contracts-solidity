@@ -59,7 +59,7 @@ let owner;
 let governor;
 let accounts;
 
-describe.skip('LiquidityProtection', () => {
+describe('LiquidityProtection', () => {
     const getConverterName = (type) => {
         switch (type) {
             case STANDARD_CONVERTER_TYPE:
@@ -2254,7 +2254,7 @@ describe.skip('LiquidityProtection', () => {
                         });
 
                         // @TODO
-                        it('should support state changing function', async () => {
+                        it.skip('should support state changing function', async () => {
                             expect(await testCall.num()).to.be.equal(BigNumber.from(0));
                             expect(await testCall.str()).to.be.eql('');
 
@@ -2572,7 +2572,7 @@ describe.skip('LiquidityProtection', () => {
                 }
             });
 
-            describe('stress tests', () => {
+            describe.skip('stress tests', () => {
                 describe('average rate', () => {
                     for (let minutesElapsed = 1; minutesElapsed <= 10; minutesElapsed += 1) {
                         for (let convertPortion = 1; convertPortion <= 10; convertPortion += 1) {
