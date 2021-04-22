@@ -2,5 +2,5 @@
 pragma solidity 0.6.12;
 
 contract ConverterVersion {
-    uint16 public constant version = 46;
+    uint16 public constant version = 47;
 }
