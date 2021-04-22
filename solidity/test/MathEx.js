@@ -59,7 +59,10 @@ describe('MathEx', () => {
                 it(`poweredRatio(${a.toFixed()}, ${b.toFixed()}, ${exp})`, async () => {
                     const expected = MathUtils.poweredRatio(a, b, exp);
                     const actual = await mathContract.poweredRatioTest(a.toFixed(), b.toFixed(), exp);
-                    expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0.000000000000000000000000922' });
+                    expectAlmostEqual(actual, expected, {
+                        maxAbsoluteError: '0',
+                        maxRelativeError: '0.000000000000000000000000922'
+                    });
                 });
             }
         }

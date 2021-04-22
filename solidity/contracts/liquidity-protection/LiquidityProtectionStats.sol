@@ -4,10 +4,8 @@ pragma solidity 0.6.12;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./interfaces/ILiquidityProtectionStats.sol";
-import "../token/interfaces/IDSToken.sol";
 
 /**
  * @dev This contract aggregates the statistics of the liquidity protection mechanism.
@@ -21,8 +19,8 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
     bytes32 public constant ROLE_OWNER = keccak256("ROLE_OWNER");
 
     mapping(IDSToken => uint256) private _totalPoolAmounts;
-    mapping(IDSToken => mapping(IERC20 => uint256)) private _totalReserveAmounts;
-    mapping(address => mapping(IDSToken => mapping(IERC20 => uint256))) private _totalProviderAmounts;
+    mapping(IDSToken => mapping(IReserveToken => uint256)) private _totalReserveAmounts;
+    mapping(address => mapping(IDSToken => mapping(IReserveToken => uint256))) private _totalProviderAmounts;
 
     mapping(address => EnumerableSet.AddressSet) private _providerPools;
 
@@ -66,7 +64,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
     function increaseTotalAmounts(
         address provider,
         IDSToken poolToken,
-        IERC20 reserveToken,
+        IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override ownerOnly {
@@ -93,7 +91,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
     function decreaseTotalAmounts(
         address provider,
         IDSToken poolToken,
-        IERC20 reserveToken,
+        IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount
     ) external override ownerOnly {
@@ -146,7 +144,12 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
      * @param reserveToken  reserve token address
      * @return total amount of protected reserve tokens
      */
-    function totalReserveAmount(IDSToken poolToken, IERC20 reserveToken) external view override returns (uint256) {
+    function totalReserveAmount(IDSToken poolToken, IReserveToken reserveToken)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return _totalReserveAmounts[poolToken][reserveToken];
     }
 
@@ -161,7 +164,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
     function totalProviderAmount(
         address provider,
         IDSToken poolToken,
-        IERC20 reserveToken
+        IReserveToken reserveToken
     ) external view override returns (uint256) {
         return _totalProviderAmounts[provider][poolToken][reserveToken];
     }
@@ -206,7 +209,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
      */
     function seedReserveAmounts(
         IDSToken[] calldata poolTokens,
-        IERC20[] calldata reserveTokens,
+        IReserveToken[] calldata reserveTokens,
         uint256[] calldata reserveAmounts
     ) external seederOnly {
         uint256 length = poolTokens.length;
@@ -227,7 +230,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
     function seedProviderAmounts(
         address[] calldata providers,
         IDSToken[] calldata poolTokens,
-        IERC20[] calldata reserveTokens,
+        IReserveToken[] calldata reserveTokens,
         uint256[] calldata reserveAmounts
     ) external seederOnly {
         uint256 length = providers.length;

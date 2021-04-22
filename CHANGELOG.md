@@ -1,3 +1,15 @@
+### 0.6.35
+General
+* Normalized ETH/reserve token usages (new `ReserveToken` contract, updated token handling across the board)
+
+ConverterFactory
+* Allow unregistering factories
+
+LiquidityProtection
+* Added `transferPosition` & `transferPositionAndCall` that allow owners to transfer their positions to other wallets/contracts
+* Fixed an issue that caused APR of new positions to remain at 0 in the first few days
+
+
 ### 0.6.34
 General
 * Added global network settings (`NetworkSettings` contract)

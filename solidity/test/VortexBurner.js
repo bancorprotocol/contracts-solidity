@@ -483,7 +483,7 @@ describe('VortexBurner', () => {
                                             const res = await vortex.burn(tokenAddresses);
 
                                             expectEvent(res, 'Burned', {
-                                                tokens: tokenAddresses,
+                                                reserveTokens: tokenAddresses,
                                                 sourceAmount: grossNetworkTokenConversionAmount,
                                                 burnedAmount: totalBurnedAmount
                                             });
@@ -492,7 +492,7 @@ describe('VortexBurner', () => {
                                                 const log = res.logs[i];
 
                                                 expectEvent({ logs: [log] }, 'Converted', {
-                                                    token: convertibleTokens[i],
+                                                    reserveToken: convertibleTokens[i],
                                                     sourceAmount: amounts[i],
                                                     targetAmount: networkTokenConversionAmounts[i]
                                                 });

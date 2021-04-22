@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../../token/interfaces/IReserveToken.sol";
 
 import "./IOwned.sol";
 
@@ -12,13 +12,13 @@ interface ITokenHolder is IOwned {
     receive() external payable;
 
     function withdrawTokens(
-        IERC20 token,
+        IReserveToken reserveToken,
         address payable to,
         uint256 amount
     ) external;
 
     function withdrawTokensMultiple(
-        IERC20[] calldata tokens,
+        IReserveToken[] calldata reserveTokens,
         address payable to,
         uint256[] calldata amounts
     ) external;
