@@ -23,19 +23,18 @@
         "size": "hardhat size-contracts",
         "verify": "hardhat verify",
         "coverage": "hardhat coverage",
+        "flatten": "hardhat flatten",
         "export": "node scripts/export.js",
         "lint": "yarn lint:js && yarn lint:sol",
         "lint:js": "eslint .",
         "lint:sol": "solhint --max-warnings 0 \"solidity/contracts/**/*.sol\"",
         "format": "prettier --check --write solidity/**/*.sol solidity/**/*.js scripts/**/*.js *.js --config .prettierrc",
         "deploy": "node scripts/deploy-one.js",
-        "verify-all": "node scripts/verify-all.js",
-        "flatten": "node scripts/flatten.js",
         "snyk-protect": "snyk protect",
         "prepare": "yarn build && yarn snyk-protect"
     },
     "dependencies": {
-        "hardhat": "2.2.0"
+        "hardhat": "2.2.1"
     },
     "devDependencies": {
         "@bancor/token-governance": "bancorprotocol/token-governance",
@@ -65,8 +64,8 @@
         "mocha": "^8.3.2",
         "prettier": "^2.2.1",
         "prettier-package-json": "^2.1.3",
-        "prettier-plugin-solidity": "^1.0.0-beta.9",
-        "snyk": "^1.551.0",
+        "prettier-plugin-solidity": "^1.0.0-beta.10",
+        "snyk": "^1.563.0",
         "solc": "0.6.12",
         "solhint": "^3.3.4",
         "solidity-coverage": "^0.7.16",
