@@ -7,6 +7,9 @@ const deployContract = async (contractName, ...args) => {
 
     if (typeof args[args.length - 1] === 'object' && args[args.length - 1].from) {
         signer = args[args.length - 1].from;
+        if (typeof signer !== 'object' || signer.constructor.name !== 'SignerWithAddress') {
+            throw new Error('Signer must be SignerWithAddress');
+        }
         args.pop();
     }
 
