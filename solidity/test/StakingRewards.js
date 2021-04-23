@@ -47,6 +47,9 @@ const RESERVE1_AMOUNT = new BN(10000000).mul(new BN(10).pow(new BN(18)));
 const RESERVE2_AMOUNT = new BN(25000000).mul(new BN(10).pow(new BN(18)));
 const TOTAL_SUPPLY = new BN(10).pow(new BN(36));
 
+const STANDARD_CONVERTER_TYPE = 3;
+const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
+
 describe('StakingRewards', () => {
     let now;
     let prevNow;
@@ -188,16 +191,14 @@ describe('StakingRewards', () => {
     };
 
     const createPoolToken = async (reserveToken) => {
-        const weights = [500000, 500000];
-
         await converterRegistry.newConverter(
-            3,
+            STANDARD_CONVERTER_TYPE,
             'PT',
             'PT',
             18,
             PPM_RESOLUTION,
             [reserveToken.address, networkToken.address],
-            weights
+            STANDARD_POOL_CONVERTER_WEIGHTS
         );
 
         const anchorCount = await converterRegistry.getAnchorCount.call();

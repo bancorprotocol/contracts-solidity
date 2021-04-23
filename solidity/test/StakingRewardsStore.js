@@ -13,7 +13,7 @@ const ConverterRegistry = contract.fromArtifact('TestConverterRegistry');
 const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
 const ContractRegistry = contract.fromArtifact('ContractRegistry');
 const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const ConverterBase = contract.fromArtifact('ConverterBase');
+const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
 const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
 
 const StakingRewardsStore = contract.fromArtifact('TestStakingRewardsStore');
@@ -25,6 +25,9 @@ const BASE_TOKEN_REWARDS_SHARE = new BN(300000); // 30%
 const MAX_REWARD_RATE = new BN(2).pow(new BN(128)).sub(new BN(1));
 
 const TOTAL_SUPPLY = new BN(10).pow(new BN(24));
+
+const STANDARD_CONVERTER_TYPE = 3;
+const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
 
 describe('StakingRewardsStore', () => {
     let now;
@@ -113,23 +116,21 @@ describe('StakingRewardsStore', () => {
     };
 
     const createPoolToken = async (reserveToken) => {
-        const weights = [500000, 500000];
-
         await converterRegistry.newConverter(
-            3,
+            STANDARD_CONVERTER_TYPE,
             'PT',
             'PT',
             18,
             PPM_RESOLUTION,
             [reserveToken.address, networkToken.address],
-            weights
+            STANDARD_POOL_CONVERTER_WEIGHTS
         );
 
         const anchorCount = await converterRegistry.getAnchorCount.call();
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
 
         const converterAddress = await converterRegistry.createdConverter.call();
-        const converter = await ConverterBase.at(converterAddress);
+        const converter = await StandardPoolConverter.at(converterAddress);
         await converter.acceptOwnership();
 
         return TestStandardToken.at(poolTokenAddress);
