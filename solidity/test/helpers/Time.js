@@ -2,7 +2,7 @@ const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const advanceBlock = async () => {
-    return await ethers.provider.send('evm_mine', [new Date().getTime()]);
+    return await ethers.provider.send('evm_mine');
 };
 
 const latest = async () => {

@@ -21,11 +21,13 @@ const EOS_BLOCKCHAIN = '0x4e8ebbefa452077428f93c9520d3edd60594ff452a29ac7d2ccc11
 
 let bancorX;
 
+let contractRegistry;
+let bancorXToken;
+
 let defaultSender;
 let reporter1;
 let reporter2;
 let reporter3;
-
 let nonOwner;
 let accounts;
 
@@ -41,8 +43,8 @@ describe('BancorX', () => {
     });
 
     beforeEach(async () => {
-        const contractRegistry = await Contracts.ContractRegistry.deploy();
-        const bancorXToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        bancorXToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
 
         bancorX = await Contracts.BancorX.deploy(
             MAX_LOCK_LIMIT,
