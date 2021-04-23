@@ -20,6 +20,7 @@
     "scripts": {
         "build": "hardhat compile",
         "test": "hardhat test",
+        "test-all": "for f in solidity/test/*.js; do yarn test $f; if [ $? != 0 ]; then exit 1; fi; done; echo 'Success, no error !'",
         "size": "hardhat size-contracts",
         "verify": "hardhat verify",
         "coverage": "hardhat coverage",
