@@ -19,7 +19,7 @@
     ],
     "scripts": {
         "build": "hardhat compile",
-        "test": "hardhat test",
+        "test": "yarn --max-old-space-size=4096 hardhat test",
         "size": "hardhat size-contracts",
         "verify": "hardhat verify",
         "coverage": "hardhat coverage",
