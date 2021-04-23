@@ -1,7 +1,5 @@
 const { ethers } = require('hardhat');
 
-const contracts = {};
-
 const deployContract = async (contractName, ...args) => {
     let signer = (await ethers.getSigners())[0];
 
@@ -13,14 +11,8 @@ const deployContract = async (contractName, ...args) => {
         args.pop();
     }
 
-    const contractKey = contractName + signer.address;
-    if (contracts[contractKey] === undefined) {
-        contracts[contractKey] = await ethers.getContractFactory(contractName, signer);
-    }
-
-    return args === undefined || args.length === 0
-        ? await contracts[contractKey].deploy()
-        : await contracts[contractKey].deploy(...args);
+    const contractFactory = await ethers.getContractFactory(contractName, signer);
+    return args === undefined || args.length === 0 ? await contractFactory.deploy() : contractFactory.deploy(...args);
 };
 
 const attachContract = async (contractName, address) => {
