@@ -16,14 +16,13 @@ import "../utility/interfaces/ICheckpointStore.sol";
 import "../token/ReserveToken.sol";
 
 import "../liquidity-protection/interfaces/ILiquidityProtection.sol";
-import "../liquidity-protection/interfaces/ILiquidityProtectionEventsSubscriber.sol";
 
-import "./interfaces/IStakingRewardsStore.sol";
+import "./interfaces/IStakingRewards.sol";
 
 /**
  * @dev This contract manages the distribution of the staking rewards
  */
-contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, Time, Utils, ContractRegistryClient {
+contract StakingRewards is IStakingRewards, AccessControl, Time, Utils, ContractRegistryClient {
     using SafeMath for uint256;
     using ReserveToken for IReserveToken;
     using SafeERC20 for IERC20;
@@ -65,24 +64,6 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
 
     // the checkpoint store recording last protected position removal times.
     ICheckpointStore private immutable _lastRemoveTimes;
-
-    /**
-     * @dev triggered when pending rewards are being claimed
-     *
-     * @param provider the owner of the liquidity
-     * @param amount the total rewards amount
-     */
-    event RewardsClaimed(address indexed provider, uint256 amount);
-
-    /**
-     * @dev triggered when pending rewards are being staked in a pool
-     *
-     * @param provider the owner of the liquidity
-     * @param poolToken the pool token representing the rewards pool
-     * @param amount the reward amount
-     * @param newId the ID of the new position
-     */
-    event RewardsStaked(address indexed provider, IDSToken indexed poolToken, uint256 amount, uint256 indexed newId);
 
     /**
      * @dev initializes a new StakingRewards contract
@@ -186,26 +167,8 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
      *
      * @return the staking rewards store
      */
-    function store() external view returns (IStakingRewardsStore) {
+    function store() external view override returns (IStakingRewardsStore) {
         return _store;
-    }
-
-    /**
-     * @dev returns the network token governance
-     *
-     * @return the network token governance
-     */
-    function networkTokenGovernance() external view returns (ITokenGovernance) {
-        return _networkTokenGovernance;
-    }
-
-    /**
-     * @dev returns the last remove times
-     *
-     * @return the last remove times
-     */
-    function lastRemoveTimes() external view returns (ICheckpointStore) {
-        return _lastRemoveTimes;
     }
 
     /**
@@ -215,7 +178,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
      *
      * @return all pending rewards
      */
-    function pendingRewards(address provider) external view returns (uint256) {
+    function pendingRewards(address provider) external view override returns (uint256) {
         return pendingRewards(provider, liquidityProtectionStats());
     }
 
@@ -227,7 +190,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
      *
      * @return all pending rewards
      */
-    function pendingPoolRewards(address provider, IDSToken poolToken) external view returns (uint256) {
+    function pendingPoolRewards(address provider, IDSToken poolToken) external view override returns (uint256) {
         return pendingRewards(provider, poolToken, liquidityProtectionStats());
     }
 
@@ -244,7 +207,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
         address provider,
         IDSToken poolToken,
         IReserveToken reserveToken
-    ) external view returns (uint256) {
+    ) external view override returns (uint256) {
         PoolProgram memory program = poolProgram(poolToken);
 
         return pendingRewards(provider, poolToken, reserveToken, program, liquidityProtectionStats());
@@ -263,7 +226,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
         address provider,
         IDSToken poolToken,
         IReserveToken reserveToken
-    ) external view returns (uint32) {
+    ) external view override returns (uint32) {
         ProviderRewards memory providerRewards = providerRewards(provider, poolToken, reserveToken);
         PoolProgram memory program = poolProgram(poolToken);
         return rewardsMultiplier(provider, providerRewards.effectiveStakingTime, program);
@@ -276,7 +239,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
      *
      * @return total claimed rewards from all participating pools
      */
-    function totalClaimedRewards(address provider) external view returns (uint256) {
+    function totalClaimedRewards(address provider) external view override returns (uint256) {
         uint256 totalRewards = 0;
 
         ILiquidityProtectionStats lpStats = liquidityProtectionStats();
@@ -303,7 +266,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
      *
      * @return all claimed rewards
      */
-    function claimRewards() external returns (uint256) {
+    function claimRewards() external override returns (uint256) {
         return claimPendingRewards(msg.sender, liquidityProtectionStats());
     }
 
@@ -315,7 +278,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
 
      * @return all staked rewards and the ID of the new position
      */
-    function stakeRewards(uint256 maxAmount, IDSToken poolToken) external returns (uint256, uint256) {
+    function stakeRewards(uint256 maxAmount, IDSToken poolToken) external override returns (uint256, uint256) {
         return stakeRewards(msg.sender, maxAmount, poolToken, liquidityProtectionStats());
     }
 
@@ -325,7 +288,7 @@ contract StakingRewards is ILiquidityProtectionEventsSubscriber, AccessControl, 
      * @param providers owners of the liquidity
      * @param poolToken the participating pool to update
      */
-    function storePoolRewards(address[] calldata providers, IDSToken poolToken) external onlyUpdater {
+    function storePoolRewards(address[] calldata providers, IDSToken poolToken) external override onlyUpdater {
         ILiquidityProtectionStats lpStats = liquidityProtectionStats();
         PoolProgram memory program = poolProgram(poolToken);
 
