@@ -1,3 +1,8 @@
+### 0.6.36
+General
+* Updated project dependencies
+
+
 ### 0.6.35
 General
 * Normalized ETH/reserve token usages (new `ReserveToken` contract, updated token handling across the board)
