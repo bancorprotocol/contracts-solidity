@@ -63,7 +63,7 @@
         "prettier": "^2.2.1",
         "prettier-package-json": "^2.1.3",
         "prettier-plugin-solidity": "^1.0.0-beta.5",
-        "snyk": "^1.455.0",
+        "snyk": "^1.564.0",
         "solc": "0.6.12",
         "solhint": "^3.3.2",
         "solidity-coverage": "^0.7.14",
