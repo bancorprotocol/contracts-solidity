@@ -541,10 +541,13 @@ describe('VortexBurner', () => {
                         ['ETH', 'TKN1', 'TKN2', 'GOV']
                     ]) {
                         context(`with tokens: ${testTokens.join(',')}`, () => {
-                            it.skip('should revert when attempting to burn the network fees', async () => {
+                            it('should revert when attempting to burn the network fees', async () => {
                                 const tokenAddresses = getTokenAddresses(testTokens);
 
-                                await expect(vortex.burn(tokenAddresses)).to.be.revertedWith('ERR_ZERO_TARGET_AMOUNT');
+                                // @TODO this should break when hardat fix the error with solc/optimizer/revertMsg
+                                await expect(vortex.burn(tokenAddresses)).to.be.reverted.but.not.to.be.revertedWith(
+                                    'ERR_ZERO_TARGET_AMOUNT'
+                                );
                             });
                         });
                     }
