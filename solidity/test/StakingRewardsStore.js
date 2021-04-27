@@ -319,7 +319,7 @@ describe('StakingRewardsStore', () => {
                         endTime,
                         rewardRate
                     );
-                expect(res)
+                await expect(res)
                     .to.emit(store, 'PoolProgramAdded')
                     .withArgs(poolToken.address, startTime, endTime, rewardRate);
 
@@ -379,7 +379,7 @@ describe('StakingRewardsStore', () => {
                         endTime2,
                         rewardRate2
                     );
-                expect(res2)
+                await expect(res2)
                     .to.emit(store, 'PoolProgramAdded')
                     .withArgs(poolToken2.address, startTime2, endTime2, rewardRate2);
 
@@ -439,7 +439,7 @@ describe('StakingRewardsStore', () => {
                         endTime,
                         rewardRate
                     );
-                expect(res)
+                await expect(res)
                     .to.emit(store, 'PoolProgramAdded')
                     .withArgs(poolToken.address, startTime, endTime, rewardRate);
 
@@ -484,7 +484,7 @@ describe('StakingRewardsStore', () => {
                     expect(programs.length).to.eql(1);
 
                     const res = await store.connect(manager).removePoolProgram(poolToken.address);
-                    expect(res).to.emit(store, 'PoolProgramRemoved').withArgs(poolToken.address);
+                    await expect(res).to.emit(store, 'PoolProgramRemoved').withArgs(poolToken.address);
 
                     programs = await getPoolPrograms();
                     expect(programs.length).to.eql(0);
@@ -1432,11 +1432,11 @@ describe('StakingRewardsStore', () => {
             await setTime(now.add(BigNumber.from(1)));
             const res = await store.connect(owner).updateProviderLastClaimTime(provider);
             expect(await store.providerLastClaimTime(provider)).to.be.equal(now);
-            expect(res).to.emit(store, 'ProviderLastClaimTimeUpdated').withArgs(provider, now);
+            await expect(res).to.emit(store, 'ProviderLastClaimTimeUpdated').withArgs(provider, now);
 
             await setTime(now.add(BigNumber.from(100000)));
             const res2 = await store.connect(owner).updateProviderLastClaimTime(provider);
-            expect(res2).to.emit(store, 'ProviderLastClaimTimeUpdated').withArgs(provider, now);
+            await expect(res2).to.emit(store, 'ProviderLastClaimTimeUpdated').withArgs(provider, now);
             expect(await store.providerLastClaimTime(provider)).to.be.equal(now);
         });
     });
