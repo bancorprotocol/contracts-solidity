@@ -78,6 +78,8 @@ module.exports = {
     TestReentrancyGuardAttacker: deployOrAttach('TestReentrancyGuardAttacker'),
     TestReserveToken: deployOrAttach('TestReserveToken'),
     TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
+    TestStakingRewards: deployOrAttach('TestStakingRewards'),
+    TestStakingRewardsStore: deployOrAttach('TestStakingRewardsStore'),
     TestStandardPoolConverter: deployOrAttach('TestStandardPoolConverter'),
     TestStandardPoolConverterFactory: deployOrAttach('TestStandardPoolConverterFactory'),
     TestStandardToken: deployOrAttach('TestStandardToken'),

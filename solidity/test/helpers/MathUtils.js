@@ -76,6 +76,12 @@ function min(a, b) {
     return toBigNumber(BN.min(a, b));
 }
 
+function max(a, b) {
+    a = toBN(a);
+    b = toBN(b);
+    return toBigNumber(BN.max(a, b));
+}
+
 function divRound(a, num) {
     a = toBN(a);
     num = toBN(num);
@@ -177,5 +183,6 @@ module.exports = {
     divCeil,
     divRound,
     min,
+    max,
     Decimal
 };
