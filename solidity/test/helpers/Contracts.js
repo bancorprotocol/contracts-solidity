@@ -61,6 +61,7 @@ module.exports = {
     Owned: deployOrAttach('Owned'),
     StandardPoolConverter: deployOrAttach('StandardPoolConverter'),
     StandardPoolConverterFactory: deployOrAttach('StandardPoolConverterFactory'),
+    TestBancorFormula: deployOrAttach('TestBancorFormula'),
     TestBancorNetwork: deployOrAttach('TestBancorNetwork'),
     TestCall: deployOrAttach('TestCall'),
     TestCheckpointStore: deployOrAttach('TestCheckpointStore'),
@@ -89,6 +90,5 @@ module.exports = {
     TokenHolder: deployOrAttach('TokenHolder'),
     VortexBurner: deployOrAttach('VortexBurner'),
     Whitelist: deployOrAttach('Whitelist'),
-    XTransferRerouter: deployOrAttach('XTransferRerouter'),
-    TestBancorFormula: deployOrAttach('TestBancorFormula')
+    XTransferRerouter: deployOrAttach('XTransferRerouter')
 };
