@@ -387,11 +387,11 @@ describe('StandardPoolConverter', () => {
                     const { res } = await convert([reserveToken1, poolToken, reserveToken2], amount, MIN_RETURN);
 
                     expectEvent(res, 'Conversion', {
-                        _smartToken: poolToken.address,
-                        _fromToken: reserveToken1.address,
-                        _toToken: reserveToken2.address,
-                        _fromAmount: amount,
-                        _toAmount: purchaseAmount
+                        anchor: poolToken.address,
+                        sourceToken: reserveToken1.address,
+                        targetToken: reserveToken2.address,
+                        sourceAmount: amount,
+                        returnAmount: purchaseAmount
                     });
                 });
 

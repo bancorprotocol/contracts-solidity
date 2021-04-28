@@ -93,16 +93,16 @@ interface IConverter is IOwned {
     /**
      * @dev triggered when a conversion between two tokens occurs
      *
-     * @param fromToken source reserve token
-     * @param toToken target reserve token
+     * @param sourceToken source reserve token
+     * @param targetToken target reserve token
      * @param trader wallet that initiated the trade
      * @param amount input amount in units of the source token
      * @param returnAmount output amount minus conversion fee in units of the target token
      * @param conversionFee conversion fee in units of the target token
      */
     event Conversion(
-        IReserveToken indexed fromToken,
-        IReserveToken indexed toToken,
+        IReserveToken indexed sourceToken,
+        IReserveToken indexed targetToken,
         address indexed trader,
         uint256 amount,
         uint256 returnAmount,

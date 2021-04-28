@@ -64,20 +64,20 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev triggered when a conversion between two tokens occurs
      *
-     * @param _smartToken  anchor governed by the converter
-     * @param _fromToken   source reserve token
-     * @param _toToken     target reserve token
-     * @param _fromAmount  amount converted, in the source token
-     * @param _toAmount    amount returned, minus conversion fee
-     * @param _trader      wallet that initiated the trade
+     * @param anchor  anchor governed by the converter
+     * @param sourceToken source reserve token
+     * @param targetToken target reserve token
+     * @param sourceAmount amount converted, in the source token
+     * @param returnAmount amount returned, minus conversion fee
+     * @param trader wallet that initiated the trade
      */
     event Conversion(
-        IConverterAnchor indexed _smartToken,
-        IReserveToken indexed _fromToken,
-        IReserveToken indexed _toToken,
-        uint256 _fromAmount,
-        uint256 _toAmount,
-        address _trader
+        IConverterAnchor indexed anchor,
+        IReserveToken indexed sourceToken,
+        IReserveToken indexed targetToken,
+        uint256 sourceAmount,
+        uint256 returnAmount,
+        address trader
     );
 
     /**
