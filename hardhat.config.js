@@ -10,6 +10,7 @@ require('@nomiclabs/hardhat-etherscan');
 
 require('solidity-coverage');
 require('hardhat-contract-sizer');
+require('hardhat-abi-exporter');
 
 // Load Config
 const configPath = path.join(__dirname, '/config.json');
@@ -59,6 +60,10 @@ module.exports = {
         alphaSort: true,
         runOnCompile: false,
         disambiguatePaths: false
+    },
+    abiExporter: {
+        path: './solidity/build/abi',
+        clear: true
     },
 
     // System Config
