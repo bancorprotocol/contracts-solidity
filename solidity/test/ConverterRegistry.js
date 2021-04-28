@@ -42,17 +42,17 @@ describe('ConverterRegistry', () => {
         const anchor = await converter.token();
         const count = BigNumber.from(await converter.connectorTokenCount());
 
-        expect(res).to.emit(converterRegistry, `ConverterAnchor${suffix}`).withArgs(anchor);
+        await expect(res).to.emit(converterRegistry, `ConverterAnchor${suffix}`).withArgs(anchor);
 
         if (count.gt(BigNumber.from(1))) {
-            expect(res).to.emit(converterRegistry, `LiquidityPool${suffix}`).withArgs(anchor);
+            await expect(res).to.emit(converterRegistry, `LiquidityPool${suffix}`).withArgs(anchor);
         } else {
-            expect(res).to.emit(converterRegistry, `ConvertibleToken${suffix}`).withArgs(anchor, anchor);
+            await expect(res).to.emit(converterRegistry, `ConvertibleToken${suffix}`).withArgs(anchor, anchor);
         }
 
         for (let i = 0; count.gt(BigNumber.from(i)); ++i) {
             const connectorToken = await converter.connectorTokens(i);
-            expect(res).to.emit(converterRegistry, `ConvertibleToken${suffix}`).withArgs(connectorToken, anchor);
+            await expect(res).to.emit(converterRegistry, `ConvertibleToken${suffix}`).withArgs(connectorToken, anchor);
         }
     };
 

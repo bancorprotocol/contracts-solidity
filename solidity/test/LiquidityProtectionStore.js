@@ -66,7 +66,7 @@ describe('LiquidityProtectionStore', () => {
 
         it('should succeed when the owner attempts to increase system balance', async () => {
             expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('0');
-            expect(await liquidityProtectionStore.connect(owner).incSystemBalance(owner.address, 1))
+            await expect(await liquidityProtectionStore.connect(owner).incSystemBalance(owner.address, 1))
                 .to.emit(liquidityProtectionStore, 'SystemBalanceUpdated')
                 .withArgs(owner.address, '0', '1');
             expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('1');
@@ -75,7 +75,7 @@ describe('LiquidityProtectionStore', () => {
         it('should succeed when the owner attempts to decrease system balance', async () => {
             await liquidityProtectionStore.connect(owner).incSystemBalance(owner.address, 1);
             expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('1');
-            expect(await liquidityProtectionStore.connect(owner).decSystemBalance(owner.address, 1))
+            await expect(await liquidityProtectionStore.connect(owner).decSystemBalance(owner.address, 1))
                 .to.emit(liquidityProtectionStore, 'SystemBalanceUpdated')
                 .withArgs(owner.address, '1', '0');
             expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('0');
@@ -110,7 +110,7 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should succeed when the owner attempts to add a protected-liquidity item', async () => {
-            expect(
+            await expect(
                 await liquidityProtectionStore
                     .connect(owner)
                     .addProtectedLiquidity(provider.address, poolToken.address, reserveToken.address, 1, 2, 3, 4, 5)
@@ -129,7 +129,7 @@ describe('LiquidityProtectionStore', () => {
                 .connect(owner)
                 .addProtectedLiquidity(provider.address, poolToken.address, reserveToken.address, 1, 2, 3, 4, 5);
 
-            expect(await liquidityProtectionStore.connect(owner).updateProtectedLiquidityAmounts(0, 3, 4))
+            await expect(await liquidityProtectionStore.connect(owner).updateProtectedLiquidityAmounts(0, 3, 4))
                 .to.emit(liquidityProtectionStore, 'ProtectionUpdated')
                 .withArgs(provider.address, '1', '2', '3', '4');
 
@@ -144,7 +144,7 @@ describe('LiquidityProtectionStore', () => {
                 .connect(owner)
                 .addProtectedLiquidity(provider.address, poolToken.address, reserveToken.address, 1, 2, 3, 4, 5);
 
-            expect(await liquidityProtectionStore.connect(owner).removeProtectedLiquidity(0))
+            await expect(await liquidityProtectionStore.connect(owner).removeProtectedLiquidity(0))
                 .to.emit(liquidityProtectionStore, 'ProtectionRemoved')
                 .withArgs(provider.address, poolToken.address, reserveToken.address, '1', '2');
 
@@ -173,7 +173,7 @@ describe('LiquidityProtectionStore', () => {
 
         it('should succeed when the owner attempts to add a locked balance', async () => {
             expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('0');
-            expect(await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, 1, 2))
+            await expect(await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, 1, 2))
                 .to.emit(liquidityProtectionStore, 'BalanceLocked')
                 .withArgs(provider.address, '1', '2');
             expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('1');
@@ -182,7 +182,7 @@ describe('LiquidityProtectionStore', () => {
         it('should succeed when the owner attempts to remove a locked balance', async () => {
             await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, 1, 2);
             expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('1');
-            expect(await liquidityProtectionStore.connect(owner).removeLockedBalance(provider.address, 0))
+            await expect(await liquidityProtectionStore.connect(owner).removeLockedBalance(provider.address, 0))
                 .to.emit(liquidityProtectionStore, 'BalanceUnlocked')
                 .withArgs(provider.address, '1');
             expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('0');

@@ -19,7 +19,7 @@
     ],
     "scripts": {
         "build": "hardhat compile",
-        "test": "NODE_OPTIONS='--max-old-space-size=4096' hardhat test",
+        "test": "NODE_OPTIONS='--max-old-space-size=6144' hardhat test",
         "testb": "BAIL=1 yarn test",
         "size": "hardhat size-contracts",
         "verify": "hardhat verify",

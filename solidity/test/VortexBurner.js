@@ -455,7 +455,7 @@ describe('VortexBurner', () => {
                                             // Perform the actual burn.
                                             const res = await vortex.burn(tokenAddresses);
 
-                                            expect(res)
+                                            await expect(res)
                                                 .to.emit(vortex, 'Burned')
                                                 .withArgs(
                                                     tokenAddresses,

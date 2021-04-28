@@ -99,7 +99,7 @@ describe('Whitelist', () => {
     it('verifies that an address can be added unless it is already added and removed unless it is already removed', async () => {
         expect(await whitelist.isWhitelisted(address1.address)).to.be.false;
 
-        expect(await whitelist.addAddress(address1.address))
+        await expect(await whitelist.addAddress(address1.address))
             .to.emit(whitelist, 'AddressAddition')
             .withArgs(address1.address);
         expect(await whitelist.isWhitelisted(address1.address)).to.be.true;
@@ -107,7 +107,7 @@ describe('Whitelist', () => {
         expect(await whitelist.addAddress(address1.address)).to.not.emit(whitelist, 'AddressAddition');
         expect(await whitelist.isWhitelisted(address1.address)).to.be.true;
 
-        expect(await whitelist.removeAddress(address1.address))
+        await expect(await whitelist.removeAddress(address1.address))
             .to.emit(whitelist, 'AddressRemoval')
             .withArgs(address1.address);
         expect(await whitelist.isWhitelisted(address1.address)).to.be.false;

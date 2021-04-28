@@ -34,7 +34,7 @@ describe('XTransferRerouter', () => {
     it('verify that calling rerouteTx emits an event properly', async () => {
         const txRouter = await Contracts.XTransferRerouter.deploy(true);
 
-        expect(await txRouter.connect(receiver).rerouteTx(txId, EOS_ADDRESS, EOS_BLOCKCHAIN))
+        await expect(await txRouter.connect(receiver).rerouteTx(txId, EOS_ADDRESS, EOS_BLOCKCHAIN))
             .to.emit(txRouter, 'TxReroute')
             .withArgs(txId, EOS_ADDRESS, EOS_BLOCKCHAIN);
     });

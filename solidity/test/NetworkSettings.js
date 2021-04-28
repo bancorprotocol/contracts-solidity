@@ -80,7 +80,7 @@ describe('NetworkSettings', () => {
         it('should suceed when setting a valid network fee wallet', async () => {
             const response = await networkSettings.setNetworkFeeWallet(address2.address);
             await expectReturn(networkSettings.networkFeeParams(), [address2.address, Number(portion1)]);
-            expect(response)
+            await expect(response)
                 .to.emit(networkSettings, 'NetworkFeeWalletUpdated')
                 .withArgs(address1.address, address2.address);
         });
@@ -88,7 +88,7 @@ describe('NetworkSettings', () => {
         it('should suceed when setting a valid network fee', async () => {
             const response = await networkSettings.setNetworkFee(portion2);
             await expectReturn(networkSettings.networkFeeParams(), [address1.address, Number(portion2)]);
-            expect(response).to.emit(networkSettings, 'NetworkFeeUpdated').withArgs(portion1, portion2);
+            await expect(response).to.emit(networkSettings, 'NetworkFeeUpdated').withArgs(portion1, portion2);
         });
     });
 });

@@ -184,7 +184,7 @@ describe('BancorX', () => {
     it('should emit an event when successfully locking tokens', async () => {
         const amount = TEST_AMOUNT;
 
-        expect(await bancorX['xTransfer(bytes32,bytes32,uint256)'](EOS_BLOCKCHAIN, EOS_ADDRESS, amount))
+        await expect(await bancorX['xTransfer(bytes32,bytes32,uint256)'](EOS_BLOCKCHAIN, EOS_ADDRESS, amount))
             .to.emit(bancorX, 'XTransfer')
             .withArgs(defaultSender.address, EOS_BLOCKCHAIN, EOS_ADDRESS, TEST_AMOUNT, BigNumber.from(0));
     });

@@ -239,7 +239,7 @@ describe('ConverterFactory', () => {
                 expect(await converter.owner()).to.be.eql(converterFactory.address);
                 expect(await converter.newOwner()).to.be.eql(owner.address);
 
-                expect(res)
+                await expect(res)
                     .to.emit(converterFactory, 'NewConverter')
                     .withArgs(converterType, converter.address, owner.address);
             });

@@ -56,7 +56,7 @@ describe('CheckpointStore', () => {
         const testCheckpoint = async (user) => {
             const res = await checkpointStore.connect(owner).addCheckpoint(user);
 
-            expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, now);
+            await expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, now);
 
             expect(await checkpointStore.checkpoint(user)).to.be.equal(now);
         };
@@ -64,7 +64,7 @@ describe('CheckpointStore', () => {
         const testPastCheckpoint = async (user, time) => {
             const res = await checkpointStore.connect(seeder).addPastCheckpoint(user, time);
 
-            expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, time);
+            await expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, time);
 
             expect(await checkpointStore.checkpoint(user)).to.be.equal(time);
         };
@@ -73,7 +73,7 @@ describe('CheckpointStore', () => {
             const res = await checkpointStore.connect(seeder).addPastCheckpoints(users, times);
 
             for (let i = 0; i < users.length; i++) {
-                expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(users[i], times[i]);
+                await expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(users[i], times[i]);
 
                 expect(await checkpointStore.checkpoint(users[i])).to.be.equal(times[i]);
             }

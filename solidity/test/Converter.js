@@ -264,7 +264,7 @@ describe('Converter', () => {
 
                     const newFee = BigNumber.from(30000);
 
-                    expect(await converter.setConversionFee(newFee))
+                    await expect(await converter.setConversionFee(newFee))
                         .to.emit(converter, 'ConversionFeeUpdate')
                         .withArgs(BigNumber.from(0), newFee);
                 });
@@ -276,7 +276,7 @@ describe('Converter', () => {
                     for (let i = 1; i <= 10; ++i) {
                         const newFee = BigNumber.from(10000 * i);
 
-                        expect(await converter.setConversionFee(newFee))
+                        await expect(await converter.setConversionFee(newFee))
                             .to.emit(converter, 'ConversionFeeUpdate')
                             .withArgs(prevFee, newFee);
 

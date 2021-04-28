@@ -276,7 +276,7 @@ describe('LiquidityProtectionSettings', () => {
             const prevMin = await settings.minNetworkTokenLiquidityForMinting();
             const newMin = BigNumber.from(100);
 
-            expect(await settings.setMinNetworkTokenLiquidityForMinting(newMin))
+            await expect(await settings.setMinNetworkTokenLiquidityForMinting(newMin))
                 .to.emit(settings, 'MinNetworkTokenLiquidityForMintingUpdated')
                 .withArgs(prevMin, newMin);
 
@@ -296,7 +296,7 @@ describe('LiquidityProtectionSettings', () => {
             const prevDefault = await settings.defaultNetworkTokenMintingLimit();
             const newDefault = BigNumber.from(100);
 
-            expect(await settings.setDefaultNetworkTokenMintingLimit(newDefault))
+            await expect(await settings.setDefaultNetworkTokenMintingLimit(newDefault))
                 .to.emit(settings, 'DefaultNetworkTokenMintingLimitUpdated')
                 .withArgs(prevDefault, newDefault);
 
@@ -316,7 +316,7 @@ describe('LiquidityProtectionSettings', () => {
             const prevLimit = await settings.networkTokenMintingLimits(poolToken.address);
             const newLimit = BigNumber.from(100);
 
-            expect(await settings.setNetworkTokenMintingLimit(poolToken.address, newLimit))
+            await expect(await settings.setNetworkTokenMintingLimit(poolToken.address, newLimit))
                 .to.emit(settings, 'NetworkTokenMintingLimitUpdated')
                 .withArgs(poolToken.address, prevLimit, newLimit);
 
@@ -340,7 +340,7 @@ describe('LiquidityProtectionSettings', () => {
             const newMinProtectionDelay = BigNumber.from(100);
             const newMaxProtectionDelay = BigNumber.from(200);
 
-            expect(await settings.setProtectionDelays(newMinProtectionDelay, 200))
+            await expect(await settings.setProtectionDelays(newMinProtectionDelay, 200))
                 .to.emit(settings, 'ProtectionDelaysUpdated')
                 .withArgs(prevMinProtectionDelay, newMinProtectionDelay, prevMaxProtectionDelay, newMaxProtectionDelay);
 
@@ -370,7 +370,7 @@ describe('LiquidityProtectionSettings', () => {
             const prevMinNetworkCompensation = await settings.minNetworkCompensation();
             const newMinNetworkCompensation = BigNumber.from(100);
 
-            expect(await settings.setMinNetworkCompensation(newMinNetworkCompensation))
+            await expect(await settings.setMinNetworkCompensation(newMinNetworkCompensation))
                 .to.emit(settings, 'MinNetworkCompensationUpdated')
                 .withArgs(prevMinNetworkCompensation, newMinNetworkCompensation);
 
@@ -392,7 +392,7 @@ describe('LiquidityProtectionSettings', () => {
             const prevLockDuration = await settings.lockDuration();
             const newLockDuration = BigNumber.from(100);
 
-            expect(await settings.setLockDuration(newLockDuration))
+            await expect(await settings.setLockDuration(newLockDuration))
                 .to.emit(settings, 'LockDurationUpdated')
                 .withArgs(prevLockDuration, newLockDuration);
 
@@ -413,7 +413,7 @@ describe('LiquidityProtectionSettings', () => {
         it('verifies that the owner can set the maximum deviation of the average rate from the actual rate', async () => {
             expect(await settings.averageRateMaxDeviation()).to.be.equal(BigNumber.from(5000));
 
-            expect(await settings.setAverageRateMaxDeviation(BigNumber.from(30000)))
+            await expect(await settings.setAverageRateMaxDeviation(BigNumber.from(30000)))
                 .to.emit(settings, 'AverageRateMaxDeviationUpdated')
                 .withArgs(BigNumber.from(5000), BigNumber.from(30000));
 
@@ -430,7 +430,7 @@ describe('LiquidityProtectionSettings', () => {
     describe('add liquidity', () => {
         it('verifies that the owner can disable add liquidity', async () => {
             expect(await settings.addLiquidityDisabled(poolToken.address, networkToken.address)).to.be.false;
-            expect(await settings.disableAddLiquidity(poolToken.address, networkToken.address, true))
+            await expect(await settings.disableAddLiquidity(poolToken.address, networkToken.address, true))
                 .to.emit(settings, 'AddLiquidityDisabled')
                 .withArgs(poolToken.address, networkToken.address, true);
             expect(await settings.addLiquidityDisabled(poolToken.address, networkToken.address)).to.be.true;
@@ -439,7 +439,7 @@ describe('LiquidityProtectionSettings', () => {
         it('verifies that the owner can enable add liquidity', async () => {
             await settings.disableAddLiquidity(poolToken.address, networkToken.address, true);
             expect(await settings.addLiquidityDisabled(poolToken.address, networkToken.address)).to.be.true;
-            expect(await settings.disableAddLiquidity(poolToken.address, networkToken.address, false))
+            await expect(await settings.disableAddLiquidity(poolToken.address, networkToken.address, false))
                 .to.emit(settings, 'AddLiquidityDisabled')
                 .withArgs(poolToken.address, networkToken.address, false);
             expect(await settings.addLiquidityDisabled(poolToken.address, networkToken.address)).to.be.false;

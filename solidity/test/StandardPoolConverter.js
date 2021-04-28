@@ -288,7 +288,9 @@ describe('StandardPoolConverter', () => {
                     await poolToken.transferOwnership(converter.address);
                     const res = await converter.acceptTokenOwnership();
 
-                    expect(res).to.emit(converter, 'Activation').withArgs(BigNumber.from(3), poolToken.address, true);
+                    await expect(res)
+                        .to.emit(converter, 'Activation')
+                        .withArgs(BigNumber.from(3), poolToken.address, true);
                 });
             });
 
@@ -367,7 +369,7 @@ describe('StandardPoolConverter', () => {
 
                     const { res } = await convert([reserveToken1, poolToken, reserveToken2], amount, MIN_RETURN);
 
-                    expect(res)
+                    await expect(res)
                         .to.emit(bancorNetwork, 'Conversion')
                         .withArgs(
                             poolToken.address,
@@ -714,11 +716,11 @@ describe('StandardPoolConverter', () => {
                     const reserve1Balance = await converter.reserveBalance(reserveToken1.address);
                     const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
 
-                    expect(res)
+                    await expect(res)
                         .to.emit(converter, 'TokenRateUpdate')
                         .withArgs(poolToken.address, reserveToken1.address, reserve1Balance, poolTokenSupply);
 
-                    expect(res)
+                    await expect(res)
                         .to.emit(converter, 'TokenRateUpdate')
                         .withArgs(poolToken.address, reserveToken2.address, reserve2Balance, poolTokenSupply);
                 });
@@ -736,11 +738,11 @@ describe('StandardPoolConverter', () => {
                     const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
                     await converter.reserveWeight(reserveToken2.address);
 
-                    expect(res)
+                    await expect(res)
                         .to.emit(converter, 'TokenRateUpdate')
                         .withArgs(poolToken.address, reserveToken1.address, reserve1Balance, poolTokenSupply);
 
-                    expect(res)
+                    await expect(res)
                         .to.emit(converter, 'TokenRateUpdate')
                         .withArgs(poolToken.address, reserveToken2.address, reserve2Balance, poolTokenSupply);
                 });

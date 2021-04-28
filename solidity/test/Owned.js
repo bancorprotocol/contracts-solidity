@@ -33,7 +33,7 @@ describe('Owned', () => {
 
     it('verifies that ownership transfer fires an OwnerUpdate event', async () => {
         await contract.transferOwnership(newOwner.address);
-        expect(await contract.connect(newOwner).acceptOwnership())
+        await expect(await contract.connect(newOwner).acceptOwnership())
             .to.emit(contract, 'OwnerUpdate')
             .withArgs(owner.address, newOwner.address);
     });
