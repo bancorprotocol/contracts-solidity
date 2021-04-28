@@ -1,4 +1,4 @@
-﻿# Bancor Protocol Contracts v0.6 (beta)
+﻿# Bancor Protocol Contracts v3.0.0 (beta)
 
 [![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://docs.bancor.network/)
 [![NPM Package](https://img.shields.io/npm/v/@bancor/contracts-solidity.svg)](https://www.npmjs.org/package/@bancor/contracts-solidity)
@@ -11,7 +11,7 @@ The main contracts are the BancorNetwork contract (entry point to the system) an
 
 ## Config
 
-In order to use some plugins or API keys we need a config.json file.
+In order to use some plugins, API keys or custom network with secret config we need a config.json file. You can check `hardhat.config.js` for more details.
 
 ```json
 {
