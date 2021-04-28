@@ -14,7 +14,7 @@
     "license": "SEE LICENSE IN LICENSE",
     "files": [
         "/solidity/contracts/**/*.sol",
-        "/solidity/build/contracts/*.json",
+        "/solidity/build/*.abi",
         "!/solidity/contracts/helpers"
     ],
     "scripts": {
