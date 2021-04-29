@@ -20,10 +20,10 @@ import "./bancorx/interfaces/IBancorX.sol";
 // interface of older converters for backward compatibility
 interface ILegacyConverter {
     function change(
-        IReserveToken _sourceToken,
-        IReserveToken _targetToken,
-        uint256 _amount,
-        uint256 _minReturn
+        IReserveToken sourceToken,
+        IReserveToken targetToken,
+        uint256 sourceAmount,
+        uint256 minReturn
     ) external returns (uint256);
 }
 
@@ -83,26 +83,26 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev initializes a new BancorNetwork instance
      *
-     * @param _registry    address of a contract registry contract
+     * @param registry address of a contract registry contract
      */
-    constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {}
+    constructor(IContractRegistry registry) public ContractRegistryClient(registry) {}
 
     /**
      * @dev returns the conversion path between two tokens in the network
      * note that this method is quite expensive in terms of gas and should generally be called off-chain
      *
-     * @param _sourceToken source reserve token address
-     * @param _targetToken target reserve token address
+     * @param sourceToken source reserve token address
+     * @param targetToken target reserve token address
      *
      * @return conversion path between the two tokens
      */
-    function conversionPath(IReserveToken _sourceToken, IReserveToken _targetToken)
+    function conversionPath(IReserveToken sourceToken, IReserveToken targetToken)
         public
         view
         returns (address[] memory)
     {
         IConversionPathFinder pathFinder = IConversionPathFinder(addressOf(CONVERSION_PATH_FINDER));
-        return pathFinder.findPath(_sourceToken, _targetToken);
+        return pathFinder.findPath(sourceToken, targetToken);
     }
 
     /**
@@ -110,7 +110,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
      * note that there is no support for circular paths
      *
      * @param path conversion path (see conversion path format above)
-     * @param sourceAmount amount of _path[0] tokens received from the sender
+     * @param sourceAmount amount of path[0] tokens received from the sender
      *
      * @return expected target amount
      */
@@ -137,34 +137,33 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
      * a predefined conversion path and transfers the result tokens to a target account
      * note that the network should already have been given allowance of the source token (if not ETH)
      *
-     * @param _path                conversion path, see conversion path format above
-     * @param _amount              amount to convert from, in the source token
-     * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-     * @param _beneficiary         account that will receive the conversion result or 0x0 to send the result to the sender account
+     * @param path conversion path, see conversion path format above
+     * @param sourceAmount amount to convert from, in the source token
+     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
+     * @param beneficiary account that will receive the conversion result or 0x0 to send the result to the sender account
      *
      * @return amount of tokens received from the conversion
      */
     function convertByPath2(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address payable _beneficiary
-    ) public payable protected greaterThanZero(_minReturn) returns (uint256) {
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address payable beneficiary
+    ) public payable protected greaterThanZero(minReturn) returns (uint256) {
         // verify that the path contains at least a single 'hop' and that the number of elements is odd
-        require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
+        require(path.length > 2 && path.length % 2 == 1, "ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
-        handleSourceToken(IReserveToken(_path[0]), IConverterAnchor(_path[1]), _amount);
+        handleSourceToken(IReserveToken(path[0]), IConverterAnchor(path[1]), sourceAmount);
 
         // check if beneficiary is set
-        address payable beneficiary = msg.sender;
-        if (_beneficiary != address(0)) {
-            beneficiary = _beneficiary;
+        if (beneficiary != address(0)) {
+            beneficiary = msg.sender;
         }
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(_path, beneficiary);
-        uint256 amount = doConversion(data, _amount, _minReturn);
+        ConversionStep[] memory data = createConversionData(path, beneficiary);
+        uint256 amount = doConversion(data, sourceAmount, minReturn);
 
         // handle the conversion target tokens
         handleTargetToken(data, amount, beneficiary);
@@ -177,37 +176,37 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
       a predefined conversion path and transfers the result to an account on a different blockchain
       * note that the network should already have been given allowance of the source token (if not ETH)
       *
-      * @param _path                conversion path, see conversion path format above
-      * @param _amount              amount to convert from, in the source token
-      * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-      * @param _targetBlockchain    blockchain BNT will be issued on
-      * @param _targetAccount       address/account on the target blockchain to send the BNT to
-      * @param _conversionId        pre-determined unique (if non zero) id which refers to this transaction
+      * @param path conversion path, see conversion path format above
+      * @param sourceAmount amount to convert from, in the source token
+      * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
+      * @param targetBlockchain blockchain BNT will be issued on
+      * @param targetAccount address/account on the target blockchain to send the BNT to
+      * @param conversionId pre-determined unique (if non zero) id which refers to this transaction
       *
       * @return the amount of BNT received from this conversion
     */
     function xConvert(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        bytes32 _targetBlockchain,
-        bytes32 _targetAccount,
-        uint256 _conversionId
-    ) public payable greaterThanZero(_minReturn) returns (uint256) {
-        IReserveToken targetToken = IReserveToken(_path[_path.length - 1]);
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        bytes32 targetBlockchain,
+        bytes32 targetAccount,
+        uint256 conversionId
+    ) public payable greaterThanZero(minReturn) returns (uint256) {
+        IReserveToken targetToken = IReserveToken(path[path.length - 1]);
         IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
 
         // verify that the destination token is BNT
         require(targetToken == IReserveToken(addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
 
         // convert and get the resulting amount
-        uint256 amount = convertByPath2(_path, _amount, _minReturn, payable(address(this)));
+        uint256 amount = convertByPath2(path, sourceAmount, minReturn, payable(address(this)));
 
         // grant BancorX allowance
         targetToken.ensureApprove(address(bancorX), amount);
 
         // transfer the resulting amount to BancorX
-        bancorX.xTransfer(_targetBlockchain, _targetAccount, amount, _conversionId);
+        bancorX.xTransfer(targetBlockchain, targetAccount, amount, conversionId);
 
         return amount;
     }
@@ -219,29 +218,29 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
      * so the input amount isn't known at that point - the amount is actually take from the
      * BancorX contract directly by specifying the conversion id
      *
-     * @param _path            conversion path
-     * @param _bancorX         address of the BancorX contract for the source token
-     * @param _conversionId    pre-determined unique (if non zero) id which refers to this conversion
-     * @param _minReturn       if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-     * @param _beneficiary     wallet to receive the conversion result
+     * @param path conversion path
+     * @param bancorX address of the BancorX contract for the source token
+     * @param conversionId pre-determined unique (if non zero) id which refers to this conversion
+     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
+     * @param beneficiary wallet to receive the conversion result
      *
      * @return amount of tokens received from the conversion
      */
     function completeXConversion(
-        address[] memory _path,
-        IBancorX _bancorX,
-        uint256 _conversionId,
-        uint256 _minReturn,
-        address payable _beneficiary
+        address[] memory path,
+        IBancorX bancorX,
+        uint256 conversionId,
+        uint256 minReturn,
+        address payable beneficiary
     ) public returns (uint256) {
         // verify that the source token is the BancorX token
-        require(_path[0] == address(_bancorX.token()), "ERR_INVALID_SOURCE_TOKEN");
+        require(path[0] == address(bancorX.token()), "ERR_INVALID_SOURCE_TOKEN");
 
         // get conversion amount from BancorX contract
-        uint256 amount = _bancorX.getXTransferAmount(_conversionId, msg.sender);
+        uint256 amount = bancorX.getXTransferAmount(conversionId, msg.sender);
 
         // perform the conversion
-        return convertByPath2(_path, amount, _minReturn, _beneficiary);
+        return convertByPath2(path, amount, minReturn, beneficiary);
     }
 
     /**
@@ -324,30 +323,30 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev validates msg.value and prepares the conversion source token for the conversion
      *
-     * @param _sourceToken source token of the first conversion step
-     * @param _anchor      converter anchor of the first conversion step
-     * @param _amount      amount to convert from, in the source token
+     * @param sourceToken source token of the first conversion step
+     * @param anchor converter anchor of the first conversion step
+     * @param sourceAmount amount to convert from, in the source token
      */
     function handleSourceToken(
-        IReserveToken _sourceToken,
-        IConverterAnchor _anchor,
-        uint256 _amount
+        IReserveToken sourceToken,
+        IConverterAnchor anchor,
+        uint256 sourceAmount
     ) private {
-        IConverter firstConverter = IConverter(payable(_anchor.owner()));
+        IConverter firstConverter = IConverter(payable(anchor.owner()));
         bool isNewerConverter = isV28OrHigherConverter(firstConverter);
 
         if (msg.value > 0) {
-            require(msg.value == _amount, "ERR_ETH_AMOUNT_MISMATCH");
-            require(_sourceToken.isNativeToken(), "ERR_INVALID_SOURCE_TOKEN");
+            require(msg.value == sourceAmount, "ERR_ETH_AMOUNT_MISMATCH");
+            require(sourceToken.isNativeToken(), "ERR_INVALID_SOURCE_TOKEN");
             require(isNewerConverter, "ERR_CONVERTER_NOT_SUPPORTED");
         } else {
-            require(!_sourceToken.isNativeToken(), "ERR_INVALID_SOURCE_TOKEN");
+            require(!sourceToken.isNativeToken(), "ERR_INVALID_SOURCE_TOKEN");
             if (isNewerConverter) {
                 // newer converter - transfer the tokens from the sender directly to the converter
-                _sourceToken.safeTransferFrom(msg.sender, address(firstConverter), _amount);
+                sourceToken.safeTransferFrom(msg.sender, address(firstConverter), sourceAmount);
             } else {
                 // otherwise claim the tokens
-                _sourceToken.safeTransferFrom(msg.sender, address(this), _amount);
+                sourceToken.safeTransferFrom(msg.sender, address(this), sourceAmount);
             }
         }
     }
@@ -355,16 +354,16 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev handles the conversion target token if the network still holds it at the end of the conversion
      *
-     * @param _data        conversion data, see ConversionStep struct above
-     * @param _amount      conversion target amount
-     * @param _beneficiary wallet to receive the conversion result
+     * @param data conversion data, see ConversionStep struct above
+     * @param targetAmount conversion target amount
+     * @param beneficiary wallet to receive the conversion result
      */
     function handleTargetToken(
-        ConversionStep[] memory _data,
-        uint256 _amount,
-        address payable _beneficiary
+        ConversionStep[] memory data,
+        uint256 targetAmount,
+        address payable beneficiary
     ) private {
-        ConversionStep memory stepData = _data[_data.length - 1];
+        ConversionStep memory stepData = data[data.length - 1];
 
         // network contract doesn't hold the tokens, do nothing
         if (stepData.beneficiary != address(this)) {
@@ -373,35 +372,35 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
         IReserveToken targetToken = stepData.targetToken;
         assert(!targetToken.isNativeToken());
-        targetToken.safeTransfer(_beneficiary, _amount);
+        targetToken.safeTransfer(beneficiary, targetAmount);
     }
 
     /**
      * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
      *
-     * @param _conversionPath      conversion path, see conversion path format above
-     * @param _beneficiary         wallet to receive the conversion result
+     * @param path conversion path, see conversion path format above
+     * @param beneficiary wallet to receive the conversion result
      *
      * @return cached conversion data to be ingested later on by the conversion flow
      */
-    function createConversionData(address[] memory _conversionPath, address payable _beneficiary)
+    function createConversionData(address[] memory path, address payable beneficiary)
         private
         view
         returns (ConversionStep[] memory)
     {
-        ConversionStep[] memory data = new ConversionStep[](_conversionPath.length / 2);
+        ConversionStep[] memory data = new ConversionStep[](path.length / 2);
 
         // iterate the conversion path and create the conversion data for each step
         uint256 i;
-        for (i = 0; i < _conversionPath.length - 1; i += 2) {
-            IConverterAnchor anchor = IConverterAnchor(_conversionPath[i + 1]);
+        for (i = 0; i < path.length - 1; i += 2) {
+            IConverterAnchor anchor = IConverterAnchor(path[i + 1]);
             IConverter converter = IConverter(payable(anchor.owner()));
-            IReserveToken targetToken = IReserveToken(_conversionPath[i + 2]);
+            IReserveToken targetToken = IReserveToken(path[i + 2]);
 
             data[i / 2] = ConversionStep({ // set the converter anchor
                 anchor: anchor, // set the converter
                 converter: converter, // set the source/target tokens
-                sourceToken: IReserveToken(_conversionPath[i]),
+                sourceToken: IReserveToken(path[i]),
                 targetToken: targetToken, // requires knowledge about the next step, so initialize in the next phase
                 beneficiary: address(0), // set flags
                 isV28OrHigherConverter: isV28OrHigherConverter(converter)
@@ -415,7 +414,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             if (stepData.isV28OrHigherConverter) {
                 if (i == data.length - 1) {
                     // converter in this step is newer, beneficiary is the user input address
-                    stepData.beneficiary = _beneficiary;
+                    stepData.beneficiary = beneficiary;
                 } else if (data[i + 1].isV28OrHigherConverter) {
                     // the converter in the next step is newer, beneficiary is the next converter
                     stepData.beneficiary = address(data[i + 1].converter);
@@ -436,13 +435,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     // using a static call to get the return from older converters
     function getReturn(
-        IConverter _dest,
-        IReserveToken _sourceToken,
-        IReserveToken _targetToken,
-        uint256 _amount
+        IConverter dest,
+        IReserveToken sourceToken,
+        IReserveToken targetToken,
+        uint256 sourceAmount
     ) internal view returns (uint256, uint256) {
-        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, _sourceToken, _targetToken, _amount);
-        (bool success, bytes memory returnData) = address(_dest).staticcall(data);
+        bytes memory data = abi.encodeWithSelector(GET_RETURN_FUNC_SELECTOR, sourceToken, targetToken, sourceAmount);
+        (bool success, bytes memory returnData) = address(dest).staticcall(data);
 
         if (success) {
             if (returnData.length == 64) {
@@ -461,9 +460,9 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     // using a static call to identify converter version
     // can't rely on the version number since the function had a different signature in older converters
-    function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
+    function isV28OrHigherConverter(IConverter converter) internal view returns (bool) {
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
-        (bool success, bytes memory returnData) = address(_converter).staticcall{ gas: 4000 }(data);
+        (bool success, bytes memory returnData) = address(converter).staticcall{ gas: 4000 }(data);
 
         if (success && returnData.length == 32) {
             return abi.decode(returnData, (bool));
@@ -475,121 +474,121 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev deprecated, backward compatibility
      */
-    function getReturnByPath(address[] memory _path, uint256 _amount) public view returns (uint256, uint256) {
-        return (rateByPath(_path, _amount), 0);
+    function getReturnByPath(address[] memory path, uint256 sourceAmount) public view returns (uint256, uint256) {
+        return (rateByPath(path, sourceAmount), 0);
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function convertByPath(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address payable _beneficiary,
-        address, /* _affiliateAccount */
-        uint256 /* _affiliateFee */
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address payable beneficiary,
+        address, /* affiliateAccount */
+        uint256 /* affiliateFee */
     ) public payable override returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, _beneficiary);
+        return convertByPath2(path, sourceAmount, minReturn, beneficiary);
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function convert(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn
     ) public payable returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, address(0));
+        return convertByPath2(path, sourceAmount, minReturn, address(0));
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function convert2(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address, /* _affiliateAccount */
-        uint256 /* _affiliateFee */
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address, /* affiliateAccount */
+        uint256 /* affiliateFee */
     ) public payable returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, address(0));
+        return convertByPath2(path, sourceAmount, minReturn, address(0));
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function convertFor(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address payable _beneficiary
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address payable beneficiary
     ) public payable returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, _beneficiary);
+        return convertByPath2(path, sourceAmount, minReturn, beneficiary);
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function convertFor2(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address payable _beneficiary,
-        address, /* _affiliateAccount */
-        uint256 /* _affiliateFee */
-    ) public payable greaterThanZero(_minReturn) returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, _beneficiary);
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address payable beneficiary,
+        address, /* affiliateAccount */
+        uint256 /* affiliateFee */
+    ) public payable greaterThanZero(minReturn) returns (uint256) {
+        return convertByPath2(path, sourceAmount, minReturn, beneficiary);
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function claimAndConvert(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn
     ) public returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, address(0));
+        return convertByPath2(path, sourceAmount, minReturn, address(0));
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function claimAndConvert2(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address, /* _affiliateAccount */
-        uint256 /* _affiliateFee */
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address, /* affiliateAccount */
+        uint256 /* affiliateFee */
     ) public returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, address(0));
+        return convertByPath2(path, sourceAmount, minReturn, address(0));
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function claimAndConvertFor(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address payable _beneficiary
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address payable beneficiary
     ) public returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, _beneficiary);
+        return convertByPath2(path, sourceAmount, minReturn, beneficiary);
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
     function claimAndConvertFor2(
-        address[] memory _path,
-        uint256 _amount,
-        uint256 _minReturn,
-        address payable _beneficiary,
-        address, /* _affiliateAccount */
-        uint256 /* _affiliateFee */
+        address[] memory path,
+        uint256 sourceAmount,
+        uint256 minReturn,
+        address payable beneficiary,
+        address, /* affiliateAccount */
+        uint256 /* affiliateFee */
     ) public returns (uint256) {
-        return convertByPath2(_path, _amount, _minReturn, _beneficiary);
+        return convertByPath2(path, sourceAmount, minReturn, beneficiary);
     }
 }
