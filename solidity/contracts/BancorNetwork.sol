@@ -157,7 +157,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         handleSourceToken(IReserveToken(path[0]), IConverterAnchor(path[1]), sourceAmount);
 
         // check if beneficiary is set
-        if (beneficiary != address(0)) {
+        if (beneficiary == address(0)) {
             beneficiary = msg.sender;
         }
 
