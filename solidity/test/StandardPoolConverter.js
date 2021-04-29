@@ -126,7 +126,7 @@ describe('StandardPoolConverter', () => {
             fromBlock: res.receipt.blockNumber
         });
         const args = events.slice(-1)[0].args;
-        return { res, amount: args.returnAmount, fee: args.conversionFee };
+        return { res, amount: args.targetAmount, fee: args.conversionFee };
     };
 
     const getBalance = async (reserveToken, account) => {
@@ -391,7 +391,7 @@ describe('StandardPoolConverter', () => {
                         sourceToken: reserveToken1.address,
                         targetToken: reserveToken2.address,
                         sourceAmount: amount,
-                        returnAmount: purchaseAmount
+                        targetAmount: purchaseAmount
                     });
                 });
 

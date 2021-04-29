@@ -68,7 +68,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
      * @param sourceToken source reserve token
      * @param targetToken target reserve token
      * @param sourceAmount amount converted, in the source token
-     * @param returnAmount amount returned, minus conversion fee
+     * @param targetAmount amount returned, minus conversion fee
      * @param trader wallet that initiated the trade
      */
     event Conversion(
@@ -76,7 +76,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         IReserveToken indexed sourceToken,
         IReserveToken indexed targetToken,
         uint256 sourceAmount,
-        uint256 returnAmount,
+        uint256 targetAmount,
         address trader
     );
 
@@ -109,22 +109,22 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
      * @dev returns the expected target amount of converting a given amount on a given path
      * note that there is no support for circular paths
      *
-     * @param _path        conversion path (see conversion path format above)
-     * @param _amount      amount of _path[0] tokens received from the sender
+     * @param path conversion path (see conversion path format above)
+     * @param sourceAmount amount of _path[0] tokens received from the sender
      *
      * @return expected target amount
      */
-    function rateByPath(address[] memory _path, uint256 _amount) public view override returns (uint256) {
+    function rateByPath(address[] memory path, uint256 sourceAmount) public view override returns (uint256) {
         // verify that the number of elements is larger than 2 and odd
-        require(_path.length > 2 && _path.length % 2 == 1, "ERR_INVALID_PATH");
+        require(path.length > 2 && path.length % 2 == 1, "ERR_INVALID_PATH");
 
-        uint256 amount = _amount;
+        uint256 amount = sourceAmount;
 
         // iterate over the conversion path
-        for (uint256 i = 2; i < _path.length; i += 2) {
-            IReserveToken sourceToken = IReserveToken(_path[i - 2]);
-            address anchor = _path[i - 1];
-            IReserveToken targetToken = IReserveToken(_path[i]);
+        for (uint256 i = 2; i < path.length; i += 2) {
+            IReserveToken sourceToken = IReserveToken(path[i - 2]);
+            address anchor = path[i - 1];
+            IReserveToken targetToken = IReserveToken(path[i]);
             IConverter converter = IConverter(payable(IConverterAnchor(anchor).owner()));
             (amount, ) = getReturn(converter, sourceToken, targetToken, amount);
         }
@@ -247,59 +247,58 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev executes the actual conversion by following the conversion path
      *
-     * @param _data                conversion data, see ConversionStep struct above
-     * @param _amount              amount to convert from, in the source token
-     * @param _minReturn           if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
+     * @param data conversion data, see ConversionStep struct above
+     * @param sourceAmount amount to convert from, in the source token
+     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
      *
      * @return amount of tokens received from the conversion
      */
     function doConversion(
-        ConversionStep[] memory _data,
-        uint256 _amount,
-        uint256 _minReturn
+        ConversionStep[] memory data,
+        uint256 sourceAmount,
+        uint256 minReturn
     ) private returns (uint256) {
-        uint256 toAmount;
-        uint256 fromAmount = _amount;
+        uint256 targetAmount;
 
         // iterate over the conversion data
-        for (uint256 i = 0; i < _data.length; i++) {
-            ConversionStep memory stepData = _data[i];
+        for (uint256 i = 0; i < data.length; i++) {
+            ConversionStep memory stepData = data[i];
 
             // newer converter
             if (stepData.isV28OrHigherConverter) {
                 // transfer the tokens to the converter only if the network contract currently holds the tokens
                 // not needed with ETH or if it's the first conversion step
-                if (i != 0 && _data[i - 1].beneficiary == address(this) && !stepData.sourceToken.isNativeToken()) {
-                    stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
+                if (i != 0 && data[i - 1].beneficiary == address(this) && !stepData.sourceToken.isNativeToken()) {
+                    stepData.sourceToken.safeTransfer(address(stepData.converter), sourceAmount);
                 }
             } else if (address(stepData.sourceToken) != address(stepData.anchor)) {
                 // if the source token is the liquid token, no need to do any transfers as the converter controls it
 
                 // grant allowance for it to transfer the tokens from the network contract
-                stepData.sourceToken.ensureApprove(address(stepData.converter), fromAmount);
+                stepData.sourceToken.ensureApprove(address(stepData.converter), sourceAmount);
             }
 
             // do the conversion
             if (!stepData.isV28OrHigherConverter) {
-                toAmount = ILegacyConverter(address(stepData.converter)).change(
+                targetAmount = ILegacyConverter(address(stepData.converter)).change(
                     stepData.sourceToken,
                     stepData.targetToken,
-                    fromAmount,
+                    sourceAmount,
                     1
                 );
             } else if (stepData.sourceToken.isNativeToken()) {
-                toAmount = stepData.converter.convert{ value: msg.value }(
+                targetAmount = stepData.converter.convert{ value: msg.value }(
                     stepData.sourceToken,
                     stepData.targetToken,
-                    fromAmount,
+                    sourceAmount,
                     msg.sender,
                     stepData.beneficiary
                 );
             } else {
-                toAmount = stepData.converter.convert(
+                targetAmount = stepData.converter.convert(
                     stepData.sourceToken,
                     stepData.targetToken,
-                    fromAmount,
+                    sourceAmount,
                     msg.sender,
                     stepData.beneficiary
                 );
@@ -309,17 +308,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 stepData.anchor,
                 stepData.sourceToken,
                 stepData.targetToken,
-                fromAmount,
-                toAmount,
+                sourceAmount,
+                targetAmount,
                 msg.sender
             );
-            fromAmount = toAmount;
+            sourceAmount = targetAmount;
         }
 
         // ensure the trade meets the minimum requested amount
-        require(toAmount >= _minReturn, "ERR_RETURN_TOO_LOW");
+        require(targetAmount >= minReturn, "ERR_RETURN_TOO_LOW");
 
-        return toAmount;
+        return targetAmount;
     }
 
     /**
