@@ -126,7 +126,7 @@ describe('StandardPoolConverter', () => {
             fromBlock: res.receipt.blockNumber
         });
         const args = events.slice(-1)[0].args;
-        return { res, amount: args.returnAmount, fee: args.conversionFee };
+        return { res, amount: args.targetAmount, fee: args.conversionFee };
     };
 
     const getBalance = async (reserveToken, account) => {
@@ -387,11 +387,11 @@ describe('StandardPoolConverter', () => {
                     const { res } = await convert([reserveToken1, poolToken, reserveToken2], amount, MIN_RETURN);
 
                     expectEvent(res, 'Conversion', {
-                        _smartToken: poolToken.address,
-                        _fromToken: reserveToken1.address,
-                        _toToken: reserveToken2.address,
-                        _fromAmount: amount,
-                        _toAmount: purchaseAmount
+                        anchor: poolToken.address,
+                        sourceToken: reserveToken1.address,
+                        targetToken: reserveToken2.address,
+                        sourceAmount: amount,
+                        targetAmount: purchaseAmount
                     });
                 });
 
