@@ -8,7 +8,7 @@ yarn-debug.log*
 yarn-error.log*
 
 cache
-solidity/build
+build
 .coverage_artifacts
 .coverage_contracts
 coverage

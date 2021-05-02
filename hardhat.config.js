@@ -62,21 +62,21 @@ module.exports = {
         disambiguatePaths: false
     },
     abiExporter: {
-        path: './solidity/build/abi',
+        path: './build/abi',
         clear: true
     },
 
     // System Config
     paths: {
-        sources: './solidity/contracts',
-        tests: './solidity/test',
+        sources: './contracts',
+        tests: './test',
         cache: './cache',
-        artifacts: './solidity/build/contracts'
+        artifacts: './build/contracts'
     },
 
     // Test Config
     mocha: {
-        spec: argv.spec || 'solidity/test',
+        spec: argv.spec || 'test',
         exit: true,
         recursive: true,
         before_timeout: 600000,

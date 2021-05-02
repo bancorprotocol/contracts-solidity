@@ -1,7 +1,7 @@
 .vscode/
 /node_modules
 
-solidity/build
+build
 .coverage_artifacts
 .coverage_contracts
 coverage
