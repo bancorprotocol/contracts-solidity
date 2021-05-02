@@ -123,7 +123,7 @@ describe('StandardPoolConverter', () => {
         const converter = await Contracts.TestStandardPoolConverter.attach(await poolToken.owner());
         const events = await converter.queryFilter('Conversion', res.blockNumber, res.blockNumber);
         const args = events.slice(-1)[0].args;
-        return { res, amount: args.returnAmount, fee: args.conversionFee };
+        return { res, amount: args.targetAmount, fee: args.conversionFee };
     };
 
     const getBalance = async (reserveToken, account) => {

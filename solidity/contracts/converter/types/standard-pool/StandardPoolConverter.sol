@@ -452,7 +452,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param sourceToken source reserve token
      * @param targetToken target reserve token
-     * @param amount amount of tokens to convert (in units of the source token)
+     * @param sourceAmount amount of tokens to convert (in units of the source token)
      * @param trader address of the caller who executed the conversion
      * @param beneficiary wallet to receive the conversion result
      *
@@ -461,13 +461,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function convert(
         IReserveToken sourceToken,
         IReserveToken targetToken,
-        uint256 amount,
+        uint256 sourceAmount,
         address trader,
         address payable beneficiary
     ) external payable override protected only(BANCOR_NETWORK) returns (uint256) {
         require(sourceToken != targetToken, "ERR_SAME_SOURCE_TARGET");
 
-        return doConvert(sourceToken, targetToken, amount, trader, beneficiary);
+        return doConvert(sourceToken, targetToken, sourceAmount, trader, beneficiary);
     }
 
     /**
@@ -576,19 +576,19 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      * @param sourceToken source ERC20 token
      * @param targetToken target ERC20 token
      * @param trader address of the caller who executed the conversion
-     * @param amount amount purchased/sold (in the source token)
-     * @param returnAmount amount returned (in the target token)
+     * @param sourceAmount amount purchased/sold (in the source token)
+     * @param targetAmount amount returned (in the target token)
      * @param feeAmount the fee amount
      */
     function dispatchConversionEvent(
         IReserveToken sourceToken,
         IReserveToken targetToken,
         address trader,
-        uint256 amount,
-        uint256 returnAmount,
+        uint256 sourceAmount,
+        uint256 targetAmount,
         uint256 feeAmount
     ) private {
-        emit Conversion(sourceToken, targetToken, trader, amount, returnAmount, int256(feeAmount));
+        emit Conversion(sourceToken, targetToken, trader, sourceAmount, targetAmount, int256(feeAmount));
     }
 
     /**
@@ -596,7 +596,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param sourceToken address of the source reserve token contract
      * @param targetToken address of the target reserve token contract
-     * @param amount amount of source reserve tokens converted
+     * @param sourceAmount amount of source reserve tokens converted
      *
      * @return expected amount in units of the target reserve token
      * @return expected fee in units of the target reserve token
@@ -604,14 +604,14 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function targetAmountAndFee(
         IReserveToken sourceToken,
         IReserveToken targetToken,
-        uint256 amount
+        uint256 sourceAmount
     ) public view virtual override active returns (uint256, uint256) {
         uint256 sourceId = _reserveIds[sourceToken];
         uint256 targetId = _reserveIds[targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
 
-        return targetAmountAndFee(sourceToken, targetToken, sourceBalance, targetBalance, amount);
+        return targetAmountAndFee(sourceToken, targetToken, sourceBalance, targetBalance, sourceAmount);
     }
 
     /**
@@ -619,7 +619,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param sourceBalance balance in the source reserve token contract
      * @param targetBalance balance in the target reserve token contract
-     * @param amount amount of source reserve tokens converted
+     * @param sourceAmount amount of source reserve tokens converted
      *
      * @return expected amount in units of the target reserve token
      * @return expected fee in units of the target reserve token
@@ -629,9 +629,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         IReserveToken, /* targetToken */
         uint256 sourceBalance,
         uint256 targetBalance,
-        uint256 amount
+        uint256 sourceAmount
     ) private view returns (uint256, uint256) {
-        uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, amount);
+        uint256 targetAmount = crossReserveTargetAmount(sourceBalance, targetBalance, sourceAmount);
 
         uint256 fee = calculateFee(targetAmount);
 
@@ -643,7 +643,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param sourceToken address of the source reserve token contract
      * @param targetToken address of the target reserve token contract
-     * @param amount amount of target reserve tokens desired
+     * @param targetAmount amount of target reserve tokens desired
      *
      * @return required amount in units of the source reserve token
      * @return expected fee in units of the target reserve token
@@ -651,18 +651,18 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function sourceAmountAndFee(
         IReserveToken sourceToken,
         IReserveToken targetToken,
-        uint256 amount
+        uint256 targetAmount
     ) public view virtual active returns (uint256, uint256) {
         uint256 sourceId = _reserveIds[sourceToken];
         uint256 targetId = _reserveIds[targetToken];
 
         (uint256 sourceBalance, uint256 targetBalance) = reserveBalances(sourceId, targetId);
 
-        uint256 fee = calculateFeeInv(amount);
+        uint256 fee = calculateFeeInv(targetAmount);
 
-        uint256 targetAmount = crossReserveSourceAmount(sourceBalance, targetBalance, amount.add(fee));
+        uint256 sourceAmount = crossReserveSourceAmount(sourceBalance, targetBalance, targetAmount.add(fee));
 
-        return (targetAmount, fee);
+        return (sourceAmount, fee);
     }
 
     /**
@@ -670,7 +670,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      *
      * @param sourceToken source reserve token
      * @param targetToken target reserve token
-     * @param amount amount of tokens to convert (in units of the source token)
+     * @param sourceAmount amount of tokens to convert (in units of the source token)
      * @param trader address of the caller who executed the conversion
      * @param beneficiary wallet to receive the conversion result
      *
@@ -679,7 +679,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function doConvert(
         IReserveToken sourceToken,
         IReserveToken targetToken,
-        uint256 amount,
+        uint256 sourceAmount,
         address trader,
         address payable beneficiary
     ) private returns (uint256) {
@@ -693,7 +693,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         // get the target amount minus the conversion fee and the conversion fee
         (uint256 targetAmount, uint256 fee) =
-            targetAmountAndFee(sourceToken, targetToken, sourceBalance, targetBalance, amount);
+            targetAmountAndFee(sourceToken, targetToken, sourceBalance, targetBalance, sourceAmount);
 
         // ensure that the trade gives something in return
         require(targetAmount != 0, "ERR_ZERO_TARGET_AMOUNT");
@@ -704,9 +704,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         // ensure that the input amount was already deposited
         uint256 actualSourceBalance = sourceToken.balanceOf(address(this));
         if (sourceToken.isNativeToken()) {
-            require(msg.value == amount, "ERR_ETH_AMOUNT_MISMATCH");
+            require(msg.value == sourceAmount, "ERR_ETH_AMOUNT_MISMATCH");
         } else {
-            require(msg.value == 0 && actualSourceBalance.sub(sourceBalance) >= amount, "ERR_INVALID_AMOUNT");
+            require(msg.value == 0 && actualSourceBalance.sub(sourceBalance) >= sourceAmount, "ERR_INVALID_AMOUNT");
         }
 
         // sync the reserve balances
@@ -716,7 +716,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         targetToken.safeTransfer(beneficiary, targetAmount);
 
         // dispatch the conversion event
-        dispatchConversionEvent(sourceToken, targetToken, trader, amount, targetAmount, fee);
+        dispatchConversionEvent(sourceToken, targetToken, trader, sourceAmount, targetAmount, fee);
 
         // dispatch rate updates
         dispatchTokenRateUpdateEvents(sourceToken, targetToken, actualSourceBalance, targetBalance - targetAmount);
@@ -1224,26 +1224,26 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function crossReserveTargetAmount(
         uint256 sourceReserveBalance,
         uint256 targetReserveBalance,
-        uint256 amount
+        uint256 sourceAmount
     ) private pure returns (uint256) {
         require(sourceReserveBalance > 0 && targetReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
 
-        return targetReserveBalance.mul(amount) / sourceReserveBalance.add(amount);
+        return targetReserveBalance.mul(sourceAmount) / sourceReserveBalance.add(sourceAmount);
     }
 
     function crossReserveSourceAmount(
         uint256 sourceReserveBalance,
         uint256 targetReserveBalance,
-        uint256 amount
+        uint256 targetAmount
     ) private pure returns (uint256) {
         require(sourceReserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
-        require(amount < targetReserveBalance, "ERR_INVALID_AMOUNT");
+        require(targetAmount < targetReserveBalance, "ERR_INVALID_AMOUNT");
 
-        if (amount == 0) {
+        if (targetAmount == 0) {
             return 0;
         }
 
-        return (sourceReserveBalance.mul(amount) - 1) / (targetReserveBalance - amount) + 1;
+        return (sourceReserveBalance.mul(targetAmount) - 1) / (targetReserveBalance - targetAmount) + 1;
     }
 
     function fundCost(
@@ -1404,8 +1404,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function getReturn(
         IReserveToken sourceToken,
         IReserveToken targetToken,
-        uint256 amount
+        uint256 sourceAmount
     ) external view returns (uint256, uint256) {
-        return targetAmountAndFee(sourceToken, targetToken, amount);
+        return targetAmountAndFee(sourceToken, targetToken, sourceAmount);
     }
 }

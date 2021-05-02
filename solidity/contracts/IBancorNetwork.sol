@@ -2,11 +2,11 @@
 pragma solidity 0.6.12;
 
 interface IBancorNetwork {
-    function rateByPath(address[] memory path, uint256 amount) external view returns (uint256);
+    function rateByPath(address[] memory path, uint256 sourceAmount) external view returns (uint256);
 
     function convertByPath(
         address[] memory path,
-        uint256 amount,
+        uint256 sourceAmount,
         uint256 minReturn,
         address payable beneficiary,
         address affiliateAccount,

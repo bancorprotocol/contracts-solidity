@@ -22,13 +22,13 @@ interface IConverter is IOwned {
     function targetAmountAndFee(
         IReserveToken sourceToken,
         IReserveToken targetToken,
-        uint256 amount
+        uint256 sourceAmount
     ) external view returns (uint256, uint256);
 
     function convert(
         IReserveToken sourceToken,
         IReserveToken targetToken,
-        uint256 amount,
+        uint256 sourceAmount,
         address trader,
         address payable beneficiary
     ) external payable returns (uint256);
@@ -93,19 +93,19 @@ interface IConverter is IOwned {
     /**
      * @dev triggered when a conversion between two tokens occurs
      *
-     * @param fromToken source reserve token
-     * @param toToken target reserve token
+     * @param sourceToken source reserve token
+     * @param targetToken target reserve token
      * @param trader wallet that initiated the trade
-     * @param amount input amount in units of the source token
-     * @param returnAmount output amount minus conversion fee in units of the target token
+     * @param sourceAmount input amount in units of the source token
+     * @param targetAmount output amount minus conversion fee in units of the target token
      * @param conversionFee conversion fee in units of the target token
      */
     event Conversion(
-        IReserveToken indexed fromToken,
-        IReserveToken indexed toToken,
+        IReserveToken indexed sourceToken,
+        IReserveToken indexed targetToken,
         address indexed trader,
-        uint256 amount,
-        uint256 returnAmount,
+        uint256 sourceAmount,
+        uint256 targetAmount,
         int256 conversionFee
     );
 

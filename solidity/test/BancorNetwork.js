@@ -264,7 +264,7 @@ describe('BancorNetwork', () => {
                     }
 
                     const prevBalance = await getBalance(targetToken, sender);
-                    const returnAmount = await bancorNetwork.callStatic.convertByPath2(
+                    const targetAmount = await bancorNetwork.callStatic.convertByPath2(
                         path.map((token) => token.address),
                         amount,
                         MIN_RETURN,
@@ -285,7 +285,7 @@ describe('BancorNetwork', () => {
                         transactionCost = await getTransactionCost(res);
                     }
 
-                    expect(postBalance).to.be.equal(prevBalance.add(returnAmount).sub(transactionCost));
+                    expect(postBalance).to.be.equal(prevBalance.add(targetAmount).sub(transactionCost));
                 });
 
                 it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} with a beneficiary succeeds`, async () => {
@@ -304,7 +304,7 @@ describe('BancorNetwork', () => {
                     const beneficiary = accounts[2].address;
                     const prevBalance = await getBalance(targetToken, beneficiary);
 
-                    const returnAmount = await bancorNetwork.callStatic.convertByPath2(
+                    const targetAmount = await bancorNetwork.callStatic.convertByPath2(
                         path.map((token) => token.address),
                         amount,
                         MIN_RETURN,
@@ -320,7 +320,7 @@ describe('BancorNetwork', () => {
                     );
 
                     const postBalance = await getBalance(targetToken, beneficiary);
-                    expect(postBalance).to.be.equal(prevBalance.add(returnAmount));
+                    expect(postBalance).to.be.equal(prevBalance.add(targetAmount));
                 });
 
                 it(`verifies that converting from ${sourceSymbol} to ${targetSymbol} returns the same amount returned by rateByPath`, async () => {
@@ -501,7 +501,7 @@ describe('BancorNetwork', () => {
             const balanceBeforeTransfer = await tokens.TKN2.balanceOf(sender2.address);
 
             const path = pathTokens.TKN3.TKN2.map((token) => token.address);
-            const returnAmount = await bancorNetwork.callStatic.claimAndConvertFor(
+            const targetAmount = await bancorNetwork.callStatic.claimAndConvertFor(
                 path,
                 value,
                 MIN_RETURN,
@@ -510,7 +510,7 @@ describe('BancorNetwork', () => {
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2.address);
 
             const balanceAfterTransfer = await tokens.TKN2.balanceOf(sender2.address);
-            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
+            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
         // eslint-disable-next-line max-len
@@ -521,7 +521,7 @@ describe('BancorNetwork', () => {
             const balanceBeforeTransfer = await tokens.TKN3.balanceOf(sender2.address);
 
             const path = pathTokens.TKN2.TKN3.map((token) => token.address);
-            const returnAmount = await bancorNetwork.callStatic.claimAndConvertFor(
+            const targetAmount = await bancorNetwork.callStatic.claimAndConvertFor(
                 path,
                 value,
                 MIN_RETURN,
@@ -530,7 +530,7 @@ describe('BancorNetwork', () => {
             await bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2.address);
 
             const balanceAfterTransfer = await tokens.TKN3.balanceOf(sender2.address);
-            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
+            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
         it('should revert when calling claimAndConvertFor without approval', async () => {
@@ -547,11 +547,11 @@ describe('BancorNetwork', () => {
             const balanceBeforeTransfer = await tokens.TKN2.balanceOf(sender.address);
 
             const path = pathTokens.TKN1.TKN2.map((token) => token.address);
-            const returnAmount = await bancorNetwork.callStatic.claimAndConvert(path, value, MIN_RETURN);
+            const targetAmount = await bancorNetwork.callStatic.claimAndConvert(path, value, MIN_RETURN);
             await bancorNetwork.claimAndConvert(path, value, MIN_RETURN);
 
             const balanceAfterTransfer = await tokens.TKN2.balanceOf(sender.address);
-            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
+            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
         it('should revert when calling claimAndConvert without approval', async () => {
@@ -585,7 +585,7 @@ describe('BancorNetwork', () => {
 
             const value = BigNumber.from(1000);
             const path = pathTokens.ETH.TKN3.map((token) => token.address);
-            const returnAmount = await bancorNetwork.callStatic.convertFor2(
+            const targetAmount = await bancorNetwork.callStatic.convertFor2(
                 path,
                 value,
                 MIN_RETURN,
@@ -599,7 +599,7 @@ describe('BancorNetwork', () => {
             });
 
             const balanceAfterTransfer = await tokens.TKN3.balanceOf(sender2.address);
-            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
+            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
         it('verifies that convert2 transfers the converted amount correctly', async () => {
@@ -607,7 +607,7 @@ describe('BancorNetwork', () => {
 
             const value = BigNumber.from(1000);
             const path = pathTokens.ETH.TKN3.map((token) => token.address);
-            const returnAmount = await bancorNetwork
+            const targetAmount = await bancorNetwork
                 .connect(sender2)
                 .callStatic.convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, {
                     value
@@ -616,7 +616,7 @@ describe('BancorNetwork', () => {
             await bancorNetwork.connect(sender2).convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0, { value });
 
             const balanceAfterTransfer = await tokens.TKN3.balanceOf(sender2.address);
-            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
+            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
         it('should revert when calling convertFor2 with ETH reserve but without sending ether', async () => {
@@ -728,7 +728,7 @@ describe('BancorNetwork', () => {
             const balanceBeforeTransfer = await tokens.TKN3.balanceOf(sender2.address);
 
             const path = pathTokens.TKN1.TKN3.map((token) => token.address);
-            const returnAmount = await bancorNetwork.callStatic.claimAndConvertFor2(
+            const targetAmount = await bancorNetwork.callStatic.claimAndConvertFor2(
                 path,
                 value,
                 MIN_RETURN,
@@ -739,7 +739,7 @@ describe('BancorNetwork', () => {
             await bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0);
 
             const balanceAfterTransfer = await tokens.TKN3.balanceOf(sender2.address);
-            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
+            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
         it('should revert when calling claimAndConvertFor2 without approval', async () => {
@@ -756,7 +756,7 @@ describe('BancorNetwork', () => {
             const balanceBeforeTransfer = await tokens.TKN3.balanceOf(sender.address);
 
             const path = pathTokens.TKN1.TKN3.map((token) => token.address);
-            const returnAmount = await bancorNetwork.callStatic.claimAndConvert2(
+            const targetAmount = await bancorNetwork.callStatic.claimAndConvert2(
                 path,
                 value,
                 MIN_RETURN,
@@ -766,7 +766,7 @@ describe('BancorNetwork', () => {
             await bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0);
 
             const balanceAfterTransfer = await tokens.TKN3.balanceOf(sender.address);
-            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(returnAmount));
+            expect(balanceAfterTransfer).to.be.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
         it('should revert when calling claimAndConvert2 without approval', async () => {
