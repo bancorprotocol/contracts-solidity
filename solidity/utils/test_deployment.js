@@ -199,7 +199,7 @@ const run = async () => {
     const poolToken1 = await web3Func(deploy, 'poolToken1', 'DSToken', ['Token1', 'TKN1', 18]);
     const poolToken2 = await web3Func(deploy, 'poolToken2', 'DSToken', ['Token2', 'TKN2', 18]);
     await web3Func(deploy, 'liquidityPoolV1Converter', 'LiquidityPoolV1Converter', [
-        poolToken2._address,
+        poolToken1._address,
         contractRegistry._address,
         1000
     ]);
@@ -259,7 +259,7 @@ const run = async () => {
         if (reserve.address) {
             const token = deployed(web3, 'ERC20', reserve.address);
             const symbol = await token.methods.symbol().call();
-            const decimals = await token.methods.symbol().call();
+            const decimals = await token.methods.decimals().call();
             reserves[symbol] = { address: token._address, decimals: decimals };
         } else {
             const name = reserve.symbol + ' DS Token';
