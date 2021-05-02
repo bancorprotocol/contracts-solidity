@@ -1,25 +1,18 @@
-const { defaultSender, contract, web3 } = require('@openzeppelin/test-environment');
-const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
+const { ethers } = require('hardhat');
+const { expect } = require('chai');
+const { BigNumber } = require('ethers');
+
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
 
 const ConverterHelper = require('./helpers/ConverterHelper');
 
-const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
+const Contracts = require('./helpers/Contracts');
 
-const { ZERO_ADDRESS } = constants;
-
-const TestStandardToken = contract.fromArtifact('TestStandardToken');
-const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const ConverterUpgrader = contract.fromArtifact('ConverterUpgrader');
-const StandardPoolConverterFactory = contract.fromArtifact('StandardPoolConverterFactory');
-const DSToken = contract.fromArtifact('DSToken');
-
-const CONVERSION_FEE = new BN(1000);
-const MAX_CONVERSION_FEE = new BN(30000);
-const RESERVE1_BALANCE = new BN(5000);
-const RESERVE2_BALANCE = new BN(8000);
-const TOKEN_TOTAL_SUPPLY = new BN(20000);
+const CONVERSION_FEE = BigNumber.from(1000);
+const MAX_CONVERSION_FEE = BigNumber.from(30000);
+const RESERVE1_BALANCE = BigNumber.from(5000);
+const RESERVE2_BALANCE = BigNumber.from(8000);
+const TOKEN_TOTAL_SUPPLY = BigNumber.from(20000);
 
 const LEGACY_VERSIONS = [9, 10, 11, 23, 45];
 
@@ -27,9 +20,16 @@ const LEGACY_CONVERTER_TYPE = 1;
 const STANDARD_CONVERTER_TYPE = 3;
 const STANDARD_CONVERTER_WEIGHT = 500_000;
 
+let contractRegistry;
+let converterFactory;
+let reserveToken1;
+let reserveToken2;
+let deployer;
+let accounts;
+
 describe('ConverterUpgrader', () => {
     const initWith2Reserves = async (type, deployer, version, activate) => {
-        const anchor = await DSToken.new('Token1', 'TKN1', 0);
+        const anchor = await Contracts.DSToken.deploy('Token1', 'TKN1', 0);
         const converter = await ConverterHelper.new(
             type,
             version,
@@ -39,7 +39,7 @@ describe('ConverterUpgrader', () => {
             reserveToken1.address,
             STANDARD_CONVERTER_WEIGHT
         );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
+        const upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         if (version && version < 45) {
@@ -74,7 +74,7 @@ describe('ConverterUpgrader', () => {
             throw new Error(`Converter version ${version} does not support ETH-reserve`);
         }
 
-        const anchor = await DSToken.new('Token1', 'TKN1', 0);
+        const anchor = await Contracts.DSToken.deploy('Token1', 'TKN1', 0);
         const converter = await ConverterHelper.new(
             type,
             version,
@@ -84,14 +84,14 @@ describe('ConverterUpgrader', () => {
             reserveToken1.address,
             STANDARD_CONVERTER_WEIGHT
         );
-        const upgrader = await ConverterUpgrader.new(contractRegistry.address);
+        const upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
 
         await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
         await converter.addReserve(NATIVE_TOKEN_ADDRESS, STANDARD_CONVERTER_WEIGHT);
         await converter.setConversionFee(CONVERSION_FEE);
         await anchor.issue(deployer, TOKEN_TOTAL_SUPPLY);
         await reserveToken1.transfer(converter.address, RESERVE1_BALANCE);
-        await converter.send(RESERVE2_BALANCE, { from: deployer });
+        await (await ethers.getSigner(deployer)).sendTransaction({ to: converter.address, value: RESERVE2_BALANCE });
 
         if (activate) {
             await anchor.transferOwnership(converter.address);
@@ -114,79 +114,69 @@ describe('ConverterUpgrader', () => {
 
         // For versions 11 or higher, we just call upgrade on the converter.
         if (converter.upgrade) {
-            res = await converter.upgrade({ from: deployer, ...options });
+            res = await converter.connect(deployer).upgrade({ ...options });
         } else {
             // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
             // then accept ownership of the new and old converter. The end results should be the same.
             await converter.transferOwnership(upgrader.address);
-            res = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''), {
-                from: deployer,
+            res = await upgrader.connect(deployer).upgradeOld(converter.address, ethers.utils.formatBytes32String(''), {
                 ...options
             });
             await converter.acceptOwnership();
         }
 
-        const logs = res.logs.filter((log) => log.event === 'ConverterUpgrade');
-        expect(logs.length).to.be.at.most(1);
+        const events = await upgrader.queryFilter('ConverterUpgrade', res.blockNumber, res.blockNumber);
 
-        if (logs.length === 1) {
-            return ConverterHelper.at(logs[0].args._newConverter);
-        }
-
-        const events = await upgrader.getPastEvents('ConverterUpgrade', {
-            fromBlock: res.receipt.blockNumber,
-            toBlock: res.receipt.blockNumber
-        });
+        expect(events.length).to.be.at.most(1);
 
         return ConverterHelper.at(events[0].args._newConverter);
     };
 
     const getConverterState = async (converter) => {
-        const token = await converter.token.call();
-        const anchor = await DSToken.at(token);
+        const token = await converter.token();
+        const anchor = await Contracts.DSToken.attach(token);
 
         const state = {
-            type: new BN(await converter.converterType.call()),
-            owner: await converter.owner.call(),
+            type: await converter.converterType(),
+            owner: await converter.owner(),
             token,
-            tokenOwner: await anchor.owner.call(),
-            newOwner: await converter.newOwner.call(),
-            conversionFee: await converter.conversionFee.call(),
-            maxConversionFee: await converter.maxConversionFee.call(),
-            reserveTokenCount: await converter.connectorTokenCount.call(),
+            tokenOwner: await anchor.owner(),
+            newOwner: await converter.newOwner(),
+            conversionFee: await converter.conversionFee(),
+            maxConversionFee: await converter.maxConversionFee(),
+            reserveTokenCount: await converter.connectorTokenCount(),
             reserveTokens: []
         };
 
-        for (let i = 0; i < state.reserveTokenCount.toNumber(); i++) {
-            const token = await converter.connectorTokens.call(i);
+        for (let i = 0; i < state.reserveTokenCount; i++) {
+            const token = await converter.connectorTokens(i);
             state.reserveTokens[i] = {
                 token,
-                balance: await converter.getConnectorBalance.call(token)
+                balance: await converter.getConnectorBalance(token)
             };
         }
 
         return state;
     };
 
-    let contractRegistry;
-    let converterFactory;
-    const deployer = defaultSender;
-    let reserveToken1;
-    let reserveToken2;
-
     before(async () => {
-        // The following contracts are unaffected by the underlying tests, this can be shared.
-        contractRegistry = await ContractRegistry.new();
+        accounts = await ethers.getSigners();
+        deployer = accounts[0];
 
-        converterFactory = await ConverterFactory.new();
+        // The following contracts are unaffected by the underlying tests, this can be shared.
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+
+        converterFactory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
 
-        await converterFactory.registerTypedConverterFactory((await StandardPoolConverterFactory.new()).address);
+        await converterFactory.registerTypedConverterFactory(
+            (await Contracts.StandardPoolConverterFactory.deploy()).address
+        );
     });
 
     beforeEach(async () => {
-        reserveToken1 = await TestStandardToken.new('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
-        reserveToken2 = await TestStandardToken.new('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
+        reserveToken1 = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
+        reserveToken2 = await Contracts.TestStandardToken.deploy('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
     });
 
     const initFuncs = [
@@ -199,6 +189,7 @@ describe('ConverterUpgrader', () => {
     const f = (a, b) => [].concat(...a.map((d) => b.map((e) => [].concat(d, e))));
     const cartesian = (a, b, ...c) => (b ? cartesian(f(a, b), ...c) : a);
     const product = cartesian(initFuncs, [...LEGACY_VERSIONS, null], [false, true]);
+
     const combinations = product.filter(([init, version]) => {
         if (
             // Test type 1 with an ETH reserve only on version 45
@@ -235,82 +226,86 @@ describe('ConverterUpgrader', () => {
                 const olderConverter = version && version < 28;
 
                 const reserveBalances = [
-                    activate || olderConverter ? RESERVE1_BALANCE : new BN(0),
-                    activate || olderConverter ? RESERVE2_BALANCE : new BN(0)
+                    activate || olderConverter ? RESERVE1_BALANCE : BigNumber.from(0),
+                    activate || olderConverter ? RESERVE2_BALANCE : BigNumber.from(0)
                 ];
 
                 // Token balances are always migrated during an upgrade, regardless of the reported reserve balance by
                 // the original converter.
                 const upgradedReserveBalances = [
-                    activate ? RESERVE1_BALANCE : new BN(0),
-                    activate ? RESERVE2_BALANCE : new BN(0)
+                    activate ? RESERVE1_BALANCE : BigNumber.from(0),
+                    activate ? RESERVE2_BALANCE : BigNumber.from(0)
                 ];
 
-                const [upgrader, oldConverter] = await init(deployer, version, activate);
+                const [upgrader, oldConverter] = await init(deployer.address, version, activate);
 
                 const oldConverterInitialState = await getConverterState(oldConverter);
-                expect(oldConverterInitialState.owner).to.be.eql(deployer);
+                expect(oldConverterInitialState.owner).to.be.eql(deployer.address);
                 expect(oldConverterInitialState.newOwner).to.be.eql(ZERO_ADDRESS);
-                expect(oldConverterInitialState.tokenOwner).to.be.eql(activate ? oldConverter.address : deployer);
-                expect(oldConverterInitialState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);
-                expect(oldConverterInitialState.maxConversionFee).to.be.bignumber.equal(MAX_CONVERSION_FEE);
+                expect(oldConverterInitialState.tokenOwner).to.be.eql(
+                    activate ? oldConverter.address : deployer.address
+                );
+                expect(oldConverterInitialState.conversionFee).to.be.equal(CONVERSION_FEE);
+                expect(oldConverterInitialState.maxConversionFee).to.be.equal(MAX_CONVERSION_FEE);
 
-                for (let i = 0; i < oldConverterInitialState.reserveTokenCount.toNumber(); ++i) {
+                for (let i = 0; i < oldConverterInitialState.reserveTokenCount; ++i) {
                     expect(oldConverterInitialState.reserveTokens[i].token).to.be.eql(reserveTokens[i]);
-                    expect(oldConverterInitialState.reserveTokens[i].balance).to.be.bignumber.equal(reserveBalances[i]);
+                    expect(oldConverterInitialState.reserveTokens[i].balance).to.be.equal(reserveBalances[i]);
                 }
 
                 const newConverter = await upgradeConverter(upgrader, oldConverter);
-
                 const oldConverterCurrentState = await getConverterState(oldConverter);
 
-                expect(oldConverterCurrentState.type).to.be.bignumber.equal(oldConverterInitialState.type);
-                expect(oldConverterCurrentState.owner).to.be.eql(deployer);
+                expect(oldConverterCurrentState.type).to.be.equal(oldConverterInitialState.type);
+                expect(oldConverterCurrentState.owner).to.be.eql(deployer.address);
                 expect(oldConverterCurrentState.newOwner).to.be.eql(ZERO_ADDRESS);
                 expect(oldConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
-                expect(oldConverterCurrentState.tokenOwner).to.be.eql(activate ? newConverter.address : deployer);
-                expect(oldConverterCurrentState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);
-                expect(oldConverterCurrentState.maxConversionFee).to.be.bignumber.equal(MAX_CONVERSION_FEE);
-                expect(oldConverterCurrentState.reserveTokenCount).to.be.bignumber.equal(
+                expect(oldConverterCurrentState.tokenOwner).to.be.eql(
+                    activate ? newConverter.address : deployer.address
+                );
+                expect(oldConverterCurrentState.conversionFee).to.be.equal(CONVERSION_FEE);
+                expect(oldConverterCurrentState.maxConversionFee).to.be.equal(MAX_CONVERSION_FEE);
+                expect(oldConverterCurrentState.reserveTokenCount).to.be.equal(
                     oldConverterInitialState.reserveTokenCount
                 );
 
-                for (let i = 0; i < oldConverterCurrentState.reserveTokenCount.toNumber(); ++i) {
+                for (let i = 0; i < oldConverterCurrentState.reserveTokenCount; ++i) {
                     expect(oldConverterCurrentState.reserveTokens[i].token).to.be.eql(
                         oldConverterInitialState.reserveTokens[i].token
                     );
-                    expect(oldConverterCurrentState.reserveTokens[i].balance).to.be.bignumber.equal(new BN(0));
+                    expect(oldConverterCurrentState.reserveTokens[i].balance).to.be.equal(BigNumber.from(0));
                 }
 
                 const newConverterCurrentState = await getConverterState(newConverter);
-                expect(newConverterCurrentState.type).to.be.bignumber.equal(new BN(STANDARD_CONVERTER_TYPE));
+                expect(newConverterCurrentState.type).to.be.equal(BigNumber.from(STANDARD_CONVERTER_TYPE));
                 expect(newConverterCurrentState.owner).to.be.eql(upgrader.address);
-                expect(newConverterCurrentState.newOwner).to.be.eql(deployer);
+                expect(newConverterCurrentState.newOwner).to.be.eql(deployer.address);
                 expect(newConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
-                expect(newConverterCurrentState.tokenOwner).to.be.eql(activate ? newConverter.address : deployer);
-                expect(newConverterCurrentState.conversionFee).to.be.bignumber.equal(CONVERSION_FEE);
-                expect(newConverterCurrentState.maxConversionFee).to.be.bignumber.equal(MAX_CONVERSION_FEE);
-                expect(newConverterCurrentState.reserveTokenCount).to.be.bignumber.equal(
+                expect(newConverterCurrentState.tokenOwner).to.be.eql(
+                    activate ? newConverter.address : deployer.address
+                );
+                expect(newConverterCurrentState.conversionFee).to.be.equal(CONVERSION_FEE);
+                expect(newConverterCurrentState.maxConversionFee).to.be.equal(MAX_CONVERSION_FEE);
+                expect(newConverterCurrentState.reserveTokenCount).to.be.equal(
                     oldConverterInitialState.reserveTokenCount
                 );
 
-                for (let i = 0; i < newConverterCurrentState.reserveTokenCount.toNumber(); ++i) {
-                    expect(newConverterCurrentState.reserveTokens[i].balance).to.be.bignumber.equal(
-                        upgradedReserveBalances[i]
-                    );
+                for (let i = 0; i < newConverterCurrentState.reserveTokenCount; ++i) {
+                    expect(newConverterCurrentState.reserveTokens[i].balance).to.be.equal(upgradedReserveBalances[i]);
                     expect(newConverterCurrentState.reserveTokens[i].token).to.be.eql(reserveTokens[i]);
                 }
             });
 
             it('should fail if the transaction did not receive enough gas', async () => {
                 const lowGas = 2000000;
-                const [upgrader, oldConverter] = await init(deployer, version, activate);
-                await expectRevert.unspecified(upgradeConverter(upgrader, oldConverter, { gas: lowGas }));
+                const [upgrader, oldConverter] = await init(deployer.address, version, activate);
+                await expect(upgradeConverter(upgrader, oldConverter, { gas: lowGas })).to.be.reverted;
             });
 
             it('should fail if the upgrader did not receive ownership', async () => {
-                const [upgrader, oldConverter] = await init(deployer, version, activate);
-                await expectRevert.unspecified(upgrader.upgradeOld(oldConverter.address, web3.utils.asciiToHex('')));
+                const [upgrader, oldConverter] = await init(deployer.address, version, activate);
+                await expect(upgrader.upgradeOld(oldConverter.address, ethers.utils.formatBytes32String(''))).to.be
+                    .reverted;
             });
         });
     }

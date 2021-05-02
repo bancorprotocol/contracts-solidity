@@ -1,10 +1,10 @@
-const { contract } = require('@openzeppelin/test-environment');
-const { BN } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
-const Decimal = require('decimal.js');
+const { expect } = require('chai');
+const { BigNumber } = require('ethers');
+
+const { Decimal } = require('./helpers/MathUtils.js');
 const MathUtils = require('./helpers/MathUtils');
 
-const MathContract = contract.fromArtifact('TestMathEx');
+const Contracts = require('./helpers/Contracts');
 
 const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);
@@ -14,27 +14,27 @@ describe('MathEx', () => {
     let mathContract;
 
     before(async () => {
-        mathContract = await MathContract.new();
+        mathContract = await Contracts.TestMathEx.deploy();
     });
 
     for (let n = 1; n <= 256; n++) {
         for (const k of n < 256 ? [-1, 0, +1] : [-1]) {
-            const x = new BN(2).pow(new BN(n)).add(new BN(k));
-            it(`Function floorSqrt(0x${x.toString(16)})`, async () => {
+            const x = BigNumber.from(2).pow(BigNumber.from(n)).add(BigNumber.from(k));
+            it(`Function floorSqrt(${x.toHexString()})`, async () => {
                 const expected = MathUtils.floorSqrt(x.toString());
-                const actual = await mathContract.floorSqrtTest(x);
-                expect(actual).to.be.bignumber.equal(expected);
+                const actual = await mathContract.floorSqrtTest(x.toString());
+                expect(actual).to.be.equal(expected);
             });
         }
     }
 
     for (let n = 1; n <= 256; n++) {
         for (const k of n < 256 ? [-1, 0, +1] : [-1]) {
-            const x = new BN(2).pow(new BN(n)).add(new BN(k));
-            it(`Function ceilSqrt(0x${x.toString(16)})`, async () => {
+            const x = BigNumber.from(2).pow(BigNumber.from(n)).add(BigNumber.from(k));
+            it(`Function ceilSqrt(${x.toHexString()})`, async () => {
                 const expected = MathUtils.ceilSqrt(x.toString());
-                const actual = await mathContract.ceilSqrtTest(x);
-                expect(actual).to.be.bignumber.equal(expected);
+                const actual = await mathContract.ceilSqrtTest(x.toString());
+                expect(actual).to.be.equal(expected);
             });
         }
     }
@@ -174,7 +174,7 @@ describe('MathEx', () => {
             it(`roundDiv(${n}, ${d})`, async () => {
                 const expected = MathUtils.roundDiv(n, d);
                 const actual = await mathContract.roundDivTest(n, d);
-                expect(actual).to.be.bignumber.equal(expected);
+                expect(actual).to.be.equal(expected);
             });
         }
     }
@@ -187,17 +187,17 @@ describe('MathEx', () => {
         it(`geometricMean([${values}])`, async () => {
             const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
             const actual = await mathContract.geometricMeanTest(values);
-            expect(actual).to.be.bignumber.equal(new BN(expected));
+            expect(actual).to.be.equal(BigNumber.from(expected));
         });
     }
 
     for (let n = 1; n <= 77; n++) {
         for (const k of [-1, 0, +1]) {
-            const x = new BN(10).pow(new BN(n)).add(new BN(k));
+            const x = BigNumber.from(10).pow(BigNumber.from(n)).add(BigNumber.from(k));
             it(`decimalLength(${x.toString()})`, async () => {
                 const expected = x.toString().length;
                 const actual = await mathContract.decimalLengthTest(x);
-                expect(actual).to.be.bignumber.equal(new BN(expected));
+                expect(actual).to.be.equal(BigNumber.from(expected));
             });
         }
     }
@@ -207,7 +207,7 @@ describe('MathEx', () => {
             it(`roundDivUnsafe(${n}, ${d})`, async () => {
                 const expected = Math.round(n / d);
                 const actual = await mathContract.roundDivUnsafeTest(n, d);
-                expect(actual).to.be.bignumber.equal(new BN(expected));
+                expect(actual).to.be.equal(BigNumber.from(expected));
             });
         }
     }
@@ -218,9 +218,7 @@ describe('MathEx', () => {
         if (!x.eq(y)) {
             const absoluteError = x.sub(y).abs();
             const relativeError = x.div(y).sub(1).abs();
-            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true(
-                `\nabsoluteError = ${absoluteError.toFixed(25)}\nrelativeError = ${relativeError.toFixed(25)}`
-            );
+            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true;
         }
     }
 });

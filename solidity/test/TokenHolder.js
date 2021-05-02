@@ -1,21 +1,32 @@
-const { accounts, contract } = require('@openzeppelin/test-environment');
-const { expect } = require('../../chai-local');
-const { expectRevert, constants, BN, balance } = require('@openzeppelin/test-helpers');
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
+const { BigNumber } = require('ethers');
 
-const { ZERO_ADDRESS } = constants;
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS } = require('./helpers/Constants');
 
-const { NATIVE_TOKEN_ADDRESS } = require('./helpers/Constants');
+const Contracts = require('./helpers/Contracts');
 
-const TokenHolder = contract.fromArtifact('TokenHolder');
-const TestStandardToken = contract.fromArtifact('TestStandardToken');
+let holder;
+let token;
+let token2;
+let receiver;
+let nonOwner;
+let accounts;
 
 describe('TokenHolder', () => {
+    before(async () => {
+        accounts = await ethers.getSigners();
+
+        receiver = accounts[2];
+        nonOwner = accounts[8];
+    });
+
     const getBalance = async (tokenAddress, account) => {
         if (tokenAddress === NATIVE_TOKEN_ADDRESS) {
-            return await balance.current(account);
+            return ethers.provider.getBalance(account);
         }
 
-        return await (await TestStandardToken.at(tokenAddress)).balanceOf.call(account);
+        return await (await Contracts.TestStandardToken.attach(tokenAddress)).balanceOf(account);
     };
 
     const getBalances = async (tokenAddresses, account) => {
@@ -27,21 +38,15 @@ describe('TokenHolder', () => {
         return balances;
     };
 
-    let holder;
-    let token;
-    let token2;
-    const receiver = accounts[2];
-    const nonOwner = accounts[8];
-
     beforeEach(async () => {
-        holder = await TokenHolder.new();
+        holder = await Contracts.TokenHolder.deploy();
 
-        token = await TestStandardToken.new('ERC', 'ERC1', 18, 100000);
-        token2 = await TestStandardToken.new('ERC', 'ERC2', 18, 100000);
+        token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', 18, 100000);
+        token2 = await Contracts.TestStandardToken.deploy('ERC', 'ERC2', 18, 100000);
 
-        await holder.send(5000);
-        await token.transfer(holder.address, new BN(1000));
-        await token2.transfer(holder.address, new BN(1000));
+        await accounts[0].sendTransaction({ to: holder.address, value: 5000 });
+        await token.transfer(holder.address, BigNumber.from(1000));
+        await token2.transfer(holder.address, BigNumber.from(1000));
     });
 
     describe('withdraw asset', () => {
@@ -54,54 +59,50 @@ describe('TokenHolder', () => {
                 });
 
                 it('should allow the owner to withdraw', async () => {
-                    const prevBalance = await getBalance(tokenAddress, receiver);
+                    const prevBalance = await getBalance(tokenAddress, receiver.address);
 
-                    const amount = new BN(100);
-                    await holder.withdrawTokens(tokenAddress, receiver, amount);
+                    const amount = BigNumber.from(100);
+                    await holder.withdrawTokens(tokenAddress, receiver.address, amount);
 
-                    const balance = await getBalance(tokenAddress, receiver);
-                    expect(balance).to.be.bignumber.equal(prevBalance.add(amount));
+                    const balance = await getBalance(tokenAddress, receiver.address);
+                    expect(balance).to.be.equal(prevBalance.add(amount));
                 });
 
                 it('should not revert when withdrawing zero amount', async () => {
-                    const prevBalance = await getBalance(tokenAddress, receiver);
+                    const prevBalance = await getBalance(tokenAddress, receiver.address);
 
-                    await holder.withdrawTokens(tokenAddress, receiver, new BN(0));
+                    await holder.withdrawTokens(tokenAddress, receiver.address, BigNumber.from(0));
 
-                    const balance = await getBalance(tokenAddress, receiver);
-                    expect(balance).to.be.bignumber.equal(prevBalance);
+                    const balance = await getBalance(tokenAddress, receiver.address);
+                    expect(balance).to.be.equal(prevBalance);
                 });
 
                 it('should revert when a non-owner attempts to withdraw', async () => {
-                    await expectRevert(
-                        holder.withdrawTokens(tokenAddress, receiver, new BN(1), { from: nonOwner }),
-                        'ERR_ACCESS_DENIED'
-                    );
+                    await expect(
+                        holder.connect(nonOwner).withdrawTokens(tokenAddress, receiver.address, BigNumber.from(1))
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
 
                 it('should revert when attempting to withdraw from an invalid asset address', async () => {
-                    await expectRevert(
-                        holder.withdrawTokens(ZERO_ADDRESS, receiver, new BN(1)),
-                        'Address: call to non-contract'
-                    );
+                    await expect(
+                        holder.withdrawTokens(ZERO_ADDRESS, receiver.address, BigNumber.from(1))
+                    ).to.be.revertedWith('Address: call to non-contract');
                 });
 
                 it('should revert when attempting to withdraw tokens to an invalid account address', async () => {
-                    await expectRevert(
-                        holder.withdrawTokens(tokenAddress, ZERO_ADDRESS, new BN(1)),
-                        'ERR_INVALID_ADDRESS'
-                    );
+                    await expect(
+                        holder.withdrawTokens(tokenAddress, ZERO_ADDRESS, BigNumber.from(1))
+                    ).to.be.revertedWith('ERR_INVALID_ADDRESS');
                 });
 
                 it('should revert when attempting to withdraw an amount greater than the holder balance', async () => {
                     const balance = await getBalance(tokenAddress, holder.address);
-                    const amount = balance.add(new BN(1));
+                    const amount = balance.add(BigNumber.from(1));
 
                     if (isETH) {
-                        await expectRevert.unspecified(holder.withdrawTokens(tokenAddress, receiver, amount));
+                        await expect(holder.withdrawTokens(tokenAddress, receiver.address, amount)).to.be.reverted;
                     } else {
-                        await expectRevert(
-                            holder.withdrawTokens(tokenAddress, receiver, amount),
+                        await expect(holder.withdrawTokens(tokenAddress, receiver.address, amount)).to.be.revertedWith(
                             'SafeMath: subtraction overflow'
                         );
                     }
@@ -120,60 +121,62 @@ describe('TokenHolder', () => {
 
             for (let i = 0; i < tokenAddresses.length; ++i) {
                 const tokenAddress = tokenAddresses[i];
-                amounts[tokenAddress] = new BN(100 * (i + 1));
+                amounts[tokenAddress] = BigNumber.from(100 * (i + 1));
             }
         });
 
         it('should allow the owner to withdraw', async () => {
-            const prevBalances = await getBalances(tokenAddresses, receiver);
+            const prevBalances = await getBalances(tokenAddresses, receiver.address);
 
-            await holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(amounts));
+            await holder.withdrawTokensMultiple(tokenAddresses, receiver.address, Object.values(amounts));
 
-            const newBalances = await getBalances(tokenAddresses, receiver);
+            const newBalances = await getBalances(tokenAddresses, receiver.address);
             for (const [tokenAddress, prevBalance] of Object.entries(prevBalances)) {
-                expect(newBalances[tokenAddress]).to.be.bignumber.equal(prevBalance.add(amounts[tokenAddress]));
+                expect(newBalances[tokenAddress]).to.be.equal(prevBalance.add(amounts[tokenAddress]));
             }
         });
 
         it('should revert when a non-owner attempts to withdraw', async () => {
-            await expectRevert(
-                holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(amounts), { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
+            await expect(
+                holder
+                    .connect(nonOwner)
+                    .withdrawTokensMultiple(tokenAddresses, receiver.address, Object.values(amounts))
+            ).to.be.revertedWith('ERR_ACCESS_DENIED');
         });
 
         it('should revert when attempting to withdraw from an invalid asset address', async () => {
-            await expectRevert(
-                holder.withdrawTokensMultiple([token.address, ZERO_ADDRESS], receiver, [new BN(1), new BN(1)]),
-                'Address: call to non-contract'
-            );
+            await expect(
+                holder.withdrawTokensMultiple([token.address, ZERO_ADDRESS], receiver.address, [
+                    BigNumber.from(1),
+                    BigNumber.from(1)
+                ])
+            ).to.be.revertedWith('Address: call to non-contract');
 
-            await expectRevert(
-                holder.withdrawTokensMultiple([ZERO_ADDRESS, token.address], receiver, [new BN(1), new BN(1)]),
-                'Address: call to non-contract'
-            );
+            await expect(
+                holder.withdrawTokensMultiple([ZERO_ADDRESS, token.address], receiver.address, [
+                    BigNumber.from(1),
+                    BigNumber.from(1)
+                ])
+            ).to.be.revertedWith('Address: call to non-contract');
         });
 
         it('should revert when attempting to withdraw tokens to an invalid account address', async () => {
-            await expectRevert(
-                holder.withdrawTokensMultiple(tokenAddresses, ZERO_ADDRESS, Object.values(amounts)),
-                'ERR_INVALID_ADDRESS'
-            );
+            await expect(
+                holder.withdrawTokensMultiple(tokenAddresses, ZERO_ADDRESS, Object.values(amounts))
+            ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
         it('should revert when attempting to withdraw an amount greater than the holder balance', async () => {
             let balances = await getBalances(tokenAddresses, holder.address);
-            balances[NATIVE_TOKEN_ADDRESS] = balances[NATIVE_TOKEN_ADDRESS].add(new BN(1));
-            await expectRevert.unspecified(
-                holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(balances))
-            );
+            balances[NATIVE_TOKEN_ADDRESS] = balances[NATIVE_TOKEN_ADDRESS].add(BigNumber.from(1));
+            await expect(holder.withdrawTokensMultiple(tokenAddresses, receiver.address, Object.values(balances))).to.be
+                .reverted;
 
             balances = await getBalances(tokenAddresses, holder.address);
-            balances[token2.address] = balances[token2.address].add(new BN(1));
-            await expectRevert(
-                holder.withdrawTokensMultiple(tokenAddresses, receiver, Object.values(balances)),
-                'SafeMath: subtraction overflow'
-            );
+            balances[token2.address] = balances[token2.address].add(BigNumber.from(1));
+            await expect(
+                holder.withdrawTokensMultiple(tokenAddresses, receiver.address, Object.values(balances))
+            ).to.be.revertedWith('SafeMath: subtraction overflow');
         });
     });
 });

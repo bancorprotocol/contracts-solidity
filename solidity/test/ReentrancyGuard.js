@@ -1,29 +1,27 @@
-const { contract } = require('@openzeppelin/test-environment');
-const { expect } = require('../../chai-local');
-const { expectRevert, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('chai');
+const { BigNumber } = require('ethers');
 
-const TestReentrancyGuard = contract.fromArtifact('TestReentrancyGuard');
-const TestReentrancyGuardAttacker = contract.fromArtifact('TestReentrancyGuardAttacker');
+const Contracts = require('./helpers/Contracts');
 
 describe('ReentrancyGuard', () => {
     let guard;
     let attacker;
 
     beforeEach(async () => {
-        guard = await TestReentrancyGuard.new();
-        attacker = await TestReentrancyGuardAttacker.new(guard.address);
+        guard = await Contracts.TestReentrancyGuard.deploy();
+        attacker = await Contracts.TestReentrancyGuardAttacker.deploy(guard.address);
     });
 
     context('safe caller', async () => {
         it('should allow calling an unprotected method', async () => {
             await attacker.run();
-            expect(await guard.calls.call()).to.be.bignumber.equal(new BN(1));
+            expect(await guard.calls()).to.be.equal(BigNumber.from(1));
         });
 
         it('should allow calling a protected method', async () => {
             await attacker.setCallProtectedMethod(true);
             await attacker.run();
-            expect(await guard.calls.call()).to.be.bignumber.equal(new BN(1));
+            expect(await guard.calls()).to.be.equal(BigNumber.from(1));
         });
     });
 
@@ -34,12 +32,12 @@ describe('ReentrancyGuard', () => {
 
         it('should allow reentering an unprotected method', async () => {
             await attacker.run();
-            expect(await guard.calls.call()).to.be.bignumber.equal(new BN(2));
+            expect(await guard.calls()).to.be.equal(BigNumber.from(2));
         });
 
         it('should revert when attempting to reetner a protected method', async () => {
             await attacker.setCallProtectedMethod(true);
-            await expectRevert(attacker.run(), 'ERR_REENTRANCY');
+            await expect(attacker.run(), 'ERR_REENTRANCY').to.be.reverted;
         });
     });
 });

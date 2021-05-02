@@ -1,64 +1,72 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, constants } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
-const { ZERO_ADDRESS } = constants;
+const Contracts = require('./helpers/Contracts');
 
-const Owned = contract.fromArtifact('Owned');
+let contract;
+let owner;
+let newOwner;
+let accounts;
 
 describe('Owned', () => {
-    let contract;
-    const owner = defaultSender;
-    const newOwner = accounts[1];
+    before(async () => {
+        accounts = await ethers.getSigners();
+
+        owner = accounts[0];
+        newOwner = accounts[1];
+    });
 
     beforeEach(async () => {
-        contract = await Owned.new();
+        contract = await Contracts.Owned.deploy();
     });
 
     it('verifies the owner after construction', async () => {
-        expect(await contract.owner.call()).to.be.eql(defaultSender);
+        expect(await contract.owner()).to.be.eql(accounts[0].address);
     });
 
     it('verifies the new owner after ownership transfer', async () => {
-        await contract.transferOwnership(newOwner);
-        await contract.acceptOwnership({ from: newOwner });
+        await contract.transferOwnership(newOwner.address);
+        await contract.connect(newOwner).acceptOwnership();
 
-        expect(await contract.owner.call()).to.be.eql(newOwner);
+        expect(await contract.owner()).to.be.eql(newOwner.address);
     });
 
     it('verifies that ownership transfer fires an OwnerUpdate event', async () => {
-        await contract.transferOwnership(newOwner);
-        const res = await contract.acceptOwnership({ from: newOwner });
-        expectEvent(res, 'OwnerUpdate', { _prevOwner: owner, _newOwner: newOwner });
+        await contract.transferOwnership(newOwner.address);
+        await expect(await contract.connect(newOwner).acceptOwnership())
+            .to.emit(contract, 'OwnerUpdate')
+            .withArgs(owner.address, newOwner.address);
     });
 
     it('verifies that newOwner is cleared after ownership transfer', async () => {
-        await contract.transferOwnership(newOwner);
-        await contract.acceptOwnership({ from: newOwner });
+        await contract.transferOwnership(newOwner.address);
+        await contract.connect(newOwner).acceptOwnership();
 
-        expect(await contract.newOwner.call()).to.be.eql(ZERO_ADDRESS);
+        expect(await contract.newOwner()).to.be.eql(ethers.constants.AddressZero);
     });
 
     it('verifies that no ownership transfer takes places before the new owner accepted it', async () => {
-        await contract.transferOwnership(newOwner);
+        await contract.transferOwnership(newOwner.address);
 
-        expect(await contract.owner.call()).to.be.eql(owner);
+        expect(await contract.owner()).to.be.eql(owner.address);
     });
 
     it('verifies that only the owner can initiate ownership transfer', async () => {
         const nonOwner = accounts[2];
 
-        await expectRevert(contract.transferOwnership(newOwner, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expect(contract.connect(nonOwner).transferOwnership(newOwner.address)).to.be.revertedWith(
+            'ERR_ACCESS_DENIED'
+        );
     });
 
     it('verifies that the owner can cancel ownership transfer before the new owner accepted it', async () => {
-        await contract.transferOwnership(newOwner);
-        await contract.transferOwnership(ZERO_ADDRESS);
+        await contract.transferOwnership(newOwner.address);
+        await contract.transferOwnership(ethers.constants.AddressZero);
 
-        expect(await contract.newOwner.call()).to.be.eql(ZERO_ADDRESS);
+        expect(await contract.newOwner()).to.be.eql(ethers.constants.AddressZero);
     });
 
     it("verifies that it's not possible to transfer ownership to the same owner", async () => {
-        await expectRevert(contract.transferOwnership(owner), 'ERR_SAME_OWNER');
+        await expect(contract.transferOwnership(owner.address)).to.be.revertedWith('ERR_SAME_OWNER');
     });
 });

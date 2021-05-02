@@ -1,70 +1,77 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
 const { registry } = require('./helpers/Constants');
 
-const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const ContractRegistryClient = contract.fromArtifact('TestContractRegistryClient');
+const Contracts = require('./helpers/Contracts');
+
+let accounts;
+let owner;
+let nonOwner;
+
+let contractRegistry;
+let contractRegistryClient;
 
 describe('ContractRegistryClient', () => {
-    let contractRegistry;
-    let contractRegistryClient;
-    const owner = defaultSender;
-    const nonOwner = accounts[1];
+    before(async () => {
+        accounts = await ethers.getSigners();
+
+        owner = accounts[0];
+        nonOwner = accounts[1];
+    });
 
     beforeEach(async () => {
-        contractRegistry = await ContractRegistry.new();
-        contractRegistryClient = await ContractRegistryClient.new(contractRegistry.address);
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        contractRegistryClient = await Contracts.TestContractRegistryClient.deploy(contractRegistry.address);
     });
 
     it('should revert when attempting to update the registry when it points to the zero address', async () => {
-        await expectRevert(contractRegistryClient.updateRegistry(), 'ERR_INVALID_REGISTRY');
+        await expect(contractRegistryClient.updateRegistry()).to.be.revertedWith('ERR_INVALID_REGISTRY');
     });
 
     it('should revert when attempting to update the registry when it points to the current registry', async () => {
         await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, contractRegistry.address);
 
-        await expectRevert(contractRegistryClient.updateRegistry(), 'ERR_INVALID_REGISTRY');
+        await expect(contractRegistryClient.updateRegistry()).to.be.revertedWith('ERR_INVALID_REGISTRY');
     });
 
     it('should revert when attempting to update the registry when it points to a new registry which points to the zero address', async () => {
-        const newRegistry = await ContractRegistry.new();
+        const newRegistry = await Contracts.ContractRegistry.deploy();
         await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
 
-        await expectRevert(contractRegistryClient.updateRegistry(), 'ERR_INVALID_REGISTRY');
+        await expect(contractRegistryClient.updateRegistry()).to.be.revertedWith('ERR_INVALID_REGISTRY');
     });
 
     it('should allow anyone to update the registry address', async () => {
-        const newRegistry = await ContractRegistry.new();
+        const newRegistry = await Contracts.ContractRegistry.deploy();
 
         await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
         await newRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
 
-        await contractRegistryClient.updateRegistry({ from: nonOwner });
+        await contractRegistryClient.connect(nonOwner).updateRegistry();
 
-        expect(await contractRegistryClient.registry.call()).to.eql(newRegistry.address);
-        expect(await contractRegistryClient.prevRegistry.call()).to.eql(contractRegistry.address);
+        expect(await contractRegistryClient.registry()).to.eql(newRegistry.address);
+        expect(await contractRegistryClient.prevRegistry()).to.eql(contractRegistry.address);
     });
 
     it('should allow the owner to restore the previous registry and disable updates', async () => {
-        const newRegistry = await ContractRegistry.new();
+        const newRegistry = await Contracts.ContractRegistry.deploy();
 
         await contractRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
         await newRegistry.registerAddress(registry.CONTRACT_REGISTRY, newRegistry.address);
-        await contractRegistryClient.updateRegistry({ from: nonOwner });
+        await contractRegistryClient.connect(nonOwner).updateRegistry();
 
-        await contractRegistryClient.restoreRegistry({ from: owner });
+        await contractRegistryClient.connect(owner).restoreRegistry();
 
-        expect(await contractRegistryClient.registry.call()).to.eql(contractRegistry.address);
-        expect(await contractRegistryClient.prevRegistry.call()).to.eql(contractRegistry.address);
+        expect(await contractRegistryClient.registry()).to.eql(contractRegistry.address);
+        expect(await contractRegistryClient.prevRegistry()).to.eql(contractRegistry.address);
 
-        await contractRegistryClient.restrictRegistryUpdate(true, { from: owner });
-        await expectRevert(contractRegistryClient.updateRegistry({ from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await contractRegistryClient.connect(owner).restrictRegistryUpdate(true);
+        await expect(contractRegistryClient.connect(nonOwner).updateRegistry()).to.be.revertedWith('ERR_ACCESS_DENIED');
 
-        await contractRegistryClient.updateRegistry({ from: owner });
+        await contractRegistryClient.connect(owner).updateRegistry();
 
-        expect(await contractRegistryClient.registry.call()).to.eql(newRegistry.address);
-        expect(await contractRegistryClient.prevRegistry.call()).to.eql(contractRegistry.address);
+        expect(await contractRegistryClient.registry()).to.eql(newRegistry.address);
+        expect(await contractRegistryClient.prevRegistry()).to.eql(contractRegistry.address);
     });
 });

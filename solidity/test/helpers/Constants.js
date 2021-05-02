@@ -1,35 +1,38 @@
-const {
-    web3: {
-        utils: { asciiToHex, keccak256 }
-    }
-} = require('@openzeppelin/test-environment');
+const { BigNumber, ethers } = require('ethers');
+
+const { formatBytes32String, id } = ethers.utils;
 
 module.exports = {
     registry: {
-        CONTRACT_REGISTRY: asciiToHex('ContractRegistry'),
-        BANCOR_NETWORK: asciiToHex('BancorNetwork'),
-        NETWORK_SETTINGS: asciiToHex('NetworkSettings'),
-        CONVERTER_FACTORY: asciiToHex('ConverterFactory'),
-        CONVERSION_PATH_FINDER: asciiToHex('ConversionPathFinder'),
-        CONVERTER_UPGRADER: asciiToHex('BancorConverterUpgrader'),
-        CONVERTER_REGISTRY: asciiToHex('BancorConverterRegistry'),
-        CONVERTER_REGISTRY_DATA: asciiToHex('BancorConverterRegistryData'),
-        BNT_TOKEN: asciiToHex('BNTToken'),
-        BANCOR_X: asciiToHex('BancorX'),
-        BANCOR_X_UPGRADER: asciiToHex('BancorXUpgrader'),
-        LIQUIDITY_PROTECTION: asciiToHex('LiquidityProtection')
+        CONTRACT_REGISTRY: formatBytes32String('ContractRegistry'),
+        BANCOR_NETWORK: formatBytes32String('BancorNetwork'),
+        NETWORK_SETTINGS: formatBytes32String('NetworkSettings'),
+        CONVERTER_FACTORY: formatBytes32String('ConverterFactory'),
+        CONVERSION_PATH_FINDER: formatBytes32String('ConversionPathFinder'),
+        CONVERTER_UPGRADER: formatBytes32String('BancorConverterUpgrader'),
+        CONVERTER_REGISTRY: formatBytes32String('BancorConverterRegistry'),
+        CONVERTER_REGISTRY_DATA: formatBytes32String('BancorConverterRegistryData'),
+        BNT_TOKEN: formatBytes32String('BNTToken'),
+        BANCOR_X: formatBytes32String('BancorX'),
+        BANCOR_X_UPGRADER: formatBytes32String('BancorXUpgrader'),
+        LIQUIDITY_PROTECTION: formatBytes32String('LiquidityProtection'),
+
+        // Needed for legacy tests
+        BANCOR_FORMULA: formatBytes32String('BancorFormula')
     },
 
     roles: {
-        ROLE_SUPERVISOR: keccak256('ROLE_SUPERVISOR'),
-        ROLE_OWNER: keccak256('ROLE_OWNER'),
-        ROLE_GOVERNOR: keccak256('ROLE_GOVERNOR'),
-        ROLE_MINTER: keccak256('ROLE_MINTER'),
-        ROLE_SEEDER: keccak256('ROLE_SEEDER'),
-        ROLE_MANAGER: keccak256('ROLE_MANAGER'),
-        ROLE_PUBLISHER: keccak256('ROLE_PUBLISHER'),
-        ROLE_UPDATER: keccak256('ROLE_UPDATER')
+        ROLE_SUPERVISOR: id('ROLE_SUPERVISOR'),
+        ROLE_OWNER: id('ROLE_OWNER'),
+        ROLE_GOVERNOR: id('ROLE_GOVERNOR'),
+        ROLE_MINTER: id('ROLE_MINTER'),
+        ROLE_SEEDER: id('ROLE_SEEDER'),
+        ROLE_MANAGER: id('ROLE_MANAGER'),
+        ROLE_PUBLISHER: id('ROLE_PUBLISHER'),
+        ROLE_UPDATER: id('ROLE_UPDATER')
     },
 
-    NATIVE_TOKEN_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+    NATIVE_TOKEN_ADDRESS: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    MAX_UINT256: BigNumber.from('2').pow(BigNumber.from('256')).sub(BigNumber.from('1')),
+    ZERO_ADDRESS: ethers.constants.AddressZero
 };

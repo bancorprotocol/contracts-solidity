@@ -1,91 +1,105 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expect } = require('../../chai-local');
-const { expectRevert, constants, BN } = require('@openzeppelin/test-helpers');
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
+const { BigNumber } = require('ethers');
 
-const { ZERO_ADDRESS } = constants;
+const { ZERO_ADDRESS } = require('./helpers/Constants');
 
-const DSToken = contract.fromArtifact('DSToken');
+const Contracts = require('./helpers/Contracts');
+
+const name = 'Token1';
+const symbol = 'TKN1';
+const decimals = BigNumber.from(18);
+
+let token;
+
+let owner;
+let receiver;
+let nonOwner;
+let accounts;
 
 describe('DSToken', () => {
-    let token;
-    const name = 'Token1';
-    const symbol = 'TKN1';
-    const decimals = new BN(18);
+    before(async () => {
+        accounts = await ethers.getSigners();
 
-    const owner = defaultSender;
-    const receiver = accounts[1];
-    const nonOwner = accounts[3];
+        owner = accounts[0];
+        receiver = accounts[1];
+        nonOwner = accounts[3];
+    });
 
     beforeEach(async () => {
-        token = await DSToken.new(name, symbol, decimals);
+        token = await Contracts.DSToken.deploy(name, symbol, decimals);
     });
 
     it('verifies the token name, symbol and decimal units after construction', async () => {
-        expect(await token.name.call()).to.eql(name);
-        expect(await token.symbol.call()).to.eql(symbol);
-        expect(await token.decimals.call()).to.be.bignumber.equal(decimals);
+        expect(await token.name()).to.eql(name);
+        expect(await token.symbol()).to.eql(symbol);
+        expect(await token.decimals()).to.be.equal(decimals);
     });
 
     it('verifies that issue tokens updates the target balance and the total supply', async () => {
-        const value = new BN(100);
-        await token.issue(receiver, value);
+        const value = BigNumber.from(100);
+        await token.issue(receiver.address, value);
 
-        const balance = await token.balanceOf.call(receiver);
-        expect(balance).to.be.bignumber.equal(value);
+        const balance = await token.balanceOf(receiver.address);
+        expect(balance).to.be.equal(value);
 
-        const totalSupply = await token.totalSupply.call();
-        expect(totalSupply).to.be.bignumber.equal(value);
+        const totalSupply = await token.totalSupply();
+        expect(totalSupply).to.be.equal(value);
     });
 
     it('verifies that the owner can issue tokens to his/her own account', async () => {
-        const value = new BN(10000);
-        await token.issue(owner, value);
+        const value = BigNumber.from(10000);
+        await token.issue(owner.address, value);
 
-        const balance = await token.balanceOf.call(owner);
-        expect(balance).to.be.bignumber.equal(value);
+        const balance = await token.balanceOf(owner.address);
+        expect(balance).to.be.equal(value);
     });
 
     it('should revert when the owner attempts to issue tokens to an invalid address', async () => {
-        await expectRevert(token.issue(ZERO_ADDRESS, new BN(1)), 'ERR_INVALID_EXTERNAL_ADDRESS');
+        await expect(token.issue(ZERO_ADDRESS, BigNumber.from(1))).to.be.revertedWith('ERR_INVALID_EXTERNAL_ADDRESS');
     });
 
     it('should revert when the owner attempts to issue tokens to the token address', async () => {
-        await expectRevert(token.issue(token.address, new BN(1)), 'ERR_INVALID_EXTERNAL_ADDRESS');
+        await expect(token.issue(token.address, BigNumber.from(1))).to.be.revertedWith('ERR_INVALID_EXTERNAL_ADDRESS');
     });
 
     it('should revert when a non owner attempts to issue tokens', async () => {
-        await expectRevert(token.issue(receiver, new BN(1), { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expect(token.connect(nonOwner).issue(receiver.address, BigNumber.from(1))).to.be.revertedWith(
+            'ERR_ACCESS_DENIED'
+        );
     });
 
     it('verifies that destroy tokens updates the target balance and the total supply', async () => {
-        const value = new BN(123);
-        await token.issue(receiver, value);
+        const value = BigNumber.from(123);
+        await token.issue(receiver.address, value);
 
-        const value2 = new BN(50);
-        await token.destroy(receiver, value2);
+        const value2 = BigNumber.from(50);
+        await token.destroy(receiver.address, value2);
 
-        const balance = await token.balanceOf.call(receiver);
-        expect(balance).to.be.bignumber.equal(value.sub(value2));
+        const balance = await token.balanceOf(receiver.address);
+        expect(balance).to.be.equal(value.sub(value2));
 
-        const totalSupply = await token.totalSupply.call();
-        expect(totalSupply).to.be.bignumber.equal(value.sub(value2));
+        const totalSupply = await token.totalSupply();
+        expect(totalSupply).to.be.equal(value.sub(value2));
     });
 
     it('verifies that the owner can destroy tokens from his/her own account', async () => {
-        const value = new BN(500);
-        await token.issue(owner, value);
+        const value = BigNumber.from(500);
+        await token.issue(owner.address, value);
 
-        const value2 = new BN(499);
-        await token.destroy(owner, value2);
+        const value2 = BigNumber.from(499);
+        await token.destroy(owner.address, value2);
 
-        const balance = await token.balanceOf.call(owner);
-        expect(balance).to.be.bignumber.equal(value.sub(value2));
+        const balance = await token.balanceOf(owner.address);
+        expect(balance).to.be.equal(value.sub(value2));
     });
 
     it('should revert when a non owner attempts to destroy tokens', async () => {
-        const value = new BN(100);
-        await token.issue(receiver, value);
+        const value = BigNumber.from(100);
+        await token.issue(receiver.address, value);
 
-        await expectRevert(token.destroy(receiver, new BN(1), { from: nonOwner }), 'ERR_ACCESS_DENIED');
+        await expect(token.connect(nonOwner).destroy(receiver.address, BigNumber.from(1))).to.be.revertedWith(
+            'ERR_ACCESS_DENIED'
+        );
     });
 });

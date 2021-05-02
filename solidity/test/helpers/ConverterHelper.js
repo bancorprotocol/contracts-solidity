@@ -1,14 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const { ethers } = require('hardhat');
 
-const { contract, web3 } = require('@openzeppelin/test-environment');
-const { constants } = require('@openzeppelin/test-helpers');
+const { ContractFactory } = require('ethers');
+const { ZERO_ADDRESS } = require('./Constants');
 
-const truffleContract = require('@truffle/contract');
-
-const { ZERO_ADDRESS } = constants;
-
-const StandardPoolConverter = contract.fromArtifact('StandardPoolConverter');
+const Contracts = require('./Contracts');
 
 module.exports.new = async (
     type,
@@ -19,6 +16,8 @@ module.exports.new = async (
     reserveTokenAddress = ZERO_ADDRESS,
     weight
 ) => {
+    const accounts = await ethers.getSigners();
+
     if (version) {
         let contractName = `../bin/converter_v${version}`;
         if (version >= 43) {
@@ -28,13 +27,9 @@ module.exports.new = async (
         const abi = fs.readFileSync(path.resolve(__dirname, `${contractName}.abi`));
         const bin = fs.readFileSync(path.resolve(__dirname, `${contractName}.bin`));
 
-        const Converter = truffleContract({ abi: JSON.parse(abi), unlinked_binary: `0x${bin}` });
-        const block = await web3.eth.getBlock('latest');
-        Converter.setProvider(web3.currentProvider);
-        Converter.defaults({ from: (await web3.eth.getAccounts())[0], gas: block.gasLimit });
-
+        const Converter = new ContractFactory(JSON.parse(abi), `0x${bin}`, accounts[0]);
         if (version > 28) {
-            const converter = await Converter.new(tokenAddress, registryAddress, maxConversionFee);
+            const converter = await Converter.deploy(tokenAddress, registryAddress, maxConversionFee);
             if (reserveTokenAddress !== ZERO_ADDRESS) {
                 await converter.addReserve(reserveTokenAddress, weight);
             }
@@ -42,20 +37,20 @@ module.exports.new = async (
             return converter;
         }
 
-        return Converter.new(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
+        return Converter.deploy(tokenAddress, registryAddress, maxConversionFee, reserveTokenAddress, weight);
     }
 
     let converterType;
     switch (type) {
         case 3:
-            converterType = StandardPoolConverter;
+            converterType = Contracts.StandardPoolConverter;
             break;
 
         default:
             throw new Error(`Unsupported converter type ${type}`);
     }
 
-    const converter = await converterType.new(tokenAddress, registryAddress, maxConversionFee);
+    const converter = await converterType.deploy(tokenAddress, registryAddress, maxConversionFee);
     if (reserveTokenAddress !== ZERO_ADDRESS) {
         await converter.addReserve(reserveTokenAddress, weight);
     }
@@ -66,9 +61,8 @@ module.exports.new = async (
 module.exports.at = async (address, version) => {
     if (version) {
         const abi = fs.readFileSync(path.resolve(__dirname, `../bin/converter_v${version}.abi`));
-        const converter = truffleContract({ abi: JSON.parse(abi) });
-        return converter.at(address);
+        return await ethers.getContractAt(JSON.parse(abi), address);
     }
 
-    return StandardPoolConverter.at(address);
+    return await Contracts.StandardPoolConverter.attach(address);
 };

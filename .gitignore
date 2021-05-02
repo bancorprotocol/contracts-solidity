@@ -7,9 +7,7 @@
 yarn-debug.log*
 yarn-error.log*
 
-# python
-*.pyc
-
+cache
 solidity/build
 .coverage_artifacts
 .coverage_contracts
@@ -18,3 +16,5 @@ coverageEnv
 coverage.json
 allFiredEvents
 scTopics
+
+config.json

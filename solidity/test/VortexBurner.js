@@ -1,92 +1,83 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent, BN, constants, balance } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
-const {
-    NATIVE_TOKEN_ADDRESS,
-    registry: {
-        NETWORK_SETTINGS,
-        CONVERTER_FACTORY,
-        CONVERTER_REGISTRY,
-        CONVERTER_REGISTRY_DATA,
-        BANCOR_NETWORK
-    }
-} = require('./helpers/Constants');
+const { expect } = require('chai');
+const { BigNumber } = require('ethers');
+const { ethers } = require('hardhat');
 
-const { ZERO_ADDRESS } = constants;
+const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS } = require('./helpers/Constants');
+const MathUtils = require('./helpers/MathUtils.js');
+const Contracts = require('./helpers/Contracts');
 
-const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const BancorNetwork = contract.fromArtifact('BancorNetwork');
-const DSToken = contract.fromArtifact('DSToken');
-const ConverterRegistry = contract.fromArtifact('ConverterRegistry');
-const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
-const ConverterFactory = contract.fromArtifact('ConverterFactory');
-const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
-const StandardPoolConverter = contract.fromArtifact('TestStandardPoolConverter');
-const TokenHolder = contract.fromArtifact('TokenHolder');
-const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
-const NetworkSettings = contract.fromArtifact('NetworkSettings');
-const VortexBurner = contract.fromArtifact('VortexBurner');
+const PPM_RESOLUTION = BigNumber.from(1_000_000);
 
-const PPM_RESOLUTION = new BN(1_000_000);
-
-const TKN = new BN(10).pow(new BN(18));
-const RESERVE1_AMOUNT = new BN(100_000_000).mul(TKN);
-const RESERVE2_AMOUNT = new BN(1_000_000).mul(TKN);
+const TKN = BigNumber.from(10).pow(BigNumber.from(18));
+const RESERVE1_AMOUNT = BigNumber.from(100_000_000).mul(TKN);
+const RESERVE2_AMOUNT = BigNumber.from(1_000_000).mul(TKN);
 const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
-const TOTAL_SUPPLY = new BN(1_000_000_000).mul(TKN);
+const TOTAL_SUPPLY = BigNumber.from(1_000_000_000).mul(TKN);
+
+let contractRegistry;
+let bancorNetwork;
+let networkToken;
+let govToken;
+let govTokenGovernance;
+let converterRegistry;
+let converterRegistryData;
+let networkSettings;
+let networkFeeWallet;
+let vortex;
+
+let owner;
+let newOwner;
+let nonOwner;
+let accounts;
 
 describe('VortexBurner', () => {
-    let contractRegistry;
-    let bancorNetwork;
-    let networkToken;
-    let govToken;
-    let govTokenGovernance;
-    let converterRegistry;
-    let converterRegistryData;
-    let networkSettings;
-    let networkFeeWallet;
-    let vortex;
-
-    const owner = defaultSender;
-    const nonOwner = accounts[3];
-
     before(async () => {
-        contractRegistry = await ContractRegistry.new();
-        bancorNetwork = await BancorNetwork.new(contractRegistry.address);
+        accounts = await ethers.getSigners();
 
-        await contractRegistry.registerAddress(BANCOR_NETWORK, bancorNetwork.address);
+        owner = accounts[0];
+        newOwner = accounts[1];
+        nonOwner = accounts[3];
 
-        networkSettings = await NetworkSettings.new(defaultSender, new BN(0));
-        await contractRegistry.registerAddress(NETWORK_SETTINGS, networkSettings.address);
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
+
+        await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
+
+        networkSettings = await Contracts.NetworkSettings.deploy(owner.address, BigNumber.from(0));
+        await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
     });
 
     beforeEach(async () => {
-        converterRegistry = await ConverterRegistry.new(contractRegistry.address);
-        converterRegistryData = await ConverterRegistryData.new(contractRegistry.address);
-        const standardPoolConverterFactory = await StandardPoolConverterFactory.new();
-        const converterFactory = await ConverterFactory.new();
+        converterRegistry = await Contracts.TestConverterRegistry.deploy(contractRegistry.address);
+        converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
+        const standardPoolConverterFactory = await Contracts.TestStandardPoolConverterFactory.deploy();
+        const converterFactory = await Contracts.ConverterFactory.deploy();
         await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
 
-        await contractRegistry.registerAddress(CONVERTER_FACTORY, converterFactory.address);
-        await contractRegistry.registerAddress(CONVERTER_REGISTRY, converterRegistry.address);
-        await contractRegistry.registerAddress(CONVERTER_REGISTRY_DATA, converterRegistryData.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
 
-        networkFeeWallet = await TokenHolder.new();
+        networkFeeWallet = await Contracts.TokenHolder.deploy();
         await networkSettings.setNetworkFeeWallet(networkFeeWallet.address);
 
-        networkToken = await DSToken.new('BNT', 'BNT', 18);
-        await networkToken.issue(owner, TOTAL_SUPPLY);
+        networkToken = await Contracts.DSToken.deploy('BNT', 'BNT', 18);
+        await networkToken.issue(owner.address, TOTAL_SUPPLY);
 
-        govToken = await DSToken.new('vBNT', 'vBNT', 18);
-        await govToken.issue(owner, TOTAL_SUPPLY);
+        govToken = await Contracts.DSToken.deploy('vBNT', 'vBNT', 18);
+        await govToken.issue(owner.address, TOTAL_SUPPLY);
 
-        govTokenGovernance = await TokenGovernance.new(govToken.address);
+        govTokenGovernance = await Contracts.TestTokenGovernance.deploy(govToken.address);
         await govToken.transferOwnership(govTokenGovernance.address);
         await govTokenGovernance.acceptTokenOwnership();
 
-        await networkToken.issue(owner, TOTAL_SUPPLY);
+        await networkToken.issue(owner.address, TOTAL_SUPPLY);
 
-        vortex = await VortexBurner.new(networkToken.address, govTokenGovernance.address, contractRegistry.address);
+        vortex = await Contracts.VortexBurner.deploy(
+            networkToken.address,
+            govTokenGovernance.address,
+            contractRegistry.address
+        );
 
         await networkFeeWallet.transferOwnership(vortex.address);
         await vortex.acceptNetworkFeeOwnership();
@@ -94,67 +85,59 @@ describe('VortexBurner', () => {
 
     describe('construction', () => {
         it('should be properly initialized', async () => {
-            const burnReward = await vortex.burnReward.call();
+            const burnReward = await vortex.burnReward();
             const reward = burnReward[0];
             const maxRewardAmount = burnReward[1];
-            expect(reward).to.be.bignumber.equal(new BN(0));
-            expect(maxRewardAmount).to.be.bignumber.equal(new BN(0));
+            expect(reward).to.be.equal(BigNumber.from(0));
+            expect(maxRewardAmount).to.be.equal(BigNumber.from(0));
 
-            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await vortex.totalBurnedAmount()).to.be.equal(BigNumber.from(0));
         });
 
         it('should revert if initialized with an invalid network token address', async () => {
-            await expectRevert(
-                VortexBurner.new(ZERO_ADDRESS, govTokenGovernance.address, contractRegistry.address),
-                'ERR_INVALID_ADDRESS'
-            );
+            await expect(
+                Contracts.VortexBurner.deploy(ZERO_ADDRESS, govTokenGovernance.address, contractRegistry.address)
+            ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
         it('should revert if initialized with an invalid governance token governance address', async () => {
-            await expectRevert(
-                VortexBurner.new(networkToken.address, ZERO_ADDRESS, contractRegistry.address),
-                'ERR_INVALID_ADDRESS'
-            );
+            await expect(
+                Contracts.VortexBurner.deploy(networkToken.address, ZERO_ADDRESS, contractRegistry.address)
+            ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
         it('should revert if initialized with an invalid contract registry address', async () => {
-            await expectRevert(
-                VortexBurner.new(networkToken.address, govTokenGovernance.address, ZERO_ADDRESS),
-                'ERR_INVALID_ADDRESS'
-            );
+            await expect(
+                Contracts.VortexBurner.deploy(networkToken.address, govTokenGovernance.address, ZERO_ADDRESS)
+            ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
     });
 
     describe('receive ETH', () => {
         it('should ETH from any address explicitly', async () => {
-            const prevBalance = await balance.current(vortex.address);
+            const prevBalance = await ethers.provider.getBalance(vortex.address);
 
-            const value = new BN(1);
-            await vortex.send(value);
-            expect(await balance.current(vortex.address)).to.be.bignumber.equal(prevBalance.add(value));
+            const value = BigNumber.from(1);
+            await accounts[9].sendTransaction({ to: vortex.address, value: value });
+            expect(await ethers.provider.getBalance(vortex.address)).to.be.equal(prevBalance.add(value));
         });
     });
 
     describe('network fee wallet ownership', () => {
-        const newOwner = accounts[1];
-
         it('should allow the owner to transfer the network fee wallet ownership', async () => {
-            await vortex.transferNetworkFeeWalletOwnership(newOwner);
-            await networkFeeWallet.acceptOwnership({ from: newOwner });
-            expect(await networkFeeWallet.owner.call()).to.be.eql(newOwner);
+            await vortex.transferNetworkFeeWalletOwnership(newOwner.address);
+            await networkFeeWallet.connect(newOwner).acceptOwnership();
+            expect(await networkFeeWallet.owner()).to.be.eql(newOwner.address);
         });
 
         it('should revert when a non owner attempts to transfer the network fee wallet', async () => {
-            await expectRevert(
-                vortex.transferNetworkFeeWalletOwnership(newOwner, {
-                    from: nonOwner
-                }),
-                'ERR_ACCESS_DENIED'
-            );
+            await expect(
+                vortex.connect(nonOwner).transferNetworkFeeWalletOwnership(newOwner.address)
+            ).to.be.revertedWith('ERR_ACCESS_DENIED');
         });
 
         it('should allow the vortex to accept the network fee wallet ownership', async () => {
-            const newVortex = await VortexBurner.new(
+            const newVortex = await Contracts.VortexBurner.deploy(
                 networkToken.address,
                 govTokenGovernance.address,
                 contractRegistry.address
@@ -162,46 +145,42 @@ describe('VortexBurner', () => {
 
             await vortex.transferNetworkFeeWalletOwnership(newVortex.address);
             await newVortex.acceptNetworkFeeOwnership();
-            expect(await networkFeeWallet.owner.call()).to.be.eql(newVortex.address);
+            expect(await networkFeeWallet.owner()).to.be.eql(newVortex.address);
         });
     });
 
     describe('burn reward setting', () => {
         it('should allow the owner to set the burn reward', async () => {
-            const burnRewardParams = await vortex.burnReward.call();
+            const burnRewardParams = await vortex.burnReward();
             const prevBurnReward = burnRewardParams[0];
             const prevMaxBurnRewardAmount = burnRewardParams[1];
 
             const newBurnReward = PPM_RESOLUTION;
-            const newMaxBurnRewardAmount = new BN(1000);
+            const newMaxBurnRewardAmount = BigNumber.from(1000);
 
             const res = await vortex.setBurnReward(newBurnReward, newMaxBurnRewardAmount);
-            expectEvent(res, 'BurnRewardUpdated', {
-                prevBurnReward,
-                newBurnReward,
-                prevMaxBurnRewardAmount,
-                newMaxBurnRewardAmount
-            });
+            expect(res)
+                .emit(vortex, 'BurnRewardUpdated')
+                .withArgs(prevBurnReward, newBurnReward, prevMaxBurnRewardAmount, newMaxBurnRewardAmount);
 
-            const currentBurnRewardParams = await vortex.burnReward.call();
+            const currentBurnRewardParams = await vortex.burnReward();
             const currentBurnReward = currentBurnRewardParams[0];
             const currentMaxBurnRewardAmount = currentBurnRewardParams[1];
 
-            expect(currentBurnReward).to.be.bignumber.equal(newBurnReward);
-            expect(currentMaxBurnRewardAmount).to.be.bignumber.equal(newMaxBurnRewardAmount);
+            expect(currentBurnReward).to.be.equal(newBurnReward);
+            expect(currentMaxBurnRewardAmount).to.be.equal(newMaxBurnRewardAmount);
         });
 
         it('should revert when a non owner attempts to set the burn reward', async () => {
-            await expectRevert(
-                vortex.setBurnReward(PPM_RESOLUTION, new BN(111), {
-                    from: nonOwner
-                }),
-                'ERR_ACCESS_DENIED'
-            );
+            await expect(
+                vortex.connect(nonOwner).setBurnReward(PPM_RESOLUTION, BigNumber.from(111))
+            ).to.be.revertedWith('ERR_ACCESS_DENIED');
         });
 
         it('should revert when the owner attempts set the burn reward to an invalid fee', async () => {
-            await expectRevert(vortex.setBurnReward(PPM_RESOLUTION.add(new BN(1)), new BN(111)), 'ERR_INVALID_FEE');
+            await expect(
+                vortex.setBurnReward(PPM_RESOLUTION.add(BigNumber.from(1)), BigNumber.from(111))
+            ).to.be.revertedWith('ERR_INVALID_FEE');
         });
     });
 
@@ -212,10 +191,10 @@ describe('VortexBurner', () => {
         const getBalance = async (token, account) => {
             const address = token.address || token;
             if (address === NATIVE_TOKEN_ADDRESS) {
-                return await balance.current(account);
+                return await ethers.provider.getBalance(account);
             }
 
-            return await token.balanceOf.call(account);
+            return await token.balanceOf(account);
         };
 
         const seedNetworkFeeWallet = async (feeAmount) => {
@@ -225,7 +204,7 @@ describe('VortexBurner', () => {
                 const token = tokenData.token;
 
                 if (isETH) {
-                    await networkFeeWallet.send(feeAmount);
+                    await accounts[9].sendTransaction({ to: networkFeeWallet.address, value: feeAmount });
                 } else {
                     await token.transfer(networkFeeWallet.address, feeAmount);
                 }
@@ -266,8 +245,8 @@ describe('VortexBurner', () => {
                     continue;
                 }
 
-                const baseToken = await DSToken.new(symbol, symbol, 18);
-                await baseToken.issue(owner, TOTAL_SUPPLY);
+                const baseToken = await Contracts.DSToken.deploy(symbol, symbol, 18);
+                await baseToken.issue(owner.address, TOTAL_SUPPLY);
 
                 data[symbol] = {
                     token: baseToken
@@ -296,12 +275,12 @@ describe('VortexBurner', () => {
                     STANDARD_CONVERTER_WEIGHTS
                 );
 
-                const anchorCount = await converterRegistry.getAnchorCount.call();
-                const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
-                const poolToken = await DSToken.at(poolTokenAddress);
-                const converterAddress = await poolToken.owner.call();
+                const anchorCount = await converterRegistry.getAnchorCount();
+                const poolTokenAddress = await converterRegistry.getAnchor(anchorCount - 1);
+                const poolToken = await Contracts.DSToken.attach(poolTokenAddress);
+                const converterAddress = await poolToken.owner();
 
-                const converter = await StandardPoolConverter.at(converterAddress);
+                const converter = await Contracts.TestStandardPoolConverter.attach(converterAddress);
 
                 await converter.acceptOwnership();
                 await networkToken.approve(converter.address, RESERVE2_AMOUNT);
@@ -328,10 +307,10 @@ describe('VortexBurner', () => {
 
         describe('successful burn', () => {
             for (const feeAmount of [
-                new BN(1_000).mul(TKN),
-                new BN(10_000).mul(TKN),
-                new BN(100_000).mul(TKN),
-                new BN(1_000_000).mul(TKN)
+                BigNumber.from(1_000).mul(TKN),
+                BigNumber.from(10_000).mul(TKN),
+                BigNumber.from(100_000).mul(TKN),
+                BigNumber.from(1_000_000).mul(TKN)
             ]) {
                 context(`with ${feeAmount.toString()} network fee balance per token`, () => {
                     beforeEach(async () => {
@@ -347,9 +326,9 @@ describe('VortexBurner', () => {
                     ]) {
                         context(`with tokens: ${testTokens.join(',')}`, () => {
                             for (const burnRewardParams of [
-                                [new BN(0), new BN(0)], // No rewards
-                                [new BN(200_000), new BN(0)], // 20%, capped at 0
-                                [new BN(500_000), new BN(1_000).mul(TKN)] // 50%, capped at 1000 tokens
+                                [BigNumber.from(0), BigNumber.from(0)], // No rewards
+                                [BigNumber.from(200_000), BigNumber.from(0)], // 20%, capped at 0
+                                [BigNumber.from(500_000), BigNumber.from(1_000).mul(TKN)] // 50%, capped at 1000 tokens
                             ]) {
                                 const [burnReward, maxBurnRewardAmount] = burnRewardParams;
 
@@ -362,8 +341,8 @@ describe('VortexBurner', () => {
                                             const amounts = [];
                                             const networkTokenConversionAmounts = [];
 
-                                            let grossNetworkTokenConversionAmount = new BN(0);
-                                            let totalBurnedAmount = new BN(0);
+                                            let grossNetworkTokenConversionAmount = BigNumber.from(0);
+                                            let totalBurnedAmount = BigNumber.from(0);
 
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
@@ -390,7 +369,7 @@ describe('VortexBurner', () => {
                                                         await token.approve(bancorNetwork.address, amount);
                                                     }
 
-                                                    const targetAmount = await bancorNetwork.rateByPath.call(
+                                                    const targetAmount = await bancorNetwork.rateByPath(
                                                         [tokenAddress, poolToken.address, networkToken.address],
                                                         amount
                                                     );
@@ -403,9 +382,9 @@ describe('VortexBurner', () => {
                                             }
 
                                             let netNetworkTokenConversionAmount = grossNetworkTokenConversionAmount;
-                                            let burnRewardAmount = new BN(0);
-                                            if (!burnReward.eq(new BN(0))) {
-                                                burnRewardAmount = BN.min(
+                                            let burnRewardAmount = BigNumber.from(0);
+                                            if (!burnReward.eq(BigNumber.from(0))) {
+                                                burnRewardAmount = MathUtils.min(
                                                     netNetworkTokenConversionAmount.mul(burnReward).div(PPM_RESOLUTION),
                                                     maxBurnRewardAmount
                                                 );
@@ -419,7 +398,7 @@ describe('VortexBurner', () => {
                                             // we won't be able to use rateByPath explicitly, since it wouldn't take into
                                             // account a previous conversion.
                                             totalBurnedAmount = totalBurnedAmount.add(
-                                                await bancorNetwork.rateByPath.call(
+                                                await bancorNetwork.rateByPath(
                                                     [
                                                         networkToken.address,
                                                         data.GOV.poolToken.address,
@@ -453,9 +432,9 @@ describe('VortexBurner', () => {
                                             // Check that the network wallet fee balances are correct.
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
-                                                expect(
-                                                    await getBalance(token, networkFeeWallet.address)
-                                                ).to.be.bignumber.equal(feeAmount);
+                                                expect(await getBalance(token, networkFeeWallet.address)).to.be.equal(
+                                                    feeAmount
+                                                );
                                             }
 
                                             const {
@@ -470,65 +449,69 @@ describe('VortexBurner', () => {
                                             // Check that the sender received the reward.
                                             const prevNetworkTokenBalance = await getBalance(
                                                 networkToken,
-                                                defaultSender
+                                                owner.address
                                             );
 
                                             // Perform the actual burn.
                                             const res = await vortex.burn(tokenAddresses);
 
-                                            expectEvent(res, 'Burned', {
-                                                reserveTokens: tokenAddresses,
-                                                sourceAmount: grossNetworkTokenConversionAmount,
-                                                burnedAmount: totalBurnedAmount
-                                            });
+                                            await expect(res)
+                                                .to.emit(vortex, 'Burned')
+                                                .withArgs(
+                                                    tokenAddresses,
+                                                    grossNetworkTokenConversionAmount,
+                                                    totalBurnedAmount
+                                                );
+
+                                            const tx = await res.wait();
+                                            let events = await vortex.queryFilter(
+                                                'Converted',
+                                                tx.blockNumber,
+                                                tx.blockNumber
+                                            );
 
                                             for (let i = 0; i < convertibleTokens.length; ++i) {
-                                                const log = res.logs[i];
-
-                                                expectEvent({ logs: [log] }, 'Converted', {
-                                                    reserveToken: convertibleTokens[i],
-                                                    sourceAmount: amounts[i],
-                                                    targetAmount: networkTokenConversionAmounts[i]
-                                                });
+                                                expect(events[i].args.reserveToken).to.equal(convertibleTokens[i]);
+                                                expect(events[i].args.sourceAmount).to.equal(amounts[i]);
+                                                expect(events[i].args.targetAmount).to.equal(
+                                                    networkTokenConversionAmounts[i]
+                                                );
                                             }
 
                                             // Check that governance tokens were actually burned.
-                                            const blockNumber = res.receipt.blockNumber;
-                                            const events = await govToken.getPastEvents('Destruction', {
-                                                fromBlock: blockNumber,
-                                                toBlock: blockNumber
-                                            });
-                                            expectEvent({ logs: events }, 'Destruction', {
-                                                _amount: totalBurnedAmount
-                                            });
+                                            const blockNumber = tx.blockNumber;
+                                            events = await govToken.queryFilter(
+                                                'Destruction',
+                                                blockNumber,
+                                                blockNumber
+                                            );
+                                            expect(events[0].args._amount).to.equal(totalBurnedAmount);
 
                                             // Check that the network fee wallet balances have been depleted.
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
-                                                expect(
-                                                    await getBalance(token, networkFeeWallet.address)
-                                                ).to.be.bignumber.equal(new BN(0));
+                                                expect(await getBalance(token, networkFeeWallet.address)).to.be.equal(
+                                                    BigNumber.from(0)
+                                                );
                                             }
 
                                             // Check that the sender received the reward.
-                                            expect(await getBalance(networkToken, defaultSender)).to.be.bignumber.equal(
+                                            expect(await getBalance(networkToken, owner.address)).to.be.equal(
                                                 prevNetworkTokenBalance.add(burnRewardAmount)
                                             );
 
                                             // Check that no network tokens have left in the contract.
-                                            expect(
-                                                await getBalance(networkToken, vortex.address)
-                                            ).to.be.bignumber.equal(new BN(0));
+                                            expect(await getBalance(networkToken, vortex.address)).to.be.equal(
+                                                BigNumber.from(0)
+                                            );
 
                                             // Check that no governance tokens have left in the contract.
-                                            expect(await getBalance(govToken, vortex.address)).to.be.bignumber.equal(
-                                                new BN(0)
+                                            expect(await getBalance(govToken, vortex.address)).to.be.equal(
+                                                BigNumber.from(0)
                                             );
 
                                             // Check that the total burned stat has been increment.
-                                            expect(await vortex.totalBurnedAmount.call()).to.be.bignumber.equal(
-                                                totalBurnedAmount
-                                            );
+                                            expect(await vortex.totalBurnedAmount()).to.be.equal(totalBurnedAmount);
                                         });
                                     }
                                 );
@@ -540,14 +523,14 @@ describe('VortexBurner', () => {
         });
 
         it('failing burn: 0 governance tokens to burn', async () => {
-            await seedNetworkFeeWallet(new BN(0));
+            await seedNetworkFeeWallet(BigNumber.from(0));
             const tokenAddresses = getTokenAddresses(['GOV']);
 
-            await expectRevert(vortex.burn(tokenAddresses), 'ERR_ZERO_BURN_AMOUNT');
+            await expect(vortex.burn(tokenAddresses)).to.be.revertedWith('ERR_ZERO_BURN_AMOUNT');
         });
 
         describe('failing burn: 0 conversion result', () => {
-            for (const feeAmount of [new BN(1), new BN(100)]) {
+            for (const feeAmount of [BigNumber.from(1), BigNumber.from(100)]) {
                 context(`with ${feeAmount.toString()} network fee balance per token`, () => {
                     beforeEach(async () => {
                         await seedNetworkFeeWallet(feeAmount);
@@ -561,7 +544,10 @@ describe('VortexBurner', () => {
                             it('should revert when attempting to burn the network fees', async () => {
                                 const tokenAddresses = getTokenAddresses(testTokens);
 
-                                await expectRevert(vortex.burn(tokenAddresses), 'ERR_ZERO_TARGET_AMOUNT');
+                                // @TODO this should break when hardat fix the error with solc/optimizer/revertMsg
+                                await expect(vortex.burn(tokenAddresses)).to.be.reverted.but.not.to.be.revertedWith(
+                                    'ERR_ZERO_TARGET_AMOUNT'
+                                );
                             });
                         });
                     }
@@ -570,7 +556,7 @@ describe('VortexBurner', () => {
         });
 
         describe('failing burn: duplicate tokens', () => {
-            const FEE_AMOUNT = new BN(100_000).mul(TKN);
+            const FEE_AMOUNT = BigNumber.from(100_000).mul(TKN);
 
             beforeEach(async () => {
                 await seedNetworkFeeWallet(FEE_AMOUNT);
@@ -584,7 +570,9 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.burn(tokenAddresses), 'ERC20: transfer amount exceeds balance');
+                        await expect(vortex.burn(tokenAddresses)).to.be.revertedWith(
+                            'ERC20: transfer amount exceeds balance'
+                        );
                     });
                 });
             }
@@ -597,19 +585,19 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert.unspecified(vortex.burn(tokenAddresses));
+                        await expect(vortex.burn(tokenAddresses)).to.be.reverted;
                     });
                 });
             }
         });
 
         describe('failing burn: unsupported tokens', () => {
-            const FEE_AMOUNT = new BN(100_000).mul(TKN);
+            const FEE_AMOUNT = BigNumber.from(100_000).mul(TKN);
             const UNSUPPORTED = 'TKN100';
 
             beforeEach(async () => {
-                const unsupportedToken = await DSToken.new(UNSUPPORTED, UNSUPPORTED, 18);
-                await unsupportedToken.issue(owner, TOTAL_SUPPLY);
+                const unsupportedToken = await Contracts.DSToken.deploy(UNSUPPORTED, UNSUPPORTED, 18);
+                await unsupportedToken.issue(owner.address, TOTAL_SUPPLY);
 
                 data[UNSUPPORTED] = {
                     token: unsupportedToken
@@ -626,7 +614,7 @@ describe('VortexBurner', () => {
                     it('should revert when attempting to burn the network fees', async () => {
                         const tokenAddresses = getTokenAddresses(testTokens);
 
-                        await expectRevert(vortex.burn(tokenAddresses), 'ERR_INVALID_RESERVE_TOKEN');
+                        await expect(vortex.burn(tokenAddresses)).to.be.revertedWith('ERR_INVALID_RESERVE_TOKEN');
                     });
                 });
             }

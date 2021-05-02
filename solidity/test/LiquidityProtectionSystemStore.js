@@ -1,69 +1,90 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
-const { roles } = require('./helpers/Constants');
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
 
-const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
+const { roles } = require('./helpers/Constants');
+
+const Contracts = require('./helpers/Contracts');
+
+let liquidityProtectionSystemStore;
+
+let owner;
+let token;
+let anchor;
+let accounts;
 
 describe('LiquidityProtectionSystemStore', () => {
-    let liquidityProtectionSystemStore;
+    before(async () => {
+        accounts = await ethers.getSigners();
 
-    const owner = accounts[1];
-    const token = accounts[2];
-    const anchor = accounts[3];
+        owner = accounts[1];
+        token = accounts[2];
+        anchor = accounts[3];
+    });
 
     beforeEach(async () => {
-        liquidityProtectionSystemStore = await LiquidityProtectionSystemStore.new();
-        await liquidityProtectionSystemStore.grantRole(roles.ROLE_OWNER, owner);
+        liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
+        await liquidityProtectionSystemStore.grantRole(roles.ROLE_OWNER, owner.address);
     });
 
     it('should revert when a non owner attempts to increase system balance', async () => {
-        await expectRevert(liquidityProtectionSystemStore.incSystemBalance(token, 1), 'ERR_ACCESS_DENIED');
-        expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('0');
+        await expect(liquidityProtectionSystemStore.incSystemBalance(token.address, 1)).to.be.revertedWith(
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionSystemStore.systemBalance(token.address)).to.be.equal('0');
     });
 
     it('should revert when a non owner attempts to decrease system balance', async () => {
-        await liquidityProtectionSystemStore.incSystemBalance(token, 1, { from: owner });
-        await expectRevert(liquidityProtectionSystemStore.decSystemBalance(token, 1), 'ERR_ACCESS_DENIED');
-        expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('1');
+        await liquidityProtectionSystemStore.connect(owner).incSystemBalance(token.address, 1);
+        await expect(liquidityProtectionSystemStore.decSystemBalance(token.address, 1)).to.be.revertedWith(
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionSystemStore.systemBalance(token.address)).to.be.equal('1');
     });
 
     it('should succeed when an owner attempts to increase system balance', async () => {
-        const response = await liquidityProtectionSystemStore.incSystemBalance(token, 1, { from: owner });
-        expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('1');
-        expectEvent(response, 'SystemBalanceUpdated', { token: token, prevAmount: '0', newAmount: '1' });
+        await expect(await liquidityProtectionSystemStore.connect(owner).incSystemBalance(token.address, 1))
+            .to.emit(liquidityProtectionSystemStore, 'SystemBalanceUpdated')
+            .withArgs(token.address, '0', '1');
+        expect(await liquidityProtectionSystemStore.systemBalance(token.address)).to.be.equal('1');
     });
 
     it('should succeed when an owner attempts to decrease system balance', async () => {
-        await liquidityProtectionSystemStore.incSystemBalance(token, 1, { from: owner });
-        expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('1');
-        const response = await liquidityProtectionSystemStore.decSystemBalance(token, 1, { from: owner });
-        expect(await liquidityProtectionSystemStore.systemBalance(token)).to.be.bignumber.equal('0');
-        expectEvent(response, 'SystemBalanceUpdated', { token: token, prevAmount: '1', newAmount: '0' });
+        await liquidityProtectionSystemStore.connect(owner).incSystemBalance(token.address, 1);
+        expect(await liquidityProtectionSystemStore.systemBalance(token.address)).to.be.equal('1');
+        await expect(await liquidityProtectionSystemStore.connect(owner).decSystemBalance(token.address, 1))
+            .to.emit(liquidityProtectionSystemStore, 'SystemBalanceUpdated')
+            .withArgs(token.address, '1', '0');
+        expect(await liquidityProtectionSystemStore.systemBalance(token.address)).to.be.equal('0');
     });
 
     it('should revert when a non owner attempts to increase network tokens minted', async () => {
-        await expectRevert(liquidityProtectionSystemStore.incNetworkTokensMinted(anchor, 1), 'ERR_ACCESS_DENIED');
-        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor)).to.be.bignumber.equal('0');
+        await expect(liquidityProtectionSystemStore.incNetworkTokensMinted(anchor.address, 1)).to.be.revertedWith(
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor.address)).to.be.equal('0');
     });
 
     it('should revert when a non owner attempts to decrease network tokens minted', async () => {
-        await liquidityProtectionSystemStore.incNetworkTokensMinted(anchor, 1, { from: owner });
-        await expectRevert(liquidityProtectionSystemStore.decNetworkTokensMinted(anchor, 1), 'ERR_ACCESS_DENIED');
-        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor)).to.be.bignumber.equal('1');
+        await liquidityProtectionSystemStore.connect(owner).incNetworkTokensMinted(anchor.address, 1);
+        await expect(liquidityProtectionSystemStore.decNetworkTokensMinted(anchor.address, 1)).to.be.revertedWith(
+            'ERR_ACCESS_DENIED'
+        );
+        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor.address)).to.be.equal('1');
     });
 
     it('should succeed when an owner attempts to increase network tokens minted', async () => {
-        const response = await liquidityProtectionSystemStore.incNetworkTokensMinted(anchor, 1, { from: owner });
-        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor)).to.be.bignumber.equal('1');
-        expectEvent(response, 'NetworkTokensMintedUpdated', { poolAnchor: anchor, prevAmount: '0', newAmount: '1' });
+        await expect(await liquidityProtectionSystemStore.connect(owner).incNetworkTokensMinted(anchor.address, 1))
+            .to.emit(liquidityProtectionSystemStore, 'NetworkTokensMintedUpdated')
+            .withArgs(anchor.address, '0', '1');
+        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor.address)).to.be.equal('1');
     });
 
     it('should succeed when an owner attempts to decrease network tokens minted', async () => {
-        await liquidityProtectionSystemStore.incNetworkTokensMinted(anchor, 1, { from: owner });
-        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor)).to.be.bignumber.equal('1');
-        const response = await liquidityProtectionSystemStore.decNetworkTokensMinted(anchor, 1, { from: owner });
-        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor)).to.be.bignumber.equal('0');
-        expectEvent(response, 'NetworkTokensMintedUpdated', { poolAnchor: anchor, prevAmount: '1', newAmount: '0' });
+        await liquidityProtectionSystemStore.connect(owner).incNetworkTokensMinted(anchor.address, 1);
+        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor.address)).to.be.equal('1');
+        await expect(await liquidityProtectionSystemStore.connect(owner).decNetworkTokensMinted(anchor.address, 1))
+            .to.emit(liquidityProtectionSystemStore, 'NetworkTokensMintedUpdated')
+            .withArgs(anchor.address, '1', '0');
+        expect(await liquidityProtectionSystemStore.networkTokensMinted(anchor.address)).to.be.equal('0');
     });
 });

@@ -1,188 +1,218 @@
-const { accounts, defaultSender, contract } = require('@openzeppelin/test-environment');
-const { expectRevert, BN } = require('@openzeppelin/test-helpers');
-const { expect } = require('../../chai-local');
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
+const { BigNumber } = require('ethers');
 
 const { registry } = require('./helpers/Constants');
-const ContractRegistry = contract.fromArtifact('ContractRegistry');
-const ConverterRegistryData = contract.fromArtifact('ConverterRegistryData');
+
+const Contracts = require('./helpers/Contracts');
+
+let contractRegistry;
+let converterRegistry;
+
+let accounts;
+let owner;
+let nonOwner;
+let address1;
+let address2;
+let keyAccounts;
+let valAccounts;
 
 describe('ConverterRegistryData', () => {
-    let contractRegistry;
-    let converterRegistry;
-    const owner = defaultSender;
-    const nonOwner = accounts[9];
-    const address1 = accounts[1];
-    const address2 = accounts[2];
+    before(async () => {
+        accounts = await ethers.getSigners();
+
+        owner = accounts[0];
+        nonOwner = accounts[9];
+        address1 = accounts[1];
+        address2 = accounts[2];
+        keyAccounts = accounts.slice(0, 4);
+        valAccounts = accounts.slice(4, 8);
+    });
 
     beforeEach(async () => {
-        contractRegistry = await ContractRegistry.new();
-        converterRegistry = await ConverterRegistryData.new(contractRegistry.address);
+        contractRegistry = await Contracts.ContractRegistry.deploy();
+        converterRegistry = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
 
         // Allow the owner to manipulate the contract registry data.
-        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, owner);
+        await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, owner.address);
     });
 
     describe('security assertions', () => {
         it('should revert when a non owner attempts to add an anchor', async () => {
-            await expectRevert(converterRegistry.addSmartToken(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expect(converterRegistry.connect(nonOwner).addSmartToken(address1.address)).to.be.revertedWith(
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('should revert when a non owner attempts to remove an anchor', async () => {
-            await converterRegistry.addSmartToken(address1);
-            await expectRevert(converterRegistry.removeSmartToken(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await converterRegistry.addSmartToken(address1.address);
+            await expect(converterRegistry.connect(nonOwner).removeSmartToken(address1.address)).to.be.revertedWith(
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('should revert when a non owner attempts to add a liquidity pool', async () => {
-            await expectRevert(converterRegistry.addLiquidityPool(address1, { from: nonOwner }), 'ERR_ACCESS_DENIED');
+            await expect(converterRegistry.connect(nonOwner).addLiquidityPool(address1.address)).to.be.revertedWith(
+                'ERR_ACCESS_DENIED'
+            );
         });
 
         it('should revert when a non owner attempts to remove a liquidity pool', async () => {
-            await converterRegistry.addLiquidityPool(address1);
-            await expectRevert(
-                converterRegistry.removeLiquidityPool(address1, { from: nonOwner }),
+            await converterRegistry.addLiquidityPool(address1.address);
+            await expect(converterRegistry.connect(nonOwner).removeLiquidityPool(address1.address)).to.be.revertedWith(
                 'ERR_ACCESS_DENIED'
             );
         });
 
         it('should revert when a non owner attempts to add a convertible token', async () => {
-            await expectRevert(
-                converterRegistry.addConvertibleToken(address1, address1, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
+            await expect(
+                converterRegistry.connect(nonOwner).addConvertibleToken(address1.address, address1.address)
+            ).to.be.revertedWith('ERR_ACCESS_DENIED');
         });
 
         it('should revert when a non owner attempts to remove a convertible token', async () => {
-            await converterRegistry.addConvertibleToken(address1, address1);
-            await expectRevert(
-                converterRegistry.removeConvertibleToken(address1, address2, { from: nonOwner }),
-                'ERR_ACCESS_DENIED'
-            );
+            await converterRegistry.addConvertibleToken(address1.address, address1.address);
+            await expect(
+                converterRegistry.connect(nonOwner).removeConvertibleToken(address1.address, address2.address)
+            ).to.be.revertedWith('ERR_ACCESS_DENIED');
         });
     });
 
     describe('anchors basic verification', () => {
         it('should add an anchor if it does not exists', async () => {
-            expect(await converterRegistry.isSmartToken.call(address1)).to.be.false();
-            expect(await converterRegistry.getSmartTokens.call()).not.to.include(address1);
-            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await converterRegistry.isSmartToken(address1.address)).to.be.false;
+            expect(await converterRegistry.getSmartTokens()).not.to.include(address1.address);
+            expect(await converterRegistry.getSmartTokenCount()).to.be.equal(BigNumber.from(0));
 
-            await converterRegistry.addSmartToken(address1);
+            await converterRegistry.addSmartToken(address1.address);
 
-            expect(await converterRegistry.isSmartToken.call(address1)).to.be.true();
-            expect(await converterRegistry.getSmartTokens.call()).to.include(address1);
-            expect(await converterRegistry.getSmartToken.call(0)).to.eql(address1);
-            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(1));
+            expect(await converterRegistry.isSmartToken(address1.address)).to.be.true;
+            expect(await converterRegistry.getSmartTokens()).to.include(address1.address);
+            expect(await converterRegistry.getSmartToken(0)).to.eql(address1.address);
+            expect(await converterRegistry.getSmartTokenCount()).to.be.equal(BigNumber.from(1));
         });
 
         it('should revert if adding an anchor that already exists', async () => {
-            await converterRegistry.addSmartToken(address1);
-            await expectRevert(converterRegistry.addSmartToken(address1), 'ERR_INVALID_ITEM');
+            await converterRegistry.addSmartToken(address1.address);
+            await expect(converterRegistry.addSmartToken(address1.address)).to.be.revertedWith('ERR_INVALID_ITEM');
         });
 
         it('should remove an anchor', async () => {
-            await converterRegistry.addSmartToken(address1);
+            await converterRegistry.addSmartToken(address1.address);
 
-            expect(await converterRegistry.isSmartToken.call(address1)).to.be.true();
-            expect(await converterRegistry.getSmartTokens.call()).to.include(address1);
-            expect(await converterRegistry.getSmartToken.call(0)).to.eql(address1);
-            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(1));
+            expect(await converterRegistry.isSmartToken(address1.address)).to.be.true;
+            expect(await converterRegistry.getSmartTokens()).to.include(address1.address);
+            expect(await converterRegistry.getSmartToken(0)).to.eql(address1.address);
+            expect(await converterRegistry.getSmartTokenCount()).to.be.equal(BigNumber.from(1));
 
-            await converterRegistry.removeSmartToken(address1);
+            await converterRegistry.removeSmartToken(address1.address);
 
-            expect(await converterRegistry.isSmartToken.call(address1)).to.be.false();
-            expect(await converterRegistry.getSmartTokens.call()).not.to.include(address1);
-            expect(await converterRegistry.getSmartTokenCount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await converterRegistry.isSmartToken(address1.address)).to.be.false;
+            expect(await converterRegistry.getSmartTokens()).not.to.include(address1.address);
+            expect(await converterRegistry.getSmartTokenCount()).to.be.equal(BigNumber.from(0));
         });
 
         it("should revert if removing n anchor that doesn't not exist", async () => {
-            await expectRevert(converterRegistry.removeSmartToken(address1), 'ERR_INVALID_ITEM');
+            await expect(converterRegistry.removeSmartToken(address1.address)).to.be.revertedWith('ERR_INVALID_ITEM');
         });
     });
 
     describe('liquidity pools basic verification', () => {
         it('should add a liquidity pool if it does not exists', async () => {
-            expect(await converterRegistry.isLiquidityPool(address1)).to.be.false();
-            expect(await converterRegistry.getLiquidityPools.call()).not.to.include(address1);
-            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(0));
+            expect(await converterRegistry.isLiquidityPool(address1.address)).to.be.false;
+            expect(await converterRegistry.getLiquidityPools()).not.to.include(address1.address);
+            expect(await converterRegistry.getLiquidityPoolCount()).to.be.equal(BigNumber.from(0));
 
-            await converterRegistry.addLiquidityPool(address1);
+            await converterRegistry.addLiquidityPool(address1.address);
 
-            expect(await converterRegistry.isLiquidityPool(address1)).to.be.true();
-            expect(await converterRegistry.getLiquidityPools.call()).to.include(address1);
-            expect(await converterRegistry.getLiquidityPool.call(0)).to.eql(address1);
-            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(1));
+            expect(await converterRegistry.isLiquidityPool(address1.address)).to.be.true;
+            expect(await converterRegistry.getLiquidityPools()).to.include(address1.address);
+            expect(await converterRegistry.getLiquidityPool(0)).to.eql(address1.address);
+            expect(await converterRegistry.getLiquidityPoolCount()).to.be.equal(BigNumber.from(1));
         });
 
         it('should revert if adding a liquidity pool that already exists', async () => {
-            await converterRegistry.addLiquidityPool(address1);
-            await expectRevert(converterRegistry.addLiquidityPool(address1), 'ERR_INVALID_ITEM');
+            await converterRegistry.addLiquidityPool(address1.address);
+            await expect(converterRegistry.addLiquidityPool(address1.address)).to.be.revertedWith('ERR_INVALID_ITEM');
         });
 
         it('should remove a liquidity pool', async () => {
-            await converterRegistry.addLiquidityPool(address1);
-            expect(await converterRegistry.isLiquidityPool(address1)).to.be.true();
-            expect(await converterRegistry.getLiquidityPools.call()).to.include(address1);
-            expect(await converterRegistry.getLiquidityPool.call(0)).to.eql(address1);
-            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(1));
+            await converterRegistry.addLiquidityPool(address1.address);
+            expect(await converterRegistry.isLiquidityPool(address1.address)).to.be.true;
+            expect(await converterRegistry.getLiquidityPools()).to.include(address1.address);
+            expect(await converterRegistry.getLiquidityPool(0)).to.eql(address1.address);
+            expect(await converterRegistry.getLiquidityPoolCount()).to.be.equal(BigNumber.from(1));
 
-            await converterRegistry.removeLiquidityPool(address1);
-            expect(await converterRegistry.isLiquidityPool(address1)).to.be.false();
-            expect(await converterRegistry.getLiquidityPools.call()).not.to.include(address1);
-            expect(await converterRegistry.getLiquidityPoolCount.call()).to.be.bignumber.equal(new BN(0));
+            await converterRegistry.removeLiquidityPool(address1.address);
+            expect(await converterRegistry.isLiquidityPool(address1.address)).to.be.false;
+            expect(await converterRegistry.getLiquidityPools()).not.to.include(address1.address);
+            expect(await converterRegistry.getLiquidityPoolCount()).to.be.equal(BigNumber.from(0));
         });
 
         it("should revert if removing a liquidity pool that doesn't not exist", async () => {
-            await expectRevert(converterRegistry.removeLiquidityPool(address1), 'ERR_INVALID_ITEM');
+            await expect(converterRegistry.removeLiquidityPool(address1.address)).to.be.revertedWith(
+                'ERR_INVALID_ITEM'
+            );
         });
     });
 
     describe('convertible tokens basic verification', () => {
         it('should add a convertible token if it does not exists', async () => {
-            expect(await converterRegistry.isConvertibleToken(address1)).to.be.false();
-            expect(await converterRegistry.getConvertibleTokens.call()).not.to.include(address1);
-            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(0));
-            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.false();
+            expect(await converterRegistry.isConvertibleToken(address1.address)).to.be.false;
+            expect(await converterRegistry.getConvertibleTokens()).not.to.include(address1.address);
+            expect(await converterRegistry.getConvertibleTokenCount()).to.be.equal(BigNumber.from(0));
+            expect(await converterRegistry.isConvertibleTokenSmartToken(address1.address, address2.address)).to.be
+                .false;
 
-            await converterRegistry.addConvertibleToken(address1, address2);
+            await converterRegistry.addConvertibleToken(address1.address, address2.address);
 
-            expect(await converterRegistry.isConvertibleToken(address1)).to.be.true();
-            expect(await converterRegistry.getConvertibleTokens.call()).to.include(address1);
-            expect(await converterRegistry.getConvertibleToken.call(0)).to.eql(address1);
-            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(1));
-            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.true();
-            expect(await converterRegistry.getConvertibleTokenSmartToken.call(address1, 0)).to.be.equal(address2);
+            expect(await converterRegistry.isConvertibleToken(address1.address)).to.be.true;
+            expect(await converterRegistry.getConvertibleTokens()).to.include(address1.address);
+            expect(await converterRegistry.getConvertibleToken(0)).to.eql(address1.address);
+            expect(await converterRegistry.getConvertibleTokenCount()).to.be.equal(BigNumber.from(1));
+            expect(await converterRegistry.isConvertibleTokenSmartToken(address1.address, address2.address)).to.be.true;
+            expect(await converterRegistry.getConvertibleTokenSmartToken(address1.address, 0)).to.be.equal(
+                address2.address
+            );
         });
 
         it('should revert if adding a convertible token that already exists', async () => {
-            await converterRegistry.addConvertibleToken(address1, address2);
-            await expectRevert(converterRegistry.addConvertibleToken(address1, address2), 'ERR_INVALID_ITEM');
+            await converterRegistry.addConvertibleToken(address1.address, address2.address);
+            await expect(converterRegistry.addConvertibleToken(address1.address, address2.address)).to.be.revertedWith(
+                'ERR_INVALID_ITEM'
+            );
         });
 
         it('should remove a convertible token', async () => {
-            await converterRegistry.addConvertibleToken(address1, address2);
-            expect(await converterRegistry.isConvertibleToken(address1)).to.be.true();
-            expect(await converterRegistry.getConvertibleTokens.call()).to.include(address1);
-            expect(await converterRegistry.getConvertibleToken.call(0)).to.eql(address1);
-            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(1));
-            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.true();
-            expect(await converterRegistry.getConvertibleTokenSmartToken.call(address1, 0)).to.be.equal(address2);
+            await converterRegistry.addConvertibleToken(address1.address, address2.address);
+            expect(await converterRegistry.isConvertibleToken(address1.address)).to.be.true;
+            expect(await converterRegistry.getConvertibleTokens()).to.include(address1.address);
+            expect(await converterRegistry.getConvertibleToken(0)).to.eql(address1.address);
+            expect(await converterRegistry.getConvertibleTokenCount()).to.be.equal(BigNumber.from(1));
+            expect(await converterRegistry.isConvertibleTokenSmartToken(address1.address, address2.address)).to.be.true;
+            expect(await converterRegistry.getConvertibleTokenSmartToken(address1.address, 0)).to.be.equal(
+                address2.address
+            );
 
-            await converterRegistry.removeConvertibleToken(address1, address2);
-            expect(await converterRegistry.isConvertibleToken(address1)).to.be.false();
-            expect(await converterRegistry.getConvertibleTokens.call()).not.to.include(address1);
-            expect(await converterRegistry.getConvertibleTokenCount.call()).to.be.bignumber.equal(new BN(0));
-            expect(await converterRegistry.isConvertibleTokenSmartToken.call(address1, address2)).to.be.false();
+            await converterRegistry.removeConvertibleToken(address1.address, address2.address);
+            expect(await converterRegistry.isConvertibleToken(address1.address)).to.be.false;
+            expect(await converterRegistry.getConvertibleTokens()).not.to.include(address1.address);
+            expect(await converterRegistry.getConvertibleTokenCount()).to.be.equal(BigNumber.from(0));
+            expect(await converterRegistry.isConvertibleTokenSmartToken(address1.address, address2.address)).to.be
+                .false;
         });
 
         it("should revert if removing a convertible token that doesn't not exist", async () => {
-            await expectRevert(converterRegistry.removeConvertibleToken(address1, address2), 'ERR_INVALID_ITEM');
+            await expect(
+                converterRegistry.removeConvertibleToken(address1.address, address2.address)
+            ).to.be.revertedWith('ERR_INVALID_ITEM');
         });
     });
 
     describe('anchors advanced verification', () => {
         const removeAllOneByOne = async (direction) => {
             for (const account of accounts) {
-                await converterRegistry.addSmartToken(account);
+                await converterRegistry.addSmartToken(account.address);
             }
 
             for (let items = accounts.slice(); items.length > 0; items.length--) {
@@ -190,7 +220,7 @@ describe('ConverterRegistryData', () => {
                 const endIndex = ((items.length - 1) * (1 + direction)) / 2;
                 const item = await converterRegistry.getSmartToken(bgnIndex);
                 await converterRegistry.removeSmartToken(item);
-                expect(item).to.eql(items[bgnIndex]);
+                expect(item).to.eql(items[bgnIndex].address);
 
                 items[bgnIndex] = items[endIndex];
             }
@@ -208,7 +238,7 @@ describe('ConverterRegistryData', () => {
     describe('liquidity pools advanced verification', () => {
         const removeAllOneByOne = async (direction) => {
             for (const account of accounts) {
-                await converterRegistry.addLiquidityPool(account);
+                await converterRegistry.addLiquidityPool(account.address);
             }
 
             for (let items = accounts.slice(); items.length > 0; items.length--) {
@@ -216,7 +246,7 @@ describe('ConverterRegistryData', () => {
                 const endIndex = ((items.length - 1) * (1 + direction)) / 2;
                 const item = await converterRegistry.getLiquidityPool(bgnIndex);
                 await converterRegistry.removeLiquidityPool(item);
-                expect(item).to.eql(items[bgnIndex]);
+                expect(item).to.eql(items[bgnIndex].address);
 
                 items[bgnIndex] = items[endIndex];
             }
@@ -232,9 +262,6 @@ describe('ConverterRegistryData', () => {
     });
 
     describe('convertible tokens advanced verification', () => {
-        const keyAccounts = accounts.slice(0, 4);
-        const valAccounts = accounts.slice(4, 8);
-
         const test = async (convertibleToken, anchor, func, currentState) => {
             await func(convertibleToken, anchor, currentState);
             const convertibleTokens = await converterRegistry.getConvertibleTokens();
@@ -302,11 +329,11 @@ describe('ConverterRegistryData', () => {
                     for (const addTuples of [rows, cols]) {
                         for (const removeTuples of [rows, cols]) {
                             for (const [convertibleToken, anchor] of addTuples(false, false)) {
-                                await test(convertibleToken, anchor, add, currentState);
+                                await test(convertibleToken.address, anchor.address, add, currentState);
                             }
 
                             for (const [convertibleToken, anchor] of removeTuples(reverseKeys, reverseVals)) {
-                                await test(convertibleToken, anchor, remove, currentState);
+                                await test(convertibleToken.address, anchor.address, remove, currentState);
                             }
                         }
                     }

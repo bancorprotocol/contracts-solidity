@@ -1,16 +1,15 @@
 const fs = require('fs');
+const { ethers } = require('hardhat');
 const path = require('path');
 
-const { web3 } = require('@openzeppelin/test-environment');
-
-const truffleContract = require('@truffle/contract');
+const { ContractFactory } = require('ethers');
 
 module.exports.new = async () => {
+    const accounts = await ethers.getSigners();
+
     const abi = fs.readFileSync(path.resolve(__dirname, '../bin/BancorFormula.abi'));
     const bin = fs.readFileSync(path.resolve(__dirname, '../bin/BancorFormula.bin'));
-    const BancorFormula = truffleContract({ abi: JSON.parse(abi), unlinked_binary: `0x${bin}` });
-    const block = await web3.eth.getBlock('latest');
-    BancorFormula.setProvider(web3.currentProvider);
-    BancorFormula.defaults({ from: (await web3.eth.getAccounts())[0], gas: block.gasLimit });
-    return BancorFormula.new();
+
+    const BancorFormula = new ContractFactory(JSON.parse(abi), `0x${bin}`, accounts[0]);
+    return BancorFormula.deploy();
 };
