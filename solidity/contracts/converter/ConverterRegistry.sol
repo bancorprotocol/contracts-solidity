@@ -91,7 +91,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
     constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {}
 
     /**
-     * @dev creates a zero supply liquid token / empty liquidity pool and adds its converter to the registry
+     * @dev creates an empty liquidity pool and adds its converter to the registry
      *
      * @param _type                converter type, see ConverterBase contract main doc
      * @param _name                token / pool name

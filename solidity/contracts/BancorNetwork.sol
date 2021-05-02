@@ -318,9 +318,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 if (i != 0 && _data[i - 1].beneficiary == address(this) && !stepData.sourceToken.isNativeToken()) {
                     stepData.sourceToken.safeTransfer(address(stepData.converter), fromAmount);
                 }
-            } else if (address(stepData.sourceToken) != address(stepData.anchor)) {
-                // if the source token is the liquid token, no need to do any transfers as the converter controls it
-
+            } else {
+                assert(address(stepData.sourceToken) != address(stepData.anchor));
                 // grant allowance for it to transfer the tokens from the network contract
                 stepData.sourceToken.ensureApprove(address(stepData.converter), fromAmount);
             }

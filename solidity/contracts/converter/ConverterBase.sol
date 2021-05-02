@@ -35,9 +35,8 @@ import "../token/ReserveToken.sol";
  * and the anchor.
  *
  * Converter types (defined as uint16 type) -
- * 0 = liquid token converter (deprecated)
- * 1 = liquidity pool v1 converter
- * 2 = liquidity pool v2 converter (deprecated)
+ * 1 = liquidity pool converter
+ * 3 = standard pool converter
  *
  * Note that converters don't currently support tokens with transfer fees.
  */
