@@ -14,7 +14,7 @@
     "license": "SEE LICENSE IN LICENSE",
     "files": [
         "/contracts/**/*.sol",
-        "/build/contracts/**/*.json",
+        "/artifacts/contracts/**/*.json",
         "!/contracts/helpers"
     ],
     "scripts": {

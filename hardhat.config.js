@@ -62,16 +62,8 @@ module.exports = {
         disambiguatePaths: false
     },
     abiExporter: {
-        path: './build/abi',
+        path: './data/abi',
         clear: true
-    },
-
-    // System Config
-    paths: {
-        sources: './contracts',
-        tests: './test',
-        cache: './cache',
-        artifacts: './build/contracts'
     },
 
     // Test Config
