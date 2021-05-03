@@ -13,8 +13,6 @@ const MIN_GAS_LIMIT = 100000;
 const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
-const ROLE_MANAGER = Web3.utils.keccak256('ROLE_MANAGER');
-const ROLE_UPDATER = Web3.utils.keccak256('ROLE_UPDATER');
 const ROLE_PUBLISHER = Web3.utils.keccak256('ROLE_PUBLISHER');
 
 const STANDARD_ERRORS = ['nonce too low', 'replacement transaction underpriced'];
@@ -367,8 +365,6 @@ const run = async () => {
     await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
 
     await execute(stakingRewardsStore.methods.grantRole(ROLE_OWNER, stakingRewards._address));
-    await execute(stakingRewardsStore.methods.grantRole(ROLE_MANAGER, account.address));
-    await execute(stakingRewards.methods.grantRole(ROLE_UPDATER, account.address));
     await execute(stakingRewards.methods.grantRole(ROLE_PUBLISHER, liquidityProtection._address));
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, stakingRewards._address));
     await execute(liquidityProtectionSettings.methods.addSubscriber(stakingRewards._address));
