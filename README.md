@@ -56,7 +56,7 @@ Bancor is a work in progress. Make sure you understand the risks before using it
     -   `yarn test` (quick testing)
     -   `yarn coverage` (full coverage)
 
-### [Utilities](solidity/utils/README.md)
+### [Utilities](utils/README.md)
 
 ## Collaborators
 
