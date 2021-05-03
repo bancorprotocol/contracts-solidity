@@ -13,6 +13,7 @@ const MIN_GAS_LIMIT = 100000;
 const ROLE_OWNER = Web3.utils.keccak256('ROLE_OWNER');
 const ROLE_GOVERNOR = Web3.utils.keccak256('ROLE_GOVERNOR');
 const ROLE_MINTER = Web3.utils.keccak256('ROLE_MINTER');
+const ROLE_PUBLISHER = Web3.utils.keccak256('ROLE_PUBLISHER');
 
 const STANDARD_ERRORS = ['nonce too low', 'replacement transaction underpriced'];
 
@@ -242,7 +243,7 @@ const run = async () => {
         if (reserve.address) {
             const token = deployed(web3, 'ERC20', reserve.address);
             const symbol = await token.methods.symbol().call();
-            const decimals = await token.methods.symbol().call();
+            const decimals = await token.methods.decimals().call();
             reserves[symbol] = { address: token._address, decimals: decimals };
         } else {
             const name = reserve.symbol + ' DS Token';
@@ -325,6 +326,15 @@ const run = async () => {
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
 
     const checkpointStore = await web3Func(deploy, 'checkpointStore', 'CheckpointStore', []);
+
+    const stakingRewardsStore = await web3Func(deploy, 'stakingRewardsStore', 'StakingRewardsStore', []);
+    const stakingRewards = await web3Func(deploy, 'stakingRewards', 'StakingRewards', [
+        stakingRewardsStore._address,
+        bntTokenGovernance._address,
+        checkpointStore._address,
+        contractRegistry._address
+    ]);
+
     const liquidityProtectionSettings = await web3Func(
         deploy,
         'liquidityProtectionSettings',
@@ -353,6 +363,11 @@ const run = async () => {
     ]);
 
     await execute(checkpointStore.methods.grantRole(ROLE_OWNER, liquidityProtection._address));
+
+    await execute(stakingRewardsStore.methods.grantRole(ROLE_OWNER, stakingRewards._address));
+    await execute(stakingRewards.methods.grantRole(ROLE_PUBLISHER, liquidityProtection._address));
+    await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, stakingRewards._address));
+    await execute(liquidityProtectionSettings.methods.addSubscriber(stakingRewards._address));
 
     // granting the LP contract both of the MINTER roles requires the deployer to have the GOVERNOR role
     await execute(bntTokenGovernance.methods.grantRole(ROLE_MINTER, liquidityProtection._address));
