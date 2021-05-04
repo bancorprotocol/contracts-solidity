@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
@@ -12,7 +13,6 @@ import "../converter/interfaces/IConverter.sol";
 import "../utility/ContractRegistryClient.sol";
 import "../utility/Owned.sol";
 import "../utility/Utils.sol";
-import "../utility/ReentrancyGuard.sol";
 import "../utility/interfaces/ITokenHolder.sol";
 
 import "../token/ReserveToken.sol";
@@ -160,7 +160,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      *
      * @param reserveTokens the reserve tokens to convert
      */
-    function burn(IReserveToken[] calldata reserveTokens) external protected {
+    function burn(IReserveToken[] calldata reserveTokens) external nonReentrant {
         ITokenHolder feeWallet = networkFeeWallet();
 
         // retrieve the burning strategy
