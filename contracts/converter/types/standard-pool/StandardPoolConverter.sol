@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "../../ConverterVersion.sol";
 import "../../interfaces/IConverter.sol";
@@ -10,7 +11,6 @@ import "../../interfaces/IConverterUpgrader.sol";
 
 import "../../../utility/MathEx.sol";
 import "../../../utility/ContractRegistryClient.sol";
-import "../../../utility/ReentrancyGuard.sol";
 import "../../../utility/Time.sol";
 
 import "../../../token/interfaces/IDSToken.sol";
@@ -278,7 +278,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     function transferReservesOnUpgrade(address newConverter)
         external
         override
-        protected
+        nonReentrant
         ownerOnly
         only(CONVERTER_UPGRADER)
     {
@@ -311,7 +311,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev executed by the upgrader at the end of the upgrade process to handle custom pool logic
      */
-    function onUpgradeComplete() external override protected ownerOnly only(CONVERTER_UPGRADER) {
+    function onUpgradeComplete() external override nonReentrant ownerOnly only(CONVERTER_UPGRADER) {
         (uint256 reserveBalance0, uint256 reserveBalance1) = reserveBalances(1, 2);
         _reserveBalancesProduct = reserveBalance0 * reserveBalance1;
     }
@@ -403,7 +403,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     /**
      * @dev calculates the accumulated network fee and transfers it to the network fee wallet
      */
-    function processNetworkFees() external protected {
+    function processNetworkFees() external nonReentrant {
         (uint256 reserveBalance0, uint256 reserveBalance1) = processNetworkFees(0);
         _reserveBalancesProduct = reserveBalance0 * reserveBalance1;
     }
@@ -464,7 +464,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 sourceAmount,
         address trader,
         address payable beneficiary
-    ) external payable override protected only(BANCOR_NETWORK) returns (uint256) {
+    ) external payable override nonReentrant only(BANCOR_NETWORK) returns (uint256) {
         require(sourceToken != targetToken, "ERR_SAME_SOURCE_TARGET");
 
         return doConvert(sourceToken, targetToken, sourceAmount, trader, beneficiary);
@@ -813,7 +813,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         IReserveToken[] memory reserves,
         uint256[] memory reserveAmounts,
         uint256 minReturn
-    ) external payable protected active returns (uint256) {
+    ) external payable nonReentrant active returns (uint256) {
         // verify the user input
         verifyLiquidityInput(reserves, reserveAmounts, minReturn);
 
@@ -939,7 +939,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 amount,
         IReserveToken[] memory reserves,
         uint256[] memory minReturnAmounts
-    ) external protected active returns (uint256[] memory) {
+    ) external nonReentrant active returns (uint256[] memory) {
         // verify the user input
         bool inputRearranged = verifyLiquidityInput(reserves, minReturnAmounts, amount);
 

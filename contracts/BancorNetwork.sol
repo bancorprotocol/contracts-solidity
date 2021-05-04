@@ -2,13 +2,13 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "./IBancorNetwork.sol";
 import "./IConversionPathFinder.sol";
 import "./converter/interfaces/IConverter.sol";
 import "./converter/interfaces/IConverterAnchor.sol";
 import "./utility/ContractRegistryClient.sol";
-import "./utility/ReentrancyGuard.sol";
 import "./utility/TokenHolder.sol";
 
 import "./token/interfaces/IDSToken.sol";
@@ -149,7 +149,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         uint256 sourceAmount,
         uint256 minReturn,
         address payable beneficiary
-    ) public payable protected greaterThanZero(minReturn) returns (uint256) {
+    ) public payable nonReentrant greaterThanZero(minReturn) returns (uint256) {
         // verify that the path contains at least a single 'hop' and that the number of elements is odd
         require(path.length > 2 && path.length % 2 == 1, "ERR_INVALID_PATH");
 

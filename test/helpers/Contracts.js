@@ -75,8 +75,6 @@ module.exports = {
     TestLiquidityProtectionEventsSubscriber: deployOrAttach('TestLiquidityProtectionEventsSubscriber'),
     TestMathEx: deployOrAttach('TestMathEx'),
     TestNonStandardToken: deployOrAttach('TestNonStandardToken'),
-    TestReentrancyGuard: deployOrAttach('TestReentrancyGuard'),
-    TestReentrancyGuardAttacker: deployOrAttach('TestReentrancyGuardAttacker'),
     TestReserveToken: deployOrAttach('TestReserveToken'),
     TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex'),
     TestStakingRewards: deployOrAttach('TestStakingRewards'),

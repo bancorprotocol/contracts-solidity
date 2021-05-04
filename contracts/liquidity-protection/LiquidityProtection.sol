@@ -3,12 +3,12 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
 import "../utility/interfaces/ICheckpointStore.sol";
 import "../utility/MathEx.sol";
-import "../utility/ReentrancyGuard.sol";
 import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
@@ -270,7 +270,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         external
         payable
         override
-        protected
+        nonReentrant
         validAddress(owner)
         poolSupportedAndWhitelisted(poolAnchor)
         addLiquidityEnabled(poolAnchor, reserveToken)
@@ -298,7 +298,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         external
         payable
         override
-        protected
+        nonReentrant
         poolSupportedAndWhitelisted(poolAnchor)
         addLiquidityEnabled(poolAnchor, reserveToken)
         greaterThanZero(amount)
@@ -593,7 +593,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param id position id
      * @param portion portion of liquidity to remove, in PPM
      */
-    function removeLiquidity(uint256 id, uint32 portion) external override protected validPortion(portion) {
+    function removeLiquidity(uint256 id, uint32 portion) external override nonReentrant validPortion(portion) {
         removeLiquidity(msg.sender, id, portion);
     }
 
@@ -761,7 +761,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      */
     function transferPosition(uint256 id, address newProvider)
         external
-        protected
+        nonReentrant
         validAddress(newProvider)
         returns (uint256)
     {
@@ -783,7 +783,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         address newProvider,
         address target,
         bytes memory data
-    ) external protected validAddress(newProvider) validAddress(target) returns (uint256) {
+    ) external nonReentrant validAddress(newProvider) validAddress(target) returns (uint256) {
         // make sure that we're not trying to call into the zero address or a fallback function
         require(data.length >= FUNC_SELECTOR_LENGTH, "ERR_INVALID_CALL_DATA");
 
@@ -830,7 +830,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param startIndex start index in the caller's list of locked balances
      * @param endIndex end index in the caller's list of locked balances (exclusive)
      */
-    function claimBalance(uint256 startIndex, uint256 endIndex) external protected {
+    function claimBalance(uint256 startIndex, uint256 endIndex) external nonReentrant {
         // get the locked balances from the store
         (uint256[] memory amounts, uint256[] memory expirationTimes) =
             _store.lockedBalanceRange(msg.sender, startIndex, endIndex);
