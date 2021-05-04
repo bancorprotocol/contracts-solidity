@@ -13,9 +13,9 @@
     "author": "Yudi Levi",
     "license": "SEE LICENSE IN LICENSE",
     "files": [
-        "/solidity/contracts/**/*.sol",
-        "/solidity/build/contracts/**/*.json",
-        "!/solidity/contracts/helpers"
+        "/contracts/**/*.sol",
+        "/artifacts/contracts/**/*.json",
+        "!/contracts/helpers"
     ],
     "scripts": {
         "build": "hardhat compile",
@@ -25,12 +25,10 @@
         "verify": "hardhat verify",
         "coverage": "hardhat coverage",
         "flatten": "hardhat flatten",
-        "export": "node scripts/export.js",
         "lint": "yarn lint:js && yarn lint:sol",
         "lint:js": "eslint .",
-        "lint:sol": "solhint --max-warnings 0 \"solidity/contracts/**/*.sol\"",
-        "format": "prettier --check --write solidity/**/*.sol solidity/**/*.js scripts/**/*.js *.js --config .prettierrc",
-        "deploy": "node scripts/deploy-one.js",
+        "lint:sol": "solhint --max-warnings 0 \"contracts/**/*.sol\"",
+        "format": "prettier --check --write contracts/**/*.sol contracts/**/*.js  --config .prettierrc",
         "snyk-protect": "snyk protect",
         "prepare": "yarn build && yarn snyk-protect"
     },
