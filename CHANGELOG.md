@@ -1,3 +1,8 @@
+### 0.6.37
+General
+* Minor cleanups
+
+
 ### 0.6.36
 General
 * Updated project dependencies
