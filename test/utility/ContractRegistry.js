@@ -2,8 +2,8 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { registry } = require('./helpers/Constants');
-const Contracts = require('./helpers/Contracts');
+const { registry } = require('../helpers/Constants');
+const Contracts = require('../helpers/Contracts');
 
 const contractName1 = 'red';
 const contractName2 = 'blue';

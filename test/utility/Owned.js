@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 let contract;
 let owner;

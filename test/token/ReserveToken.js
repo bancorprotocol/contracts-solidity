@@ -2,9 +2,9 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { NATIVE_TOKEN_ADDRESS } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS } = require('../helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 const TOTAL_SUPPLY = BigNumber.from(1_000_000);
 

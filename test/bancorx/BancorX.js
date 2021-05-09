@@ -2,9 +2,9 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { advanceBlock } = require('./helpers/Time');
+const { advanceBlock } = require('../helpers/Time');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens

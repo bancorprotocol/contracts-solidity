@@ -19,7 +19,7 @@ module.exports.new = async (
     const accounts = await ethers.getSigners();
 
     if (version) {
-        let contractName = `../bin/converter_v${version}`;
+        let contractName = `./bin/converter_v${version}`;
         if (version >= 43) {
             contractName += `_t${type}`;
         }

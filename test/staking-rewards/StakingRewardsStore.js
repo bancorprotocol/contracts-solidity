@@ -2,10 +2,10 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const Constants = require('./helpers/Constants');
-const Contracts = require('./helpers/Contracts');
+const Constants = require('../helpers/Constants');
+const Contracts = require('../helpers/Contracts');
 
-const { ZERO_ADDRESS } = require('./helpers/Constants');
+const { ZERO_ADDRESS } = require('../helpers/Constants');
 const { CONVERTER_FACTORY, CONVERTER_REGISTRY, CONVERTER_REGISTRY_DATA } = Constants.registry;
 const { ROLE_SUPERVISOR, ROLE_OWNER, ROLE_MANAGER, ROLE_SEEDER } = Constants.roles;
 

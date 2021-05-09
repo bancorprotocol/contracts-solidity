@@ -2,11 +2,11 @@ const { ethers } = require('hardhat');
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../helpers/Constants');
 
-const ConverterHelper = require('./helpers/ConverterHelper');
+const ConverterHelper = require('../helpers/ConverterHelper');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 const CONVERSION_FEE = BigNumber.from(1000);
 const MAX_CONVERSION_FEE = BigNumber.from(30000);
