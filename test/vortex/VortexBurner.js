@@ -2,9 +2,9 @@ const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 const { ethers } = require('hardhat');
 
-const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS } = require('./helpers/Constants');
-const MathUtils = require('./helpers/MathUtils.js');
-const Contracts = require('./helpers/Contracts');
+const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS } = require('../helpers/Constants');
+const MathUtils = require('../helpers/MathUtils.js');
+const Contracts = require('../helpers/Contracts');
 
 const PPM_RESOLUTION = BigNumber.from(1_000_000);
 

@@ -2,11 +2,11 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { Decimal } = require('./helpers/MathUtils.js');
-const { latest, duration } = require('./helpers/Time');
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
+const { Decimal } = require('../../../helpers/MathUtils.js');
+const { latest, duration } = require('../../../helpers/Time');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../../../helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../../../helpers/Contracts');
 
 let now;
 let bancorNetwork;

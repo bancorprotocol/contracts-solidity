@@ -2,16 +2,16 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const MathUtils = require('./helpers/MathUtils');
+const MathUtils = require('../helpers/MathUtils');
 const humanizeDuration = require('humanize-duration');
 const { set } = require('lodash');
 
-const Constants = require('./helpers/Constants');
-const Contracts = require('./helpers/Contracts');
+const Constants = require('../helpers/Constants');
+const Contracts = require('../helpers/Contracts');
 
-const { duration, latest } = require('./helpers/Time');
+const { duration, latest } = require('../helpers/Time');
 
-const { ZERO_ADDRESS } = require('./helpers/Constants');
+const { ZERO_ADDRESS } = require('../helpers/Constants');
 const { CONVERTER_FACTORY, CONVERTER_REGISTRY, CONVERTER_REGISTRY_DATA, LIQUIDITY_PROTECTION } = Constants.registry;
 const {
     ROLE_SUPERVISOR,

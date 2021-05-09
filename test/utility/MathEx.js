@@ -1,10 +1,10 @@
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
-const { Decimal } = require('./helpers/MathUtils.js');
-const MathUtils = require('./helpers/MathUtils');
+const { Decimal } = require('../helpers/MathUtils.js');
+const MathUtils = require('../helpers/MathUtils');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);

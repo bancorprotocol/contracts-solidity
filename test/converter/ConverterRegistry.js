@@ -1,12 +1,12 @@
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
-const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Constants');
+const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../helpers/Constants');
 
 const STANDARD_CONVERTER_TYPE = 3;
 const STANDARD_POOL_CONVERTER_WEIGHT = 500_000;
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 let contractRegistry;
 let converterFactory;

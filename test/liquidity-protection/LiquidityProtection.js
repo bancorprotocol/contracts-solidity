@@ -2,11 +2,11 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { ZERO_ADDRESS, registry, roles, MAX_UINT256, NATIVE_TOKEN_ADDRESS } = require('./helpers/Constants');
-const { duration, latest } = require('./helpers/Time');
+const { ZERO_ADDRESS, registry, roles, MAX_UINT256, NATIVE_TOKEN_ADDRESS } = require('../helpers/Constants');
+const { duration, latest } = require('../helpers/Time');
 
-const Contracts = require('./helpers/Contracts');
-const { Decimal, min } = require('./helpers/MathUtils');
+const Contracts = require('../helpers/Contracts');
+const { Decimal, min } = require('../helpers/MathUtils');
 
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 

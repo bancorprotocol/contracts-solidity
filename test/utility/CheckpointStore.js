@@ -2,11 +2,11 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { duration } = require('./helpers/Time');
-const { roles } = require('./helpers/Constants');
+const { duration } = require('../helpers/Time');
+const { roles } = require('../helpers/Constants');
 const { ROLE_OWNER, ROLE_SEEDER } = roles;
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 let checkpointStore;
 

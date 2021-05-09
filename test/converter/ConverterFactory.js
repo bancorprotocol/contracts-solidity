@@ -2,9 +2,9 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const Constants = require('./helpers/Constants');
+const Constants = require('../helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 const Factories = {
     StandardPoolConverterFactory: Contracts.StandardPoolConverterFactory

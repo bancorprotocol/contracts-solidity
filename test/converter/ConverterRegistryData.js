@@ -2,9 +2,9 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { registry } = require('./helpers/Constants');
+const { registry } = require('../helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 let contractRegistry;
 let converterRegistry;

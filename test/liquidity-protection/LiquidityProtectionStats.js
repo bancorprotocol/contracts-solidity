@@ -1,8 +1,8 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { roles } = require('./helpers/Constants');
+const { roles } = require('../helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('../helpers/Contracts');
 
 let liquidityProtectionStats;
 
