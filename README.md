@@ -25,20 +25,19 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 
 ### Prerequisites
 
-* node 10.16.0
+* node 12.20.0
 * yarn 1.22.0
 * python 3.7.3
 * web3.py 4.9.2
 
 ### Installation
 
-* `yarn`
+* `yarn install`
 
 ### Verification
 
 * Verifying all the contracts:
   * `yarn test` (quick testing)
-  * `yarn coverage` (full coverage)
 * [Verifying the BancorFormula contract](solidity/python/README.md)
 
 ### [Utilities](solidity/utils/README.md)
