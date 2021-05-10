@@ -43,12 +43,12 @@ Bancor is a work in progress. Make sure you understand the risks before using it
 
 ### Prerequisites
 
--   node 10.16.0
+-   node 12.20.0
 -   yarn 1.22.0
 
 ### Installation
 
--   `yarn`
+-   `yarn install`
 
 ### Verification
 
