@@ -11,6 +11,7 @@ require('@nomiclabs/hardhat-etherscan');
 require('solidity-coverage');
 require('hardhat-contract-sizer');
 require('hardhat-abi-exporter');
+require('hardhat-gas-reporter');
 
 // Load Config
 const configPath = path.join(__dirname, '/config.json');
@@ -64,6 +65,10 @@ module.exports = {
     abiExporter: {
         path: './data/abi',
         clear: true
+    },
+    gasReporter: {
+        currency: 'USD',
+        enabled: process.env.PROFILE
     },
 
     // Test Config
