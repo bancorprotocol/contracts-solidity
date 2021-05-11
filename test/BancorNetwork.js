@@ -688,7 +688,7 @@ describe('BancorNetwork', () => {
 
             await expect(
                 bancorNetwork.connect(sender).convert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0)
-            ).to.be.revertedWith('SafeMath: subtraction overflow');
+            ).to.be.revertedWith('ERR_INVALID_SOURCE_TOKEN');
         });
 
         it('should revert when calling convert2 with ether amount different than the amount sent', async () => {
@@ -757,7 +757,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
             await expect(
                 bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0)
-            ).to.be.revertedWith('ERR_INVALID_SOURCE_TOKEN');
+            ).to.be.revertedWith('SafeMath: subtraction overflow');
         });
 
         it('verifies that claimAndConvert2 transfers the converted amount correctly', async () => {
