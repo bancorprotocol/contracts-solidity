@@ -761,6 +761,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      */
     function transferPosition(uint256 id, address newProvider)
         external
+        override
         protected
         validAddress(newProvider)
         returns (uint256)
@@ -773,23 +774,18 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * @param id position id
      * @param newProvider the new provider
-     * @param target the contract to notify
-     * @param data the data to call the contract with
+     * @param callback the callback contract to notify
      *
      * @return new position id
      */
-    function transferPositionAndCall(
+    function transferPositionAndNotify(
         uint256 id,
         address newProvider,
-        address target,
-        bytes memory data
-    ) external protected validAddress(newProvider) validAddress(target) returns (uint256) {
-        // make sure that we're not trying to call into the zero address or a fallback function
-        require(data.length >= FUNC_SELECTOR_LENGTH, "ERR_INVALID_CALL_DATA");
-
+        ITransferPositionEventCallback callback
+    ) external override protected validAddress(newProvider) validAddress(address(callback)) returns (uint256) {
         uint256 newId = transferPosition(msg.sender, id, newProvider);
 
-        Address.functionCall(target, data, "ERR_CALL_FAILED");
+        callback.onTransferPosition(newId, msg.sender);
 
         return newId;
     }
@@ -1381,7 +1377,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         address[] memory subscribers = _settings.subscribers();
         uint256 length = subscribers.length;
         for (uint256 i = 0; i < length; i++) {
-            ILiquidityProtectionEventsSubscriber(subscribers[i]).onAddingLiquidity(
+            ILiquidityProvisionEventsSubscriber(subscribers[i]).onAddingLiquidity(
                 provider,
                 poolToken,
                 reserveToken,
@@ -1412,7 +1408,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         address[] memory subscribers = _settings.subscribers();
         uint256 length = subscribers.length;
         for (uint256 i = 0; i < length; i++) {
-            ILiquidityProtectionEventsSubscriber(subscribers[i]).onRemovingLiquidity(
+            ILiquidityProvisionEventsSubscriber(subscribers[i]).onRemovingLiquidity(
                 id,
                 provider,
                 poolToken,

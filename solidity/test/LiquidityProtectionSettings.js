@@ -16,7 +16,7 @@ const ConverterFactory = contract.fromArtifact('ConverterFactory');
 const DSToken = contract.fromArtifact('DSToken');
 const LiquidityPoolV1ConverterFactory = contract.fromArtifact('TestLiquidityPoolV1ConverterFactory');
 const StandardPoolConverterFactory = contract.fromArtifact('TestStandardPoolConverterFactory');
-const LiquidityProtectionEventsSubscriber = contract.fromArtifact('TestLiquidityProtectionEventsSubscriber');
+const LiquidityProvisionEventsSubscriber = contract.fromArtifact('TestLiquidityProvisionEventsSubscriber');
 const LiquidityProtectionSettings = contract.fromArtifact('LiquidityProtectionSettings');
 
 const PPM_RESOLUTION = new BN(1000000);
@@ -71,7 +71,7 @@ describe('LiquidityProtectionSettings', () => {
         const poolTokenAddress = await converterRegistry.getAnchor.call(anchorCount - 1);
         poolToken = await DSToken.at(poolTokenAddress);
 
-        subscriber = await LiquidityProtectionEventsSubscriber.new();
+        subscriber = await LiquidityProvisionEventsSubscriber.new();
     });
 
     beforeEach(async () => {
@@ -184,13 +184,15 @@ describe('LiquidityProtectionSettings', () => {
         it('should succeed when an owner attempts to add a subscriber', async () => {
             expect(await settings.subscribers.call()).to.be.equalTo([]);
 
-            await settings.addSubscriber(subscriber.address, { from: owner });
+            const res = await settings.addSubscriber(subscriber.address, { from: owner });
+            expectEvent(res, 'SubscriberUpdated', { subscriber: subscriber.address, added: true });
 
             expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
 
             const subscriber2 = accounts[3];
 
-            await settings.addSubscriber(subscriber2, { from: owner });
+            const res2 = await settings.addSubscriber(subscriber2, { from: owner });
+            expectEvent(res2, 'SubscriberUpdated', { subscriber: subscriber2, added: true });
 
             expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address, subscriber2]);
         });
@@ -200,7 +202,8 @@ describe('LiquidityProtectionSettings', () => {
 
             expect(await settings.subscribers.call()).to.be.equalTo([subscriber.address]);
 
-            await settings.removeSubscriber(subscriber.address, { from: owner });
+            const res = await settings.removeSubscriber(subscriber.address, { from: owner });
+            expectEvent(res, 'SubscriberUpdated', { subscriber: subscriber.address, added: false });
 
             expect(await settings.subscribers.call()).to.be.equalTo([]);
         });
@@ -267,8 +270,6 @@ describe('LiquidityProtectionSettings', () => {
     });
 
     describe('pool limits', () => {
-        const admin = accounts[2];
-
         it('verifies that the owner can set the minimum network token liquidity for minting', async () => {
             const prevMin = await settings.minNetworkTokenLiquidityForMinting.call();
             const newMin = new BN(100);

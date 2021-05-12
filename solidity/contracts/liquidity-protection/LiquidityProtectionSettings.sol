@@ -66,7 +66,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      * @param subscriber subscriber
      * @param added true if the subscriber was added, false if it was removed
      */
-    event SubscriberUpdated(ILiquidityProtectionEventsSubscriber indexed subscriber, bool added);
+    event SubscriberUpdated(ILiquidityProvisionEventsSubscriber indexed subscriber, bool added);
 
     /**
      * @dev triggered when the minimum amount of network token liquidity to allow minting is updated
@@ -328,7 +328,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param subscriber subscriber address
      */
-    function addSubscriber(ILiquidityProtectionEventsSubscriber subscriber)
+    function addSubscriber(ILiquidityProvisionEventsSubscriber subscriber)
         external
         onlyOwner
         validExternalAddress(address(subscriber))
@@ -344,7 +344,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * @param subscriber    subscriber address
      */
-    function removeSubscriber(ILiquidityProtectionEventsSubscriber subscriber) external onlyOwner {
+    function removeSubscriber(ILiquidityProvisionEventsSubscriber subscriber) external onlyOwner {
         require(_subscribers.remove(address(subscriber)), "ERR_INVALID_SUBSCRIBER");
 
         emit SubscriberUpdated(subscriber, false);
