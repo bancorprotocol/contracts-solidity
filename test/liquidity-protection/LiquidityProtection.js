@@ -2303,7 +2303,7 @@ describe('LiquidityProtection', () => {
                                 callback = await Contracts.TestTransferPositionCallback.deploy();
                             });
 
-                            it('should revert when called with an invalid target', async () => {
+                            it('should revert when called with an invalid callback', async () => {
                                 await expect(
                                     liquidityProtection
                                         .connect(recipient)
