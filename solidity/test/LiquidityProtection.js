@@ -2229,7 +2229,7 @@ describe('LiquidityProtection', () => {
                             callback = await TransferPositionCallback.new();
                         });
 
-                        it('should revert when called with an invalid target', async () => {
+                        it('should revert when called with an invalid callback', async () => {
                             await expectRevert(
                                 liquidityProtection.transferPositionAndNotify(
                                     protectionId,
