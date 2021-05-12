@@ -2231,9 +2231,15 @@ describe('LiquidityProtection', () => {
 
                         it('should revert when called with an invalid target', async () => {
                             await expectRevert(
-                                liquidityProtection.transferPositionAndNotify(protectionId, newOwner, ZERO_ADDRESS, {
-                                    from: recipient
-                                }),
+                                liquidityProtection.transferPositionAndNotify(
+                                    protectionId,
+                                    newOwner,
+                                    ZERO_ADDRESS,
+                                    [],
+                                    {
+                                        from: recipient
+                                    }
+                                ),
                                 'ERR_INVALID_ADDRESS'
                             );
                         });
@@ -2242,12 +2248,16 @@ describe('LiquidityProtection', () => {
                             const transferEvent = await callback.transferEvent.call();
                             expect(transferEvent[0]).to.be.bignumber.equal(new BN(0));
                             expect(transferEvent[1]).to.eql(ZERO_ADDRESS);
+                            expect(transferEvent[2]).to.be.null();
+
+                            const data = '0x1234';
 
                             await verifyTransfer(async () =>
                                 liquidityProtection.transferPositionAndNotify(
                                     protectionId,
                                     newOwner,
                                     callback.address,
+                                    data,
                                     {
                                         from: recipient
                                     }
@@ -2260,6 +2270,7 @@ describe('LiquidityProtection', () => {
                             const transferEvent2 = await callback.transferEvent.call();
                             expect(transferEvent2[0]).to.be.bignumber.equal(protectionIds2[0]);
                             expect(transferEvent2[1]).to.eql(recipient);
+                            expect(transferEvent2[2]).to.eql(data);
                         });
                     });
                 };

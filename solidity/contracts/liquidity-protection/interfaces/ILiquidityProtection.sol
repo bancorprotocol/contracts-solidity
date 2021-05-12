@@ -47,6 +47,7 @@ interface ILiquidityProtection {
     function transferPositionAndNotify(
         uint256 id,
         address newProvider,
-        ITransferPositionEventCallback callback
+        ITransferPositionEventCallback callback,
+        bytes calldata data
     ) external returns (uint256);
 }

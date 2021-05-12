@@ -5,5 +5,9 @@ pragma solidity 0.6.12;
  * @dev Transfer position event callback interface
  */
 interface ITransferPositionEventCallback {
-    function onTransferPosition(uint256 newId, address provider) external;
+    function onTransferPosition(
+        uint256 newId,
+        address provider,
+        bytes calldata data
+    ) external;
 }

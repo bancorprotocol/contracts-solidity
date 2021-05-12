@@ -775,17 +775,19 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param id position id
      * @param newProvider the new provider
      * @param callback the callback contract to notify
+     * @param data custom data provided to the callback
      *
      * @return new position id
      */
     function transferPositionAndNotify(
         uint256 id,
         address newProvider,
-        ITransferPositionEventCallback callback
+        ITransferPositionEventCallback callback,
+        bytes calldata data
     ) external override protected validAddress(newProvider) validAddress(address(callback)) returns (uint256) {
         uint256 newId = transferPosition(msg.sender, id, newProvider);
 
-        callback.onTransferPosition(newId, msg.sender);
+        callback.onTransferPosition(newId, msg.sender, data);
 
         return newId;
     }
