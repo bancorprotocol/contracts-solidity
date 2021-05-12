@@ -782,7 +782,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function transferPositionAndNotify(
         uint256 id,
         address newProvider,
-        ITransferPositionEventCallback callback,
+        ITransferPositionCallback callback,
         bytes calldata data
     ) external override protected validAddress(newProvider) validAddress(address(callback)) returns (uint256) {
         uint256 newId = transferPosition(msg.sender, id, newProvider);

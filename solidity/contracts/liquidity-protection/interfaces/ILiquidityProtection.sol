@@ -5,7 +5,7 @@ import "./ILiquidityProtectionStore.sol";
 import "./ILiquidityProtectionStats.sol";
 import "./ILiquidityProtectionSettings.sol";
 import "./ILiquidityProtectionSystemStore.sol";
-import "./ITransferPositionEventCallback.sol";
+import "./ITransferPositionCallback.sol";
 
 import "../../utility/interfaces/ITokenHolder.sol";
 
@@ -47,7 +47,7 @@ interface ILiquidityProtection {
     function transferPositionAndNotify(
         uint256 id,
         address newProvider,
-        ITransferPositionEventCallback callback,
+        ITransferPositionCallback callback,
         bytes calldata data
     ) external returns (uint256);
 }

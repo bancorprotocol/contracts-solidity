@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "../liquidity-protection/interfaces/ITransferPositionEventCallback.sol";
+import "../liquidity-protection/interfaces/ITransferPositionCallback.sol";
 
-contract TestTransferPositionEventCallback is ITransferPositionEventCallback {
+contract TestTransferPositionCallback is ITransferPositionCallback {
     struct TransferPositionEvent {
         uint256 newId;
         address provider;

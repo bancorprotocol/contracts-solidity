@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 /**
  * @dev Transfer position event callback interface
  */
-interface ITransferPositionEventCallback {
+interface ITransferPositionCallback {
     function onTransferPosition(
         uint256 newId,
         address provider,

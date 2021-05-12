@@ -25,7 +25,7 @@ const LiquidityProtectionStats = contract.fromArtifact('LiquidityProtectionStats
 const LiquidityProtectionSystemStore = contract.fromArtifact('LiquidityProtectionSystemStore');
 const TokenHolder = contract.fromArtifact('TokenHolder');
 const LiquidityProvisionEventsSubscriber = contract.fromArtifact('TestLiquidityProvisionEventsSubscriber');
-const TransferPositionEventCallback = contract.fromArtifact('TestTransferPositionEventCallback');
+const TransferPositionCallback = contract.fromArtifact('TestTransferPositionCallback');
 const TokenGovernance = contract.fromArtifact('TestTokenGovernance');
 const CheckpointStore = contract.fromArtifact('TestCheckpointStore');
 const LiquidityProtection = contract.fromArtifact('TestLiquidityProtection');
@@ -2226,7 +2226,7 @@ describe('LiquidityProtection', () => {
                         let callback;
 
                         beforeEach(async () => {
-                            callback = await TransferPositionEventCallback.new();
+                            callback = await TransferPositionCallback.new();
                         });
 
                         it('should revert when called with an invalid target', async () => {
