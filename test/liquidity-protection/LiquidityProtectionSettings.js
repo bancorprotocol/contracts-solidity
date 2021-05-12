@@ -72,7 +72,7 @@ describe('LiquidityProtectionSettings', () => {
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
 
-        subscriber = await Contracts.TestLiquidityProtectionEventsSubscriber.deploy();
+        subscriber = await Contracts.TestLiquidityProvisionEventsSubscriber.deploy();
     });
 
     beforeEach(async () => {
@@ -208,13 +208,15 @@ describe('LiquidityProtectionSettings', () => {
         it('should succeed when an owner attempts to add a subscriber', async () => {
             expect(await settings.subscribers()).to.be.deep.equal([]);
 
-            await settings.connect(owner).addSubscriber(subscriber.address);
+            const res = await settings.connect(owner).addSubscriber(subscriber.address);
+            await expect(res).to.emit(settings, 'SubscriberUpdated').withArgs(subscriber.address, true);
 
             expect(await settings.subscribers()).to.be.deep.equal([subscriber.address]);
 
             const subscriber2 = accounts[3].address;
 
-            await settings.connect(owner).addSubscriber(subscriber2);
+            const res2 = await settings.connect(owner).addSubscriber(subscriber2);
+            await expect(res2).to.emit(settings, 'SubscriberUpdated').withArgs(subscriber2, true);
 
             expect(await settings.subscribers()).to.be.deep.equal([subscriber.address, subscriber2]);
         });
@@ -224,7 +226,8 @@ describe('LiquidityProtectionSettings', () => {
 
             expect(await settings.subscribers()).to.be.deep.equal([subscriber.address]);
 
-            await settings.connect(owner).removeSubscriber(subscriber.address);
+            const res = await settings.connect(owner).removeSubscriber(subscriber.address);
+            await expect(res).to.emit(settings, 'SubscriberUpdated').withArgs(subscriber.address, false);
 
             expect(await settings.subscribers()).to.be.deep.equal([]);
         });

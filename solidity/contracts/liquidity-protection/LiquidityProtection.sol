@@ -3,12 +3,12 @@ pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
 import "../utility/interfaces/ICheckpointStore.sol";
 import "../utility/MathEx.sol";
+import "../utility/ReentrancyGuard.sol";
 import "../utility/Types.sol";
 import "../utility/Time.sol";
 import "../utility/Utils.sol";
@@ -270,7 +270,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         external
         payable
         override
-        nonReentrant
+        protected
         validAddress(owner)
         poolSupportedAndWhitelisted(poolAnchor)
         addLiquidityEnabled(poolAnchor, reserveToken)
@@ -298,7 +298,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         external
         payable
         override
-        nonReentrant
+        protected
         poolSupportedAndWhitelisted(poolAnchor)
         addLiquidityEnabled(poolAnchor, reserveToken)
         greaterThanZero(amount)
@@ -593,7 +593,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param id position id
      * @param portion portion of liquidity to remove, in PPM
      */
-    function removeLiquidity(uint256 id, uint32 portion) external override nonReentrant validPortion(portion) {
+    function removeLiquidity(uint256 id, uint32 portion) external override protected validPortion(portion) {
         removeLiquidity(msg.sender, id, portion);
     }
 
@@ -762,7 +762,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function transferPosition(uint256 id, address newProvider)
         external
         override
-        nonReentrant
+        protected
         validAddress(newProvider)
         returns (uint256)
     {
@@ -784,7 +784,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         address newProvider,
         ITransferPositionCallback callback,
         bytes calldata data
-    ) external override nonReentrant validAddress(newProvider) validAddress(address(callback)) returns (uint256) {
+    ) external override protected validAddress(newProvider) validAddress(address(callback)) returns (uint256) {
         uint256 newId = transferPosition(msg.sender, id, newProvider);
 
         callback.onTransferPosition(newId, msg.sender, data);
@@ -828,7 +828,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @param startIndex start index in the caller's list of locked balances
      * @param endIndex end index in the caller's list of locked balances (exclusive)
      */
-    function claimBalance(uint256 startIndex, uint256 endIndex) external nonReentrant {
+    function claimBalance(uint256 startIndex, uint256 endIndex) external protected {
         // get the locked balances from the store
         (uint256[] memory amounts, uint256[] memory expirationTimes) =
             _store.lockedBalanceRange(msg.sender, startIndex, endIndex);

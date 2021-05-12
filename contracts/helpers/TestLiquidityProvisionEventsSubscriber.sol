@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
-import "../liquidity-protection/interfaces/ILiquidityProtectionEventsSubscriber.sol";
+import "../liquidity-protection/interfaces/ILiquidityProvisionEventsSubscriber.sol";
 
-/**
- * @dev Liquidity protection events subscriber interface
- */
-contract TestLiquidityProtectionEventsSubscriber is ILiquidityProtectionEventsSubscriber {
+contract TestLiquidityProvisionEventsSubscriber is ILiquidityProvisionEventsSubscriber {
     struct LiquidityProtectionEvent {
         uint256 id;
         address provider;
