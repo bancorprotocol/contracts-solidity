@@ -1,4 +1,4 @@
-const { expect } = require('chai');
+const chai = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
@@ -6,6 +6,9 @@ const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, roles } = require('../help
 
 const ConverterHelper = require('../helpers/ConverterHelper');
 const Contracts = require('../helpers/Contracts');
+
+chai.use(require('chai-arrays'));
+const { expect } = chai;
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
 
@@ -100,9 +103,9 @@ describe('LiquidityProtectionSettings', () => {
     });
 
     it('should properly initialize roles', async () => {
-        expect(await settings.getRoleMemberCount(roles.ROLE_OWNER)).to.be.equal(BigNumber.from(1));
+        expect(await settings.getRoleMemberCount(roles.ROLE_OWNER)).to.equal(BigNumber.from(1));
 
-        expect(await settings.getRoleAdmin(roles.ROLE_OWNER)).to.eql(roles.ROLE_OWNER);
+        expect(await settings.getRoleAdmin(roles.ROLE_OWNER)).to.equal(roles.ROLE_OWNER);
 
         expect(await settings.hasRole(roles.ROLE_OWNER, owner.address)).to.be.true;
     });
@@ -148,31 +151,31 @@ describe('LiquidityProtectionSettings', () => {
 
         it('should succeed when an owner attempts to add a whitelisted pool', async () => {
             expect(await settings.isPoolWhitelisted(poolToken.address)).to.be.false;
-            expect(await settings.poolWhitelist()).to.be.deep.equal([]);
+            expect(await settings.poolWhitelist()).to.be.empty;
 
             await settings.connect(owner).addPoolToWhitelist(poolToken.address);
 
             expect(await settings.isPoolWhitelisted(poolToken.address)).to.be.true;
-            expect(await settings.poolWhitelist()).to.be.deep.equal([poolToken.address]);
+            expect(await settings.poolWhitelist()).to.equalTo([poolToken.address]);
 
             const poolToken2 = accounts[3].address;
 
             await settings.connect(owner).addPoolToWhitelist(poolToken2);
 
             expect(await settings.isPoolWhitelisted(poolToken2)).to.be.true;
-            expect(await settings.poolWhitelist()).to.be.deep.equal([poolToken.address, poolToken2]);
+            expect(await settings.poolWhitelist()).to.equalTo([poolToken.address, poolToken2]);
         });
 
         it('should succeed when the owner attempts to remove a whitelisted pool', async () => {
             await settings.connect(owner).addPoolToWhitelist(poolToken.address);
 
             expect(await settings.isPoolWhitelisted(poolToken.address)).to.be.true;
-            expect(await settings.poolWhitelist()).to.be.deep.equal([poolToken.address]);
+            expect(await settings.poolWhitelist()).to.equalTo([poolToken.address]);
 
             await settings.connect(owner).removePoolFromWhitelist(poolToken.address);
 
             expect(await settings.isPoolWhitelisted(poolToken.address)).to.be.false;
-            expect(await settings.poolWhitelist()).to.be.deep.equal([]);
+            expect(await settings.poolWhitelist()).to.be.empty;
         });
     });
 
@@ -181,7 +184,7 @@ describe('LiquidityProtectionSettings', () => {
             await expect(settings.connect(nonOwner).addSubscriber(subscriber.address)).to.be.revertedWith(
                 'ERR_ACCESS_DENIED'
             );
-            expect(await settings.subscribers()).to.be.deep.equal([]);
+            expect(await settings.subscribers()).to.be.empty;
         });
 
         it('should revert when a non owner attempts to remove a subscriber', async () => {
@@ -189,7 +192,7 @@ describe('LiquidityProtectionSettings', () => {
             await expect(settings.connect(nonOwner).removeSubscriber(subscriber.address)).to.be.revertedWith(
                 'ERR_ACCESS_DENIED'
             );
-            expect(await settings.subscribers()).to.be.deep.equal([subscriber.address]);
+            expect(await settings.subscribers()).to.equalTo([subscriber.address]);
         });
 
         it('should revert when an owner attempts to add a subscriber which is already set', async () => {
@@ -206,30 +209,30 @@ describe('LiquidityProtectionSettings', () => {
         });
 
         it('should succeed when an owner attempts to add a subscriber', async () => {
-            expect(await settings.subscribers()).to.be.deep.equal([]);
+            expect(await settings.subscribers()).to.be.empty;
 
             const res = await settings.connect(owner).addSubscriber(subscriber.address);
             await expect(res).to.emit(settings, 'SubscriberUpdated').withArgs(subscriber.address, true);
 
-            expect(await settings.subscribers()).to.be.deep.equal([subscriber.address]);
+            expect(await settings.subscribers()).to.equalTo([subscriber.address]);
 
             const subscriber2 = accounts[3].address;
 
             const res2 = await settings.connect(owner).addSubscriber(subscriber2);
             await expect(res2).to.emit(settings, 'SubscriberUpdated').withArgs(subscriber2, true);
 
-            expect(await settings.subscribers()).to.be.deep.equal([subscriber.address, subscriber2]);
+            expect(await settings.subscribers()).to.equalTo([subscriber.address, subscriber2]);
         });
 
         it('should succeed when the owner attempts to remove a subscriber', async () => {
             await settings.connect(owner).addSubscriber(subscriber.address);
 
-            expect(await settings.subscribers()).to.be.deep.equal([subscriber.address]);
+            expect(await settings.subscribers()).to.equalTo([subscriber.address]);
 
             const res = await settings.connect(owner).removeSubscriber(subscriber.address);
             await expect(res).to.emit(settings, 'SubscriberUpdated').withArgs(subscriber.address, false);
 
-            expect(await settings.subscribers()).to.be.deep.equal([]);
+            expect(await settings.subscribers()).to.be.empty;
         });
     });
 
@@ -285,8 +288,8 @@ describe('LiquidityProtectionSettings', () => {
 
             const minimum = await settings.minNetworkTokenLiquidityForMinting();
 
-            expect(minimum).not.to.be.equal(prevMin);
-            expect(minimum).to.be.equal(newMin);
+            expect(minimum).not.to.equal(prevMin);
+            expect(minimum).to.equal(newMin);
         });
 
         it('should revert when a non owner attempts to set the minimum network token liquidity for minting', async () => {
@@ -305,8 +308,8 @@ describe('LiquidityProtectionSettings', () => {
 
             const defaultLimit = await settings.defaultNetworkTokenMintingLimit();
 
-            expect(defaultLimit).not.to.be.equal(prevDefault);
-            expect(defaultLimit).to.be.equal(newDefault);
+            expect(defaultLimit).not.to.equal(prevDefault);
+            expect(defaultLimit).to.equal(newDefault);
         });
 
         it('should revert when a non owner attempts to set the default network token minting limit', async () => {
@@ -325,8 +328,8 @@ describe('LiquidityProtectionSettings', () => {
 
             const limit = await settings.networkTokenMintingLimits(poolToken.address);
 
-            expect(limit).not.to.be.equal(prevLimit);
-            expect(limit).to.be.equal(newLimit);
+            expect(limit).not.to.equal(prevLimit);
+            expect(limit).to.equal(newLimit);
         });
 
         it('should revert when a non owner attempts to set the network token minting limit for a pool', async () => {
@@ -350,11 +353,11 @@ describe('LiquidityProtectionSettings', () => {
             const minProtectionDelay = await settings.minProtectionDelay();
             const maxProtectionDelay = await settings.maxProtectionDelay();
 
-            expect(minProtectionDelay).not.to.be.equal(prevMinProtectionDelay);
-            expect(maxProtectionDelay).not.to.be.equal(prevMaxProtectionDelay);
+            expect(minProtectionDelay).not.to.equal(prevMinProtectionDelay);
+            expect(maxProtectionDelay).not.to.equal(prevMaxProtectionDelay);
 
-            expect(minProtectionDelay).to.be.equal(newMinProtectionDelay);
-            expect(maxProtectionDelay).to.be.equal(newMaxProtectionDelay);
+            expect(minProtectionDelay).to.equal(newMinProtectionDelay);
+            expect(maxProtectionDelay).to.equal(newMaxProtectionDelay);
         });
 
         it('should revert when a non owner attempts to set the protection delays', async () => {
@@ -379,8 +382,8 @@ describe('LiquidityProtectionSettings', () => {
 
             const minNetworkCompensation = await settings.minNetworkCompensation();
 
-            expect(minNetworkCompensation).not.to.be.equal(prevMinNetworkCompensation);
-            expect(minNetworkCompensation).to.be.equal(newMinNetworkCompensation);
+            expect(minNetworkCompensation).not.to.equal(prevMinNetworkCompensation);
+            expect(minNetworkCompensation).to.equal(newMinNetworkCompensation);
         });
 
         it('should revert when a non owner attempts to set the minimum network compensation', async () => {
@@ -401,8 +404,8 @@ describe('LiquidityProtectionSettings', () => {
 
             const lockDuration = await settings.lockDuration();
 
-            expect(lockDuration).not.to.be.equal(prevLockDuration);
-            expect(lockDuration).to.be.equal(BigNumber.from(100));
+            expect(lockDuration).not.to.equal(prevLockDuration);
+            expect(lockDuration).to.equal(BigNumber.from(100));
         });
 
         it('should revert when a non owner attempts to set the lock duration', async () => {
@@ -414,13 +417,13 @@ describe('LiquidityProtectionSettings', () => {
 
     describe('maximum deviation of the average rate', () => {
         it('verifies that the owner can set the maximum deviation of the average rate from the actual rate', async () => {
-            expect(await settings.averageRateMaxDeviation()).to.be.equal(BigNumber.from(5000));
+            expect(await settings.averageRateMaxDeviation()).to.equal(BigNumber.from(5000));
 
             await expect(await settings.setAverageRateMaxDeviation(BigNumber.from(30000)))
                 .to.emit(settings, 'AverageRateMaxDeviationUpdated')
                 .withArgs(BigNumber.from(5000), BigNumber.from(30000));
 
-            expect(await settings.averageRateMaxDeviation()).to.be.equal(BigNumber.from(30000));
+            expect(await settings.averageRateMaxDeviation()).to.equal(BigNumber.from(30000));
         });
 
         it('should revert when a non owner attempts to set the maximum deviation of the average rate from the actual rate', async () => {

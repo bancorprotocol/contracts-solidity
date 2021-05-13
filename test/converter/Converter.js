@@ -131,7 +131,7 @@ describe('Converter', () => {
         it('verifies that converterType returns the correct type', async () => {
             const converter = await initConverter(type, true, true);
             const converterType = await converter.converterType();
-            expect(converterType).to.be.equal(BigNumber.from(type));
+            expect(converterType).to.equal(BigNumber.from(type));
         });
 
         it('verifies that sending ether to the converter succeeds if it has ETH reserve', async () => {
@@ -151,13 +151,13 @@ describe('Converter', () => {
                 it('verifies the converter data after construction', async () => {
                     const converter = await initConverter(type, false, isETHReserve);
                     const anchor = await converter.anchor();
-                    expect(anchor).to.eql(anchorAddress);
+                    expect(anchor).to.equal(anchorAddress);
 
                     const registry = await converter.registry();
-                    expect(registry).to.eql(contractRegistry.address);
+                    expect(registry).to.equal(contractRegistry.address);
 
                     const maxConversionFee = await converter.maxConversionFee();
-                    expect(maxConversionFee).to.be.equal(BigNumber.from(0));
+                    expect(maxConversionFee).to.equal(BigNumber.from(0));
                 });
 
                 it('should revert when attempting to construct a converter with no anchor', async () => {
@@ -207,7 +207,7 @@ describe('Converter', () => {
                         await converter.setConversionWhitelist(receiver.address);
 
                         const newWhitelist = await converter.conversionWhitelist();
-                        expect(prevWhitelist).not.to.eql(newWhitelist);
+                        expect(prevWhitelist).not.to.equal(newWhitelist);
                     });
 
                     it('should revert when a non owner attempts update the conversion whitelist contract address', async () => {
@@ -223,12 +223,12 @@ describe('Converter', () => {
                         await converter.setConversionWhitelist(receiver.address);
 
                         let whitelist = await converter.conversionWhitelist();
-                        expect(whitelist).to.eql(receiver.address);
+                        expect(whitelist).to.equal(receiver.address);
 
                         await converter.setConversionWhitelist(ZERO_ADDRESS);
                         whitelist = await converter.conversionWhitelist();
 
-                        expect(whitelist).to.eql(ZERO_ADDRESS);
+                        expect(whitelist).to.equal(ZERO_ADDRESS);
                     });
                 }
 
@@ -239,7 +239,7 @@ describe('Converter', () => {
                     await converter.setConversionFee(newFee);
 
                     const conversionFee = await converter.conversionFee();
-                    expect(conversionFee).to.be.equal(newFee);
+                    expect(conversionFee).to.equal(newFee);
                 });
 
                 it('should revert when attempting to update the fee to an invalid value', async () => {
@@ -336,7 +336,7 @@ describe('Converter', () => {
                         await converter.addReserve(getReserve1Address(isETHReserve), WEIGHT_10_PERCENT);
 
                         const reserveWeight = await converter.reserveWeight(getReserve1Address(isETHReserve));
-                        expect(reserveWeight).to.be.equal(WEIGHT_10_PERCENT);
+                        expect(reserveWeight).to.equal(WEIGHT_10_PERCENT);
                     });
 
                     it('should revert when attempting to retrieve the balance for a reserve that does not exist', async () => {
@@ -355,7 +355,7 @@ describe('Converter', () => {
                     await anchor.transferOwnership(converter.address);
                     await converter.acceptAnchorOwnership();
 
-                    expect(await anchor.owner()).to.eql(converter.address);
+                    expect(await anchor.owner()).to.equal(converter.address);
                 });
 
                 it('should revert when attempting to accept an anchor ownership of a converter without any reserves', async () => {
@@ -377,7 +377,7 @@ describe('Converter', () => {
                     const anchorAddress = await converter.anchor();
                     const token = await Contracts.DSToken.attach(anchorAddress);
                     const newOwner = await token.newOwner();
-                    expect(newOwner).to.eql(nonOwner.address);
+                    expect(newOwner).to.equal(nonOwner.address);
                 });
 
                 it('should revert when the owner attempts to transfer the anchor ownership', async () => {

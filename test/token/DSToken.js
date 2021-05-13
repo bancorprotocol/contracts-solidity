@@ -31,9 +31,9 @@ describe('DSToken', () => {
     });
 
     it('verifies the token name, symbol and decimal units after construction', async () => {
-        expect(await token.name()).to.eql(name);
-        expect(await token.symbol()).to.eql(symbol);
-        expect(await token.decimals()).to.be.equal(decimals);
+        expect(await token.name()).to.equal(name);
+        expect(await token.symbol()).to.equal(symbol);
+        expect(await token.decimals()).to.equal(decimals);
     });
 
     it('verifies that issue tokens updates the target balance and the total supply', async () => {
@@ -41,10 +41,10 @@ describe('DSToken', () => {
         await token.issue(receiver.address, value);
 
         const balance = await token.balanceOf(receiver.address);
-        expect(balance).to.be.equal(value);
+        expect(balance).to.equal(value);
 
         const totalSupply = await token.totalSupply();
-        expect(totalSupply).to.be.equal(value);
+        expect(totalSupply).to.equal(value);
     });
 
     it('verifies that the owner can issue tokens to his/her own account', async () => {
@@ -52,7 +52,7 @@ describe('DSToken', () => {
         await token.issue(owner.address, value);
 
         const balance = await token.balanceOf(owner.address);
-        expect(balance).to.be.equal(value);
+        expect(balance).to.equal(value);
     });
 
     it('should revert when the owner attempts to issue tokens to an invalid address', async () => {
@@ -77,10 +77,10 @@ describe('DSToken', () => {
         await token.destroy(receiver.address, value2);
 
         const balance = await token.balanceOf(receiver.address);
-        expect(balance).to.be.equal(value.sub(value2));
+        expect(balance).to.equal(value.sub(value2));
 
         const totalSupply = await token.totalSupply();
-        expect(totalSupply).to.be.equal(value.sub(value2));
+        expect(totalSupply).to.equal(value.sub(value2));
     });
 
     it('verifies that the owner can destroy tokens from his/her own account', async () => {
@@ -91,7 +91,7 @@ describe('DSToken', () => {
         await token.destroy(owner.address, value2);
 
         const balance = await token.balanceOf(owner.address);
-        expect(balance).to.be.equal(value.sub(value2));
+        expect(balance).to.equal(value.sub(value2));
     });
 
     it('should revert when a non owner attempts to destroy tokens', async () => {

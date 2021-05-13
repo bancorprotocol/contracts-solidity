@@ -298,7 +298,7 @@ describe('StandardPoolConverter', () => {
                 const expectAlmostEqual = (amount1, amount2, maxError) => {
                     if (!amount1.eq(amount2)) {
                         const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
-                        expect(error.lte(maxError)).to.be.equal(true, `error = ${error.toFixed(maxError.length)}`);
+                        expect(error.lte(maxError)).to.equal(true, `error = ${error.toFixed(maxError.length)}`);
                     }
                 };
 
@@ -394,24 +394,24 @@ describe('StandardPoolConverter', () => {
 
                     // TokenRateUpdate for [source, target):
                     const { args: event1 } = events[0];
-                    expect(event1.token1).to.eql(reserveToken1.address);
-                    expect(event1.token2).to.eql(reserveToken2.address);
-                    expect(event1.rateN).to.be.equal(reserve2Balance);
-                    expect(event1.rateD).to.be.equal(reserve1Balance);
+                    expect(event1.token1).to.equal(reserveToken1.address);
+                    expect(event1.token2).to.equal(reserveToken2.address);
+                    expect(event1.rateN).to.equal(reserve2Balance);
+                    expect(event1.rateD).to.equal(reserve1Balance);
 
                     // TokenRateUpdate for [source, pool token):
                     const { args: event2 } = events[1];
-                    expect(event2.token1).to.eql(poolToken.address);
-                    expect(event2.token2).to.eql(reserveToken1.address);
-                    expect(event2.rateN).to.be.equal(reserve1Balance);
-                    expect(event2.rateD).to.be.equal(poolTokenSupply);
+                    expect(event2.token1).to.equal(poolToken.address);
+                    expect(event2.token2).to.equal(reserveToken1.address);
+                    expect(event2.rateN).to.equal(reserve1Balance);
+                    expect(event2.rateD).to.equal(poolTokenSupply);
 
                     // TokenRateUpdate for [pool token, target):
                     const { args: event3 } = events[2];
-                    expect(event3.token1).to.eql(poolToken.address);
-                    expect(event3.token2).to.eql(reserveToken2.address);
-                    expect(event3.rateN).to.be.equal(reserve2Balance);
-                    expect(event3.rateD).to.be.equal(poolTokenSupply);
+                    expect(event3.token1).to.equal(poolToken.address);
+                    expect(event3.token2).to.equal(reserveToken2.address);
+                    expect(event3.rateN).to.equal(reserve2Balance);
+                    expect(event3.rateD).to.equal(poolTokenSupply);
                 });
 
                 it('should revert when attempting to convert when the return is smaller than the minimum requested amount', async () => {
@@ -467,7 +467,7 @@ describe('StandardPoolConverter', () => {
 
                     if (!rate1.eq(rate2)) {
                         const error = Decimal(rate1.toString()).div(rate2.toString()).sub(1).abs();
-                        expect(error.lte('0.000002')).to.be.equal(true, `error = ${error.toFixed(10)}`);
+                        expect(error.lte('0.000002')).to.equal(true, `error = ${error.toFixed(10)}`);
                     }
                 };
 
@@ -503,8 +503,8 @@ describe('StandardPoolConverter', () => {
                     const currentRate = await getCurrentRate(reserveToken1, reserveToken2);
                     const prevAverageRateUpdateTime = await getPrevAverageRateUpdateTime();
 
-                    expect(averageRate.n.mul(currentRate.d)).to.be.equal(currentRate.n.mul(averageRate.d));
-                    expect(prevAverageRateUpdateTime).to.be.equal(BigNumber.from(0));
+                    expect(averageRate.n.mul(currentRate.d)).to.equal(currentRate.n.mul(averageRate.d));
+                    expect(prevAverageRateUpdateTime).to.equal(BigNumber.from(0));
                 });
 
                 it('should change after a conversion', async () => {
@@ -520,9 +520,9 @@ describe('StandardPoolConverter', () => {
                     const averageRate = await getAverageRate(reserveToken1);
                     const averageRateUpdateTime = await getPrevAverageRateUpdateTime();
 
-                    expect(averageRate.n).not.to.be.equal(prevAverageRate.n);
-                    expect(averageRate.d).not.to.be.equal(prevAverageRate.d);
-                    expect(averageRateUpdateTime).not.to.be.equal(prevAverageRateUpdateTime);
+                    expect(averageRate.n).not.to.equal(prevAverageRate.n);
+                    expect(averageRate.d).not.to.equal(prevAverageRate.d);
+                    expect(averageRateUpdateTime).not.to.equal(prevAverageRateUpdateTime);
                 });
 
                 it('should be identical to the current rate after the full average rate period has passed', async () => {
@@ -538,15 +538,15 @@ describe('StandardPoolConverter', () => {
                     const currentRate = await getCurrentRate(reserveToken1, reserveToken2);
                     let averageRate = await getAverageRate(reserveToken1);
 
-                    expect(averageRate.n).not.to.be.equal(currentRate.n);
-                    expect(averageRate.d).not.to.be.equal(currentRate.d);
+                    expect(averageRate.n).not.to.equal(currentRate.n);
+                    expect(averageRate.d).not.to.equal(currentRate.d);
 
                     converterTime = converterTime.add(AVERAGE_RATE_PERIOD);
                     await converter.setTime(converterTime);
                     averageRate = await getAverageRate(reserveToken1);
 
-                    expect(averageRate.n).to.be.equal(currentRate.n);
-                    expect(averageRate.d).to.be.equal(currentRate.d);
+                    expect(averageRate.n).to.equal(currentRate.n);
+                    expect(averageRate.d).to.equal(currentRate.d);
                 });
 
                 for (const seconds of [0, 1, 2, 3, 10, 100, 200, 300, 400, 500]) {
@@ -595,8 +595,8 @@ describe('StandardPoolConverter', () => {
                                 await convert([reserveToken1, poolToken, reserveToken2], amount, MIN_RETURN);
                                 const averageRate2 = await getAverageRate(reserveToken1);
 
-                                expect(averageRate.n).to.be.equal(averageRate2.n);
-                                expect(averageRate.d).to.be.equal(averageRate2.d);
+                                expect(averageRate.n).to.equal(averageRate2.n);
+                                expect(averageRate.d).to.equal(averageRate2.d);
                             }
                         });
 
@@ -687,7 +687,7 @@ describe('StandardPoolConverter', () => {
                         reserveTokens.map((reserveToken, i) => reserveAmountsRemoved[i])
                     );
                     reserveTokens.map((reserveToken, i) =>
-                        expect(actualOutputAmounts[i]).to.be.equal(expectedOutputAmounts[i])
+                        expect(actualOutputAmounts[i]).to.equal(expectedOutputAmounts[i])
                     );
                 };
 
@@ -801,19 +801,19 @@ describe('StandardPoolConverter', () => {
 
                         for (let i = 0; i < allowances.length; i++) {
                             const diff = Decimal(allowances[i].toString()).div(reserveAmounts[i].toString());
-                            expect(diff.toFixed()).to.be.equal('0');
+                            expect(diff.toFixed()).to.equal(BigNumber.from(0));
                         }
 
                         const actual = balances.map((balance) => Decimal(balance.toString()).div(supply.toString()));
                         for (let i = 0; i < expected.length; i++) {
                             const diff = expected[i].div(actual[i]);
-                            expect(diff.toFixed()).to.be.equal('1');
+                            expect(diff.toFixed()).to.equal(BigNumber.from(1));
                             for (const liquidityCost of liquidityCosts) {
-                                expect(liquidityCost[i]).to.be.equal(balances[i].sub(prevBalances[i]));
+                                expect(liquidityCost[i]).to.equal(balances[i].sub(prevBalances[i]));
                             }
                         }
 
-                        expect(liquidityReturn).to.be.equal(supply.sub(prevSupply));
+                        expect(liquidityReturn).to.equal(supply.sub(prevSupply));
 
                         expected = actual;
                         prevSupply = supply;
@@ -835,8 +835,8 @@ describe('StandardPoolConverter', () => {
                             const diff = Decimal(state[n - 1].balances[i].toString()).div(
                                 Decimal(balances[i].toString())
                             );
-                            expect(diff.toFixed()).to.be.equal('1');
-                            expect(prevBalances[i].sub(balances[i])).to.be.equal(reserveAmounts[i]);
+                            expect(diff.toFixed()).to.equal(BigNumber.from(1));
+                            expect(prevBalances[i].sub(balances[i])).to.equal(reserveAmounts[i]);
                         }
                         prevBalances = balances;
                     }
@@ -853,8 +853,8 @@ describe('StandardPoolConverter', () => {
                         reserveTokens.map((reserveToken) => getBalance(reserveToken, converter.address))
                     );
                     for (let i = 0; i < balances.length; i++) {
-                        expect(balances[i]).to.be.equal(BigNumber.from(0));
-                        expect(prevBalances[i].sub(balances[i])).to.be.equal(reserveAmounts[i]);
+                        expect(balances[i]).to.equal(BigNumber.from(0));
+                        expect(prevBalances[i].sub(balances[i])).to.equal(reserveAmounts[i]);
                     }
                 });
 
@@ -870,8 +870,8 @@ describe('StandardPoolConverter', () => {
                     const reserve1Balance = await converter.reserveBalance(reserveToken1.address);
                     const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
 
-                    expect(reserve1Balance).to.be.equal(prevReserve1Balance.add(token1Amount));
-                    expect(reserve2Balance).to.be.equal(prevReserve2Balance.add(token2Amount));
+                    expect(reserve1Balance).to.equal(prevReserve1Balance.add(token1Amount));
+                    expect(reserve2Balance).to.equal(prevReserve2Balance.add(token2Amount));
                 });
 
                 it('should revert when attempting to add liquidity with insufficient funds', async () => {
@@ -914,12 +914,12 @@ describe('StandardPoolConverter', () => {
                     const token1Balance = await getBalance(reserveToken1, sender.address);
                     const token2Balance = await getBalance(reserveToken2, sender.address);
 
-                    expect(token1Balance).to.be.equal(
+                    expect(token1Balance).to.equal(
                         token1PrevBalance
                             .add(token1Amount)
                             .sub(reserveToken1.address === NATIVE_TOKEN_ADDRESS ? transactionCost : BigNumber.from(0))
                     );
-                    expect(token2Balance).to.be.equal(
+                    expect(token2Balance).to.equal(
                         token2PrevBalance
                             .add(token2Amount)
                             .sub(reserveToken2.address === NATIVE_TOKEN_ADDRESS ? transactionCost : BigNumber.from(0))
@@ -947,14 +947,14 @@ describe('StandardPoolConverter', () => {
                     const token1Balance = await getBalance(reserveToken1, sender.address);
                     const token2Balance = await getBalance(reserveToken2, sender.address);
 
-                    expect(await poolToken.totalSupply()).to.be.equal(BigNumber.from(0));
+                    expect(await poolToken.totalSupply()).to.equal(BigNumber.from(0));
 
-                    expect(token1Balance).to.be.equal(
+                    expect(token1Balance).to.equal(
                         token1PrevBalance
                             .add(reserve1Balance)
                             .sub(reserveToken1.address === NATIVE_TOKEN_ADDRESS ? transactionCost : BigNumber.from(0))
                     );
-                    expect(token2Balance).to.be.equal(
+                    expect(token2Balance).to.equal(
                         token2PrevBalance
                             .add(reserve2Balance)
                             .sub(reserveToken2.address === NATIVE_TOKEN_ADDRESS ? transactionCost : BigNumber.from(0))
@@ -992,8 +992,8 @@ describe('StandardPoolConverter', () => {
                             const expected2 = a2b1.lt(a1b2) ? BigNumber.from(0) : a2b1.sub(a1b2).div(balance1);
                             const actual1 = await getAllowance(reserveToken1, converter);
                             const actual2 = await getAllowance(reserveToken2, converter);
-                            expect(actual1).to.be.equal(expected1);
-                            expect(actual2).to.be.equal(expected2);
+                            expect(actual1).to.equal(expected1);
+                            expect(actual2).to.equal(expected2);
                         });
                     }
                 });
@@ -1030,7 +1030,7 @@ describe('StandardPoolConverter', () => {
                                 const balance1 = await getBalance(reserveToken1, sender.address);
                                 const balance2 = await getBalance(reserveToken2, sender.address);
                                 const amount = BigNumber.from(amounts[1]);
-                                expect(balance1).to.be.equal(
+                                expect(balance1).to.equal(
                                     prevBalance1
                                         .add(amount)
                                         .sub(
@@ -1039,7 +1039,7 @@ describe('StandardPoolConverter', () => {
                                                 : BigNumber.from(0)
                                         )
                                 );
-                                expect(balance2).to.be.equal(
+                                expect(balance2).to.equal(
                                     prevBalance2
                                         .add(amount)
                                         .sub(
@@ -1082,7 +1082,7 @@ describe('StandardPoolConverter', () => {
                             reserveTokens.map((reserveToken) => getBalance(reserveToken, sender.address))
                         );
 
-                        expect(balancesAfter[0]).to.be.equal(
+                        expect(balancesAfter[0]).to.equal(
                             balancesBefore[0]
                                 .sub(BigNumber.from(amount))
                                 .sub(
@@ -1090,7 +1090,7 @@ describe('StandardPoolConverter', () => {
                                 )
                         );
 
-                        expect(balancesAfter[1]).to.be.equal(
+                        expect(balancesAfter[1]).to.equal(
                             balancesBefore[1]
                                 .sub(BigNumber.from(amount))
                                 .sub(
@@ -1143,15 +1143,15 @@ describe('StandardPoolConverter', () => {
                     const balanceBefore2 = await getBalance(reserveToken2, networkFeeWallet);
 
                     const newConverter = await upgradeConverter(converterUpgrader, converter);
-                    expect(newConverter.address).to.be.not.equal(converter.address);
+                    expect(newConverter.address).to.not.equal(converter.address);
 
                     await newConverter.processNetworkFees();
 
                     const balanceAfter1 = await getBalance(reserveToken1, networkFeeWallet);
                     const balanceAfter2 = await getBalance(reserveToken2, networkFeeWallet);
 
-                    expect(balanceAfter1).to.be.equal(balanceBefore1);
-                    expect(balanceAfter2).to.be.equal(balanceBefore2);
+                    expect(balanceAfter1).to.equal(balanceBefore1);
+                    expect(balanceAfter2).to.equal(balanceBefore2);
                 });
 
                 for (const initialBalance1 of [100000, 200000, 400000, 800000]) {
@@ -1795,7 +1795,7 @@ describe('StandardPoolConverter', () => {
                     if (!x.eq(y)) {
                         const absoluteError = x.sub(y).abs();
                         const relativeError = x.div(y).sub(1).abs();
-                        expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.be.equal(
+                        expect(absoluteError.lte(maxAbsoluteError) || relativeError.lte(maxRelativeError)).to.equal(
                             true,
                             `\nabsoluteError = ${absoluteError.toFixed()}\nrelativeError = ${relativeError.toFixed(25)}`
                         );
@@ -1826,8 +1826,8 @@ describe('StandardPoolConverter', () => {
 
                     await converter.syncReserveBalances();
 
-                    expect(await converter.reserveBalance(reserveToken1.address)).to.be.equal(reserve1Balance);
-                    expect(await converter.reserveBalance(reserveToken2.address)).to.be.equal(reserve2Balance);
+                    expect(await converter.reserveBalance(reserveToken1.address)).to.equal(reserve1Balance);
+                    expect(await converter.reserveBalance(reserveToken2.address)).to.equal(reserve2Balance);
                 };
 
                 it('should not affect reserve balances before and after conversion', async () => {
@@ -1863,10 +1863,10 @@ describe('StandardPoolConverter', () => {
 
                     await converter.syncReserveBalances();
 
-                    expect(await converter.reserveBalance(reserveToken1.address)).to.be.equal(
+                    expect(await converter.reserveBalance(reserveToken1.address)).to.equal(
                         reserve1Balance.add(amount1)
                     );
-                    expect(await converter.reserveBalance(reserveToken2.address)).to.be.equal(
+                    expect(await converter.reserveBalance(reserveToken2.address)).to.equal(
                         reserve2Balance.add(amount2)
                     );
                 });

@@ -1,4 +1,4 @@
-const { expect } = require('chai');
+const chai = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
@@ -7,6 +7,9 @@ const { duration, latest } = require('../helpers/Time');
 
 const Contracts = require('../helpers/Contracts');
 const { Decimal, min } = require('../helpers/MathUtils');
+
+chai.use(require('chai-arrays'));
+const { expect } = chai;
 
 const { ROLE_OWNER, ROLE_GOVERNOR, ROLE_MINTER } = roles;
 
@@ -186,7 +189,7 @@ describe('LiquidityProtection', () => {
             };
 
             const poolTokenRate = (poolSupply, reserveBalance) => {
-                return { n: reserveBalance.mul(BigNumber.from('2')), d: poolSupply };
+                return { n: reserveBalance.mul(BigNumber.from(2)), d: poolSupply };
             };
 
             const getBalance = async (token, address, account) => {
@@ -205,7 +208,7 @@ describe('LiquidityProtection', () => {
             const expectAlmostEqual = (amount1, amount2, maxError = '0.01') => {
                 if (!amount1.eq(amount2)) {
                     const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
-                    expect(error.lte(maxError)).to.be.equal(true, `error = ${error.toFixed(maxError.length)}`);
+                    expect(error.lte(maxError)).to.equal(true, `error = ${error.toFixed(maxError.length)}`);
                 }
             };
 
@@ -407,19 +410,19 @@ describe('LiquidityProtection', () => {
 
                 it('verifies the liquidity protection contract after initialization', async () => {
                     const settings = await liquidityProtection.settings();
-                    expect(settings).to.eql(liquidityProtectionSettings.address);
+                    expect(settings).to.equal(liquidityProtectionSettings.address);
 
                     const store = await liquidityProtection.store();
-                    expect(store).to.eql(liquidityProtectionStore.address);
+                    expect(store).to.equal(liquidityProtectionStore.address);
 
                     const stats = await liquidityProtection.stats();
-                    expect(stats).to.eql(liquidityProtectionStats.address);
+                    expect(stats).to.equal(liquidityProtectionStats.address);
 
                     const systemStore = await liquidityProtection.systemStore();
-                    expect(systemStore).to.eql(liquidityProtectionSystemStore.address);
+                    expect(systemStore).to.equal(liquidityProtectionSystemStore.address);
 
                     const wallet = await liquidityProtection.wallet();
-                    expect(wallet).to.eql(liquidityProtectionWallet.address);
+                    expect(wallet).to.equal(liquidityProtectionWallet.address);
                 });
 
                 it('verifies that the owner can transfer the store ownership', async () => {
@@ -459,10 +462,10 @@ describe('LiquidityProtection', () => {
                         liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION)
                     ).to.be.revertedWith('ERR_TOO_EARLY');
                     protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                    expect(protectionIds.length).to.eql(1);
+                    expect(protectionIds.length).to.equal(1);
 
                     const newBalance = await baseToken.balanceOf(owner.address);
-                    expect(newBalance).to.be.equal(balance.sub(amount));
+                    expect(newBalance).to.equal(balance.sub(amount));
                 });
 
                 it('should revert when the caller attempts to add and partially remove base tokens on the same block', async () => {
@@ -480,10 +483,10 @@ describe('LiquidityProtection', () => {
                         liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION.div(BigNumber.from(2)))
                     ).to.be.revertedWith('ERR_TOO_EARLY');
                     protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                    expect(protectionIds.length).to.eql(1);
+                    expect(protectionIds.length).to.equal(1);
 
                     const newBalance = await baseToken.balanceOf(owner.address);
-                    expect(newBalance).to.be.equal(balance.sub(amount));
+                    expect(newBalance).to.equal(balance.sub(amount));
                 });
 
                 for (const { baseBalance, networkBalance } of POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES) {
@@ -579,7 +582,7 @@ describe('LiquidityProtection', () => {
                                         const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
                                             recipient.address
                                         );
-                                        expect(protectionIds.length).to.eql(1);
+                                        expect(protectionIds.length).to.equal(1);
 
                                         const expectedPoolAmount = reserveAmount.mul(rate.d).div(rate.n);
                                         const reserve1Balance = await converter.reserveBalance(baseTokenAddress);
@@ -590,21 +593,21 @@ describe('LiquidityProtection', () => {
                                         );
                                         protection = getProtection(protection);
 
-                                        expect(protection.provider).to.eql(recipient.address);
-                                        expect(protection.poolToken).to.eql(poolToken.address);
-                                        expect(protection.reserveToken).to.eql(baseTokenAddress);
-                                        expect(protection.poolAmount).to.be.equal(expectedPoolAmount);
-                                        expect(protection.reserveAmount).to.be.equal(reserveAmount);
-                                        expect(protection.reserveRateN).to.be.equal(reserve2Balance);
-                                        expect(protection.reserveRateD).to.be.equal(reserve1Balance);
-                                        expect(protection.timestamp).to.be.equal(BigNumber.from(now));
+                                        expect(protection.provider).to.equal(recipient.address);
+                                        expect(protection.poolToken).to.equal(poolToken.address);
+                                        expect(protection.reserveToken).to.equal(baseTokenAddress);
+                                        expect(protection.poolAmount).to.equal(expectedPoolAmount);
+                                        expect(protection.reserveAmount).to.equal(reserveAmount);
+                                        expect(protection.reserveRateN).to.equal(reserve2Balance);
+                                        expect(protection.reserveRateD).to.equal(reserve1Balance);
+                                        expect(protection.timestamp).to.equal(BigNumber.from(now));
 
                                         // verify stats
                                         const poolStats = await getPoolStats(poolToken, baseToken, isETHReserve);
-                                        expect(poolStats.totalPoolAmount).to.be.equal(
+                                        expect(poolStats.totalPoolAmount).to.equal(
                                             prevPoolStats.totalPoolAmount.add(protection.poolAmount)
                                         );
-                                        expect(poolStats.totalReserveAmount).to.be.equal(
+                                        expect(poolStats.totalReserveAmount).to.equal(
                                             prevPoolStats.totalReserveAmount.add(protection.reserveAmount)
                                         );
 
@@ -615,41 +618,41 @@ describe('LiquidityProtection', () => {
                                             isETHReserve
                                         );
 
-                                        expect(providerStats.totalProviderAmount).to.be.equal(
+                                        expect(providerStats.totalProviderAmount).to.equal(
                                             prevProviderStats.totalProviderAmount.add(protection.reserveAmount)
                                         );
-                                        expect(providerStats.providerPools).to.eql([poolToken.address]);
+                                        expect(providerStats.providerPools).to.equalTo([poolToken.address]);
 
                                         // verify balances
                                         const systemBalance = await liquidityProtectionSystemStore.systemBalance(
                                             poolToken.address
                                         );
-                                        expect(systemBalance).to.be.equal(expectedPoolAmount);
+                                        expect(systemBalance).to.equal(expectedPoolAmount);
 
                                         const walletBalance = await poolToken.balanceOf(
                                             liquidityProtectionWallet.address
                                         );
-                                        expect(walletBalance).to.be.equal(expectedPoolAmount.mul(BigNumber.from(2)));
+                                        expect(walletBalance).to.equal(expectedPoolAmount.mul(BigNumber.from(2)));
 
                                         const govBalance = await govToken.balanceOf(recipient.address);
-                                        expect(govBalance).to.be.equal(BigNumber.from(0));
+                                        expect(govBalance).to.equal(BigNumber.from(0));
 
                                         const protectionPoolBalance = await poolToken.balanceOf(
                                             liquidityProtection.address
                                         );
-                                        expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
+                                        expect(protectionPoolBalance).to.equal(BigNumber.from(0));
 
                                         const protectionBaseBalance = await getBalance(
                                             baseToken,
                                             baseTokenAddress,
                                             liquidityProtection.address
                                         );
-                                        expect(protectionBaseBalance).to.be.equal(BigNumber.from(0));
+                                        expect(protectionBaseBalance).to.equal(BigNumber.from(0));
 
                                         const protectionNetworkBalance = await networkToken.balanceOf(
                                             liquidityProtection.address
                                         );
-                                        expect(protectionNetworkBalance).to.be.equal(BigNumber.from(0));
+                                        expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                                     });
 
                                     it('should revert when attempting to add liquidity with zero amount', async () => {
@@ -879,7 +882,7 @@ describe('LiquidityProtection', () => {
                                     const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
                                         recipient.address
                                     );
-                                    expect(protectionIds.length).to.eql(1);
+                                    expect(protectionIds.length).to.equal(1);
 
                                     const expectedPoolAmount = reserveAmount.mul(rate.d).div(rate.n);
                                     const reserve1Balance = await converter.reserveBalance(networkToken.address);
@@ -889,61 +892,61 @@ describe('LiquidityProtection', () => {
                                         protectionIds[0]
                                     );
                                     protection = getProtection(protection);
-                                    expect(protection.provider).to.eql(recipient.address);
-                                    expect(protection.poolToken).to.eql(poolToken.address);
-                                    expect(protection.reserveToken).to.eql(networkToken.address);
-                                    expect(protection.poolAmount).to.be.equal(expectedPoolAmount);
-                                    expect(protection.reserveAmount).to.be.equal(reserveAmount);
-                                    expect(protection.reserveRateN).to.be.equal(reserve2Balance);
-                                    expect(protection.reserveRateD).to.be.equal(reserve1Balance);
-                                    expect(protection.timestamp).to.be.equal(BigNumber.from(now));
+                                    expect(protection.provider).to.equal(recipient.address);
+                                    expect(protection.poolToken).to.equal(poolToken.address);
+                                    expect(protection.reserveToken).to.equal(networkToken.address);
+                                    expect(protection.poolAmount).to.equal(expectedPoolAmount);
+                                    expect(protection.reserveAmount).to.equal(reserveAmount);
+                                    expect(protection.reserveRateN).to.equal(reserve2Balance);
+                                    expect(protection.reserveRateD).to.equal(reserve1Balance);
+                                    expect(protection.timestamp).to.equal(BigNumber.from(now));
 
                                     // verify stats
                                     const poolStats = await getPoolStats(poolToken, networkToken);
-                                    expect(poolStats.totalPoolAmount).to.be.equal(
+                                    expect(poolStats.totalPoolAmount).to.equal(
                                         prevPoolStats.totalPoolAmount.add(protection.poolAmount)
                                     );
-                                    expect(poolStats.totalReserveAmount).to.be.equal(
+                                    expect(poolStats.totalReserveAmount).to.equal(
                                         prevPoolStats.totalReserveAmount.add(protection.reserveAmount)
                                     );
 
                                     const providerStats = await getProviderStats(recipient, poolToken, networkToken);
-                                    expect(providerStats.totalProviderAmount).to.be.equal(
+                                    expect(providerStats.totalProviderAmount).to.equal(
                                         prevProviderStats.totalProviderAmount.add(protection.reserveAmount)
                                     );
-                                    expect(providerStats.providerPools).to.eql([poolToken.address]);
+                                    expect(providerStats.providerPools).to.equalTo([poolToken.address]);
 
                                     // verify balances
                                     const balance = await networkToken.balanceOf(owner.address);
-                                    expect(balance).to.be.equal(prevOwnerBalance.sub(reserveAmount));
+                                    expect(balance).to.equal(prevOwnerBalance.sub(reserveAmount));
 
                                     const systemBalance = await liquidityProtectionSystemStore.systemBalance(
                                         poolToken.address
                                     );
-                                    expect(systemBalance).to.be.equal(prevSystemBalance.sub(expectedPoolAmount));
+                                    expect(systemBalance).to.equal(prevSystemBalance.sub(expectedPoolAmount));
 
                                     const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                                    expect(walletBalance).to.be.equal(prevWalletBalance);
+                                    expect(walletBalance).to.equal(prevWalletBalance);
 
                                     const govBalance = await govToken.balanceOf(recipient.address);
-                                    expect(govBalance).to.be.equal(reserveAmount);
+                                    expect(govBalance).to.equal(reserveAmount);
 
                                     const protectionPoolBalance = await poolToken.balanceOf(
                                         liquidityProtection.address
                                     );
-                                    expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
+                                    expect(protectionPoolBalance).to.equal(BigNumber.from(0));
 
                                     const protectionBaseBalance = await getBalance(
                                         baseToken,
                                         baseTokenAddress,
                                         liquidityProtection.address
                                     );
-                                    expect(protectionBaseBalance).to.be.equal(BigNumber.from(0));
+                                    expect(protectionBaseBalance).to.equal(BigNumber.from(0));
 
                                     const protectionNetworkBalance = await networkToken.balanceOf(
                                         liquidityProtection.address
                                     );
-                                    expect(protectionNetworkBalance).to.be.equal(BigNumber.from(0));
+                                    expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                                 });
 
                                 it('should revert when attempting to add liquidity with zero amount', async () => {
@@ -1084,7 +1087,7 @@ describe('LiquidityProtection', () => {
                             await liquidityProtection.removeLiquidityReturn(protectionId, PPM_RESOLUTION, now)
                         )[0];
 
-                        expect(amount).to.be.equal(reserveAmount);
+                        expect(amount).to.equal(reserveAmount);
                     });
 
                     it('verifies that removeLiquidityReturn returns the correct amount for removing a portion of a protection', async () => {
@@ -1095,7 +1098,7 @@ describe('LiquidityProtection', () => {
 
                         const amount = (await liquidityProtection.removeLiquidityReturn(protectionId, 800000, now))[0];
 
-                        expect(amount).to.be.equal(BigNumber.from(800));
+                        expect(amount).to.equal(BigNumber.from(800));
                     });
 
                     it('verifies that removeLiquidityReturn can be called even if the average rate is invalid', async () => {
@@ -1190,7 +1193,7 @@ describe('LiquidityProtection', () => {
 
                                 const res = await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                                expect(protectionIds.length).to.eql(0);
+                                expect(protectionIds.length).to.equal(0);
 
                                 let transactionCost = BigNumber.from(0);
                                 if (isETHReserve) {
@@ -1199,51 +1202,51 @@ describe('LiquidityProtection', () => {
 
                                 // verify stats
                                 const poolStats = await getPoolStats(poolToken, baseToken, isETHReserve);
-                                expect(poolStats.totalPoolAmount).to.be.equal(
+                                expect(poolStats.totalPoolAmount).to.equal(
                                     prevPoolStats.totalPoolAmount.sub(protection.poolAmount)
                                 );
-                                expect(poolStats.totalReserveAmount).to.be.equal(
+                                expect(poolStats.totalReserveAmount).to.equal(
                                     prevPoolStats.totalReserveAmount.sub(protection.reserveAmount)
                                 );
 
                                 const providerStats = await getProviderStats(owner, poolToken, baseToken, isETHReserve);
-                                expect(providerStats.totalProviderAmount).to.be.equal(
+                                expect(providerStats.totalProviderAmount).to.equal(
                                     prevProviderStats.totalProviderAmount.sub(protection.reserveAmount)
                                 );
-                                expect(providerStats.providerPools).to.eql([poolToken.address]);
+                                expect(providerStats.providerPools).to.equalTo([poolToken.address]);
 
                                 // verify balances
                                 const systemBalance = await liquidityProtectionSystemStore.systemBalance(
                                     poolToken.address
                                 );
-                                expect(systemBalance).to.be.equal(prevSystemBalance.sub(protection.poolAmount));
+                                expect(systemBalance).to.equal(prevSystemBalance.sub(protection.poolAmount));
 
                                 const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
 
                                 // double since system balance was also liquidated
                                 const delta = protection.poolAmount.mul(BigNumber.from(2));
-                                expect(walletBalance).to.be.equal(prevWalletBalance.sub(delta));
+                                expect(walletBalance).to.equal(prevWalletBalance.sub(delta));
 
                                 const balance = await getBalance(baseToken, baseTokenAddress, owner.address);
-                                expect(balance).to.be.equal(prevBalance.add(reserveAmount).sub(transactionCost));
+                                expect(balance).to.equal(prevBalance.add(reserveAmount).sub(transactionCost));
 
                                 const govBalance = await govToken.balanceOf(owner.address);
-                                expect(govBalance).to.be.equal(prevGovBalance);
+                                expect(govBalance).to.equal(prevGovBalance);
 
                                 const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                                expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
+                                expect(protectionPoolBalance).to.equal(BigNumber.from(0));
 
                                 const protectionBaseBalance = await getBalance(
                                     baseToken,
                                     baseTokenAddress,
                                     liquidityProtection.address
                                 );
-                                expect(protectionBaseBalance).to.be.equal(BigNumber.from(0));
+                                expect(protectionBaseBalance).to.equal(BigNumber.from(0));
 
                                 const protectionNetworkBalance = await networkToken.balanceOf(
                                     liquidityProtection.address
                                 );
-                                expect(protectionNetworkBalance).to.be.equal(BigNumber.from(0));
+                                expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                             });
 
                             it('verifies that the caller can remove a portion of a protection', async () => {
@@ -1291,44 +1294,44 @@ describe('LiquidityProtection', () => {
                                 }
 
                                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                                expect(protectionIds.length).to.eql(1);
+                                expect(protectionIds.length).to.equal(1);
 
                                 let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
                                 protection = getProtection(protection);
 
-                                expect(protection.poolAmount).to.be.equal(
+                                expect(protection.poolAmount).to.equal(
                                     prevProtection.poolAmount.div(BigNumber.from(5))
                                 );
-                                expect(protection.reserveAmount).to.be.equal(
+                                expect(protection.reserveAmount).to.equal(
                                     prevProtection.reserveAmount.div(BigNumber.from(5))
                                 );
 
                                 // verify stats
                                 const poolStats = await getPoolStats(poolToken, baseToken, isETHReserve);
-                                expect(poolStats.totalPoolAmount).to.be.equal(
+                                expect(poolStats.totalPoolAmount).to.equal(
                                     prevPoolStats.totalPoolAmount.sub(
                                         prevProtection.poolAmount.sub(protection.poolAmount)
                                     )
                                 );
-                                expect(poolStats.totalReserveAmount).to.be.equal(
+                                expect(poolStats.totalReserveAmount).to.equal(
                                     prevPoolStats.totalReserveAmount.sub(
                                         prevProtection.reserveAmount.sub(protection.reserveAmount)
                                     )
                                 );
 
                                 const providerStats = await getProviderStats(owner, poolToken, baseToken, isETHReserve);
-                                expect(providerStats.totalProviderAmount).to.be.equal(
+                                expect(providerStats.totalProviderAmount).to.equal(
                                     prevProviderStats.totalProviderAmount.sub(
                                         prevProtection.reserveAmount.sub(protection.reserveAmount)
                                     )
                                 );
-                                expect(providerStats.providerPools).to.eql([poolToken.address]);
+                                expect(providerStats.providerPools).to.equalTo([poolToken.address]);
 
                                 // verify balances
                                 const systemBalance = await liquidityProtectionSystemStore.systemBalance(
                                     poolToken.address
                                 );
-                                expect(systemBalance).to.be.equal(
+                                expect(systemBalance).to.equal(
                                     prevSystemBalance.sub(prevProtection.poolAmount.sub(protection.poolAmount))
                                 );
 
@@ -1338,28 +1341,28 @@ describe('LiquidityProtection', () => {
                                 const delta = prevProtection.poolAmount
                                     .sub(protection.poolAmount)
                                     .mul(BigNumber.from(2));
-                                expect(walletBalance).to.be.equal(prevWalletBalance.sub(delta));
+                                expect(walletBalance).to.equal(prevWalletBalance.sub(delta));
 
                                 const balance = await getBalance(baseToken, baseTokenAddress, owner.address);
-                                expect(balance).to.be.equal(prevBalance.add(BigNumber.from(800)).sub(transactionCost));
+                                expect(balance).to.equal(prevBalance.add(BigNumber.from(800)).sub(transactionCost));
 
                                 const govBalance = await govToken.balanceOf(owner.address);
-                                expect(govBalance).to.be.equal(prevGovBalance);
+                                expect(govBalance).to.equal(prevGovBalance);
 
                                 const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                                expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
+                                expect(protectionPoolBalance).to.equal(BigNumber.from(0));
 
                                 const protectionBaseBalance = await getBalance(
                                     baseToken,
                                     baseTokenAddress,
                                     liquidityProtection.address
                                 );
-                                expect(protectionBaseBalance).to.be.equal(BigNumber.from(0));
+                                expect(protectionBaseBalance).to.equal(BigNumber.from(0));
 
                                 const protectionNetworkBalance = await networkToken.balanceOf(
                                     liquidityProtection.address
                                 );
-                                expect(protectionNetworkBalance).to.be.equal(BigNumber.from(0));
+                                expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                             });
 
                             it('verifies that removing the entire protection updates the removal checkpoint', async () => {
@@ -1379,12 +1382,12 @@ describe('LiquidityProtection', () => {
                                 );
                                 const protectionId = protectionIds[0];
 
-                                expect(await checkpointStore.checkpoint(owner.address)).to.be.equal(BigNumber.from(0));
+                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(BigNumber.from(0));
 
                                 const portion = BigNumber.from(PPM_RESOLUTION);
                                 await liquidityProtection.removeLiquidity(protectionId, portion);
 
-                                expect(await checkpointStore.checkpoint(owner.address)).to.be.equal(now);
+                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(now);
                             });
 
                             it('verifies that removing a portion of a protection updates the removal checkpoint', async () => {
@@ -1402,7 +1405,7 @@ describe('LiquidityProtection', () => {
                                 );
                                 const protectionId = protectionIds[0];
 
-                                expect(await checkpointStore.checkpoint(owner.address)).to.be.equal(BigNumber.from(0));
+                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(BigNumber.from(0));
 
                                 const portion = BigNumber.from(500000);
                                 for (let i = 1; i < 5; i++) {
@@ -1410,7 +1413,7 @@ describe('LiquidityProtection', () => {
 
                                     await liquidityProtection.removeLiquidity(protectionId, portion);
 
-                                    expect(await checkpointStore.checkpoint(owner.address)).to.be.equal(now);
+                                    expect(await checkpointStore.checkpoint(owner.address)).to.equal(now);
                                 }
                             });
 
@@ -1572,46 +1575,46 @@ describe('LiquidityProtection', () => {
                             await liquidityProtection.setTime(now.add(duration.seconds(1)));
                             await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                            expect(protectionIds.length).to.eql(0);
+                            expect(protectionIds.length).to.equal(0);
 
                             // verify stats
                             const poolStats = await getPoolStats(poolToken, networkToken);
-                            expect(poolStats.totalPoolAmount).to.be.equal(prevSystemBalance.add(protection.poolAmount));
-                            expect(poolStats.totalReserveAmount).to.be.equal(
+                            expect(poolStats.totalPoolAmount).to.equal(prevSystemBalance.add(protection.poolAmount));
+                            expect(poolStats.totalReserveAmount).to.equal(
                                 prevPoolStats.totalReserveAmount.sub(protection.reserveAmount)
                             );
 
                             const providerStats = await getProviderStats(owner, poolToken, networkToken);
-                            expect(providerStats.totalProviderAmount).to.be.equal(
+                            expect(providerStats.totalProviderAmount).to.equal(
                                 prevProviderStats.totalProviderAmount.sub(protection.reserveAmount)
                             );
-                            expect(prevProviderStats.providerPools).to.eql([poolToken.address]);
+                            expect(prevProviderStats.providerPools).to.equalTo([poolToken.address]);
 
                             // verify balances
                             const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                            expect(systemBalance).to.be.equal(prevSystemBalance.add(protection.poolAmount));
+                            expect(systemBalance).to.equal(prevSystemBalance.add(protection.poolAmount));
 
                             const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            expect(walletBalance).to.be.equal(prevWalletBalance);
+                            expect(walletBalance).to.equal(prevWalletBalance);
 
                             const balance = await getBalance(networkToken, networkToken.address, owner.address);
                             expectAlmostEqual(balance, prevBalance.add(reserveAmount));
 
                             const govBalance = await govToken.balanceOf(owner.address);
-                            expect(govBalance).to.be.equal(prevGovBalance.sub(reserveAmount));
+                            expect(govBalance).to.equal(prevGovBalance.sub(reserveAmount));
 
                             const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                            expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
+                            expect(protectionPoolBalance).to.equal(BigNumber.from(0));
 
                             const protectionBaseBalance = await getBalance(
                                 baseToken,
                                 baseTokenAddress,
                                 liquidityProtection.address
                             );
-                            expect(protectionBaseBalance).to.be.equal(BigNumber.from(0));
+                            expect(protectionBaseBalance).to.equal(BigNumber.from(0));
 
                             const protectionNetworkBalance = await networkToken.balanceOf(liquidityProtection.address);
-                            expect(protectionNetworkBalance).to.be.equal(BigNumber.from(0));
+                            expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                         });
 
                         it('verifies that the caller can remove a portion of a protection', async () => {
@@ -1655,62 +1658,62 @@ describe('LiquidityProtection', () => {
                             await liquidityProtection.setTime(now.add(duration.seconds(1)));
                             await liquidityProtection.removeLiquidity(protectionId, portion);
                             protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                            expect(protectionIds.length).to.eql(1);
+                            expect(protectionIds.length).to.equal(1);
 
                             let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
                             protection = getProtection(protection);
 
-                            expect(protection.poolAmount).to.be.equal(prevProtection.poolAmount.div(BigNumber.from(5)));
-                            expect(protection.reserveAmount).to.be.equal(
+                            expect(protection.poolAmount).to.equal(prevProtection.poolAmount.div(BigNumber.from(5)));
+                            expect(protection.reserveAmount).to.equal(
                                 prevProtection.reserveAmount.div(BigNumber.from(5))
                             );
 
                             // verify stats
                             const poolStats = await getPoolStats(poolToken, networkToken);
-                            expect(poolStats.totalPoolAmount).to.be.equal(
+                            expect(poolStats.totalPoolAmount).to.equal(
                                 prevPoolStats.totalPoolAmount.sub(prevProtection.poolAmount.sub(protection.poolAmount))
                             );
-                            expect(poolStats.totalReserveAmount).to.be.equal(
+                            expect(poolStats.totalReserveAmount).to.equal(
                                 prevPoolStats.totalReserveAmount.sub(
                                     prevProtection.reserveAmount.sub(protection.reserveAmount)
                                 )
                             );
 
                             const providerStats = await getProviderStats(owner, poolToken, networkToken);
-                            expect(providerStats.totalProviderAmount).to.be.equal(
+                            expect(providerStats.totalProviderAmount).to.equal(
                                 prevProviderStats.totalProviderAmount.sub(
                                     prevProtection.reserveAmount.sub(protection.reserveAmount)
                                 )
                             );
-                            expect(providerStats.providerPools).to.eql([poolToken.address]);
+                            expect(providerStats.providerPools).to.equalTo([poolToken.address]);
 
                             // verify balances
                             const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                            expect(systemBalance).to.be.equal(
+                            expect(systemBalance).to.equal(
                                 prevSystemBalance.add(prevProtection.poolAmount.sub(protection.poolAmount))
                             );
 
                             const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            expect(walletBalance).to.be.equal(prevWalletBalance);
+                            expect(walletBalance).to.equal(prevWalletBalance);
 
                             const balance = await getBalance(networkToken, networkToken.address, owner.address);
                             expectAlmostEqual(balance, prevBalance.add(BigNumber.from(800)));
 
                             const govBalance = await govToken.balanceOf(owner.address);
-                            expect(govBalance).to.be.equal(prevGovBalance.sub(BigNumber.from(800)));
+                            expect(govBalance).to.equal(prevGovBalance.sub(BigNumber.from(800)));
 
                             const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                            expect(protectionPoolBalance).to.be.equal(BigNumber.from(0));
+                            expect(protectionPoolBalance).to.equal(BigNumber.from(0));
 
                             const protectionBaseBalance = await getBalance(
                                 baseToken,
                                 baseTokenAddress,
                                 liquidityProtection.address
                             );
-                            expect(protectionBaseBalance).to.be.equal(BigNumber.from(0));
+                            expect(protectionBaseBalance).to.equal(BigNumber.from(0));
 
                             const protectionNetworkBalance = await networkToken.balanceOf(liquidityProtection.address);
-                            expect(protectionNetworkBalance).to.be.equal(BigNumber.from(0));
+                            expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                         });
                     });
 
@@ -2010,7 +2013,7 @@ describe('LiquidityProtection', () => {
                                                     const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
                                                         owner.address
                                                     );
-                                                    expect(lockedBalanceCount).to.be.equal(BigNumber.from(1));
+                                                    expect(lockedBalanceCount).to.equal(BigNumber.from(1));
 
                                                     const lockedBalance = await getLockedBalance(owner.address);
                                                     expect(lockedBalance).to.be.gt(BigNumber.from(0));
@@ -2041,10 +2044,10 @@ describe('LiquidityProtection', () => {
                                                     const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
                                                         owner.address
                                                     );
-                                                    expect(lockedBalanceCount).to.be.equal(BigNumber.from(0));
+                                                    expect(lockedBalanceCount).to.equal(BigNumber.from(0));
 
                                                     const lockedBalance = await getLockedBalance(owner.address);
-                                                    expect(lockedBalance).to.be.equal(BigNumber.from(0));
+                                                    expect(lockedBalance).to.equal(BigNumber.from(0));
                                                 });
                                             }
                                         }
@@ -2092,10 +2095,10 @@ describe('LiquidityProtection', () => {
                         await liquidityProtection.claimBalance(0, 1);
 
                         const balance = await networkToken.balanceOf(owner.address);
-                        expect(balance).to.be.equal(prevBalance.add(lockedBalance));
+                        expect(balance).to.equal(prevBalance.add(lockedBalance));
 
                         const totalLockedBalance = await getLockedBalance(owner.address);
-                        expect(totalLockedBalance).to.be.equal(prevTotalLockedBalance.sub(lockedBalance));
+                        expect(totalLockedBalance).to.equal(prevTotalLockedBalance.sub(lockedBalance));
                     });
 
                     it('verifies that locked balance owner can claim multiple locked tokens if sufficient time has passed', async () => {
@@ -2108,13 +2111,13 @@ describe('LiquidityProtection', () => {
                         await liquidityProtection.claimBalance(0, 2);
 
                         const balance = await networkToken.balanceOf(owner.address);
-                        expect(balance).to.be.equal(prevBalance.add(prevTotalLockedBalance));
+                        expect(balance).to.equal(prevBalance.add(prevTotalLockedBalance));
 
                         const totalLockedBalance = await getLockedBalance(owner.address);
-                        expect(totalLockedBalance).to.be.equal(BigNumber.from(0));
+                        expect(totalLockedBalance).to.equal(BigNumber.from(0));
 
                         const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(owner.address);
-                        expect(lockedBalanceCount).to.be.equal(BigNumber.from(0));
+                        expect(lockedBalanceCount).to.equal(BigNumber.from(0));
                     });
 
                     it('verifies that attempting to claim tokens that are still locked does not change any balance', async () => {
@@ -2124,10 +2127,10 @@ describe('LiquidityProtection', () => {
                         await liquidityProtection.claimBalance(0, 2);
 
                         const balance = await networkToken.balanceOf(owner.address);
-                        expect(balance).to.be.equal(prevBalance);
+                        expect(balance).to.equal(prevBalance);
 
                         const totalLockedBalance = await getLockedBalance(owner.address);
-                        expect(totalLockedBalance).to.be.equal(prevTotalLockedBalance);
+                        expect(totalLockedBalance).to.equal(prevTotalLockedBalance);
                     });
 
                     it('should revert when locked balance owner attempts claim tokens with invalid indices', async () => {
@@ -2146,8 +2149,8 @@ describe('LiquidityProtection', () => {
                             let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
                             protection = getProtection(protection);
 
-                            expect(await checkpointStore.checkpoint(recipient.address)).to.be.equal(BigNumber.from(0));
-                            expect(await checkpointStore.checkpoint(newOwner.address)).to.be.equal(BigNumber.from(0));
+                            expect(await checkpointStore.checkpoint(recipient.address)).to.equal(BigNumber.from(0));
+                            expect(await checkpointStore.checkpoint(newOwner.address)).to.equal(BigNumber.from(0));
 
                             const prevPoolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
                             const prevRecipientStats = await getProviderStats(
@@ -2176,27 +2179,27 @@ describe('LiquidityProtection', () => {
                             const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(
                                 newOwner.address
                             );
-                            expect(protectionIds2.length).to.eql(1);
+                            expect(protectionIds2.length).to.equal(1);
 
                             let protection2 = await liquidityProtectionStore.protectedLiquidity(protectionIds2[0]);
                             protection2 = getProtection(protection2);
-                            expect(protection2.provider).to.eql(newOwner.address);
-                            expect(protection.poolToken).to.eql(protection2.poolToken);
-                            expect(protection.reserveToken).to.eql(protection2.reserveToken);
-                            expect(protection.poolAmount).to.be.equal(protection2.poolAmount);
-                            expect(protection.reserveAmount).to.be.equal(protection2.reserveAmount);
-                            expect(protection.reserveRateN).to.be.equal(protection2.reserveRateN);
-                            expect(protection.reserveRateD).to.be.equal(protection2.reserveRateD);
-                            expect(protection.timestamp).to.be.equal(protection2.timestamp);
+                            expect(protection2.provider).to.equal(newOwner.address);
+                            expect(protection.poolToken).to.equal(protection2.poolToken);
+                            expect(protection.reserveToken).to.equal(protection2.reserveToken);
+                            expect(protection.poolAmount).to.equal(protection2.poolAmount);
+                            expect(protection.reserveAmount).to.equal(protection2.reserveAmount);
+                            expect(protection.reserveRateN).to.equal(protection2.reserveRateN);
+                            expect(protection.reserveRateD).to.equal(protection2.reserveRateD);
+                            expect(protection.timestamp).to.equal(protection2.timestamp);
 
                             // verify system balance
                             const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                            expect(systemBalance).to.be.equal(prevSystemBalance);
+                            expect(systemBalance).to.equal(prevSystemBalance);
 
                             // verify stats
                             const poolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
-                            expect(poolStats.totalPoolAmount).to.be.equal(prevPoolStats.totalPoolAmount);
-                            expect(poolStats.totalReserveAmount).to.be.equal(prevPoolStats.totalReserveAmount);
+                            expect(poolStats.totalPoolAmount).to.equal(prevPoolStats.totalPoolAmount);
+                            expect(poolStats.totalReserveAmount).to.equal(prevPoolStats.totalReserveAmount);
 
                             const recipientStats = await getProviderStats(
                                 recipient,
@@ -2204,10 +2207,10 @@ describe('LiquidityProtection', () => {
                                 reserveToken,
                                 isETHReserve
                             );
-                            expect(recipientStats.totalProviderAmount).to.be.equal(
+                            expect(recipientStats.totalProviderAmount).to.equal(
                                 prevRecipientStats.totalProviderAmount.sub(protection.reserveAmount)
                             );
-                            expect(recipientStats.providerPools).to.eql([protection.poolToken]);
+                            expect(recipientStats.providerPools).to.equalTo([protection.poolToken]);
 
                             const newOwnerStats = await getProviderStats(
                                 newOwner,
@@ -2215,14 +2218,14 @@ describe('LiquidityProtection', () => {
                                 reserveToken,
                                 isETHReserve
                             );
-                            expect(newOwnerStats.totalProviderAmount).to.be.equal(
+                            expect(newOwnerStats.totalProviderAmount).to.equal(
                                 prevNewOwnerStats.totalProviderAmount.add(protection2.reserveAmount)
                             );
-                            expect(newOwnerStats.providerPools).to.eql([protection2.poolToken]);
+                            expect(newOwnerStats.providerPools).to.equalTo([protection2.poolToken]);
 
                             // verify removal checkpoints
-                            expect(await checkpointStore.checkpoint(recipient.address)).to.be.equal(now);
-                            expect(await checkpointStore.checkpoint(newOwner.address)).to.be.equal(BigNumber.from(0));
+                            expect(await checkpointStore.checkpoint(recipient.address)).to.equal(now);
+                            expect(await checkpointStore.checkpoint(newOwner.address)).to.equal(BigNumber.from(0));
                         };
 
                         let protectionId;
@@ -2276,7 +2279,7 @@ describe('LiquidityProtection', () => {
                             const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
                                 recipient.address
                             );
-                            expect(protectionIds.length).to.eql(1);
+                            expect(protectionIds.length).to.equal(1);
 
                             protectionId = protectionIds[0];
 
@@ -2333,12 +2336,12 @@ describe('LiquidityProtection', () => {
                                 const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(
                                     newOwner.address
                                 );
-                                expect(protectionIds2.length).to.eql(1);
+                                expect(protectionIds2.length).to.equal(1);
 
                                 const transferEvent2 = await callback.transferEvent();
-                                expect(transferEvent2[0]).to.be.equal(protectionIds2[0]);
-                                expect(transferEvent2[1]).to.eql(recipient.address);
-                                expect(transferEvent2[2]).to.be.equal(data);
+                                expect(transferEvent2[0]).to.equal(protectionIds2[0]);
+                                expect(transferEvent2[1]).to.equal(recipient.address);
+                                expect(transferEvent2[2]).to.equal(data);
                             });
                         });
                     };
@@ -2533,12 +2536,12 @@ describe('LiquidityProtection', () => {
 
                                     const event = events[0];
                                     expect(event.adding).to.be.true;
-                                    expect(event.id).to.be.equal(BigNumber.from(0));
-                                    expect(event.provider).to.eql(recipient.address);
-                                    expect(event.poolAnchor).to.eql(poolToken.address);
-                                    expect(event.reserveToken).to.eql(reserveTokenAddress);
-                                    expect(event.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(event.reserveAmount).to.be.equal(reserveAmount);
+                                    expect(event.id).to.equal(BigNumber.from(0));
+                                    expect(event.provider).to.equal(recipient.address);
+                                    expect(event.poolAnchor).to.equal(poolToken.address);
+                                    expect(event.reserveToken).to.equal(reserveTokenAddress);
+                                    expect(event.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
+                                    expect(event.reserveAmount).to.equal(reserveAmount);
                                 });
                             });
 
@@ -2567,12 +2570,12 @@ describe('LiquidityProtection', () => {
 
                                     const event = events[0];
                                     expect(event.adding).to.be.false;
-                                    expect(event.id).to.be.equal(id);
-                                    expect(event.provider).to.eql(recipient.address);
-                                    expect(event.poolAnchor).to.eql(poolToken.address);
-                                    expect(event.reserveToken).to.eql(reserveTokenAddress);
-                                    expect(event.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(event.reserveAmount).to.be.equal(reserveAmount);
+                                    expect(event.id).to.equal(id);
+                                    expect(event.provider).to.equal(recipient.address);
+                                    expect(event.poolAnchor).to.equal(poolToken.address);
+                                    expect(event.reserveToken).to.equal(reserveTokenAddress);
+                                    expect(event.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
+                                    expect(event.reserveAmount).to.equal(reserveAmount);
                                 });
                             });
 
@@ -2596,21 +2599,21 @@ describe('LiquidityProtection', () => {
 
                                     const removeEvent = events[0];
                                     expect(removeEvent.adding).to.be.false;
-                                    expect(removeEvent.id).to.be.equal(id);
-                                    expect(removeEvent.provider).to.eql(recipient.address);
-                                    expect(removeEvent.poolAnchor).to.eql(poolToken.address);
-                                    expect(removeEvent.reserveToken).to.eql(reserveTokenAddress);
-                                    expect(removeEvent.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(removeEvent.reserveAmount).to.be.equal(reserveAmount);
+                                    expect(removeEvent.id).to.equal(id);
+                                    expect(removeEvent.provider).to.equal(recipient.address);
+                                    expect(removeEvent.poolAnchor).to.equal(poolToken.address);
+                                    expect(removeEvent.reserveToken).to.equal(reserveTokenAddress);
+                                    expect(removeEvent.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
+                                    expect(removeEvent.reserveAmount).to.equal(reserveAmount);
 
                                     const addEvent = events[1];
                                     expect(addEvent.adding).to.be.true;
-                                    expect(addEvent.id).to.be.equal(BigNumber.from(0));
-                                    expect(addEvent.provider).to.eql(newOwner.address);
-                                    expect(addEvent.poolAnchor).to.eql(poolToken.address);
-                                    expect(addEvent.reserveToken).to.eql(reserveTokenAddress);
-                                    expect(addEvent.poolAmount).to.be.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(addEvent.reserveAmount).to.be.equal(reserveAmount);
+                                    expect(addEvent.id).to.equal(BigNumber.from(0));
+                                    expect(addEvent.provider).to.equal(newOwner.address);
+                                    expect(addEvent.poolAnchor).to.equal(poolToken.address);
+                                    expect(addEvent.reserveToken).to.equal(reserveTokenAddress);
+                                    expect(addEvent.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
+                                    expect(addEvent.reserveAmount).to.equal(reserveAmount);
                                 });
                             });
                         });
@@ -2698,8 +2701,8 @@ describe('LiquidityProtection', () => {
                                                     poolToken.address,
                                                     baseToken.address
                                                 );
-                                                expect(reserveTokenRate[0]).to.be.equal(averageRate[0]);
-                                                expect(reserveTokenRate[1]).to.be.equal(averageRate[1]);
+                                                expect(reserveTokenRate[0]).to.equal(averageRate[0]);
+                                                expect(reserveTokenRate[1]).to.equal(averageRate[1]);
                                             } else {
                                                 await expect(
                                                     liquidityProtection.averageRateTest(
@@ -3057,7 +3060,7 @@ describe('LiquidityProtection', () => {
                             const relativeError = actual.div(expected).sub(1).abs();
                             expect(
                                 absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)
-                            ).to.be.equal(
+                            ).to.equal(
                                 true,
                                 `\nabsoluteError = ${absoluteError.toFixed(
                                     25

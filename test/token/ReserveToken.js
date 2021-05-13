@@ -60,13 +60,11 @@ describe('ReserveToken', () => {
             });
 
             it('should properly check if the reserve token is a native token', async () => {
-                expect(await reserveToken.isNativeToken(token.address)).to.be.eql(hasETH);
+                expect(await reserveToken.isNativeToken(token.address)).to.equal(hasETH);
             });
 
             it('should properly get the right balance', async () => {
-                expect(await reserveToken.balanceOf(token.address, sender)).to.be.equal(
-                    await getBalance(token, sender)
-                );
+                expect(await reserveToken.balanceOf(token.address, sender)).to.equal(await getBalance(token, sender));
             });
 
             for (const amount of [BigNumber.from(0), BigNumber.from(10000)]) {
@@ -76,8 +74,8 @@ describe('ReserveToken', () => {
 
                     await reserveToken.safeTransfer(token.address, recipient.address, amount);
 
-                    expect(await getBalance(token, sender)).to.be.equal(prevSenderBalance.sub(amount));
-                    expect(await getBalance(token, recipient)).to.be.equal(prevRecipientBalance.add(amount));
+                    expect(await getBalance(token, sender)).to.equal(prevSenderBalance.sub(amount));
+                    expect(await getBalance(token, recipient)).to.equal(prevRecipientBalance.add(amount));
                 });
             }
 
@@ -90,8 +88,8 @@ describe('ReserveToken', () => {
                     await reserveToken.ensureApprove(token.address, sender, amount);
                     await reserveToken.safeTransferFrom(token.address, sender, recipient.address, amount);
 
-                    expect(await getBalance(token, sender)).to.be.equal(prevSenderBalance);
-                    expect(await getBalance(token, recipient)).to.be.equal(prevRecipientBalance);
+                    expect(await getBalance(token, sender)).to.equal(prevSenderBalance);
+                    expect(await getBalance(token, recipient)).to.equal(prevRecipientBalance);
                 });
             } else {
                 for (const amount of [BigNumber.from(0), BigNumber.from(10000)]) {
@@ -102,8 +100,8 @@ describe('ReserveToken', () => {
                         await reserveToken.ensureApprove(token.address, sender, amount);
                         await reserveToken.safeTransferFrom(token.address, sender, recipient.address, amount);
 
-                        expect(await getBalance(token, sender)).to.be.equal(prevSenderBalance.sub(amount));
-                        expect(await getBalance(token, recipient)).to.be.equal(prevRecipientBalance.add(amount));
+                        expect(await getBalance(token, sender)).to.equal(prevSenderBalance.sub(amount));
+                        expect(await getBalance(token, recipient)).to.equal(prevRecipientBalance.add(amount));
                     });
 
                     it('should setting the allowance', async () => {
@@ -112,7 +110,7 @@ describe('ReserveToken', () => {
 
                         await reserveToken.ensureApprove(token.address, spender.address, allowance);
 
-                        expect(await token.allowance(sender, spender.address)).to.be.equal(allowance);
+                        expect(await token.allowance(sender, spender.address)).to.equal(allowance);
                     });
                 }
             }

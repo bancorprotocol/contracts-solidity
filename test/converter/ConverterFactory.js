@@ -44,7 +44,7 @@ describe('ConverterFactory', () => {
 
             it('should allow the owner to register a typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
-                expect(await converterFactory.converterFactories(await factory.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory.converterType())).to.equal(
                     factory.address
                 );
             });
@@ -53,10 +53,10 @@ describe('ConverterFactory', () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
 
                 const factory2 = await Factories[contractName].deploy();
-                expect(await factory.converterType()).to.be.equal(await factory2.converterType());
+                expect(await factory.converterType()).to.equal(await factory2.converterType());
 
                 await converterFactory.registerTypedConverterFactory(factory2.address);
-                expect(await converterFactory.converterFactories(await factory2.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory2.converterType())).to.equal(
                     factory2.address
                 );
             });
@@ -69,7 +69,7 @@ describe('ConverterFactory', () => {
 
             it('should allow the owner to register a typed converter anchor factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
-                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.equal(
                     anchorFactory.address
                 );
             });
@@ -78,10 +78,10 @@ describe('ConverterFactory', () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
 
                 const anchorFactory2 = await Contracts.TestTypedConverterAnchorFactory.deploy('TypedAnchor2');
-                expect(await anchorFactory.converterType()).to.be.equal(await anchorFactory.converterType());
+                expect(await anchorFactory.converterType()).to.equal(await anchorFactory.converterType());
 
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory2.address);
-                expect(await converterFactory.anchorFactories(await anchorFactory2.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory2.converterType())).to.equal(
                     anchorFactory2.address
                 );
             });
@@ -95,13 +95,13 @@ describe('ConverterFactory', () => {
             it('should allow the owner to unregister a registered typed converter anchor factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
 
-                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.equal(
                     anchorFactory.address
                 );
 
                 await converterFactory.unregisterTypedConverterAnchorFactory(anchorFactory.address);
 
-                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.equal(
                     Constants.ZERO_ADDRESS
                 );
             });
@@ -109,18 +109,18 @@ describe('ConverterFactory', () => {
             it('should revert if the owner attempts to unregister an unregistered typed converter anchor factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
 
-                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.equal(
                     anchorFactory.address
                 );
 
                 const factory2 = await Factories[contractName].deploy();
-                expect(await factory.converterType()).to.be.equal(await factory2.converterType());
+                expect(await factory.converterType()).to.equal(await factory2.converterType());
 
                 await expect(converterFactory.unregisterTypedConverterAnchorFactory(factory2.address)).to.revertedWith(
                     'ERR_NOT_REGISTERED'
                 );
 
-                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.equal(
                     anchorFactory.address
                 );
             });
@@ -128,7 +128,7 @@ describe('ConverterFactory', () => {
             it('should revert if a non-owner attempts to unregister a registered typed converter anchor factory', async () => {
                 await converterFactory.registerTypedConverterAnchorFactory(anchorFactory.address);
 
-                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.equal(
                     anchorFactory.address
                 );
 
@@ -136,20 +136,20 @@ describe('ConverterFactory', () => {
                     converterFactory.connect(nonOwner).unregisterTypedConverterAnchorFactory(anchorFactory.address)
                 ).to.revertedWith('ERR_ACCESS_DENIED');
 
-                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.eql(
+                expect(await converterFactory.anchorFactories(await anchorFactory.converterType())).to.equal(
                     anchorFactory.address
                 );
             });
 
             it('should allow the owner to unregister a registered typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
-                expect(await converterFactory.converterFactories(await factory.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory.converterType())).to.equal(
                     factory.address
                 );
 
                 await converterFactory.unregisterTypedConverterFactory(factory.address);
 
-                expect(await converterFactory.converterFactories(await factory.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory.converterType())).to.equal(
                     Constants.ZERO_ADDRESS
                 );
             });
@@ -157,18 +157,18 @@ describe('ConverterFactory', () => {
             it('should revert if the owner attempts to unregister an unregistered typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
 
-                expect(await converterFactory.converterFactories(await factory.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory.converterType())).to.equal(
                     factory.address
                 );
 
                 const factory2 = await Factories[contractName].deploy();
-                expect(await factory.converterType()).to.be.equal(await factory2.converterType());
+                expect(await factory.converterType()).to.equal(await factory2.converterType());
 
                 await expect(converterFactory.unregisterTypedConverterFactory(factory2.address)).to.revertedWith(
                     'ERR_NOT_REGISTERED'
                 );
 
-                expect(await converterFactory.converterFactories(await factory.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory.converterType())).to.equal(
                     factory.address
                 );
             });
@@ -176,7 +176,7 @@ describe('ConverterFactory', () => {
             it('should revert if a non-owner attempts to unregister a registered typed converter factory', async () => {
                 await converterFactory.registerTypedConverterFactory(factory.address);
 
-                expect(await converterFactory.converterFactories(await factory.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory.converterType())).to.equal(
                     factory.address
                 );
 
@@ -184,7 +184,7 @@ describe('ConverterFactory', () => {
                     converterFactory.connect(nonOwner).unregisterTypedConverterFactory(factory.address)
                 ).to.revertedWith('ERR_ACCESS_DENIED');
 
-                expect(await converterFactory.converterFactories(await factory.converterType())).to.eql(
+                expect(await converterFactory.converterFactories(await factory.converterType())).to.equal(
                     factory.address
                 );
             });
@@ -198,10 +198,10 @@ describe('ConverterFactory', () => {
                 const anchorAddress = await converterFactory.createdAnchor();
                 const anchor = await Contracts.DSToken.attach(anchorAddress);
 
-                expect(await anchor.name()).to.not.be.eql(name);
-                expect(await anchor.name()).to.be.eql(await anchorFactory.name());
-                expect(await anchor.owner()).to.be.eql(converterFactory.address);
-                expect(await anchor.newOwner()).to.be.eql(owner.address);
+                expect(await anchor.name()).to.not.equal(name);
+                expect(await anchor.name()).to.equal(await anchorFactory.name());
+                expect(await anchor.owner()).to.equal(converterFactory.address);
+                expect(await anchor.newOwner()).to.equal(owner.address);
             });
 
             it('should create an anchor using custom settings', async () => {
@@ -211,10 +211,10 @@ describe('ConverterFactory', () => {
                 const anchorAddress = await converterFactory.createdAnchor();
                 const anchor = await Contracts.DSToken.attach(anchorAddress);
 
-                expect(await anchor.name()).to.be.eql(name);
-                expect(await anchor.name()).not.to.be.eql(await anchorFactory.name());
-                expect(await anchor.owner()).to.be.eql(converterFactory.address);
-                expect(await anchor.newOwner()).to.be.eql(owner.address);
+                expect(await anchor.name()).to.equal(name);
+                expect(await anchor.name()).not.to.equal(await anchorFactory.name());
+                expect(await anchor.owner()).to.equal(converterFactory.address);
+                expect(await anchor.newOwner()).to.equal(owner.address);
             });
 
             it('should create converter', async () => {
@@ -233,11 +233,11 @@ describe('ConverterFactory', () => {
                 const converterAddress = await converterFactory.createdConverter();
                 const converter = await Contracts.StandardPoolConverter.attach(converterAddress);
 
-                expect(await converter.anchor()).to.be.eql(anchor.address);
-                expect(await converter.registry()).to.be.eql(contractRegistry.address);
-                expect(await converter.maxConversionFee()).to.be.equal(MAX_CONVERSION_FEE);
-                expect(await converter.owner()).to.be.eql(converterFactory.address);
-                expect(await converter.newOwner()).to.be.eql(owner.address);
+                expect(await converter.anchor()).to.equal(anchor.address);
+                expect(await converter.registry()).to.equal(contractRegistry.address);
+                expect(await converter.maxConversionFee()).to.equal(MAX_CONVERSION_FEE);
+                expect(await converter.owner()).to.equal(converterFactory.address);
+                expect(await converter.newOwner()).to.equal(owner.address);
 
                 await expect(res)
                     .to.emit(converterFactory, 'NewConverter')

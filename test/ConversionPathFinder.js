@@ -1,9 +1,12 @@
-const { expect } = require('chai');
+const chai = require('chai');
 const { ethers } = require('hardhat');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
 const Contracts = require('./helpers/Contracts');
+
+chai.use(require('chai-arrays'));
+const { expect } = chai;
 
 const ANCHOR_TOKEN_SYMBOL = 'ETH';
 const STANDARD_CONVERTER_TYPE = 3;
@@ -200,7 +203,7 @@ describe('ConversionPathFinder', () => {
                 const targetToken = addresses[targetSymbol];
                 const expected = await findPath(sourceToken, targetToken, anchorToken, converterRegistry);
                 const actual = await pathFinder.findPath(sourceToken, targetToken);
-                expect(actual).to.be.deep.equal(expected);
+                expect(actual).to.equalTo(expected);
 
                 await printPath(sourceToken, targetToken, actual);
             });

@@ -98,11 +98,11 @@ describe('BancorX', () => {
         await bancorX.setLimitIncPerBlock(newLimitIncPerBlock);
         await bancorX.setMinRequiredReports(newMinRequiredReports);
 
-        expect(await bancorX.maxLockLimit()).to.be.equal(newMaxLockLimit);
-        expect(await bancorX.maxReleaseLimit()).to.be.equal(newMaxReleaseLimit);
-        expect(await bancorX.minLimit()).to.be.equal(newMinLimit);
-        expect(await bancorX.limitIncPerBlock()).to.be.equal(newLimitIncPerBlock);
-        expect(await bancorX.minRequiredReports()).to.be.equal(newMinRequiredReports);
+        expect(await bancorX.maxLockLimit()).to.equal(newMaxLockLimit);
+        expect(await bancorX.maxReleaseLimit()).to.equal(newMaxReleaseLimit);
+        expect(await bancorX.minLimit()).to.equal(newMinLimit);
+        expect(await bancorX.limitIncPerBlock()).to.equal(newLimitIncPerBlock);
+        expect(await bancorX.minRequiredReports()).to.equal(newMinRequiredReports);
     });
 
     it('should not allow a non-owner to set limits', async () => {
@@ -195,14 +195,14 @@ describe('BancorX', () => {
         await bancorX['xTransfer(bytes32,bytes32,uint256)'](EOS_BLOCKCHAIN, EOS_ADDRESS, amount);
 
         for (let i = 0; i <= numOfTests; ++i) {
-            expect(await bancorX.getCurrentLockLimit()).to.be.equal(
+            expect(await bancorX.getCurrentLockLimit()).to.equal(
                 MAX_LOCK_LIMIT.sub(amount).add(MIN_LIMIT.mul(BigNumber.from(i)))
             );
             await advanceBlock();
         }
 
         for (let i = 0; i < 3; i++) {
-            expect(await bancorX.getCurrentLockLimit()).to.be.equal(MAX_LOCK_LIMIT);
+            expect(await bancorX.getCurrentLockLimit()).to.equal(MAX_LOCK_LIMIT);
 
             await advanceBlock();
         }

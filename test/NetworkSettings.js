@@ -25,7 +25,7 @@ describe('NetworkSettings', () => {
     });
 
     const expectReturn = async (method, object) => {
-        expect(JSON.stringify(await method)).to.be.equal(JSON.stringify(object));
+        expect(JSON.stringify(await method)).to.equal(JSON.stringify(object));
     };
 
     describe('construction', () => {
