@@ -1,3 +1,8 @@
+### 0.6.38
+LiquidityProtection
+* `transferPositionAndCall` replaced by `transferPositionAndNotify` with predefined callback interface
+
+
 ### 0.6.37
 General
 * Minor cleanups
