@@ -73,7 +73,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
-    uint8 private constant FUNC_SELECTOR_LENGTH = 4;
 
     ILiquidityProtectionSettings private immutable _settings;
     ILiquidityProtectionStore private immutable _store;
