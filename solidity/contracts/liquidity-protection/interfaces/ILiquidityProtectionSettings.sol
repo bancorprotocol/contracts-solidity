@@ -5,7 +5,7 @@ import "../../converter/interfaces/IConverterAnchor.sol";
 
 import "../../token/interfaces/IReserveToken.sol";
 
-import "./ILiquidityProtectionEventsSubscriber.sol";
+import "./ILiquidityProvisionEventsSubscriber.sol";
 
 /*
     Liquidity Protection Store Settings interface

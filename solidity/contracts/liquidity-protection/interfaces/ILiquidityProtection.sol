@@ -5,6 +5,7 @@ import "./ILiquidityProtectionStore.sol";
 import "./ILiquidityProtectionStats.sol";
 import "./ILiquidityProtectionSettings.sol";
 import "./ILiquidityProtectionSystemStore.sol";
+import "./ITransferPositionCallback.sol";
 
 import "../../utility/interfaces/ITokenHolder.sol";
 
@@ -40,4 +41,13 @@ interface ILiquidityProtection {
     ) external payable returns (uint256);
 
     function removeLiquidity(uint256 id, uint32 portion) external;
+
+    function transferPosition(uint256 id, address newProvider) external returns (uint256);
+
+    function transferPositionAndNotify(
+        uint256 id,
+        address newProvider,
+        ITransferPositionCallback callback,
+        bytes calldata data
+    ) external returns (uint256);
 }
