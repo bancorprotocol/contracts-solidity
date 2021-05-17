@@ -6,9 +6,9 @@ import "../../converter/interfaces/IConverterAnchor.sol";
 import "../../token/interfaces/IReserveToken.sol";
 
 /**
- * @dev Liquidity protection events subscriber interface
+ * @dev Liquidity provision events subscriber interface
  */
-interface ILiquidityProtectionEventsSubscriber {
+interface ILiquidityProvisionEventsSubscriber {
     function onAddingLiquidity(
         address provider,
         IConverterAnchor poolAnchor,

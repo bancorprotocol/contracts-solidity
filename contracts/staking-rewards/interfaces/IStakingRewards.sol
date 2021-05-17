@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.12;
 
-import "../../liquidity-protection/interfaces/ILiquidityProtectionEventsSubscriber.sol";
+import "../../liquidity-protection/interfaces/ILiquidityProvisionEventsSubscriber.sol";
 
 import "./IStakingRewardsStore.sol";
 
-interface IStakingRewards is ILiquidityProtectionEventsSubscriber {
+interface IStakingRewards is ILiquidityProvisionEventsSubscriber {
     /**
      * @dev triggered when pending rewards are being claimed
      *

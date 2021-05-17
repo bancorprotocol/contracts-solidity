@@ -2297,90 +2297,48 @@ describe('LiquidityProtection', () => {
                         });
 
                         describe('notification', () => {
-                            let testCall;
+                            let callback;
 
                             beforeEach(async () => {
-                                testCall = await Contracts.TestCall.deploy();
+                                callback = await Contracts.TestTransferPositionCallback.deploy();
                             });
 
-                            it('should revert when called with invalid call data', async () => {
+                            it('should revert when called with an invalid callback', async () => {
                                 await expect(
                                     liquidityProtection
                                         .connect(recipient)
-                                        .transferPositionAndCall(
-                                            protectionId,
-                                            newOwner.address,
-                                            ZERO_ADDRESS,
-                                            liquidityProtection.interface.encodeFunctionData('store')
-                                        )
+                                        .transferPositionAndNotify(protectionId, newOwner.address, ZERO_ADDRESS, [])
                                 ).to.be.revertedWith('ERR_INVALID_ADDRESS');
-
-                                await expect(
-                                    liquidityProtection
-                                        .connect(recipient)
-                                        .transferPositionAndCall(protectionId, newOwner.address, testCall.address, [])
-                                ).to.be.revertedWith('ERR_INVALID_CALL_DATA');
-
-                                for (const invalidCallData of [[], '0x1234', '0x123456']) {
-                                    await expect(
-                                        liquidityProtection
-                                            .connect(recipient)
-                                            .transferPositionAndCall(
-                                                protectionId,
-                                                newOwner.address,
-                                                testCall.address,
-                                                invalidCallData
-                                            )
-                                    ).to.be.revertedWith('ERR_INVALID_CALL_DATA');
-                                }
                             });
 
-                            it('should revert when the callback reverts', async () => {
-                                await expect(
-                                    liquidityProtection
-                                        .connect(recipient)
-                                        .transferPositionAndCall(
-                                            protectionId,
-                                            newOwner.address,
-                                            testCall.address,
-                                            testCall.interface.encodeFunctionData('error')
-                                        )
-                                ).to.be.revertedWith('ERR_REVERT');
-                            });
+                            it('should notify on transfer', async () => {
+                                const transferEvent = await callback.transferEvent();
+                                expect(transferEvent[0]).to.equal(BigNumber.from(0));
+                                expect(transferEvent[1]).to.equal(ZERO_ADDRESS);
+                                expect(transferEvent[2]).to.equal('0x');
 
-                            it('should revert when calling an invalid method', async () => {
-                                await expect(
-                                    liquidityProtection
-                                        .connect(recipient)
-                                        .transferPositionAndCall(
-                                            protectionId,
-                                            newOwner.address,
-                                            testCall.address,
-                                            liquidityProtection.interface.encodeFunctionData('store')
-                                        )
-                                ).to.be.revertedWith('ERR_CALL_FAILED');
-                            });
-
-                            it('should support state changing function', async () => {
-                                expect(await testCall.num()).to.be.equal(BigNumber.from(0));
-                                expect(await testCall.str()).to.be.eql('');
-
-                                const newNum = BigNumber.from(12345);
-                                const newStr = 'Hello World!';
+                                const data = '0x1234';
 
                                 await verifyTransfer(async () =>
                                     liquidityProtection
                                         .connect(recipient)
-                                        .transferPositionAndCall(
+                                        .transferPositionAndNotify(
                                             protectionId,
                                             newOwner.address,
-                                            testCall.address,
-                                            testCall.interface.encodeFunctionData('set', [newNum, newStr])
+                                            callback.address,
+                                            data
                                         )
                                 );
 
-                                expect(await testCall.num()).to.be.equal(newNum);
-                                expect(await testCall.str()).to.be.eql(newStr);
+                                const protectionIds2 = await liquidityProtectionStore.protectedLiquidityIds(
+                                    newOwner.address
+                                );
+                                expect(protectionIds2.length).to.eql(1);
+
+                                const transferEvent2 = await callback.transferEvent();
+                                expect(transferEvent2[0]).to.be.equal(protectionIds2[0]);
+                                expect(transferEvent2[1]).to.eql(recipient.address);
+                                expect(transferEvent2[2]).to.be.equal(data);
                             });
                         });
                     };
@@ -2419,7 +2377,7 @@ describe('LiquidityProtection', () => {
                     let eventsSubscriber;
 
                     beforeEach(async () => {
-                        eventsSubscriber = await Contracts.TestLiquidityProtectionEventsSubscriber.deploy();
+                        eventsSubscriber = await Contracts.TestLiquidityProvisionEventsSubscriber.deploy();
                     });
 
                     const getEvents = async () => {
