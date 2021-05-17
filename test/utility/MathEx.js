@@ -23,7 +23,7 @@ describe('MathEx', () => {
             it(`Function floorSqrt(${x.toHexString()})`, async () => {
                 const expected = MathUtils.floorSqrt(x.toString());
                 const actual = await mathContract.floorSqrtTest(x.toString());
-                expect(actual).to.be.equal(expected);
+                expect(actual).to.equal(expected);
             });
         }
     }
@@ -34,7 +34,7 @@ describe('MathEx', () => {
             it(`Function ceilSqrt(${x.toHexString()})`, async () => {
                 const expected = MathUtils.ceilSqrt(x.toString());
                 const actual = await mathContract.ceilSqrtTest(x.toString());
-                expect(actual).to.be.equal(expected);
+                expect(actual).to.equal(expected);
             });
         }
     }
@@ -174,7 +174,7 @@ describe('MathEx', () => {
             it(`roundDiv(${n}, ${d})`, async () => {
                 const expected = MathUtils.roundDiv(n, d);
                 const actual = await mathContract.roundDivTest(n, d);
-                expect(actual).to.be.equal(expected);
+                expect(actual).to.equal(expected);
             });
         }
     }
@@ -187,7 +187,7 @@ describe('MathEx', () => {
         it(`geometricMean([${values}])`, async () => {
             const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
             const actual = await mathContract.geometricMeanTest(values);
-            expect(actual).to.be.equal(BigNumber.from(expected));
+            expect(actual).to.equal(BigNumber.from(expected));
         });
     }
 
@@ -197,7 +197,7 @@ describe('MathEx', () => {
             it(`decimalLength(${x.toString()})`, async () => {
                 const expected = x.toString().length;
                 const actual = await mathContract.decimalLengthTest(x);
-                expect(actual).to.be.equal(BigNumber.from(expected));
+                expect(actual).to.equal(BigNumber.from(expected));
             });
         }
     }
@@ -207,7 +207,7 @@ describe('MathEx', () => {
             it(`roundDivUnsafe(${n}, ${d})`, async () => {
                 const expected = Math.round(n / d);
                 const actual = await mathContract.roundDivUnsafeTest(n, d);
-                expect(actual).to.be.equal(BigNumber.from(expected));
+                expect(actual).to.equal(BigNumber.from(expected));
             });
         }
     }

@@ -88,10 +88,10 @@ describe('VortexBurner', () => {
             const burnReward = await vortex.burnReward();
             const reward = burnReward[0];
             const maxRewardAmount = burnReward[1];
-            expect(reward).to.be.equal(BigNumber.from(0));
-            expect(maxRewardAmount).to.be.equal(BigNumber.from(0));
+            expect(reward).to.equal(BigNumber.from(0));
+            expect(maxRewardAmount).to.equal(BigNumber.from(0));
 
-            expect(await vortex.totalBurnedAmount()).to.be.equal(BigNumber.from(0));
+            expect(await vortex.totalBurnedAmount()).to.equal(BigNumber.from(0));
         });
 
         it('should revert if initialized with an invalid network token address', async () => {
@@ -119,7 +119,7 @@ describe('VortexBurner', () => {
 
             const value = BigNumber.from(1);
             await accounts[9].sendTransaction({ to: vortex.address, value: value });
-            expect(await ethers.provider.getBalance(vortex.address)).to.be.equal(prevBalance.add(value));
+            expect(await ethers.provider.getBalance(vortex.address)).to.equal(prevBalance.add(value));
         });
     });
 
@@ -127,7 +127,7 @@ describe('VortexBurner', () => {
         it('should allow the owner to transfer the network fee wallet ownership', async () => {
             await vortex.transferNetworkFeeWalletOwnership(newOwner.address);
             await networkFeeWallet.connect(newOwner).acceptOwnership();
-            expect(await networkFeeWallet.owner()).to.be.eql(newOwner.address);
+            expect(await networkFeeWallet.owner()).to.equal(newOwner.address);
         });
 
         it('should revert when a non owner attempts to transfer the network fee wallet', async () => {
@@ -145,7 +145,7 @@ describe('VortexBurner', () => {
 
             await vortex.transferNetworkFeeWalletOwnership(newVortex.address);
             await newVortex.acceptNetworkFeeOwnership();
-            expect(await networkFeeWallet.owner()).to.be.eql(newVortex.address);
+            expect(await networkFeeWallet.owner()).to.equal(newVortex.address);
         });
     });
 
@@ -167,8 +167,8 @@ describe('VortexBurner', () => {
             const currentBurnReward = currentBurnRewardParams[0];
             const currentMaxBurnRewardAmount = currentBurnRewardParams[1];
 
-            expect(currentBurnReward).to.be.equal(newBurnReward);
-            expect(currentMaxBurnRewardAmount).to.be.equal(newMaxBurnRewardAmount);
+            expect(currentBurnReward).to.equal(newBurnReward);
+            expect(currentMaxBurnRewardAmount).to.equal(newMaxBurnRewardAmount);
         });
 
         it('should revert when a non owner attempts to set the burn reward', async () => {
@@ -432,7 +432,7 @@ describe('VortexBurner', () => {
                                             // Check that the network wallet fee balances are correct.
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
-                                                expect(await getBalance(token, networkFeeWallet.address)).to.be.equal(
+                                                expect(await getBalance(token, networkFeeWallet.address)).to.equal(
                                                     feeAmount
                                                 );
                                             }
@@ -490,28 +490,28 @@ describe('VortexBurner', () => {
                                             // Check that the network fee wallet balances have been depleted.
                                             for (const tokenData of selectedTokens) {
                                                 const token = tokenData.token;
-                                                expect(await getBalance(token, networkFeeWallet.address)).to.be.equal(
+                                                expect(await getBalance(token, networkFeeWallet.address)).to.equal(
                                                     BigNumber.from(0)
                                                 );
                                             }
 
                                             // Check that the sender received the reward.
-                                            expect(await getBalance(networkToken, owner.address)).to.be.equal(
+                                            expect(await getBalance(networkToken, owner.address)).to.equal(
                                                 prevNetworkTokenBalance.add(burnRewardAmount)
                                             );
 
                                             // Check that no network tokens have left in the contract.
-                                            expect(await getBalance(networkToken, vortex.address)).to.be.equal(
+                                            expect(await getBalance(networkToken, vortex.address)).to.equal(
                                                 BigNumber.from(0)
                                             );
 
                                             // Check that no governance tokens have left in the contract.
-                                            expect(await getBalance(govToken, vortex.address)).to.be.equal(
+                                            expect(await getBalance(govToken, vortex.address)).to.equal(
                                                 BigNumber.from(0)
                                             );
 
                                             // Check that the total burned stat has been increment.
-                                            expect(await vortex.totalBurnedAmount()).to.be.equal(totalBurnedAmount);
+                                            expect(await vortex.totalBurnedAmount()).to.equal(totalBurnedAmount);
                                         });
                                     }
                                 );

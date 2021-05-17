@@ -41,11 +41,11 @@ describe('CheckpointStore', () => {
 
     describe('construction', () => {
         it('should properly initialize roles', async () => {
-            expect(await checkpointStore.getRoleMemberCount(ROLE_OWNER)).to.be.equal(BigNumber.from(1));
-            expect(await checkpointStore.getRoleMemberCount(ROLE_SEEDER)).to.be.equal(BigNumber.from(0));
+            expect(await checkpointStore.getRoleMemberCount(ROLE_OWNER)).to.equal(BigNumber.from(1));
+            expect(await checkpointStore.getRoleMemberCount(ROLE_SEEDER)).to.equal(BigNumber.from(0));
 
-            expect(await checkpointStore.getRoleAdmin(ROLE_OWNER)).to.eql(ROLE_OWNER);
-            expect(await checkpointStore.getRoleAdmin(ROLE_SEEDER)).to.eql(ROLE_OWNER);
+            expect(await checkpointStore.getRoleAdmin(ROLE_OWNER)).to.equal(ROLE_OWNER);
+            expect(await checkpointStore.getRoleAdmin(ROLE_SEEDER)).to.equal(ROLE_OWNER);
 
             expect(await checkpointStore.hasRole(ROLE_OWNER, owner.address)).to.be.true;
             expect(await checkpointStore.hasRole(ROLE_SEEDER, owner.address)).to.be.false;
@@ -58,7 +58,7 @@ describe('CheckpointStore', () => {
 
             await expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, now);
 
-            expect(await checkpointStore.checkpoint(user)).to.be.equal(now);
+            expect(await checkpointStore.checkpoint(user)).to.equal(now);
         };
 
         const testPastCheckpoint = async (user, time) => {
@@ -66,7 +66,7 @@ describe('CheckpointStore', () => {
 
             await expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(user, time);
 
-            expect(await checkpointStore.checkpoint(user)).to.be.equal(time);
+            expect(await checkpointStore.checkpoint(user)).to.equal(time);
         };
 
         const testPastCheckpoints = async (users, times) => {
@@ -75,7 +75,7 @@ describe('CheckpointStore', () => {
             for (let i = 0; i < users.length; i++) {
                 await expect(res).to.emit(checkpointStore, 'CheckpointUpdated').withArgs(users[i], times[i]);
 
-                expect(await checkpointStore.checkpoint(users[i])).to.be.equal(times[i]);
+                expect(await checkpointStore.checkpoint(users[i])).to.equal(times[i]);
             }
         };
 

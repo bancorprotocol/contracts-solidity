@@ -147,7 +147,7 @@ describe('XConversions', () => {
 
             await bancorNetwork.connect(sender).xConvert(path, amount, MIN_RETURN, EOS_BLOCKCHAIN, EOS_ADDRESS, TX_ID);
 
-            expect((await bntToken.balanceOf(bancorX.address)).sub(prevBalance)).to.be.equal(retAmount);
+            expect((await bntToken.balanceOf(bancorX.address)).sub(prevBalance)).to.equal(retAmount);
         });
 
         it('should revert when attempting to xConvert to a different token than BNT', async () => {
@@ -185,7 +185,7 @@ describe('XConversions', () => {
             const cumulativeGasUsed = (await res.wait()).cumulativeGasUsed;
             const transactionCost = BigNumber.from(res.gasPrice).mul(BigNumber.from(cumulativeGasUsed));
 
-            expect(await sender.getBalance()).to.be.equal(prevBalance.add(retAmount).sub(transactionCost));
+            expect(await sender.getBalance()).to.equal(prevBalance.add(retAmount).sub(transactionCost));
         });
 
         it('should be able to completeXConversion to an ERC20', async () => {
@@ -208,7 +208,7 @@ describe('XConversions', () => {
                 .connect(sender)
                 .completeXConversion(path, bancorX.address, xTransferId, MIN_RETURN, sender.address);
 
-            expect(await erc20Token.balanceOf(sender.address)).to.be.equal(prevBalance.add(retAmount));
+            expect(await erc20Token.balanceOf(sender.address)).to.equal(prevBalance.add(retAmount));
         });
 
         it("shouldn't be able to completeXConversion to an ERC20 with a different xTransferId", async () => {

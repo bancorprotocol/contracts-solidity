@@ -41,14 +41,14 @@ describe('ContractRegistry', () => {
 
     it('verifies that a given contract address is not set after construction', async () => {
         const address = await contractRegistry.addressOf(contractName1bytes);
-        expect(address).to.eql(ethers.constants.AddressZero);
+        expect(address).to.equal(ethers.constants.AddressZero);
     });
 
     it('verifies that the owner can register a contract address', async () => {
         await contractRegistry.registerAddress(contractName1bytes, address1.address);
 
         const address = await contractRegistry.addressOf(contractName1bytes);
-        expect(address).to.eql(address1.address);
+        expect(address).to.equal(address1.address);
     });
 
     it('should revert when attempting to register the registry to the zero address', async () => {
@@ -68,32 +68,32 @@ describe('ContractRegistry', () => {
         await contractRegistry.registerAddress(contractName2bytes, address2.address);
 
         const itemCount = await contractRegistry.itemCount();
-        expect(itemCount).to.be.equal(BigNumber.from(2));
+        expect(itemCount).to.equal(BigNumber.from(2));
 
         const name1 = trimNull(await contractRegistry.contractNames(0));
-        expect(name1).to.eql(contractName1);
+        expect(name1).to.equal(contractName1);
 
         const name2 = trimNull(await contractRegistry.contractNames(1));
-        expect(name2).to.eql(contractName2);
+        expect(name2).to.equal(contractName2);
     });
 
     it('verifies that the owner can unregister a contract address', async () => {
         await contractRegistry.registerAddress(contractName1bytes, address1.address);
 
         let address = await contractRegistry.addressOf(contractName1bytes);
-        expect(address).to.eql(address1.address);
+        expect(address).to.equal(address1.address);
 
         await contractRegistry.unregisterAddress(contractName1bytes);
 
         address = await contractRegistry.addressOf(contractName1bytes);
-        expect(address).to.eql(ethers.constants.AddressZero);
+        expect(address).to.equal(ethers.constants.AddressZero);
     });
 
     it('should revert when a non owner attempts to unregister a contract address', async () => {
         await contractRegistry.registerAddress(contractName1bytes, address1.address);
 
         const address = await contractRegistry.addressOf(contractName1bytes);
-        expect(address).to.eql(address1.address);
+        expect(address).to.equal(address1.address);
 
         await expect(contractRegistry.connect(nonOwner).unregisterAddress(contractName1bytes)).to.be.revertedWith(
             'ERR_ACCESS_DENIED'
@@ -106,27 +106,27 @@ describe('ContractRegistry', () => {
         await contractRegistry.registerAddress(contractName3bytes, address3.address);
 
         let itemCount = await contractRegistry.itemCount();
-        expect(itemCount).to.be.equal(BigNumber.from(3));
+        expect(itemCount).to.equal(BigNumber.from(3));
 
         let name1 = trimNull(await contractRegistry.contractNames(0));
-        expect(name1).to.eql(contractName1);
+        expect(name1).to.equal(contractName1);
 
         let name2 = trimNull(await contractRegistry.contractNames(1));
-        expect(name2).to.eql(contractName2);
+        expect(name2).to.equal(contractName2);
 
         const name3 = trimNull(await contractRegistry.contractNames(2));
-        expect(name3).to.eql(contractName3);
+        expect(name3).to.equal(contractName3);
 
         await contractRegistry.unregisterAddress(contractName1bytes);
 
         itemCount = await contractRegistry.itemCount();
-        expect(itemCount).to.be.equal(BigNumber.from(2));
+        expect(itemCount).to.equal(BigNumber.from(2));
 
         name1 = trimNull(await contractRegistry.contractNames(0));
-        expect(name1).to.eql(contractName3);
+        expect(name1).to.equal(contractName3);
 
         name2 = trimNull(await contractRegistry.contractNames(1));
-        expect(name2).to.eql(contractName2);
+        expect(name2).to.equal(contractName2);
     });
 
     it('verifies that a registry item can be unregistered and reregistered properly', async () => {
@@ -137,13 +137,13 @@ describe('ContractRegistry', () => {
         await contractRegistry.registerAddress(contractName1bytes, address3.address);
 
         const name2 = trimNull(await contractRegistry.contractNames(0));
-        expect(name2).to.eql(contractName2);
+        expect(name2).to.equal(contractName2);
 
         const name1 = trimNull(await contractRegistry.contractNames(1));
-        expect(name1).to.eql(contractName1);
+        expect(name1).to.equal(contractName1);
 
         const address = await contractRegistry.addressOf(contractName1bytes);
-        expect(address).to.eql(address3.address);
+        expect(address).to.equal(address3.address);
     });
 
     it('should revert when unregistering non registered address', async () => {
@@ -157,13 +157,13 @@ describe('ContractRegistry', () => {
         await contractRegistry.registerAddress(contractName2bytes, address2.address);
         await contractRegistry.registerAddress(contractName3bytes, address3.address);
 
-        expect(await contractRegistry.getAddress(contractName1bytes)).to.eql(
+        expect(await contractRegistry.getAddress(contractName1bytes)).to.equal(
             await contractRegistry.addressOf(contractName1bytes)
         );
-        expect(await contractRegistry.getAddress(contractName2bytes)).to.eql(
+        expect(await contractRegistry.getAddress(contractName2bytes)).to.equal(
             await contractRegistry.addressOf(contractName2bytes)
         );
-        expect(await contractRegistry.getAddress(contractName3bytes)).to.eql(
+        expect(await contractRegistry.getAddress(contractName3bytes)).to.equal(
             await contractRegistry.addressOf(contractName3bytes)
         );
     });

@@ -32,11 +32,11 @@ describe('SafeERC20Ex', () => {
     it('should set allowance', async () => {
         const amount = BigNumber.from(100);
 
-        expect(await token.allowance(sender, spender.address)).to.be.equal(BigNumber.from(0));
+        expect(await token.allowance(sender, spender.address)).to.equal(BigNumber.from(0));
 
         await safeERC20.ensureApprove(token.address, spender.address, amount);
 
-        expect(await token.allowance(sender, spender.address)).to.be.equal(amount);
+        expect(await token.allowance(sender, spender.address)).to.equal(amount);
     });
 
     context('with existing allowance', () => {
@@ -49,7 +49,7 @@ describe('SafeERC20Ex', () => {
         it('should ignore the request when the allowance is sufficient', async () => {
             await safeERC20.ensureApprove(token.address, spender.address, allowance.sub(BigNumber.from(10)));
 
-            expect(await token.allowance(sender, spender.address)).to.be.equal(allowance);
+            expect(await token.allowance(sender, spender.address)).to.equal(allowance);
         });
 
         it('should allow increasing the allowance', async () => {
@@ -57,13 +57,13 @@ describe('SafeERC20Ex', () => {
 
             await safeERC20.ensureApprove(token.address, spender.address, newAllowance);
 
-            expect(await token.allowance(sender, spender.address)).to.be.equal(newAllowance);
+            expect(await token.allowance(sender, spender.address)).to.equal(newAllowance);
         });
 
         it('should ignore the request when the allowance is zero', async () => {
             await safeERC20.ensureApprove(token.address, spender.address, BigNumber.from(0));
 
-            expect(await token.allowance(sender, spender.address)).to.be.equal(allowance);
+            expect(await token.allowance(sender, spender.address)).to.equal(allowance);
         });
     });
 });

@@ -37,15 +37,15 @@ describe('LiquidityProtectionStore', () => {
             await expect(
                 liquidityProtectionStore.connect(nonOwner).withdrawTokens(erc20Token.address, owner.address, 1)
             ).to.be.revertedWith('ERR_ACCESS_DENIED');
-            expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.equal('1');
-            expect(await erc20Token.balanceOf(owner.address)).to.be.equal('0');
+            expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.equal(BigNumber.from(1));
+            expect(await erc20Token.balanceOf(owner.address)).to.equal(BigNumber.from(0));
         });
 
         it('should revert when a non owner attempts to increase system balance', async () => {
             await expect(
                 liquidityProtectionStore.connect(nonOwner).incSystemBalance(owner.address, 1)
             ).to.be.revertedWith('ERR_ACCESS_DENIED');
-            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.equal(BigNumber.from(0));
         });
 
         it('should revert when a non owner attempts to decrease system balance', async () => {
@@ -53,32 +53,32 @@ describe('LiquidityProtectionStore', () => {
             await expect(
                 liquidityProtectionStore.connect(nonOwner).decSystemBalance(owner.address, 1)
             ).to.be.revertedWith('ERR_ACCESS_DENIED');
-            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('1');
+            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.equal(BigNumber.from(1));
         });
 
         it('should succeed when the owner attempts to withdraw tokens', async () => {
             const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await liquidityProtectionStore.connect(owner).withdrawTokens(erc20Token.address, owner.address, 1);
-            expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.be.equal('0');
-            expect(await erc20Token.balanceOf(owner.address)).to.be.equal('1');
+            expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.equal(BigNumber.from(0));
+            expect(await erc20Token.balanceOf(owner.address)).to.equal(BigNumber.from(1));
         });
 
         it('should succeed when the owner attempts to increase system balance', async () => {
-            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.equal(BigNumber.from(0));
             await expect(await liquidityProtectionStore.connect(owner).incSystemBalance(owner.address, 1))
                 .to.emit(liquidityProtectionStore, 'SystemBalanceUpdated')
                 .withArgs(owner.address, '0', '1');
-            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('1');
+            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.equal(BigNumber.from(1));
         });
 
         it('should succeed when the owner attempts to decrease system balance', async () => {
             await liquidityProtectionStore.connect(owner).incSystemBalance(owner.address, 1);
-            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('1');
+            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.equal(BigNumber.from(1));
             await expect(await liquidityProtectionStore.connect(owner).decSystemBalance(owner.address, 1))
                 .to.emit(liquidityProtectionStore, 'SystemBalanceUpdated')
                 .withArgs(owner.address, '1', '0');
-            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.systemBalance(owner.address)).to.equal(BigNumber.from(0));
         });
     });
 
@@ -118,10 +118,12 @@ describe('LiquidityProtectionStore', () => {
                 .to.emit(liquidityProtectionStore, 'ProtectionAdded')
                 .withArgs(provider.address, poolToken.address, reserveToken.address, '1', '2');
 
-            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken.address)).to.be.equal('1');
+            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken.address)).to.equal(
+                BigNumber.from(1)
+            );
             expect(
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken.address, reserveToken.address)
-            ).to.be.equal('2');
+            ).to.equal(BigNumber.from(2));
         });
 
         it('should succeed when the owner attempts to update a protected-liquidity item', async () => {
@@ -133,10 +135,10 @@ describe('LiquidityProtectionStore', () => {
                 .to.emit(liquidityProtectionStore, 'ProtectionUpdated')
                 .withArgs(provider.address, '1', '2', '3', '4');
 
-            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken.address)).to.be.equal('3');
+            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken.address)).to.equal('3');
             expect(
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken.address, reserveToken.address)
-            ).to.be.equal('4');
+            ).to.equal('4');
         });
 
         it('should succeed when the owner attempts to remove a protected-liquidity item', async () => {
@@ -148,10 +150,12 @@ describe('LiquidityProtectionStore', () => {
                 .to.emit(liquidityProtectionStore, 'ProtectionRemoved')
                 .withArgs(provider.address, poolToken.address, reserveToken.address, '1', '2');
 
-            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.totalProtectedPoolAmount(poolToken.address)).to.equal(
+                BigNumber.from(0)
+            );
             expect(
                 await liquidityProtectionStore.totalProtectedReserveAmount(poolToken.address, reserveToken.address)
-            ).to.be.equal('0');
+            ).to.equal(BigNumber.from(0));
         });
     });
 
@@ -160,7 +164,7 @@ describe('LiquidityProtectionStore', () => {
             await expect(
                 liquidityProtectionStore.connect(nonOwner).addLockedBalance(provider.address, 1, 2)
             ).to.be.revertedWith('ERR_ACCESS_DENIED');
-            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.equal(BigNumber.from(0));
         });
 
         it('should revert when a non owner attempts to remove a locked balance', async () => {
@@ -168,24 +172,24 @@ describe('LiquidityProtectionStore', () => {
             await expect(
                 liquidityProtectionStore.connect(nonOwner).removeLockedBalance(provider.address, 0)
             ).to.be.revertedWith('ERR_ACCESS_DENIED');
-            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('1');
+            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.equal(BigNumber.from(1));
         });
 
         it('should succeed when the owner attempts to add a locked balance', async () => {
-            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.equal(BigNumber.from(0));
             await expect(await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, 1, 2))
                 .to.emit(liquidityProtectionStore, 'BalanceLocked')
                 .withArgs(provider.address, '1', '2');
-            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('1');
+            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.equal(BigNumber.from(1));
         });
 
         it('should succeed when the owner attempts to remove a locked balance', async () => {
             await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, 1, 2);
-            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('1');
+            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.equal(BigNumber.from(1));
             await expect(await liquidityProtectionStore.connect(owner).removeLockedBalance(provider.address, 0))
                 .to.emit(liquidityProtectionStore, 'BalanceUnlocked')
                 .withArgs(provider.address, '1');
-            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.equal(BigNumber.from(0));
         });
     });
 
@@ -213,7 +217,7 @@ describe('LiquidityProtectionStore', () => {
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
             }
             const range = await liquidityProtectionStore.lockedBalanceRange(provider.address, 3, 8);
-            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 4));
+            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.equal(BigNumber.from(i + 4));
         });
 
         it('should succeed when end-index is larger than the total number of items', async () => {
@@ -221,7 +225,7 @@ describe('LiquidityProtectionStore', () => {
                 await liquidityProtectionStore.connect(owner).addLockedBalance(provider.address, amount, 1);
             }
             const range = await liquidityProtectionStore.lockedBalanceRange(provider.address, 8, 1000);
-            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.be.equal(BigNumber.from(i + 9));
+            for (let i = 0; i < range[0].length; i++) expect(range[0][i]).to.equal(BigNumber.from(i + 9));
         });
     });
 
@@ -237,13 +241,15 @@ describe('LiquidityProtectionStore', () => {
                 const index = ((items.length - 1) * (1 - direction)) / 2;
                 const id = await liquidityProtectionStore.protectedLiquidityId(provider.address, index);
                 const item = (await liquidityProtectionStore.protectedLiquidity(id))[1];
-                expect(item).to.be.equal(items[index].address);
+                expect(item).to.equal(items[index].address);
                 items[index] = items[items.length - 1];
                 await liquidityProtectionStore.connect(owner).removeProtectedLiquidity(id);
                 console.log(`item ${index} removed`);
             }
-            expect(await liquidityProtectionStore.protectedLiquidityCount(provider.address)).to.be.equal('0');
-            expect((await liquidityProtectionStore.protectedLiquidityIds(provider.address)).length).to.be.equal(0);
+            expect(await liquidityProtectionStore.protectedLiquidityCount(provider.address)).to.equal(
+                BigNumber.from(0)
+            );
+            expect((await liquidityProtectionStore.protectedLiquidityIds(provider.address)).length).to.equal(0);
         };
 
         it('remove first item until all items removed', async function () {
@@ -269,11 +275,11 @@ describe('LiquidityProtectionStore', () => {
                 const endIndex = ((items.length - 1) * (1 + direction)) / 2;
                 const item = (await liquidityProtectionStore.lockedBalance(provider.address, bgnIndex))[0];
                 await liquidityProtectionStore.connect(owner).removeLockedBalance(provider.address, bgnIndex);
-                expect(item).to.be.equal(await items[bgnIndex].getBalance());
+                expect(item).to.equal(await items[bgnIndex].getBalance());
                 items[bgnIndex] = items[endIndex];
                 console.log(`item ${bgnIndex} removed`);
             }
-            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.be.equal('0');
+            expect(await liquidityProtectionStore.lockedBalanceCount(provider.address)).to.equal(BigNumber.from(0));
         };
 
         it('remove first item until all items removed', async () => {

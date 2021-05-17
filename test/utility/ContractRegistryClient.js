@@ -50,8 +50,8 @@ describe('ContractRegistryClient', () => {
 
         await contractRegistryClient.connect(nonOwner).updateRegistry();
 
-        expect(await contractRegistryClient.registry()).to.eql(newRegistry.address);
-        expect(await contractRegistryClient.prevRegistry()).to.eql(contractRegistry.address);
+        expect(await contractRegistryClient.registry()).to.equal(newRegistry.address);
+        expect(await contractRegistryClient.prevRegistry()).to.equal(contractRegistry.address);
     });
 
     it('should allow the owner to restore the previous registry and disable updates', async () => {
@@ -63,15 +63,15 @@ describe('ContractRegistryClient', () => {
 
         await contractRegistryClient.connect(owner).restoreRegistry();
 
-        expect(await contractRegistryClient.registry()).to.eql(contractRegistry.address);
-        expect(await contractRegistryClient.prevRegistry()).to.eql(contractRegistry.address);
+        expect(await contractRegistryClient.registry()).to.equal(contractRegistry.address);
+        expect(await contractRegistryClient.prevRegistry()).to.equal(contractRegistry.address);
 
         await contractRegistryClient.connect(owner).restrictRegistryUpdate(true);
         await expect(contractRegistryClient.connect(nonOwner).updateRegistry()).to.be.revertedWith('ERR_ACCESS_DENIED');
 
         await contractRegistryClient.connect(owner).updateRegistry();
 
-        expect(await contractRegistryClient.registry()).to.eql(newRegistry.address);
-        expect(await contractRegistryClient.prevRegistry()).to.eql(contractRegistry.address);
+        expect(await contractRegistryClient.registry()).to.equal(newRegistry.address);
+        expect(await contractRegistryClient.prevRegistry()).to.equal(contractRegistry.address);
     });
 });

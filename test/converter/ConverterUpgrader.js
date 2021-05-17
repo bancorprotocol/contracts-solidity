@@ -240,59 +240,55 @@ describe('ConverterUpgrader', () => {
                 const [upgrader, oldConverter] = await init(deployer.address, version, activate);
 
                 const oldConverterInitialState = await getConverterState(oldConverter);
-                expect(oldConverterInitialState.owner).to.be.eql(deployer.address);
-                expect(oldConverterInitialState.newOwner).to.be.eql(ZERO_ADDRESS);
-                expect(oldConverterInitialState.tokenOwner).to.be.eql(
+                expect(oldConverterInitialState.owner).to.equal(deployer.address);
+                expect(oldConverterInitialState.newOwner).to.equal(ZERO_ADDRESS);
+                expect(oldConverterInitialState.tokenOwner).to.equal(
                     activate ? oldConverter.address : deployer.address
                 );
-                expect(oldConverterInitialState.conversionFee).to.be.equal(CONVERSION_FEE);
-                expect(oldConverterInitialState.maxConversionFee).to.be.equal(MAX_CONVERSION_FEE);
+                expect(oldConverterInitialState.conversionFee).to.equal(CONVERSION_FEE);
+                expect(oldConverterInitialState.maxConversionFee).to.equal(MAX_CONVERSION_FEE);
 
                 for (let i = 0; i < oldConverterInitialState.reserveTokenCount; ++i) {
-                    expect(oldConverterInitialState.reserveTokens[i].token).to.be.eql(reserveTokens[i]);
-                    expect(oldConverterInitialState.reserveTokens[i].balance).to.be.equal(reserveBalances[i]);
+                    expect(oldConverterInitialState.reserveTokens[i].token).to.equal(reserveTokens[i]);
+                    expect(oldConverterInitialState.reserveTokens[i].balance).to.equal(reserveBalances[i]);
                 }
 
                 const newConverter = await upgradeConverter(upgrader, oldConverter);
                 const oldConverterCurrentState = await getConverterState(oldConverter);
 
-                expect(oldConverterCurrentState.type).to.be.equal(oldConverterInitialState.type);
-                expect(oldConverterCurrentState.owner).to.be.eql(deployer.address);
-                expect(oldConverterCurrentState.newOwner).to.be.eql(ZERO_ADDRESS);
-                expect(oldConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
-                expect(oldConverterCurrentState.tokenOwner).to.be.eql(
+                expect(oldConverterCurrentState.type).to.equal(oldConverterInitialState.type);
+                expect(oldConverterCurrentState.owner).to.equal(deployer.address);
+                expect(oldConverterCurrentState.newOwner).to.equal(ZERO_ADDRESS);
+                expect(oldConverterCurrentState.token).to.equal(oldConverterInitialState.token);
+                expect(oldConverterCurrentState.tokenOwner).to.equal(
                     activate ? newConverter.address : deployer.address
                 );
-                expect(oldConverterCurrentState.conversionFee).to.be.equal(CONVERSION_FEE);
-                expect(oldConverterCurrentState.maxConversionFee).to.be.equal(MAX_CONVERSION_FEE);
-                expect(oldConverterCurrentState.reserveTokenCount).to.be.equal(
-                    oldConverterInitialState.reserveTokenCount
-                );
+                expect(oldConverterCurrentState.conversionFee).to.equal(CONVERSION_FEE);
+                expect(oldConverterCurrentState.maxConversionFee).to.equal(MAX_CONVERSION_FEE);
+                expect(oldConverterCurrentState.reserveTokenCount).to.equal(oldConverterInitialState.reserveTokenCount);
 
                 for (let i = 0; i < oldConverterCurrentState.reserveTokenCount; ++i) {
-                    expect(oldConverterCurrentState.reserveTokens[i].token).to.be.eql(
+                    expect(oldConverterCurrentState.reserveTokens[i].token).to.equal(
                         oldConverterInitialState.reserveTokens[i].token
                     );
-                    expect(oldConverterCurrentState.reserveTokens[i].balance).to.be.equal(BigNumber.from(0));
+                    expect(oldConverterCurrentState.reserveTokens[i].balance).to.equal(BigNumber.from(0));
                 }
 
                 const newConverterCurrentState = await getConverterState(newConverter);
-                expect(newConverterCurrentState.type).to.be.equal(BigNumber.from(STANDARD_CONVERTER_TYPE));
-                expect(newConverterCurrentState.owner).to.be.eql(upgrader.address);
-                expect(newConverterCurrentState.newOwner).to.be.eql(deployer.address);
-                expect(newConverterCurrentState.token).to.be.eql(oldConverterInitialState.token);
-                expect(newConverterCurrentState.tokenOwner).to.be.eql(
+                expect(newConverterCurrentState.type).to.equal(BigNumber.from(STANDARD_CONVERTER_TYPE));
+                expect(newConverterCurrentState.owner).to.equal(upgrader.address);
+                expect(newConverterCurrentState.newOwner).to.equal(deployer.address);
+                expect(newConverterCurrentState.token).to.equal(oldConverterInitialState.token);
+                expect(newConverterCurrentState.tokenOwner).to.equal(
                     activate ? newConverter.address : deployer.address
                 );
-                expect(newConverterCurrentState.conversionFee).to.be.equal(CONVERSION_FEE);
-                expect(newConverterCurrentState.maxConversionFee).to.be.equal(MAX_CONVERSION_FEE);
-                expect(newConverterCurrentState.reserveTokenCount).to.be.equal(
-                    oldConverterInitialState.reserveTokenCount
-                );
+                expect(newConverterCurrentState.conversionFee).to.equal(CONVERSION_FEE);
+                expect(newConverterCurrentState.maxConversionFee).to.equal(MAX_CONVERSION_FEE);
+                expect(newConverterCurrentState.reserveTokenCount).to.equal(oldConverterInitialState.reserveTokenCount);
 
                 for (let i = 0; i < newConverterCurrentState.reserveTokenCount; ++i) {
-                    expect(newConverterCurrentState.reserveTokens[i].balance).to.be.equal(upgradedReserveBalances[i]);
-                    expect(newConverterCurrentState.reserveTokens[i].token).to.be.eql(reserveTokens[i]);
+                    expect(newConverterCurrentState.reserveTokens[i].balance).to.equal(upgradedReserveBalances[i]);
+                    expect(newConverterCurrentState.reserveTokens[i].token).to.equal(reserveTokens[i]);
                 }
             });
 
