@@ -244,9 +244,11 @@ describe('LiquidityProtectionStats', () => {
                 reserveToken.address
             )
         ).to.equal(BigNumber.from(0));
+
         await liquidityProtectionStats
             .connect(seeder)
             .seedProviderAmounts([provider.address], [poolToken.address], [reserveToken.address], [1]);
+
         expect(
             await liquidityProtectionStats.totalProviderAmount(
                 provider.address,
@@ -258,7 +260,9 @@ describe('LiquidityProtectionStats', () => {
 
     it('should succeed when a seeder attempts to seed provider pools', async () => {
         expect(await liquidityProtectionStats.providerPools(provider.address)).to.empty;
+
         await liquidityProtectionStats.connect(seeder).seedProviderPools([provider.address], [poolToken.address]);
+
         expect(await liquidityProtectionStats.providerPools(provider.address)).to.equalTo([poolToken.address]);
     });
 });
