@@ -85,7 +85,7 @@ const config =
     }
 };
 
-describe.only('Deployment', () => {
+describe('Deployment', () => {
     it('run', async () => {
         await runDeployment(
             (await ethers.getSigners())[0],
