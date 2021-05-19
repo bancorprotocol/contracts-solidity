@@ -2673,7 +2673,7 @@ describe('LiquidityProtection', () => {
                                                 1
                                             );
 
-                                            let time = await converter.currentTime();
+                                            let time = await converter.time();
                                             time = time.add(BigNumber.from(minutesElapsed * 60));
                                             await converter.setTime(time);
                                         });
