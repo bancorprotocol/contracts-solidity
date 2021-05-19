@@ -206,7 +206,13 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
         await execute(liquidityProtectionSettings.addPoolToWhitelist(reserves[converter].address));
     }
 
-    const vortexBurner = await deploy('vortexBurner', 'VortexBurner', reserves.BNT.address, vbntTokenGovernance.address, contractRegistry.address);
+    const vortexBurner = await deploy(
+        'vortexBurner',
+        'VortexBurner',
+        reserves.BNT.address,
+        vbntTokenGovernance.address,
+        contractRegistry.address
+    );
 
     await execute(networkFeeWallet.transferOwnership(vortexBurner.address));
     await execute(vortexBurner.acceptNetworkFeeOwnership());
