@@ -10,7 +10,6 @@ const Contracts = require('../../../helpers/Contracts');
 
 let now;
 let bancorNetwork;
-let converterUpgrader;
 let contractRegistry;
 let networkSettings;
 let owner;
@@ -236,9 +235,6 @@ describe('StandardPoolConverter', () => {
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await Contracts.ContractRegistry.deploy();
 
-        converterUpgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, converterUpgrader.address);
-
         const factory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
 
@@ -254,18 +250,7 @@ describe('StandardPoolConverter', () => {
     });
 
     const upgradeConverter = async (upgrader, converter) => {
-        let res;
-
-        // For versions 11 or higher, we just call upgrade on the converter.
-        if (converter.upgrade) {
-            res = await converter.upgrade();
-        } else {
-            // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
-            // then accept ownership of the new and old converter. The end results should be the same.
-            await converter.transferOwnership(upgrader.address);
-            res = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''));
-            await converter.acceptOwnership();
-        }
+        const res = await converter.upgrade();
         const tx = await res.wait();
         const logs = tx.logs.filter((log) => log.event === 'ConverterUpgrade');
         expect(logs.length).to.be.at.most(1);
@@ -445,6 +430,11 @@ describe('StandardPoolConverter', () => {
             });
 
             describe('upgrade sanity', () => {
+                beforeEach(async () => {
+                    const upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
+                    await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+                });
+
                 it('verifies that the owner can upgrade the converter while the converter is active', async () => {
                     const { converter } = await createPool({ ethIndex });
 
@@ -1411,7 +1401,10 @@ describe('StandardPoolConverter', () => {
                     const balanceBefore1 = await getBalance(reserveToken1, networkFeeWallet);
                     const balanceBefore2 = await getBalance(reserveToken2, networkFeeWallet);
 
-                    const newConverter = await upgradeConverter(converterUpgrader, converter);
+                    const upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
+                    await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+
+                    const newConverter = await upgradeConverter(upgrader, converter);
                     expect(newConverter.address).to.not.equal(converter.address);
 
                     await newConverter.processNetworkFees();
