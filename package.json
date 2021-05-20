@@ -29,7 +29,7 @@
         "lint": "yarn lint:js && yarn lint:sol",
         "lint:js": "eslint .",
         "lint:sol": "solhint --max-warnings 0 \"contracts/**/*.sol\"",
-        "format": "prettier --check --write contracts/**/*.sol test/**/*.js utils/**/*.js  --config .prettierrc",
+        "format": "prettier --check --write contracts/**/*.sol test/**/*.js utils/**/*.js --config .prettierrc",
         "snyk-protect": "snyk protect",
         "prepare": "yarn build && yarn snyk-protect"
     },
