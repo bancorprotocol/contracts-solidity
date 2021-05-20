@@ -97,9 +97,9 @@ const send = async (transaction) => {
 
 const deploy = async (contractId, contractName, ...contractArgs) => {
     if (getConfig()[contractId] === undefined) {
-        const json = JSON.parse(readContract(contractName));
-        const contract = new web3.eth.Contract(json.abi);
-        const options = { data: json.bytecode, arguments: contractArgs };
+        const artifact = getArtifact(contractName);
+        const contract = new web3.eth.Contract(artifact.abi);
+        const options = { data: artifact.bytecode, arguments: contractArgs };
         const transaction = contract.deploy(options);
         const receipt = await send(transaction);
         const args = transaction.encodeABI().slice(options.data.length);
@@ -116,10 +116,10 @@ const deploy = async (contractId, contractName, ...contractArgs) => {
 };
 
 const deployed = (contractName, contractAddr) => {
-    const json = JSON.parse(readContract(contractName));
-    const contract = new web3.eth.Contract(json.abi, contractAddr);
+    const artifact = getArtifact(contractName);
+    const contract = new web3.eth.Contract(artifact.abi, contractAddr);
     contract.address = contract._address;
-    for (const obj of json.abi) {
+    for (const obj of artifact.abi) {
         if (obj.type === 'function') {
             switch (obj.stateMutability) {
                 case 'pure':
@@ -141,7 +141,7 @@ const deployed = (contractName, contractAddr) => {
     return contract;
 };
 
-const readContract = (contractName) => {
+const getArtifact = (artifactName) => {
     const getPathNames = (dirName) => {
         let pathNames = [];
         for (const fileName of fs.readdirSync(dirName)) {
@@ -156,12 +156,12 @@ const readContract = (contractName) => {
     };
 
     for (const pathName of getPathNames(ARTIFACTS_DIR)) {
-        if (path.basename(pathName) === contractName + '.json') {
-            return fs.readFileSync(pathName, { encoding: 'utf8' });
+        if (path.basename(pathName) === artifactName + '.json') {
+            return JSON.parse(fs.readFileSync(pathName, { encoding: 'utf8' }));
         }
     }
 
-    throw new Error(`${contractName}.json not found`);
+    throw new Error(`${artifactName} artifact not found`);
 };
 
 let web3;
