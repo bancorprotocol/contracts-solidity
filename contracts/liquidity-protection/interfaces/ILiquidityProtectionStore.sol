@@ -13,12 +13,12 @@ import "../../utility/interfaces/IOwned.sol";
 */
 interface ILiquidityProtectionStore is IOwned {
     function withdrawTokens(
-        IReserveToken _token,
-        address _to,
-        uint256 _amount
+        IReserveToken token,
+        address recipient,
+        uint256 amount
     ) external;
 
-    function protectedLiquidity(uint256 _id)
+    function protectedLiquidity(uint256 id)
         external
         view
         returns (
@@ -33,43 +33,43 @@ interface ILiquidityProtectionStore is IOwned {
         );
 
     function addProtectedLiquidity(
-        address _provider,
-        IDSToken _poolToken,
-        IReserveToken _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount,
-        uint256 _reserveRateN,
-        uint256 _reserveRateD,
-        uint256 _timestamp
+        address provider,
+        IDSToken poolToken,
+        IReserveToken reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        uint256 reserveRateN,
+        uint256 reserveRateD,
+        uint256 timestamp
     ) external returns (uint256);
 
     function updateProtectedLiquidityAmounts(
-        uint256 _id,
-        uint256 _poolNewAmount,
-        uint256 _reserveNewAmount
+        uint256 id,
+        uint256 poolNewAmount,
+        uint256 reserveNewAmount
     ) external;
 
-    function removeProtectedLiquidity(uint256 _id) external;
+    function removeProtectedLiquidity(uint256 id) external;
 
-    function lockedBalance(address _provider, uint256 _index) external view returns (uint256, uint256);
+    function lockedBalance(address provider, uint256 index) external view returns (uint256, uint256);
 
     function lockedBalanceRange(
-        address _provider,
-        uint256 _startIndex,
-        uint256 _endIndex
+        address provider,
+        uint256 startIndex,
+        uint256 endIndex
     ) external view returns (uint256[] memory, uint256[] memory);
 
     function addLockedBalance(
-        address _provider,
-        uint256 _reserveAmount,
-        uint256 _expirationTime
+        address provider,
+        uint256 reserveAmount,
+        uint256 expirationTime
     ) external returns (uint256);
 
-    function removeLockedBalance(address _provider, uint256 _index) external;
+    function removeLockedBalance(address provider, uint256 index) external;
 
-    function systemBalance(IReserveToken _poolToken) external view returns (uint256);
+    function systemBalance(IReserveToken poolToken) external view returns (uint256);
 
-    function incSystemBalance(IReserveToken _poolToken, uint256 _poolAmount) external;
+    function incSystemBalance(IReserveToken poolToken, uint256 poolAmount) external;
 
-    function decSystemBalance(IReserveToken _poolToken, uint256 _poolAmount) external;
+    function decSystemBalance(IReserveToken poolToken, uint256 poolAmount) external;
 }

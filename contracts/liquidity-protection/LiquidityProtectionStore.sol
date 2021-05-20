@@ -37,148 +37,151 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     }
 
     // protected liquidity by provider
-    uint256 private nextProtectedLiquidityId;
-    mapping(address => uint256[]) private protectedLiquidityIdsByProvider;
-    mapping(uint256 => ProtectedLiquidity) private protectedLiquidities;
+    uint256 private _nextProtectedLiquidityId;
+    mapping(address => uint256[]) private _protectedLiquidityIdsByProvider;
+    mapping(uint256 => ProtectedLiquidity) private _protectedLiquidities;
 
     // user locked network token balances
-    mapping(address => LockedBalance[]) private lockedBalances;
+    mapping(address => LockedBalance[]) private _lockedBalances;
 
     // system balances
-    mapping(IReserveToken => uint256) private systemBalances;
+    mapping(IReserveToken => uint256) private _systemBalances;
 
     // total protected pool supplies / reserve amounts
-    mapping(IDSToken => uint256) private totalProtectedPoolAmounts;
-    mapping(IDSToken => mapping(IReserveToken => uint256)) private totalProtectedReserveAmounts;
+    mapping(IDSToken => uint256) private _totalProtectedPoolAmounts;
+    mapping(IDSToken => mapping(IReserveToken => uint256)) private _totalProtectedReserveAmounts;
 
     /**
      * @dev triggered when liquidity protection is added
      *
-     * @param _provider        liquidity provider
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
-     * @param _poolAmount      amount of pool tokens
-     * @param _reserveAmount   amount of reserve tokens
+     * @param provider liquidity provider
+     * @param poolToken pool token address
+     * @param reserveToken reserve token address
+     * @param poolAmount amount of pool tokens
+     * @param reserveAmount amount of reserve tokens
      */
     event ProtectionAdded(
-        address indexed _provider,
-        IDSToken indexed _poolToken,
-        IReserveToken indexed _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        address indexed provider,
+        IDSToken indexed poolToken,
+        IReserveToken indexed reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     );
 
     /**
      * @dev triggered when liquidity protection is updated
      *
-     * @param _provider            liquidity provider
-     * @param _prevPoolAmount      previous amount of pool tokens
-     * @param _prevReserveAmount   previous amount of reserve tokens
-     * @param _newPoolAmount       new amount of pool tokens
-     * @param _newReserveAmount    new amount of reserve tokens
+     * @param provider liquidity provider
+     * @param prevPoolAmount previous amount of pool tokens
+     * @param prevReserveAmount previous amount of reserve tokens
+     * @param newPoolAmount new amount of pool tokens
+     * @param newReserveAmount new amount of reserve tokens
      */
     event ProtectionUpdated(
-        address indexed _provider,
-        uint256 _prevPoolAmount,
-        uint256 _prevReserveAmount,
-        uint256 _newPoolAmount,
-        uint256 _newReserveAmount
+        address indexed provider,
+        uint256 prevPoolAmount,
+        uint256 prevReserveAmount,
+        uint256 newPoolAmount,
+        uint256 newReserveAmount
     );
 
     /**
      * @dev triggered when liquidity protection is removed
      *
-     * @param _provider        liquidity provider
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
-     * @param _poolAmount      amount of pool tokens
-     * @param _reserveAmount   amount of reserve tokens
+     * @param provider liquidity provider
+     * @param poolToken pool token address
+     * @param reserveToken reserve token address
+     * @param poolAmount amount of pool tokens
+     * @param reserveAmount amount of reserve tokens
      */
     event ProtectionRemoved(
-        address indexed _provider,
-        IDSToken indexed _poolToken,
-        IReserveToken indexed _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount
+        address indexed provider,
+        IDSToken indexed poolToken,
+        IReserveToken indexed reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount
     );
 
     /**
      * @dev triggered when network tokens are locked
      *
-     * @param _provider        provider of the network tokens
-     * @param _amount          amount of network tokens
-     * @param _expirationTime  lock expiration time
+     * @param provider provider of the network tokens
+     * @param amount amount of network tokens
+     * @param expirationTime lock expiration time
      */
-    event BalanceLocked(address indexed _provider, uint256 _amount, uint256 _expirationTime);
+    event BalanceLocked(address indexed provider, uint256 amount, uint256 expirationTime);
 
     /**
      * @dev triggered when network tokens are unlocked
      *
-     * @param _provider    provider of the network tokens
-     * @param _amount      amount of network tokens
+     * @param provider provider of the network tokens
+     * @param amount amount of network tokens
      */
-    event BalanceUnlocked(address indexed _provider, uint256 _amount);
+    event BalanceUnlocked(address indexed provider, uint256 amount);
 
     /**
      * @dev triggered when the system balance for a given token is updated
      *
-     * @param _token       token address
-     * @param _prevAmount  previous amount
-     * @param _newAmount   new amount
+     * @param token token address
+     * @param prevAmount previous amount
+     * @param newAmount new amount
      */
-    event SystemBalanceUpdated(IReserveToken _token, uint256 _prevAmount, uint256 _newAmount);
+    event SystemBalanceUpdated(IReserveToken token, uint256 prevAmount, uint256 newAmount);
 
     /**
      * @dev withdraws tokens held by the contract
      * can only be called by the contract owner
      *
-     * @param _token   token address
-     * @param _to      recipient address
-     * @param _amount  amount to withdraw
+     * @param token token address
+     * @param recipient recipient address
+     * @param amount amount to withdraw
      */
     function withdrawTokens(
-        IReserveToken _token,
-        address _to,
-        uint256 _amount
-    ) external override ownerOnly validExternalAddress(_to) {
-        _token.safeTransfer(_to, _amount);
+        IReserveToken token,
+        address recipient,
+        uint256 amount
+    ) external override ownerOnly validExternalAddress(recipient) {
+        token.safeTransfer(recipient, amount);
     }
 
     /**
      * @dev returns the number of protected liquidities for the given provider
      *
-     * @param _provider    liquidity provider
+     * @param provider liquidity provider
+     *
      * @return number of protected liquidities
      */
-    function protectedLiquidityCount(address _provider) external view returns (uint256) {
-        return protectedLiquidityIdsByProvider[_provider].length;
+    function protectedLiquidityCount(address provider) external view returns (uint256) {
+        return _protectedLiquidityIdsByProvider[provider].length;
     }
 
     /**
      * @dev returns the list of protected liquidity ids for the given provider
      *
-     * @param _provider    liquidity provider
+     * @param provider liquidity provider
+     *
      * @return protected liquidity ids
      */
-    function protectedLiquidityIds(address _provider) external view returns (uint256[] memory) {
-        return protectedLiquidityIdsByProvider[_provider];
+    function protectedLiquidityIds(address provider) external view returns (uint256[] memory) {
+        return _protectedLiquidityIdsByProvider[provider];
     }
 
     /**
      * @dev returns the id of a protected liquidity for the given provider at a specific index
      *
-     * @param _provider    liquidity provider
-     * @param _index       protected liquidity index
+     * @param provider liquidity provider
+     * @param index protected liquidity index
+     *
      * @return protected liquidity id
      */
-    function protectedLiquidityId(address _provider, uint256 _index) external view returns (uint256) {
-        return protectedLiquidityIdsByProvider[_provider][_index];
+    function protectedLiquidityId(address provider, uint256 index) external view returns (uint256) {
+        return _protectedLiquidityIdsByProvider[provider][index];
     }
 
     /**
      * @dev returns an existing protected liquidity details
      *
-     * @param _id  protected liquidity id
+     * @param id protected liquidity id
      *
      * @return liquidity provider
      * @return pool token address
@@ -189,7 +192,7 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @return rate of 1 protected reserve token in units of the other reserve token (denominator)
      * @return timestamp
      */
-    function protectedLiquidity(uint256 _id)
+    function protectedLiquidity(uint256 id)
         external
         view
         override
@@ -204,7 +207,8 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
             uint256
         )
     {
-        ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
+        ProtectedLiquidity memory liquidity = _protectedLiquidities[id];
+
         return (
             liquidity.provider,
             liquidity.poolToken,
@@ -221,68 +225,68 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @dev adds protected liquidity
      * can only be called by the contract owner
      *
-     * @param _provider        liquidity provider
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
-     * @param _poolAmount      pool token amount
-     * @param _reserveAmount   reserve token amount
-     * @param _reserveRateN    rate of 1 protected reserve token in units of the other reserve token (numerator)
-     * @param _reserveRateD    rate of 1 protected reserve token in units of the other reserve token (denominator)
-     * @param _timestamp       timestamp
+     * @param provider liquidity provider
+     * @param poolToken pool token address
+     * @param reserveToken reserve token address
+     * @param poolAmount pool token amount
+     * @param reserveAmount reserve token amount
+     * @param reserveRateN rate of 1 protected reserve token in units of the other reserve token (numerator)
+     * @param reserveRateD rate of 1 protected reserve token in units of the other reserve token (denominator)
+     * @param timestamp timestamp
+     *
      * @return new protected liquidity id
      */
     function addProtectedLiquidity(
-        address _provider,
-        IDSToken _poolToken,
-        IReserveToken _reserveToken,
-        uint256 _poolAmount,
-        uint256 _reserveAmount,
-        uint256 _reserveRateN,
-        uint256 _reserveRateD,
-        uint256 _timestamp
+        address provider,
+        IDSToken poolToken,
+        IReserveToken reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        uint256 reserveRateN,
+        uint256 reserveRateD,
+        uint256 timestamp
     ) external override ownerOnly returns (uint256) {
         // validate input
         require(
-            _provider != address(0) &&
-                _provider != address(this) &&
-                address(_poolToken) != address(0) &&
-                address(_poolToken) != address(this) &&
-                address(_reserveToken) != address(0) &&
-                address(_reserveToken) != address(this),
+            provider != address(0) &&
+                provider != address(this) &&
+                address(poolToken) != address(0) &&
+                address(poolToken) != address(this) &&
+                address(reserveToken) != address(0) &&
+                address(reserveToken) != address(this),
             "ERR_INVALID_ADDRESS"
         );
         require(
-            _poolAmount > 0 && _reserveAmount > 0 && _reserveRateN > 0 && _reserveRateD > 0 && _timestamp > 0,
+            poolAmount > 0 && reserveAmount > 0 && reserveRateN > 0 && reserveRateD > 0 && timestamp > 0,
             "ERR_ZERO_VALUE"
         );
 
         // add the protected liquidity
-        uint256[] storage ids = protectedLiquidityIdsByProvider[_provider];
-        uint256 id = nextProtectedLiquidityId;
-        nextProtectedLiquidityId += 1;
+        uint256[] storage ids = _protectedLiquidityIdsByProvider[provider];
+        uint256 id = _nextProtectedLiquidityId;
+        _nextProtectedLiquidityId += 1;
 
-        protectedLiquidities[id] = ProtectedLiquidity({
-            provider: _provider,
+        _protectedLiquidities[id] = ProtectedLiquidity({
+            provider: provider,
             index: ids.length,
-            poolToken: _poolToken,
-            reserveToken: _reserveToken,
-            poolAmount: _poolAmount,
-            reserveAmount: _reserveAmount,
-            reserveRateN: _reserveRateN,
-            reserveRateD: _reserveRateD,
-            timestamp: _timestamp
+            poolToken: poolToken,
+            reserveToken: reserveToken,
+            poolAmount: poolAmount,
+            reserveAmount: reserveAmount,
+            reserveRateN: reserveRateN,
+            reserveRateD: reserveRateD,
+            timestamp: timestamp
         });
 
         ids.push(id);
 
         // update the total amounts
-        totalProtectedPoolAmounts[_poolToken] = totalProtectedPoolAmounts[_poolToken].add(_poolAmount);
-        totalProtectedReserveAmounts[_poolToken][_reserveToken] = totalProtectedReserveAmounts[_poolToken][
-            _reserveToken
-        ]
-            .add(_reserveAmount);
+        _totalProtectedPoolAmounts[poolToken] = _totalProtectedPoolAmounts[poolToken].add(poolAmount);
+        _totalProtectedReserveAmounts[poolToken][reserveToken] = _totalProtectedReserveAmounts[poolToken][reserveToken]
+            .add(reserveAmount);
 
-        emit ProtectionAdded(_provider, _poolToken, _reserveToken, _poolAmount, _reserveAmount);
+        emit ProtectionAdded(provider, poolToken, reserveToken, poolAmount, reserveAmount);
+
         return id;
     }
 
@@ -290,17 +294,17 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @dev updates an existing protected liquidity pool/reserve amounts
      * can only be called by the contract owner
      *
-     * @param _id                  protected liquidity id
-     * @param _newPoolAmount       new pool tokens amount
-     * @param _newReserveAmount    new reserve tokens amount
+     * @param id protected liquidity id
+     * @param newPoolAmount new pool tokens amount
+     * @param newReserveAmount new reserve tokens amount
      */
     function updateProtectedLiquidityAmounts(
-        uint256 _id,
-        uint256 _newPoolAmount,
-        uint256 _newReserveAmount
-    ) external override ownerOnly greaterThanZero(_newPoolAmount) greaterThanZero(_newReserveAmount) {
+        uint256 id,
+        uint256 newPoolAmount,
+        uint256 newReserveAmount
+    ) external override ownerOnly greaterThanZero(newPoolAmount) greaterThanZero(newReserveAmount) {
         // update the protected liquidity
-        ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
+        ProtectedLiquidity storage liquidity = _protectedLiquidities[id];
 
         // validate input
         address provider = liquidity.provider;
@@ -310,29 +314,29 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
         IReserveToken reserveToken = liquidity.reserveToken;
         uint256 prevPoolAmount = liquidity.poolAmount;
         uint256 prevReserveAmount = liquidity.reserveAmount;
-        liquidity.poolAmount = _newPoolAmount;
-        liquidity.reserveAmount = _newReserveAmount;
+        liquidity.poolAmount = newPoolAmount;
+        liquidity.reserveAmount = newReserveAmount;
 
         // update the total amounts
-        totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken].add(_newPoolAmount).sub(
+        _totalProtectedPoolAmounts[poolToken] = _totalProtectedPoolAmounts[poolToken].add(newPoolAmount).sub(
             prevPoolAmount
         );
-        totalProtectedReserveAmounts[poolToken][reserveToken] = totalProtectedReserveAmounts[poolToken][reserveToken]
-            .add(_newReserveAmount)
+        _totalProtectedReserveAmounts[poolToken][reserveToken] = _totalProtectedReserveAmounts[poolToken][reserveToken]
+            .add(newReserveAmount)
             .sub(prevReserveAmount);
 
-        emit ProtectionUpdated(provider, prevPoolAmount, prevReserveAmount, _newPoolAmount, _newReserveAmount);
+        emit ProtectionUpdated(provider, prevPoolAmount, prevReserveAmount, newPoolAmount, newReserveAmount);
     }
 
     /**
      * @dev removes protected liquidity
      * can only be called by the contract owner
      *
-     * @param _id  protected liquidity id
+     * @param id protected liquidity id
      */
-    function removeProtectedLiquidity(uint256 _id) external override ownerOnly {
+    function removeProtectedLiquidity(uint256 id) external override ownerOnly {
         // remove the protected liquidity
-        ProtectedLiquidity storage liquidity = protectedLiquidities[_id];
+        ProtectedLiquidity storage liquidity = _protectedLiquidities[id];
 
         // validate input
         address provider = liquidity.provider;
@@ -343,9 +347,9 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
         IReserveToken reserveToken = liquidity.reserveToken;
         uint256 poolAmount = liquidity.poolAmount;
         uint256 reserveAmount = liquidity.reserveAmount;
-        delete protectedLiquidities[_id];
+        delete _protectedLiquidities[id];
 
-        uint256[] storage ids = protectedLiquidityIdsByProvider[provider];
+        uint256[] storage ids = _protectedLiquidityIdsByProvider[provider];
         uint256 length = ids.length;
         assert(length > 0);
 
@@ -353,14 +357,14 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
         if (index < lastIndex) {
             uint256 lastId = ids[lastIndex];
             ids[index] = lastId;
-            protectedLiquidities[lastId].index = index;
+            _protectedLiquidities[lastId].index = index;
         }
 
         ids.pop();
 
         // update the total amounts
-        totalProtectedPoolAmounts[poolToken] = totalProtectedPoolAmounts[poolToken].sub(poolAmount);
-        totalProtectedReserveAmounts[poolToken][reserveToken] = totalProtectedReserveAmounts[poolToken][reserveToken]
+        _totalProtectedPoolAmounts[poolToken] = _totalProtectedPoolAmounts[poolToken].sub(poolAmount);
+        _totalProtectedReserveAmounts[poolToken][reserveToken] = _totalProtectedReserveAmounts[poolToken][reserveToken]
             .sub(reserveAmount);
 
         emit ProtectionRemoved(provider, poolToken, reserveToken, poolAmount, reserveAmount);
@@ -369,55 +373,59 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
     /**
      * @dev returns the number of network token locked balances for a given provider
      *
-     * @param _provider    locked balances provider
+     * @param provider locked balances provider
+     *
      * @return the number of network token locked balances
      */
-    function lockedBalanceCount(address _provider) external view returns (uint256) {
-        return lockedBalances[_provider].length;
+    function lockedBalanceCount(address provider) external view returns (uint256) {
+        return _lockedBalances[provider].length;
     }
 
     /**
      * @dev returns an existing locked network token balance details
      *
-     * @param _provider    locked balances provider
-     * @param _index       start index
+     * @param provider locked balances provider
+     * @param index start index
+     *
      * @return amount of network tokens
      * @return lock expiration time
      */
-    function lockedBalance(address _provider, uint256 _index) external view override returns (uint256, uint256) {
-        LockedBalance storage balance = lockedBalances[_provider][_index];
+    function lockedBalance(address provider, uint256 index) external view override returns (uint256, uint256) {
+        LockedBalance storage balance = _lockedBalances[provider][index];
+
         return (balance.amount, balance.expirationTime);
     }
 
     /**
      * @dev returns a range of locked network token balances for a given provider
      *
-     * @param _provider    locked balances provider
-     * @param _startIndex  start index
-     * @param _endIndex    end index (exclusive)
+     * @param provider locked balances provider
+     * @param startIndex start index
+     * @param endIndex end index (exclusive)
+     *
      * @return locked amounts
      * @return expiration times
      */
     function lockedBalanceRange(
-        address _provider,
-        uint256 _startIndex,
-        uint256 _endIndex
+        address provider,
+        uint256 startIndex,
+        uint256 endIndex
     ) external view override returns (uint256[] memory, uint256[] memory) {
         // limit the end index by the number of locked balances
-        if (_endIndex > lockedBalances[_provider].length) {
-            _endIndex = lockedBalances[_provider].length;
+        if (endIndex > _lockedBalances[provider].length) {
+            endIndex = _lockedBalances[provider].length;
         }
 
         // ensure that the end index is higher than the start index
-        require(_endIndex > _startIndex, "ERR_INVALID_INDICES");
+        require(endIndex > startIndex, "ERR_INVALID_INDICES");
 
         // get the locked balances for the given range and return them
-        uint256 length = _endIndex - _startIndex;
+        uint256 length = endIndex - startIndex;
         uint256[] memory amounts = new uint256[](length);
         uint256[] memory expirationTimes = new uint256[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            LockedBalance storage balance = lockedBalances[_provider][_startIndex + i];
+            LockedBalance storage balance = _lockedBalances[provider][startIndex + i];
             amounts[i] = balance.amount;
             expirationTimes[i] = balance.expirationTime;
         }
@@ -429,132 +437,131 @@ contract LiquidityProtectionStore is ILiquidityProtectionStore, Owned, Utils {
      * @dev adds new locked network token balance
      * can only be called by the contract owner
      *
-     * @param _provider        liquidity provider
-     * @param _amount          token amount
-     * @param _expirationTime  lock expiration time
+     * @param provider liquidity provider
+     * @param amount token amount
+     * @param expirationTime lock expiration time
+     *
      * @return new locked balance index
      */
     function addLockedBalance(
-        address _provider,
-        uint256 _amount,
-        uint256 _expirationTime
+        address provider,
+        uint256 amount,
+        uint256 expirationTime
     )
         external
         override
         ownerOnly
-        validExternalAddress(_provider)
-        greaterThanZero(_amount)
-        greaterThanZero(_expirationTime)
+        validExternalAddress(provider)
+        greaterThanZero(amount)
+        greaterThanZero(expirationTime)
         returns (uint256)
     {
-        lockedBalances[_provider].push(LockedBalance({ amount: _amount, expirationTime: _expirationTime }));
+        _lockedBalances[provider].push(LockedBalance({ amount: amount, expirationTime: expirationTime }));
 
-        emit BalanceLocked(_provider, _amount, _expirationTime);
-        return lockedBalances[_provider].length - 1;
+        emit BalanceLocked(provider, amount, expirationTime);
+        return _lockedBalances[provider].length - 1;
     }
 
     /**
      * @dev removes a locked network token balance
      * can only be called by the contract owner
      *
-     * @param _provider    liquidity provider
-     * @param _index       index of the locked balance
+     * @param provider liquidity provider
+     * @param index index of the locked balance
      */
-    function removeLockedBalance(address _provider, uint256 _index)
-        external
-        override
-        ownerOnly
-        validAddress(_provider)
-    {
-        LockedBalance[] storage balances = lockedBalances[_provider];
+    function removeLockedBalance(address provider, uint256 index) external override ownerOnly validAddress(provider) {
+        LockedBalance[] storage balances = _lockedBalances[provider];
         uint256 length = balances.length;
 
         // validate input
-        require(_index < length, "ERR_INVALID_INDEX");
+        require(index < length, "ERR_INVALID_INDEX");
 
-        uint256 amount = balances[_index].amount;
+        uint256 amount = balances[index].amount;
         uint256 lastIndex = length - 1;
-        if (_index < lastIndex) {
-            balances[_index] = balances[lastIndex];
+        if (index < lastIndex) {
+            balances[index] = balances[lastIndex];
         }
 
         balances.pop();
 
-        emit BalanceUnlocked(_provider, amount);
+        emit BalanceUnlocked(provider, amount);
     }
 
     /**
      * @dev returns the system balance for a given token
      *
-     * @param _token   token address
+     * @param token token address
+     *
      * @return system balance
      */
-    function systemBalance(IReserveToken _token) external view override returns (uint256) {
-        return systemBalances[_token];
+    function systemBalance(IReserveToken token) external view override returns (uint256) {
+        return _systemBalances[token];
     }
 
     /**
      * @dev increases the system balance for a given token
      * can only be called by the contract owner
      *
-     * @param _token   token address
-     * @param _amount  token amount
+     * @param token token address
+     * @param amount token amount
      */
-    function incSystemBalance(IReserveToken _token, uint256 _amount)
+    function incSystemBalance(IReserveToken token, uint256 amount)
         external
         override
         ownerOnly
-        validAddress(address(_token))
+        validAddress(address(token))
     {
-        uint256 prevAmount = systemBalances[_token];
-        uint256 newAmount = prevAmount.add(_amount);
-        systemBalances[_token] = newAmount;
+        uint256 prevAmount = _systemBalances[token];
+        uint256 newAmount = prevAmount.add(amount);
+        _systemBalances[token] = newAmount;
 
-        emit SystemBalanceUpdated(_token, prevAmount, newAmount);
+        emit SystemBalanceUpdated(token, prevAmount, newAmount);
     }
 
     /**
      * @dev decreases the system balance for a given token
      * can only be called by the contract owner
      *
-     * @param _token   token address
-     * @param _amount  token amount
+     * @param token token address
+     * @param amount token amount
      */
-    function decSystemBalance(IReserveToken _token, uint256 _amount)
+    function decSystemBalance(IReserveToken token, uint256 amount)
         external
         override
         ownerOnly
-        validAddress(address(_token))
+        validAddress(address(token))
     {
-        uint256 prevAmount = systemBalances[_token];
-        uint256 newAmount = prevAmount.sub(_amount);
-        systemBalances[_token] = newAmount;
+        uint256 prevAmount = _systemBalances[token];
+        uint256 newAmount = prevAmount.sub(amount);
+        _systemBalances[token] = newAmount;
 
-        emit SystemBalanceUpdated(_token, prevAmount, newAmount);
+        emit SystemBalanceUpdated(token, prevAmount, newAmount);
     }
 
     /**
      * @dev returns the total protected pool token amount for a given pool
      *
-     * @param _poolToken   pool token address
+     * @param poolToken pool token address
+     *
      * @return total protected amount
      */
-    function totalProtectedPoolAmount(IDSToken _poolToken) external view returns (uint256) {
-        return totalProtectedPoolAmounts[_poolToken];
+    function totalProtectedPoolAmount(IDSToken poolToken) external view returns (uint256) {
+        return _totalProtectedPoolAmounts[poolToken];
     }
 
     /**
      * @dev returns the total protected reserve amount for a given pool
      *
-     * @param _poolToken       pool token address
-     * @param _reserveToken    reserve token address
+     * @param poolToken pool token address
+     * @param reserveToken reserve token address
+     *
      * @return total protected amount
      */
-    function totalProtectedReserveAmount(IDSToken _poolToken, IReserveToken _reserveToken)
+    function totalProtectedReserveAmount(IDSToken poolToken, IReserveToken reserveToken)
         external
         view
         returns (uint256)
     {
-        return totalProtectedReserveAmounts[_poolToken][_reserveToken];
+        return _totalProtectedReserveAmounts[poolToken][reserveToken];
     }
 }

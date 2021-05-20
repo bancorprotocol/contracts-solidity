@@ -5,5 +5,5 @@ pragma solidity 0.6.12;
     Bancor X Upgrader interface
 */
 interface IBancorXUpgrader {
-    function upgrade(uint16 _version, address[] memory _reporters) external;
+    function upgrade(uint16 version, address[] memory reporters) external;
 }

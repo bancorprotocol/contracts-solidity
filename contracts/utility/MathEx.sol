@@ -12,16 +12,16 @@ library MathEx {
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a positive integer
      *
-     * @param _num a positive integer
+     * @param num a positive integer
      *
      * @return the largest integer smaller than or equal to the square root of the positive integer
      */
-    function floorSqrt(uint256 _num) internal pure returns (uint256) {
-        uint256 x = _num / 2 + 1;
-        uint256 y = (x + _num / x) / 2;
+    function floorSqrt(uint256 num) internal pure returns (uint256) {
+        uint256 x = num / 2 + 1;
+        uint256 y = (x + num / x) / 2;
         while (x > y) {
             x = y;
-            y = (x + _num / x) / 2;
+            y = (x + num / x) / 2;
         }
         return x;
     }
@@ -29,71 +29,72 @@ library MathEx {
     /**
      * @dev returns the smallest integer larger than or equal to the square root of a positive integer
      *
-     * @param _num a positive integer
+     * @param num a positive integer
      *
      * @return the smallest integer larger than or equal to the square root of the positive integer
      */
-    function ceilSqrt(uint256 _num) internal pure returns (uint256) {
-        uint256 x = floorSqrt(_num);
-        return x * x == _num ? x : x + 1;
+    function ceilSqrt(uint256 num) internal pure returns (uint256) {
+        uint256 x = floorSqrt(num);
+
+        return x * x == num ? x : x + 1;
     }
 
     /**
      * @dev computes a powered ratio
      *
-     * @param _n   ratio numerator
-     * @param _d   ratio denominator
-     * @param _exp ratio exponent
+     * @param n ratio numerator
+     * @param d ratio denominator
+     * @param exp ratio exponent
      *
      * @return powered ratio's numerator and denominator
      */
     function poweredRatio(
-        uint256 _n,
-        uint256 _d,
-        uint256 _exp
+        uint256 n,
+        uint256 d,
+        uint256 exp
     ) internal pure returns (uint256, uint256) {
-        require(_exp <= MAX_EXP, "ERR_EXP_TOO_LARGE");
+        require(exp <= MAX_EXP, "ERR_EXP_TOO_LARGE");
 
         uint256[MAX_EXP_BIT_LEN] memory ns;
         uint256[MAX_EXP_BIT_LEN] memory ds;
 
-        (ns[0], ds[0]) = reducedRatio(_n, _d, MAX_UINT128);
-        for (uint256 i = 0; (_exp >> i) > 1; i++) {
-            (ns[i + 1], ds[i + 1]) = reducedRatio(ns[i] ** 2, ds[i] ** 2, MAX_UINT128);
+        (ns[0], ds[0]) = reducedRatio(n, d, MAX_UINT128);
+        for (uint256 i = 0; (exp >> i) > 1; ++i) {
+            (ns[i + 1], ds[i + 1]) = reducedRatio(ns[i]**2, ds[i]**2, MAX_UINT128);
         }
 
-        uint256 n = 1;
-        uint256 d = 1;
+        uint256 newN = 1;
+        uint256 newD = 1;
 
-        for (uint256 i = 0; (_exp >> i) > 0; i++) {
-            if (((_exp >> i) & 1) > 0) {
-                (n, d) = reducedRatio(n * ns[i], d * ds[i], MAX_UINT128);
+        for (uint256 i = 0; (exp >> i) > 0; ++i) {
+            if (((exp >> i) & 1) > 0) {
+                (newN, newD) = reducedRatio(newN * ns[i], newD * ds[i], MAX_UINT128);
             }
         }
 
-        return (n, d);
+        return (newN, newD);
     }
 
     /**
      * @dev computes a reduced-scalar ratio
      *
-     * @param _n   ratio numerator
-     * @param _d   ratio denominator
-     * @param _max maximum desired scalar
+     * @param n ratio numerator
+     * @param d ratio denominator
+     * @param max maximum desired scalar
      *
      * @return ratio's numerator and denominator
      */
     function reducedRatio(
-        uint256 _n,
-        uint256 _d,
-        uint256 _max
+        uint256 n,
+        uint256 d,
+        uint256 max
     ) internal pure returns (uint256, uint256) {
-        (uint256 n, uint256 d) = (_n, _d);
-        if (n > _max || d > _max) {
-            (n, d) = normalizedRatio(n, d, _max);
+        (uint256 newN, uint256 newD) = (n, d);
+        if (newN > max || newD > max) {
+            (newN, newD) = normalizedRatio(newN, newD, max);
         }
-        if (n != d) {
-            return (n, d);
+        if (newN != newD) {
+            return (newN, newD);
         }
         return (1, 1);
     }
@@ -102,14 +103,14 @@ library MathEx {
      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)".
      */
     function normalizedRatio(
-        uint256 _a,
-        uint256 _b,
-        uint256 _scale
+        uint256 a,
+        uint256 b,
+        uint256 scale
     ) internal pure returns (uint256, uint256) {
-        if (_a <= _b) {
-            return accurateRatio(_a, _b, _scale);
+        if (a <= b) {
+            return accurateRatio(a, b, scale);
         }
-        (uint256 y, uint256 x) = accurateRatio(_b, _a, _scale);
+        (uint256 y, uint256 x) = accurateRatio(b, a, scale);
         return (x, y);
     }
 
@@ -117,52 +118,52 @@ library MathEx {
      * @dev computes "scale * a / (a + b)" and "scale * b / (a + b)", assuming that "a <= b".
      */
     function accurateRatio(
-        uint256 _a,
-        uint256 _b,
-        uint256 _scale
+        uint256 a,
+        uint256 b,
+        uint256 scale
     ) internal pure returns (uint256, uint256) {
-        uint256 maxVal = uint256(-1) / _scale;
-        if (_a > maxVal) {
-            uint256 c = _a / (maxVal + 1) + 1;
-            _a /= c; // we can now safely compute `_a * _scale`
-            _b /= c;
+        uint256 maxVal = uint256(-1) / scale;
+        if (a > maxVal) {
+            uint256 c = a / (maxVal + 1) + 1;
+            a /= c; // we can now safely compute `a * scale`
+            b /= c;
         }
-        if (_a != _b) {
-            uint256 n = _a * _scale;
-            uint256 d = _a + _b; // can overflow
-            if (d >= _a) {
-                // no overflow in `_a + _b`
-                uint256 x = roundDiv(n, d); // we can now safely compute `_scale - x`
-                uint256 y = _scale - x;
+        if (a != b) {
+            uint256 newN = a * scale;
+            uint256 newD = a + b; // can overflow
+            if (newD >= a) {
+                // no overflow in `a + b`
+                uint256 x = roundDiv(newN, newD); // we can now safely compute `scale - x`
+                uint256 y = scale - x;
                 return (x, y);
             }
-            if (n < _b - (_b - _a) / 2) {
-                return (0, _scale); // `_a * _scale < (_a + _b) / 2 < MAX_UINT256 < _a + _b`
+            if (newN < b - (b - a) / 2) {
+                return (0, scale); // `a * scale < (a + b) / 2 < MAX_UINT256 < a + b`
             }
-            return (1, _scale - 1); // `(_a + _b) / 2 < _a * _scale < MAX_UINT256 < _a + _b`
+            return (1, scale - 1); // `(a + b) / 2 < a * scale < MAX_UINT256 < a + b`
         }
-        return (_scale / 2, _scale / 2); // allow reduction to `(1, 1)` in the calling function
+        return (scale / 2, scale / 2); // allow reduction to `(1, 1)` in the calling function
     }
 
     /**
      * @dev computes the nearest integer to a given quotient without overflowing or underflowing.
      */
-    function roundDiv(uint256 _n, uint256 _d) internal pure returns (uint256) {
-        return _n / _d + (_n % _d) / (_d - _d / 2);
+    function roundDiv(uint256 n, uint256 d) internal pure returns (uint256) {
+        return n / d + (n % d) / (d - d / 2);
     }
 
     /**
      * @dev returns the average number of decimal digits in a given list of positive integers
      *
-     * @param _values  list of positive integers
+     * @param values list of positive integers
      *
      * @return the average number of decimal digits in the given list of positive integers
      */
-    function geometricMean(uint256[] memory _values) internal pure returns (uint256) {
+    function geometricMean(uint256[] memory values) internal pure returns (uint256) {
         uint256 numOfDigits = 0;
-        uint256 length = _values.length;
-        for (uint256 i = 0; i < length; i++) {
-            numOfDigits += decimalLength(_values[i]);
+        uint256 length = values.length;
+        for (uint256 i = 0; i < length; ++i) {
+            numOfDigits += decimalLength(values[i]);
         }
         return uint256(10)**(roundDivUnsafe(numOfDigits, length) - 1);
     }
@@ -170,14 +171,14 @@ library MathEx {
     /**
      * @dev returns the number of decimal digits in a given positive integer
      *
-     * @param _x   positive integer
+     * @param x positive integer
      *
      * @return the number of decimal digits in the given positive integer
      */
-    function decimalLength(uint256 _x) internal pure returns (uint256) {
+    function decimalLength(uint256 x) internal pure returns (uint256) {
         uint256 y = 0;
-        for (uint256 x = _x; x > 0; x /= 10) {
-            y++;
+        for (uint256 tmpX = x; tmpX > 0; tmpX /= 10) {
+            ++y;
         }
         return y;
     }
@@ -186,22 +187,12 @@ library MathEx {
      * @dev returns the nearest integer to a given quotient
      * the computation is overflow-safe assuming that the input is sufficiently small
      *
-     * @param _n   quotient numerator
-     * @param _d   quotient denominator
+     * @param n quotient numerator
+     * @param d quotient denominator
      *
      * @return the nearest integer to the given quotient
      */
-    function roundDivUnsafe(uint256 _n, uint256 _d) internal pure returns (uint256) {
-        return (_n + _d / 2) / _d;
-    }
-
-    /**
-     * @dev returns the larger of two values
-     *
-     * @param _val1 the first value
-     * @param _val2 the second value
-     */
-    function max(uint256 _val1, uint256 _val2) internal pure returns (uint256) {
-        return _val1 > _val2 ? _val1 : _val2;
+    function roundDivUnsafe(uint256 n, uint256 d) internal pure returns (uint256) {
+        return (n + d / 2) / d;
     }
 }

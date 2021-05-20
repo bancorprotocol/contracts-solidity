@@ -8,7 +8,7 @@ interface IOwned {
     // this function isn't since the compiler emits automatically generated getter functions as external
     function owner() external view returns (address);
 
-    function transferOwnership(address _newOwner) external;
+    function transferOwnership(address newOwner) external;
 
     function acceptOwnership() external;
 }

@@ -10,22 +10,24 @@ contract TestConverterFactory is ConverterFactory {
     IConverterAnchor public createdAnchor;
 
     function createAnchor(
-        uint16 _converterType,
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals
+        uint16 converterType,
+        string memory name,
+        string memory symbol,
+        uint8 decimals
     ) public override returns (IConverterAnchor) {
-        createdAnchor = super.createAnchor(_converterType, _name, _symbol, _decimals);
+        createdAnchor = super.createAnchor(converterType, name, symbol, decimals);
+
         return createdAnchor;
     }
 
     function createConverter(
-        uint16 _type,
-        IConverterAnchor _anchor,
-        IContractRegistry _registry,
-        uint32 _maxConversionFee
+        uint16 converterType,
+        IConverterAnchor anchor,
+        IContractRegistry registry,
+        uint32 maxConversionFee
     ) public override returns (IConverter) {
-        createdConverter = super.createConverter(_type, _anchor, _registry, _maxConversionFee);
+        createdConverter = super.createConverter(converterType, anchor, registry, maxConversionFee);
+
         return createdConverter;
     }
 }

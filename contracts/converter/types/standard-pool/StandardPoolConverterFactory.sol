@@ -22,19 +22,20 @@ contract StandardPoolConverterFactory is ITypedConverterFactory {
      * @dev creates a new converter with the given arguments and transfers
      * the ownership to the caller
      *
-     * @param _anchor            anchor governed by the converter
-     * @param _registry          address of a contract registry contract
-     * @param _maxConversionFee  maximum conversion fee, represented in ppm
+     * @param anchor anchor governed by the converter
+     * @param registry address of a contract registry contract
+     * @param maxConversionFee maximum conversion fee, represented in ppm
      *
      * @return a new converter
      */
     function createConverter(
-        IConverterAnchor _anchor,
-        IContractRegistry _registry,
-        uint32 _maxConversionFee
+        IConverterAnchor anchor,
+        IContractRegistry registry,
+        uint32 maxConversionFee
     ) external virtual override returns (IConverter) {
-        IConverter converter = new StandardPoolConverter(IDSToken(address(_anchor)), _registry, _maxConversionFee);
+        IConverter converter = new StandardPoolConverter(IDSToken(address(anchor)), registry, maxConversionFee);
         converter.transferOwnership(msg.sender);
+
         return converter;
     }
 }

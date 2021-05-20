@@ -11,12 +11,12 @@ import "./interfaces/IConverterFactory.sol";
 
 interface ILegacyConverterVersion45 is IConverter {
     function withdrawTokens(
-        IReserveToken _token,
-        address _to,
-        uint256 _amount
+        IReserveToken token,
+        address recipient,
+        uint256 amount
     ) external;
 
-    function withdrawETH(address payable _to) external;
+    function withdrawETH(address payable recipient) external;
 }
 
 /**
@@ -38,25 +38,25 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
     /**
      * @dev triggered when the contract accept a converter ownership
      *
-     * @param _converter   converter address
-     * @param _owner       new owner - local upgrader address
+     * @param converter converter address
+     * @param owner new owner - local upgrader address
      */
-    event ConverterOwned(IConverter indexed _converter, address indexed _owner);
+    event ConverterOwned(IConverter indexed converter, address indexed owner);
 
     /**
      * @dev triggered when the upgrading process is done
      *
-     * @param _oldConverter    old converter address
-     * @param _newConverter    new converter address
+     * @param oldConverter old converter address
+     * @param newConverter new converter address
      */
-    event ConverterUpgrade(address indexed _oldConverter, address indexed _newConverter);
+    event ConverterUpgrade(address indexed oldConverter, address indexed newConverter);
 
     /**
      * @dev initializes a new ConverterUpgrader instance
      *
-     * @param _registry    address of a contract registry contract
+     * @param registry address of a contract registry contract
      */
-    constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {}
+    constructor(IContractRegistry registry) public ContractRegistryClient(registry) {}
 
     /**
      * @dev upgrades an old converter to the latest version
@@ -65,10 +65,10 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * fires the ConverterUpgrade event upon success.
      * can only be called by a converter
      *
-     * @param _version old converter version
+     * @param version old converter version
      */
-    function upgrade(bytes32 _version) external override {
-        upgradeOld(IConverter(msg.sender), _version);
+    function upgrade(bytes32 version) external override {
+        upgradeOld(IConverter(msg.sender), version);
     }
 
     /**
@@ -78,10 +78,10 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * fires the ConverterUpgrade event upon success.
      * can only be called by a converter
      *
-     * @param _version old converter version
+     * @param version old converter version
      */
-    function upgrade(uint16 _version) external override {
-        upgrade(IConverter(msg.sender), _version);
+    function upgrade(uint16 version) external override {
+        upgrade(IConverter(msg.sender), version);
     }
 
     /**
@@ -90,14 +90,14 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * ownership of the new converter will be transferred back to the original owner.
      * fires the ConverterUpgrade event upon success.
      *
-     * @param _converter old converter contract address
+     * @param converter old converter contract address
      */
     function upgradeOld(
-        IConverter _converter,
-        bytes32 /* _version */
+        IConverter converter,
+        bytes32 /* version */
     ) public {
         // the upgrader doesn't require the version for older converters
-        upgrade(_converter, 0);
+        upgrade(converter, 0);
     }
 
     /**
@@ -106,17 +106,16 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * ownership of the new converter will be transferred back to the original owner.
      * fires the ConverterUpgrade event upon success.
      *
-     * @param _converter old converter contract address
-     * @param _version old converter version
+     * @param converter old converter contract address
+     * @param version old converter version
      */
-    function upgrade(IConverter _converter, uint16 _version) private {
-        IConverter converter = IConverter(_converter);
+    function upgrade(IConverter converter, uint16 version) private {
         address prevOwner = converter.owner();
         acceptConverterOwnership(converter);
         IConverter newConverter = createConverter(converter);
         copyReserves(converter, newConverter);
         copyConversionFee(converter, newConverter);
-        transferReserveBalances(converter, newConverter, _version);
+        transferReserveBalances(converter, newConverter, version);
         IConverterAnchor anchor = converter.token();
 
         if (anchor.owner() == address(converter)) {
@@ -138,48 +137,50 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * the upgrade process.
      * fires the ConverterOwned event upon success
      *
-     * @param _oldConverter       converter to accept ownership of
+     * @param oldConverter converter to accept ownership of
      */
-    function acceptConverterOwnership(IConverter _oldConverter) private {
-        _oldConverter.acceptOwnership();
-        emit ConverterOwned(_oldConverter, address(this));
+    function acceptConverterOwnership(IConverter oldConverter) private {
+        oldConverter.acceptOwnership();
+
+        emit ConverterOwned(oldConverter, address(this));
     }
 
     /**
      * @dev creates a new converter with same basic data as the original old converter
      * the newly created converter will have no reserves at this step.
      *
-     * @param _oldConverter    old converter contract address
+     * @param oldConverter old converter contract address
      *
-     * @return the new converter  new converter contract address
+     * @return new converter's contract address
      */
-    function createConverter(IConverter _oldConverter) private returns (IConverter) {
-        IConverterAnchor anchor = _oldConverter.token();
-        uint32 maxConversionFee = _oldConverter.maxConversionFee();
-        uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
+    function createConverter(IConverter oldConverter) private returns (IConverter) {
+        IConverterAnchor anchor = oldConverter.token();
+        uint32 maxConversionFee = oldConverter.maxConversionFee();
+        uint16 reserveTokenCount = oldConverter.connectorTokenCount();
 
         // determine new converter type
         uint16 newType = 0;
         // new converter - get the type from the converter itself
-        if (isV28OrHigherConverter(_oldConverter)) {
-            newType = _oldConverter.converterType();
+        if (isV28OrHigherConverter(oldConverter)) {
+            newType = oldConverter.converterType();
         } else {
             assert(reserveTokenCount > 1);
             newType = 1;
         }
 
         if (newType == 1 && reserveTokenCount == 2) {
-            (, uint32 weight0, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(0));
-            (, uint32 weight1, , , ) = _oldConverter.connectors(_oldConverter.connectorTokens(1));
+            (, uint32 weight0, , , ) = oldConverter.connectors(oldConverter.connectorTokens(0));
+            (, uint32 weight1, , , ) = oldConverter.connectors(oldConverter.connectorTokens(1));
             if (weight0 == PPM_RESOLUTION / 2 && weight1 == PPM_RESOLUTION / 2) {
                 newType = 3;
             }
         }
 
         IConverterFactory converterFactory = IConverterFactory(addressOf(CONVERTER_FACTORY));
-        IConverter converter = converterFactory.createConverter(newType, anchor, registry, maxConversionFee);
+        IConverter converter = converterFactory.createConverter(newType, anchor, registry(), maxConversionFee);
 
         converter.acceptOwnership();
+
         return converter;
     }
 
@@ -187,29 +188,29 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * @dev copies the reserves from the old converter to the new one.
      * note that this will not work for an unlimited number of reserves due to block gas limit constraints.
      *
-     * @param _oldConverter    old converter contract address
-     * @param _newConverter    new converter contract address
+     * @param oldConverter old converter contract address
+     * @param newConverter new converter contract address
      */
-    function copyReserves(IConverter _oldConverter, IConverter _newConverter) private {
-        uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
+    function copyReserves(IConverter oldConverter, IConverter newConverter) private {
+        uint16 reserveTokenCount = oldConverter.connectorTokenCount();
 
         for (uint16 i = 0; i < reserveTokenCount; i++) {
-            IReserveToken reserveAddress = _oldConverter.connectorTokens(i);
-            (, uint32 weight, , , ) = _oldConverter.connectors(reserveAddress);
+            IReserveToken reserveAddress = oldConverter.connectorTokens(i);
+            (, uint32 weight, , , ) = oldConverter.connectors(reserveAddress);
 
-            _newConverter.addReserve(reserveAddress, weight);
+            newConverter.addReserve(reserveAddress, weight);
         }
     }
 
     /**
      * @dev copies the conversion fee from the old converter to the new one
      *
-     * @param _oldConverter    old converter contract address
-     * @param _newConverter    new converter contract address
+     * @param oldConverter old converter contract address
+     * @param newConverter new converter contract address
      */
-    function copyConversionFee(IConverter _oldConverter, IConverter _newConverter) private {
-        uint32 conversionFee = _oldConverter.conversionFee();
-        _newConverter.setConversionFee(conversionFee);
+    function copyConversionFee(IConverter oldConverter, IConverter newConverter) private {
+        uint32 conversionFee = oldConverter.conversionFee();
+        newConverter.setConversionFee(conversionFee);
     }
 
     /**
@@ -217,22 +218,22 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * note that the function assumes that the new converter already has the exact same number of reserves
      * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
      *
-     * @param _oldConverter    old converter contract address
-     * @param _newConverter    new converter contract address
-     * @param _version old converter version
+     * @param oldConverter old converter contract address
+     * @param newConverter new converter contract address
+     * @param version old converter version
      */
     function transferReserveBalances(
-        IConverter _oldConverter,
-        IConverter _newConverter,
-        uint16 _version
+        IConverter oldConverter,
+        IConverter newConverter,
+        uint16 version
     ) private {
-        if (_version <= 45) {
-            transferReserveBalancesVersion45(ILegacyConverterVersion45(address(_oldConverter)), _newConverter);
+        if (version <= 45) {
+            transferReserveBalancesVersion45(ILegacyConverterVersion45(address(oldConverter)), newConverter);
 
             return;
         }
 
-        _oldConverter.transferReservesOnUpgrade(address(_newConverter));
+        oldConverter.transferReservesOnUpgrade(address(newConverter));
     }
 
     /**
@@ -240,22 +241,20 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
      * note that the function assumes that the new converter already has the exact same number of reserves
      * also, this will not work for an unlimited number of reserves due to block gas limit constraints.
      *
-     * @param _oldConverter old converter contract address
-     * @param _newConverter new converter contract address
+     * @param oldConverter old converter contract address
+     * @param newConverter new converter contract address
      */
-    function transferReserveBalancesVersion45(ILegacyConverterVersion45 _oldConverter, IConverter _newConverter)
-        private
-    {
-        uint16 reserveTokenCount = _oldConverter.connectorTokenCount();
+    function transferReserveBalancesVersion45(ILegacyConverterVersion45 oldConverter, IConverter newConverter) private {
+        uint16 reserveTokenCount = oldConverter.connectorTokenCount();
         for (uint16 i = 0; i < reserveTokenCount; i++) {
-            IReserveToken reserveToken = _oldConverter.connectorTokens(i);
+            IReserveToken reserveToken = oldConverter.connectorTokens(i);
 
-            uint256 reserveBalance = reserveToken.balanceOf(address(_oldConverter));
+            uint256 reserveBalance = reserveToken.balanceOf(address(oldConverter));
             if (reserveBalance > 0) {
                 if (reserveToken.isNativeToken()) {
-                    _oldConverter.withdrawETH(address(_newConverter));
+                    oldConverter.withdrawETH(address(newConverter));
                 } else {
-                    _oldConverter.withdrawTokens(reserveToken, address(_newConverter), reserveBalance);
+                    oldConverter.withdrawTokens(reserveToken, address(newConverter), reserveBalance);
                 }
             }
         }
@@ -265,9 +264,9 @@ contract ConverterUpgrader is IConverterUpgrader, ContractRegistryClient {
 
     // using a static call to identify converter version
     // can't rely on the version number since the function had a different signature in older converters
-    function isV28OrHigherConverter(IConverter _converter) internal view returns (bool) {
+    function isV28OrHigherConverter(IConverter converter) internal view returns (bool) {
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
-        (bool success, bytes memory returnData) = address(_converter).staticcall{ gas: 4000 }(data);
+        (bool success, bytes memory returnData) = address(converter).staticcall{ gas: 4000 }(data);
 
         if (success && returnData.length == 32) {
             return abi.decode(returnData, (bool));

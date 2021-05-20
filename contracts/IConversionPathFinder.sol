@@ -7,5 +7,5 @@ import "./token/interfaces/IReserveToken.sol";
     Conversion Path Finder interface
 */
 interface IConversionPathFinder {
-    function findPath(IReserveToken _sourceToken, IReserveToken _targetToken) external view returns (address[] memory);
+    function findPath(IReserveToken sourceToken, IReserveToken targetToken) external view returns (address[] memory);
 }

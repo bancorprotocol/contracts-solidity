@@ -11,203 +11,178 @@ import "../utility/Utils.sol";
 contract NonStandardToken is Utils {
     using SafeMath for uint256;
 
-    uint256 public totalSupply;
-    mapping(address => uint256) public balanceOf;
-    mapping(address => mapping(address => uint256)) public allowance;
+    uint256 private _totalSupply;
+    mapping(address => uint256) private _balanceOf;
+    mapping(address => mapping(address => uint256)) private _allowances;
 
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
 
-    /**
-     * @dev initializes a new NonStandardToken instance
-     *
-     * @param _supply      initial supply
-     */
-    constructor(uint256 _supply) internal {
-        totalSupply = _supply;
-        balanceOf[msg.sender] = _supply;
+    constructor(uint256 initialTotalSupply) internal {
+        _totalSupply = initialTotalSupply;
+        _balanceOf[msg.sender] = initialTotalSupply;
     }
 
-    /**
-     * @dev send coins
-     * throws on any error rather then return a false flag to minimize user errors
-     *
-     * @param _to      target address
-     * @param _value   transfer amount
-     */
-    function _transfer(address _to, uint256 _value) internal validAddress(_to) {
-        balanceOf[msg.sender] = balanceOf[msg.sender].sub(_value);
-        balanceOf[_to] = balanceOf[_to].add(_value);
-        emit Transfer(msg.sender, _to, _value);
+    function totalSupply() external view returns (uint256) {
+        return _totalSupply;
     }
 
-    /**
-     * @dev an account/contract attempts to get the coins
-     * throws on any error rather then return a false flag to minimize user errors
-     *
-     * @param _from    source address
-     * @param _to      target address
-     * @param _value   transfer amount
-     */
+    function balanceOf(address owner) external view returns (uint256) {
+        return _balanceOf[owner];
+    }
+
+    function allowance(address owner, address spender) external view returns (uint256) {
+        return _allowances[owner][spender];
+    }
+
+    function _transfer(address to, uint256 value) internal validAddress(to) {
+        _balanceOf[msg.sender] = _balanceOf[msg.sender].sub(value);
+        _balanceOf[to] = _balanceOf[to].add(value);
+
+        emit Transfer(msg.sender, to, value);
+    }
+
     function _transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
-    ) internal validAddress(_from) validAddress(_to) {
-        allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
-        balanceOf[_from] = balanceOf[_from].sub(_value);
-        balanceOf[_to] = balanceOf[_to].add(_value);
-        emit Transfer(_from, _to, _value);
+        address from,
+        address to,
+        uint256 value
+    ) internal validAddress(from) validAddress(to) {
+        _allowances[from][msg.sender] = _allowances[from][msg.sender].sub(value);
+        _balanceOf[from] = _balanceOf[from].sub(value);
+        _balanceOf[to] = _balanceOf[to].add(value);
+
+        emit Transfer(from, to, value);
     }
 
-    /**
-     * @dev allow another account/contract to spend some tokens on your behalf
-     * throws on any error rather then return a false flag to minimize user errors
-     *
-     * also, to minimize the risk of the approve/transferFrom attack vector
-     * (see https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), approve has to be called twice
-     * in 2 separate transactions - once to change the allowance to 0 and secondly to change it to the new allowance value
-     *
-     * @param _spender approved address
-     * @param _value   allowance amount
-     */
-    function _approve(address _spender, uint256 _value) internal validAddress(_spender) {
+    function _approve(address spender, uint256 value) internal validAddress(spender) {
         // if the allowance isn't 0, it can only be updated to 0 to prevent an allowance change immediately after withdrawal
-        require(_value == 0 || allowance[msg.sender][_spender] == 0);
+        require(value == 0 || _allowances[msg.sender][spender] == 0, "ERR_ALREADY_APPROVED");
 
-        allowance[msg.sender][_spender] = _value;
-        emit Approval(msg.sender, _spender, _value);
+        _allowances[msg.sender][spender] = value;
+
+        emit Approval(msg.sender, spender, value);
     }
 }
 
 contract NonStandardTokenDetailed is NonStandardToken {
-    string public name;
-    string public symbol;
-    uint8 public decimals;
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
 
     /**
      * @dev initializes a new NonStandardToken instance
      *
-     * @param _name        token name
-     * @param _symbol      token symbol
-     * @param _decimals    decimal points
-     * @param _supply      initial supply
+     * @param initialName token tokenName
+     * @param initialSymbol token symbol
+     * @param initialDecimals decimal points
+     * @param initialTotalSupply initial supply
      */
     constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        uint256 _supply
-    ) internal NonStandardToken(_supply) {
-        name = _name;
-        symbol = _symbol;
-        decimals = _decimals;
+        string memory initialName,
+        string memory initialSymbol,
+        uint8 initialDecimals,
+        uint256 initialTotalSupply
+    ) internal NonStandardToken(initialTotalSupply) {
+        _name = initialName;
+        _symbol = initialSymbol;
+        _decimals = initialDecimals;
+    }
+
+    function name() external view returns (string memory) {
+        return _name;
+    }
+
+    function symbol() external view returns (string memory) {
+        return _symbol;
+    }
+
+    function decimals() external view returns (uint8) {
+        return _decimals;
     }
 }
 
 contract TestNonStandardToken is NonStandardTokenDetailed {
-    bool public ok;
+    bool private _ok;
 
     constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        uint256 _supply
-    ) public NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
+        uint256 initialTotalSupply
+    ) public NonStandardTokenDetailed(name, symbol, decimals, initialTotalSupply) {
         set(true);
     }
 
-    function set(bool _ok) public {
-        ok = _ok;
+    function set(bool status) public {
+        _ok = status;
     }
 
-    function approve(address _spender, uint256 _value) public {
-        _approve(_spender, _value);
-        require(ok);
+    function approve(address spender, uint256 value) external {
+        _approve(spender, value);
+
+        require(_ok, "ERR_NOT_OK");
     }
 
-    function transfer(address _to, uint256 _value) public {
-        _transfer(_to, _value);
-        require(ok);
-    }
+    function transfer(address to, uint256 value) external {
+        _transfer(to, value);
 
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
-    ) public {
-        _transferFrom(_from, _to, _value);
-        require(ok);
-    }
-}
-
-contract TestNonStandardTokenWithoutDecimals is NonStandardToken {
-    string public name;
-    string public symbol;
-
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        uint256 _supply
-    ) public NonStandardToken(_supply) {
-        name = _name;
-        symbol = _symbol;
-    }
-
-    function approve(address _spender, uint256 _value) public {
-        _approve(_spender, _value);
-    }
-
-    function transfer(address _to, uint256 _value) public {
-        _transfer(_to, _value);
+        require(_ok, "ERR_NOT_OK");
     }
 
     function transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
+        address from,
+        address to,
+        uint256 value
     ) public {
-        _transferFrom(_from, _to, _value);
+        _transferFrom(from, to, value);
+
+        require(_ok, "ERR_NOT_OK");
     }
 }
 
 contract TestStandardToken is NonStandardTokenDetailed {
-    bool public ok;
-    bool public ret;
+    bool private _ok;
+    bool private _ret;
 
     constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals,
-        uint256 _supply
-    ) public NonStandardTokenDetailed(_name, _symbol, _decimals, _supply) {
+        string memory name,
+        string memory symbol,
+        uint8 decimals,
+        uint256 supply
+    ) public NonStandardTokenDetailed(name, symbol, decimals, supply) {
         set(true, true);
     }
 
-    function set(bool _ok, bool _ret) public {
-        ok = _ok;
-        ret = _ret;
+    function set(bool status, bool retValue) public {
+        _ok = status;
+        _ret = retValue;
     }
 
-    function approve(address _spender, uint256 _value) public returns (bool) {
-        _approve(_spender, _value);
-        require(ok);
-        return ret;
+    function approve(address spender, uint256 value) public returns (bool) {
+        require(_ok, "ERR_NOT_OK");
+
+        _approve(spender, value);
+
+        return _ret;
     }
 
-    function transfer(address _to, uint256 _value) public returns (bool) {
-        _transfer(_to, _value);
-        require(ok);
-        return ret;
+    function transfer(address to, uint256 value) public returns (bool) {
+        require(_ok, "ERR_NOT_OK");
+
+        _transfer(to, value);
+
+        return _ret;
     }
 
     function transferFrom(
-        address _from,
-        address _to,
-        uint256 _value
+        address from,
+        address to,
+        uint256 value
     ) public returns (bool) {
-        _transferFrom(_from, _to, _value);
-        require(ok);
-        return ret;
+        require(_ok, "ERR_NOT_OK");
+
+        _transferFrom(from, to, value);
+
+        return _ret;
     }
 }

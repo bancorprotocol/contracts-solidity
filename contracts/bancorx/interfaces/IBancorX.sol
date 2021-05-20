@@ -7,11 +7,11 @@ interface IBancorX {
     function token() external view returns (IERC20);
 
     function xTransfer(
-        bytes32 _toBlockchain,
-        bytes32 _to,
-        uint256 _amount,
-        uint256 _id
+        bytes32 toBlockchain,
+        bytes32 to,
+        uint256 amount,
+        uint256 id
     ) external;
 
-    function getXTransferAmount(uint256 _xTransferId, address _for) external view returns (uint256);
+    function getXTransferAmount(uint256 xTransferId, address receiver) external view returns (uint256);
 }

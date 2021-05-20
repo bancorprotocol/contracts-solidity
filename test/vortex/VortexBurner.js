@@ -485,7 +485,7 @@ describe('VortexBurner', () => {
                                                 blockNumber,
                                                 blockNumber
                                             );
-                                            expect(events[0].args._amount).to.equal(totalBurnedAmount);
+                                            expect(events[0].args.amount).to.equal(totalBurnedAmount);
 
                                             // Check that the network fee wallet balances have been depleted.
                                             for (const tokenData of selectedTokens) {

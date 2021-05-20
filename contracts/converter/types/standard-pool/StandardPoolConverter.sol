@@ -251,6 +251,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         require(_reserveTokens.length == 2, "ERR_INVALID_RESERVE_COUNT");
 
         _anchor.acceptOwnership();
+
         syncReserveBalances(0);
 
         emit Activation(converterType(), _anchor, true);
@@ -266,6 +267,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         require(fee <= _maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
 
         emit ConversionFeeUpdate(_conversionFee, fee);
+
         _conversionFee = fee;
     }
 
@@ -1182,11 +1184,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     function decodeReserveBalances(
-        uint256 _balances,
+        uint256 balances,
         uint256 id0,
         uint256 id1
     ) private pure returns (uint256, uint256) {
-        return (decodeReserveBalance(_balances, id0), decodeReserveBalance(_balances, id1));
+        return (decodeReserveBalance(balances, id0), decodeReserveBalance(balances, id1));
     }
 
     function encodeAverageRateInfo(

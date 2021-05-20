@@ -127,7 +127,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
 
         IConverterFactory factory = IConverterFactory(addressOf(CONVERTER_FACTORY));
         IConverterAnchor anchor = IConverterAnchor(factory.createAnchor(converterType, name, symbol, decimals));
-        IConverter converter = IConverter(factory.createConverter(converterType, anchor, registry, maxConversionFee));
+        IConverter converter = IConverter(factory.createConverter(converterType, anchor, registry(), maxConversionFee));
 
         anchor.acceptOwnership();
         converter.acceptOwnership();
@@ -165,7 +165,7 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
      * @param converter converter
      */
     function removeConverter(IConverter converter) public {
-        require(msg.sender == owner || !isConverterValid(converter), "ERR_ACCESS_DENIED");
+        require(msg.sender == owner() || !isConverterValid(converter), "ERR_ACCESS_DENIED");
 
         removeConverterInternal(converter);
     }
