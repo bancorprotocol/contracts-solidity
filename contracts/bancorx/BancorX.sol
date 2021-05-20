@@ -66,18 +66,18 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     /**
      * @dev triggered when tokens are locked in smart contract
      *
-     * @param from wallet address that the tokens are locked from
+     * @param source wallet address that the tokens are locked from
      * @param amount amount locked
      */
-    event TokensLock(address indexed from, uint256 amount);
+    event TokensLock(address indexed source, uint256 amount);
 
     /**
      * @dev triggered when tokens are released by the smart contract
      *
-     * @param to wallet address that the tokens are released to
+     * @param target wallet address that the tokens are released to
      * @param amount amount released
      */
-    event TokensRelease(address indexed to, uint256 amount);
+    event TokensRelease(address indexed target, uint256 amount);
 
     /**
      * @dev triggered when xTransfer is successfully called
@@ -487,7 +487,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         uint256 currentLockLimit = getCurrentLockLimit();
 
         // verify lock limit
-        require(amount >= _minLimit && amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
+        require(_minLimit <= amount && amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
 
         lockTokens(amount);
 
