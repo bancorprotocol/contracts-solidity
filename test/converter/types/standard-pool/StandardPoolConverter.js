@@ -248,7 +248,7 @@ describe('StandardPoolConverter', () => {
             // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
             // then accept ownership of the new and old converter. The end results should be the same.
             await converter.transferOwnership(upgrader.address);
-            res = await upgrader.upgradeOld(converter.address, web3.utils.asciiToHex(''));
+            res = await upgrader.upgradeOld(converter.address, ethers.utils.formatBytes32String(''));
             await converter.acceptOwnership();
         }
         const tx = await res.wait();
