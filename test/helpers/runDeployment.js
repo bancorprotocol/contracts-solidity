@@ -27,7 +27,11 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
     const conversionPathFinder = await deploy('conversionPathFinder', 'ConversionPathFinder', contractRegistry.address);
     const converterUpgrader = await deploy('converterUpgrader', 'ConverterUpgrader', contractRegistry.address);
     const converterRegistry = await deploy('converterRegistry', 'ConverterRegistry', contractRegistry.address);
-    const converterRegistryData = await deploy('converterRegistryData', 'ConverterRegistryData', contractRegistry.address);
+    const converterRegistryData = await deploy(
+        'converterRegistryData',
+        'ConverterRegistryData',
+        contractRegistry.address
+    );
 
     const networkFeeWallet = await deploy('networkFeeWallet', 'TokenHolder');
     const networkSettings = await deploy('networkSettings', 'NetworkSettings', networkFeeWallet.address, 0);
@@ -47,7 +51,9 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
     await execute(contractRegistry.registerAddress(asciiToHex('ConversionPathFinder'), conversionPathFinder.address));
     await execute(contractRegistry.registerAddress(asciiToHex('BancorConverterUpgrader'), converterUpgrader.address));
     await execute(contractRegistry.registerAddress(asciiToHex('BancorConverterRegistry'), converterRegistry.address));
-    await execute(contractRegistry.registerAddress(asciiToHex('BancorConverterRegistryData'), converterRegistryData.address));
+    await execute(
+        contractRegistry.registerAddress(asciiToHex('BancorConverterRegistryData'), converterRegistryData.address)
+    );
 
     // initialize converter factory
     await execute(converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address));
@@ -86,15 +92,7 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
         const value = amounts[converter.reserves.findIndex((reserve) => reserve.symbol === 'ETH')];
 
         await execute(
-            converterRegistry.newConverter(
-                type,
-                name,
-                symbol,
-                decimals,
-                percentageToPPM('100%'),
-                tokens,
-                weights
-            )
+            converterRegistry.newConverter(type, name, symbol, decimals, percentageToPPM('100%'), tokens, weights)
         );
 
         const converterAnchor = await deployed('IConverterAnchor', await converterRegistry.getAnchor(index));
@@ -137,7 +135,7 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
     const stakingRewardsStore = await deploy('stakingRewardsStore', 'StakingRewardsStore');
     const stakingRewards = await deploy(
         'stakingRewards',
-        'StakingRewards', 
+        'StakingRewards',
         stakingRewardsStore.address,
         bntTokenGovernance.address,
         checkpointStore.address,
@@ -146,19 +144,22 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
 
     const liquidityProtectionSettings = await deploy(
         'liquidityProtectionSettings',
-        'LiquidityProtectionSettings', 
+        'LiquidityProtectionSettings',
         reserves.BNT.address,
         contractRegistry.address
     );
 
     const liquidityProtectionStore = await deploy('liquidityProtectionStore', 'LiquidityProtectionStore');
     const liquidityProtectionStats = await deploy('liquidityProtectionStats', 'LiquidityProtectionStats');
-    const liquidityProtectionSystemStore = await deploy('liquidityProtectionSystemStore', 'LiquidityProtectionSystemStore');
+    const liquidityProtectionSystemStore = await deploy(
+        'liquidityProtectionSystemStore',
+        'LiquidityProtectionSystemStore'
+    );
     const liquidityProtectionWallet = await deploy('liquidityProtectionWallet', 'TokenHolder');
 
     const liquidityProtection = await deploy(
         'liquidityProtection',
-        'LiquidityProtection', 
+        'LiquidityProtection',
         liquidityProtectionSettings.address,
         liquidityProtectionStore.address,
         liquidityProtectionStats.address,
@@ -193,13 +194,23 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
 
     const params = getConfig().liquidityProtectionParams;
 
-    const minNetworkTokenLiquidityForMinting = decimalToInteger(params.minNetworkTokenLiquidityForMinting, reserves.BNT.decimals);
-    await execute(liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(minNetworkTokenLiquidityForMinting));
+    const minNetworkTokenLiquidityForMinting = decimalToInteger(
+        params.minNetworkTokenLiquidityForMinting,
+        reserves.BNT.decimals
+    );
+    await execute(
+        liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(minNetworkTokenLiquidityForMinting)
+    );
 
-    const defaultNetworkTokenMintingLimit = decimalToInteger(params.defaultNetworkTokenMintingLimit, reserves.BNT.decimals);
+    const defaultNetworkTokenMintingLimit = decimalToInteger(
+        params.defaultNetworkTokenMintingLimit,
+        reserves.BNT.decimals
+    );
     await execute(liquidityProtectionSettings.setDefaultNetworkTokenMintingLimit(defaultNetworkTokenMintingLimit));
 
-    await execute(liquidityProtectionSettings.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay));
+    await execute(
+        liquidityProtectionSettings.setProtectionDelays(params.minProtectionDelay, params.maxProtectionDelay)
+    );
     await execute(liquidityProtectionSettings.setLockDuration(params.lockDuration));
 
     for (const converter of params.converters) {

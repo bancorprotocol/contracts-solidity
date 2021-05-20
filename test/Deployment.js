@@ -89,9 +89,9 @@ describe('Deployment', () => {
     it('run', async () => {
         await runDeployment(
             (await ethers.getSigners())[0],
-            async (...args) => Contracts[args[1]].deploy(...args.slice(2)),
-            async (...args) => Contracts[args[0]].attach(args[1]),
-            async (...args) => args[0],
+            (...args) => Contracts[args[1]].deploy(...args.slice(2)),
+            (...args) => Contracts[args[0]].attach(args[1]),
+            (...args) => args[0],
             () => config,
             ethers.utils.id,
             ethers.utils.formatBytes32String,

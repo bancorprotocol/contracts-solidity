@@ -70,7 +70,10 @@ const send = async (transaction) => {
             const tx = {
                 to: transaction._parent._address,
                 data: transaction.encodeABI(),
-                gas: Math.max(await transaction.estimateGas({ from: account.address, value: transaction.value }), MIN_GAS_LIMIT),
+                gas: Math.max(
+                    await transaction.estimateGas({ from: account.address, value: transaction.value }),
+                    MIN_GAS_LIMIT
+                ),
                 gasPrice: gasPrice || (await getGasPrice(web3)),
                 chainId: await web3.eth.net.getId(),
                 value: transaction.value
@@ -119,19 +122,19 @@ const deployed = (contractName, contractAddr) => {
     for (const obj of json.abi) {
         if (obj.type === 'function') {
             switch (obj.stateMutability) {
-            case "pure":
-            case "view":
-                contract[obj.name] = (...args) => contract.methods[obj.name](...args).call();
-                break;
-            case "nonpayable":
-                contract[obj.name] = contract.methods[obj.name];
-                break;
-            case "payable":
-                contract[obj.name] = (...args) => ({
-                    ...contract.methods[obj.name](...args.slice(0, -1)),
-                    value: args[args.length - 1].value
-                });
-                break;
+                case 'pure':
+                case 'view':
+                    contract[obj.name] = (...args) => contract.methods[obj.name](...args).call();
+                    break;
+                case 'nonpayable':
+                    contract[obj.name] = contract.methods[obj.name];
+                    break;
+                case 'payable':
+                    contract[obj.name] = (...args) => ({
+                        ...contract.methods[obj.name](...args.slice(0, -1)),
+                        value: args[args.length - 1].value
+                    });
+                    break;
             }
         }
     }
@@ -145,8 +148,7 @@ const readContract = (contractName) => {
             const pathName = path.join(dirName, fileName);
             if (fs.statSync(pathName).isDirectory()) {
                 pathNames = pathNames.concat(getPathNames(pathName));
-            }
-            else {
+            } else {
                 pathNames.push(pathName);
             }
         }
