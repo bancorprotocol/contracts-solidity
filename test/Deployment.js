@@ -1,87 +1,86 @@
 const Contracts = require('./helpers/Contracts');
 const runDeployment = require('./helpers/runDeployment');
 
-const config =
-{
-    "reserves": [
+const config = {
+    'reserves': [
         {
-            "symbol": "XXX",
-            "decimals": 18,
-            "supply": "1829101"
+            'symbol': 'XXX',
+            'decimals': 18,
+            'supply': '1829101'
         },
         {
-            "symbol": "YYY",
-            "decimals": 18,
-            "supply": "3603801"
+            'symbol': 'YYY',
+            'decimals': 18,
+            'supply': '3603801'
         },
         {
-            "symbol": "BNT",
-            "decimals": 18,
-            "supply": "6914855"
+            'symbol': 'BNT',
+            'decimals': 18,
+            'supply': '6914855'
         },
         {
-            "symbol": "vBNT",
-            "decimals": 18,
-            "supply": "0"
+            'symbol': 'vBNT',
+            'decimals': 18,
+            'supply': '0'
         }
     ],
-    "converters": [
+    'converters': [
         {
-            "type": 3,
-            "symbol": "ETHBNT",
-            "decimals": 18,
-            "fee": "0.1%",
-            "reserves": [
+            'type': 3,
+            'symbol': 'ETHBNT',
+            'decimals': 18,
+            'fee': '0.1%',
+            'reserves': [
                 {
-                    "symbol": "ETH",
-                    "balance": "21"
+                    'symbol': 'ETH',
+                    'balance': '21'
                 },
                 {
-                    "symbol": "BNT",
-                    "balance": "3092"
+                    'symbol': 'BNT',
+                    'balance': '3092'
                 }
             ]
         },
         {
-            "type": 3,
-            "symbol": "XXXBNT",
-            "decimals": 18,
-            "fee": "0.1%",
-            "reserves": [
+            'type': 3,
+            'symbol': 'XXXBNT',
+            'decimals': 18,
+            'fee': '0.1%',
+            'reserves': [
                 {
-                    "symbol": "XXX",
-                    "balance": "582"
+                    'symbol': 'XXX',
+                    'balance': '582'
                 },
                 {
-                    "symbol": "BNT",
-                    "balance": "2817"
+                    'symbol': 'BNT',
+                    'balance': '2817'
                 }
             ]
         },
         {
-            "type": 3,
-            "symbol": "YYYBNT",
-            "decimals": 18,
-            "fee": "0.2%",
-            "reserves": [
+            'type': 3,
+            'symbol': 'YYYBNT',
+            'decimals': 18,
+            'fee': '0.2%',
+            'reserves': [
                 {
-                    "symbol": "YYY",
-                    "balance": "312"
+                    'symbol': 'YYY',
+                    'balance': '312'
                 },
                 {
-                    "symbol": "BNT",
-                    "balance": "270"
+                    'symbol': 'BNT',
+                    'balance': '270'
                 }
             ]
         }
     ],
-    "liquidityProtectionParams": {
-        "minNetworkTokenLiquidityForMinting": "100",
-        "defaultNetworkTokenMintingLimit": "750",
-        "minProtectionDelay": 600,
-        "maxProtectionDelay": 3600,
-        "lockDuration": 60,
-        "converters": ["ETHBNT", "XXXBNT"]
+    'liquidityProtectionParams': {
+        'minNetworkTokenLiquidityForMinting': '100',
+        'defaultNetworkTokenMintingLimit': '750',
+        'minProtectionDelay': 600,
+        'maxProtectionDelay': 3600,
+        'lockDuration': 60,
+        'converters': ['ETHBNT', 'XXXBNT']
     }
 };
 
