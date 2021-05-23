@@ -23,10 +23,10 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
     /**
      * @dev triggered when a new data point is being added
      *
-     * @param _address the address we're collecting the data for
-     * @param _time the checkpoint
+     * @param target the address we're collecting the data for
+     * @param timestamp the checkpoint
      */
-    event CheckpointUpdated(address indexed _address, uint256 _time);
+    event CheckpointUpdated(address indexed target, uint256 timestamp);
 
     constructor() public {
         // set up administrative roles.
@@ -41,44 +41,44 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
      * @dev adds a new data point to the store
      * can only be called by an owner
      *
-     * @param _address the address we're collecting the data for
+     * @param target the address we're collecting the data for
      */
-    function addCheckpoint(address _address) external override validAddress(_address) {
+    function addCheckpoint(address target) external override validAddress(target) {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
 
-        addCheckpoint(_address, time());
+        addCheckpoint(target, time());
     }
 
     /**
      * @dev adds a past checkpoint to the store
      * can only be called by a seeder
      *
-     * @param _address the address we're collecting the data for
-     * @param _time the checkpoint
+     * @param target the address we're collecting the data for
+     * @param timestamp the checkpoint
      */
-    function addPastCheckpoint(address _address, uint256 _time) external override validAddress(_address) {
+    function addPastCheckpoint(address target, uint256 timestamp) external override validAddress(target) {
         require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
-        require(_time < time(), "ERR_INVALID_TIME");
+        require(timestamp < time(), "ERR_INVALID_TIME");
 
-        addCheckpoint(_address, _time);
+        addCheckpoint(target, timestamp);
     }
 
     /**
      * @dev adds past checkpoints to the store
      * can only be called by a seeder
      *
-     * @param _addresses the addresses we're collecting the data for
-     * @param _times the checkpoints
+     * @param targets the addresses we're collecting the data for
+     * @param timestamps the checkpoints
      */
-    function addPastCheckpoints(address[] calldata _addresses, uint256[] calldata _times) external override {
+    function addPastCheckpoints(address[] calldata targets, uint256[] calldata timestamps) external override {
         require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
 
-        uint256 length = _addresses.length;
-        require(length == _times.length, "ERR_INVALID_LENGTH");
+        uint256 length = targets.length;
+        require(length == timestamps.length, "ERR_INVALID_LENGTH");
 
         for (uint256 i = 0; i < length; i++) {
-            address addr = _addresses[i];
-            uint256 t = _times[i];
+            address addr = targets[i];
+            uint256 t = timestamps[i];
 
             _validAddress(addr);
             require(t < time(), "ERR_INVALID_TIME");
@@ -90,26 +90,26 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
     /**
      * @dev returns the store value for a specific address
      *
-     * @param _address the address we're collecting the data for
+     * @param target the address we're collecting the data for
      *
      * @return the checkpoint
      */
-    function checkpoint(address _address) external view override returns (uint256) {
-        return data[_address];
+    function checkpoint(address target) external view override returns (uint256) {
+        return data[target];
     }
 
     /**
      * @dev adds a new checkpoint
      * can only be called by a seeder
      *
-     * @param _address the address we're collecting the data for
-     * @param _time the checkpoint
+     * @param target the address we're collecting the data for
+     * @param timestamp the checkpoint
      */
-    function addCheckpoint(address _address, uint256 _time) private {
-        require(data[_address] <= _time, "ERR_WRONG_ORDER");
+    function addCheckpoint(address target, uint256 timestamp) private {
+        require(data[target] <= timestamp, "ERR_WRONG_ORDER");
 
-        data[_address] = _time;
+        data[target] = timestamp;
 
-        emit CheckpointUpdated(_address, _time);
+        emit CheckpointUpdated(target, timestamp);
     }
 }

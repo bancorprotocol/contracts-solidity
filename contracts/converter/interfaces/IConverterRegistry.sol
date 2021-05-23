@@ -10,40 +10,40 @@ interface IConverterRegistry {
 
     function getAnchors() external view returns (address[] memory);
 
-    function getAnchor(uint256 _index) external view returns (IConverterAnchor);
+    function getAnchor(uint256 index) external view returns (IConverterAnchor);
 
-    function isAnchor(address _value) external view returns (bool);
+    function isAnchor(address value) external view returns (bool);
 
     function getLiquidityPoolCount() external view returns (uint256);
 
     function getLiquidityPools() external view returns (address[] memory);
 
-    function getLiquidityPool(uint256 _index) external view returns (IConverterAnchor);
+    function getLiquidityPool(uint256 index) external view returns (IConverterAnchor);
 
-    function isLiquidityPool(address _value) external view returns (bool);
+    function isLiquidityPool(address value) external view returns (bool);
 
     function getConvertibleTokenCount() external view returns (uint256);
 
     function getConvertibleTokens() external view returns (address[] memory);
 
-    function getConvertibleToken(uint256 _index) external view returns (IReserveToken);
+    function getConvertibleToken(uint256 index) external view returns (IReserveToken);
 
-    function isConvertibleToken(address _value) external view returns (bool);
+    function isConvertibleToken(address value) external view returns (bool);
 
-    function getConvertibleTokenAnchorCount(IReserveToken _convertibleToken) external view returns (uint256);
+    function getConvertibleTokenAnchorCount(IReserveToken convertibleToken) external view returns (uint256);
 
-    function getConvertibleTokenAnchors(IReserveToken _convertibleToken) external view returns (address[] memory);
+    function getConvertibleTokenAnchors(IReserveToken convertibleToken) external view returns (address[] memory);
 
-    function getConvertibleTokenAnchor(IReserveToken _convertibleToken, uint256 _index)
+    function getConvertibleTokenAnchor(IReserveToken convertibleToken, uint256 index)
         external
         view
         returns (IConverterAnchor);
 
-    function isConvertibleTokenAnchor(IReserveToken _convertibleToken, address _value) external view returns (bool);
+    function isConvertibleTokenAnchor(IReserveToken convertibleToken, address value) external view returns (bool);
 
     function getLiquidityPoolByConfig(
-        uint16 _type,
-        IReserveToken[] memory _reserveTokens,
-        uint32[] memory _reserveWeights
+        uint16 converterType,
+        IReserveToken[] memory reserveTokens,
+        uint32[] memory reserveWeights
     ) external view returns (IConverterAnchor);
 }

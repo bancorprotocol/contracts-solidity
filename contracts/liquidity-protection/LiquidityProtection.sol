@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -27,13 +28,13 @@ interface ILiquidityPoolConverter is IConverter {
     function addLiquidity(
         IReserveToken[] memory reserveTokens,
         uint256[] memory reserveAmounts,
-        uint256 _minReturn
+        uint256 minReturn
     ) external payable;
 
     function removeLiquidity(
         uint256 amount,
         IReserveToken[] memory reserveTokens,
-        uint256[] memory _reserveMinReturnAmounts
+        uint256[] memory reserveMinReturnAmounts
     ) external;
 
     function recentAverageRate(IReserveToken reserveToken) external view returns (uint256, uint256);
@@ -43,12 +44,13 @@ interface ILiquidityPoolConverter is IConverter {
  * @dev This contract implements the liquidity protection mechanism.
  */
 contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGuard, Time {
+    using Math for uint256;
     using SafeMath for uint256;
+    using MathEx for uint256;
     using ReserveToken for IReserveToken;
     using SafeERC20 for IERC20;
     using SafeERC20 for IDSToken;
     using SafeERC20Ex for IERC20;
-    using MathEx for *;
 
     struct Position {
         address provider; // liquidity provider
@@ -483,7 +485,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 networkTokensMinted = _systemStore.networkTokensMinted(poolAnchor);
 
         // get the amount of network tokens which can minted for the pool
-        uint256 networkTokensCanBeMinted = MathEx.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
+        uint256 networkTokensCanBeMinted = Math.max(mintingLimit, networkTokensMinted) - networkTokensMinted;
 
         // return the maximum amount of base token liquidity that can be single-sided staked in the pool
         return networkTokensCanBeMinted.mul(reserveBalanceBase).div(reserveBalanceNetwork);
@@ -747,7 +749,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         Fraction memory level = protectionLevel(addTimestamp, removeTimestamp);
 
         // calculate the compensation amount
-        return compensationAmount(reserveAmount, MathEx.max(reserveAmount, total), loss, level);
+        return compensationAmount(reserveAmount, Math.max(reserveAmount, total), loss, level);
     }
 
     /**
@@ -1245,7 +1247,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 min = (hi / d).mul(lo);
 
         if (q > 0) {
-            return MathEx.max(min, (p * lo) / q);
+            return Math.max(min, (p * lo) / q);
         }
         return min;
     }
@@ -1316,7 +1318,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ) internal pure returns (uint256) {
         uint256 levelN = level.n.mul(amount);
         uint256 levelD = level.d;
-        uint256 maxVal = MathEx.max(MathEx.max(levelN, levelD), total);
+        uint256 maxVal = Math.max(Math.max(levelN, levelD), total);
         (uint256 lossN, uint256 lossD) = MathEx.reducedRatio(loss.n, loss.d, MAX_UINT256 / maxVal);
         return total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).div(lossD.mul(levelD)));
     }

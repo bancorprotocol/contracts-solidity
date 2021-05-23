@@ -17,120 +17,135 @@ import "./interfaces/IContractRegistry.sol";
  */
 contract ContractRegistry is IContractRegistry, Owned, Utils {
     struct RegistryItem {
-        address contractAddress; // contract address
+        address contractAddress;
         uint256 nameIndex; // index of the item in the list of contract names
     }
 
-    mapping(bytes32 => RegistryItem) private items; // name -> RegistryItem mapping
-    string[] public contractNames; // list of all registered contract names
+    // the mapping between contract names and RegistryItem items
+    mapping(bytes32 => RegistryItem) private _items;
+
+    // the list of all registered contract names
+    string[] private _contractNames;
 
     /**
      * @dev triggered when an address pointed to by a contract name is modified
      *
-     * @param _contractName    contract name
-     * @param _contractAddress new contract address
+     * @param contractName contract name
+     * @param contractAddress new contract address
      */
-    event AddressUpdate(bytes32 indexed _contractName, address _contractAddress);
+    event AddressUpdate(bytes32 indexed contractName, address contractAddress);
 
     /**
      * @dev returns the number of items in the registry
      *
      * @return number of items
      */
-    function itemCount() public view returns (uint256) {
-        return contractNames.length;
+    function itemCount() external view returns (uint256) {
+        return _contractNames.length;
+    }
+
+    /**
+     * @dev returns a registered contract name
+     *
+     * @param index the index of the contract name to return
+     *
+     * @return a registered contract name
+     */
+    function contractNames(uint256 index) external view returns (string memory) {
+        return _contractNames[index];
     }
 
     /**
      * @dev returns the address associated with the given contract name
      *
-     * @param _contractName    contract name
+     * @param contractName contract name
      *
      * @return contract address
      */
-    function addressOf(bytes32 _contractName) public view override returns (address) {
-        return items[_contractName].contractAddress;
+    function addressOf(bytes32 contractName) public view override returns (address) {
+        return _items[contractName].contractAddress;
     }
 
     /**
      * @dev registers a new address for the contract name in the registry
      *
-     * @param _contractName     contract name
-     * @param _contractAddress  contract address
+     * @param contractName contract name
+     * @param contractAddress contract address
      */
-    function registerAddress(bytes32 _contractName, address _contractAddress)
-        public
+    function registerAddress(bytes32 contractName, address contractAddress)
+        external
         ownerOnly
-        validAddress(_contractAddress)
+        validAddress(contractAddress)
     {
-        // validate input
-        require(_contractName.length > 0, "ERR_INVALID_NAME");
+        require(contractName.length > 0, "ERR_INVALID_NAME");
 
         // check if any change is needed
-        address currentAddress = items[_contractName].contractAddress;
-        if (_contractAddress == currentAddress) {
+        address currentAddress = _items[contractName].contractAddress;
+        if (contractAddress == currentAddress) {
             return;
         }
 
         if (currentAddress == address(0)) {
             // update the item's index in the list
-            items[_contractName].nameIndex = contractNames.length;
+            _items[contractName].nameIndex = _contractNames.length;
 
             // add the contract name to the name list
-            contractNames.push(bytes32ToString(_contractName));
+            _contractNames.push(bytes32ToString(contractName));
         }
 
         // update the address in the registry
-        items[_contractName].contractAddress = _contractAddress;
+        _items[contractName].contractAddress = contractAddress;
 
         // dispatch the address update event
-        emit AddressUpdate(_contractName, _contractAddress);
+        emit AddressUpdate(contractName, contractAddress);
     }
 
     /**
      * @dev removes an existing contract address from the registry
      *
-     * @param _contractName contract name
+     * @param contractName contract name
      */
-    function unregisterAddress(bytes32 _contractName) public ownerOnly {
-        // validate input
-        require(_contractName.length > 0, "ERR_INVALID_NAME");
-        require(items[_contractName].contractAddress != address(0), "ERR_INVALID_NAME");
+    function unregisterAddress(bytes32 contractName) public ownerOnly {
+        require(contractName.length > 0, "ERR_INVALID_NAME");
+        require(_items[contractName].contractAddress != address(0), "ERR_INVALID_NAME");
 
         // remove the address from the registry
-        items[_contractName].contractAddress = address(0);
+        _items[contractName].contractAddress = address(0);
 
         // if there are multiple items in the registry, move the last element to the deleted element's position
         // and modify last element's registryItem.nameIndex in the items collection to point to the right position in contractNames
-        if (contractNames.length > 1) {
-            string memory lastContractNameString = contractNames[contractNames.length - 1];
-            uint256 unregisterIndex = items[_contractName].nameIndex;
+        if (_contractNames.length > 1) {
+            string memory lastContractNameString = _contractNames[_contractNames.length - 1];
+            uint256 unregisterIndex = _items[contractName].nameIndex;
 
-            contractNames[unregisterIndex] = lastContractNameString;
+            _contractNames[unregisterIndex] = lastContractNameString;
             bytes32 lastContractName = stringToBytes32(lastContractNameString);
-            RegistryItem storage registryItem = items[lastContractName];
+            RegistryItem storage registryItem = _items[lastContractName];
             registryItem.nameIndex = unregisterIndex;
         }
 
         // remove the last element from the name list
-        contractNames.pop();
+        _contractNames.pop();
+
         // zero the deleted element's index
-        items[_contractName].nameIndex = 0;
+        _items[contractName].nameIndex = 0;
 
         // dispatch the address update event
-        emit AddressUpdate(_contractName, address(0));
+        emit AddressUpdate(contractName, address(0));
     }
 
     /**
      * @dev utility, converts bytes32 to a string
      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
      *
-     * @return string representation of the given bytes32 argument
+     * @param data the data to convert
+     *
+     * @return string representation of the given data
      */
-    function bytes32ToString(bytes32 _bytes) private pure returns (string memory) {
+    function bytes32ToString(bytes32 data) private pure returns (string memory) {
         bytes memory byteArray = new bytes(32);
         for (uint256 i = 0; i < 32; i++) {
-            byteArray[i] = _bytes[i];
+            byteArray[i] = data[i];
         }
 
         return string(byteArray);
@@ -140,20 +155,25 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
      * @dev utility, converts string to bytes32
      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
      *
-     * @return string representation of the given bytes32 argument
+     * @param str the data to convert
+     *
+     * @return string representation of the given data
      */
-    function stringToBytes32(string memory _string) private pure returns (bytes32) {
+    function stringToBytes32(string memory str) private pure returns (bytes32) {
         bytes32 result;
+
+        // solhint-disable-next-line no-inline-assembly
         assembly {
-            result := mload(add(_string, 32))
+            result := mload(add(str, 32))
         }
+
         return result;
     }
 
     /**
      * @dev deprecated, backward compatibility
      */
-    function getAddress(bytes32 _contractName) public view returns (address) {
-        return addressOf(_contractName);
+    function getAddress(bytes32 contractName) public view returns (address) {
+        return addressOf(contractName);
     }
 }

@@ -129,7 +129,7 @@ describe('ConverterUpgrader', () => {
 
         expect(events.length).to.be.at.most(1);
 
-        return ConverterHelper.at(events[0].args._newConverter);
+        return ConverterHelper.at(events[0].args.newConverter);
     };
 
     const getConverterState = async (converter) => {

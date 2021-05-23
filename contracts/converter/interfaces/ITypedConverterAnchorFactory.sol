@@ -8,9 +8,11 @@ import "./IConverterAnchor.sol";
 interface ITypedConverterAnchorFactory {
     function converterType() external pure returns (uint16);
 
+    function name() external view returns (string calldata);
+
     function createAnchor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals
+        string memory anchorName,
+        string memory symbol,
+        uint8 decimals
     ) external returns (IConverterAnchor);
 }

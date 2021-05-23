@@ -485,7 +485,7 @@ describe('VortexBurner', () => {
                                                 blockNumber,
                                                 blockNumber
                                             );
-                                            expect(events[0].args._amount).to.equal(totalBurnedAmount);
+                                            expect(events[0].args.amount).to.equal(totalBurnedAmount);
 
                                             // Check that the network fee wallet balances have been depleted.
                                             for (const tokenData of selectedTokens) {
@@ -544,7 +544,7 @@ describe('VortexBurner', () => {
                             it('should revert when attempting to burn the network fees', async () => {
                                 const tokenAddresses = getTokenAddresses(testTokens);
 
-                                // @TODO this should break when hardat fix the error with solc/optimizer/revertMsg
+                                // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
                                 await expect(vortex.burn(tokenAddresses)).to.be.reverted.but.not.to.be.revertedWith(
                                     'ERR_ZERO_TARGET_AMOUNT'
                                 );

@@ -10,7 +10,7 @@ import "../../utility/interfaces/IOwned.sol";
     DSToken interface
 */
 interface IDSToken is IConverterAnchor, IERC20 {
-    function issue(address _to, uint256 _amount) external;
+    function issue(address recipient, uint256 amount) external;
 
-    function destroy(address _from, uint256 _amount) external;
+    function destroy(address recipient, uint256 amount) external;
 }

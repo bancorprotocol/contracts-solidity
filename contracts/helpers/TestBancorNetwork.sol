@@ -3,42 +3,36 @@ pragma solidity 0.6.12;
 import "../BancorNetwork.sol";
 
 contract OldConverter {
-    uint256 private amount;
+    uint256 private _returnAmount;
 
-    constructor(uint256 _amount) public {
-        amount = _amount;
+    constructor(uint256 initialAmount) public {
+        _returnAmount = initialAmount;
     }
 
     function getReturn(
-        IReserveToken _sourceToken,
-        IReserveToken _targetToken,
-        uint256 _amount
+        IReserveToken, /* sourceToken */
+        IReserveToken, /* targetToken */
+        uint256 /* amount */
     ) external view returns (uint256) {
-        _sourceToken;
-        _targetToken;
-        _amount;
-        return (amount);
+        return (_returnAmount);
     }
 }
 
 contract NewConverter {
-    uint256 private amount;
-    uint256 private fee;
+    uint256 private _returnAmount;
+    uint256 private _fee;
 
-    constructor(uint256 _amount, uint256 _fee) public {
-        amount = _amount;
-        fee = _fee;
+    constructor(uint256 amount, uint256 fee) public {
+        _returnAmount = amount;
+        _fee = fee;
     }
 
     function getReturn(
-        IReserveToken _sourceToken,
-        IReserveToken _targetToken,
-        uint256 _amount
+        IReserveToken, /* sourceToken */
+        IReserveToken, /* targetToken */
+        uint256 /* amount */
     ) external view returns (uint256, uint256) {
-        _sourceToken;
-        _targetToken;
-        _amount;
-        return (amount, fee);
+        return (_returnAmount, _fee);
     }
 }
 
@@ -60,28 +54,28 @@ contract ConverterV28OrHigherWithFallback {
     }
 
     receive() external payable {
-        revert();
+        revert("ERR_REVERT");
     }
 }
 
 contract TestBancorNetwork is BancorNetwork {
-    OldConverter private oldConverter;
-    NewConverter private newConverter;
+    OldConverter private _oldConverter;
+    NewConverter private _newConverter;
 
-    constructor(uint256 _amount, uint256 _fee) public BancorNetwork(IContractRegistry(address(1))) {
-        oldConverter = new OldConverter(_amount);
-        newConverter = new NewConverter(_amount, _fee);
+    constructor(uint256 amount, uint256 fee) public BancorNetwork(IContractRegistry(address(1))) {
+        _oldConverter = new OldConverter(amount);
+        _newConverter = new NewConverter(amount, fee);
     }
 
-    function isV28OrHigherConverterExternal(IConverter _converter) external view returns (bool) {
-        return super.isV28OrHigherConverter(_converter);
+    function isV28OrHigherConverterExternal(IConverter converter) external view returns (bool) {
+        return super.isV28OrHigherConverter(converter);
     }
 
     function getReturnOld() external view returns (uint256, uint256) {
-        return getReturn(IConverter(payable(address(oldConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
+        return getReturn(IConverter(payable(address(_oldConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
     }
 
     function getReturnNew() external view returns (uint256, uint256) {
-        return getReturn(IConverter(payable(address(newConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
+        return getReturn(IConverter(payable(address(_newConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
     }
 }

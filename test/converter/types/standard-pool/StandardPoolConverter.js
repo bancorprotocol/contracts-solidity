@@ -10,42 +10,26 @@ const Contracts = require('../../../helpers/Contracts');
 
 let now;
 let bancorNetwork;
-let converterUpgrader;
 let contractRegistry;
 let networkSettings;
-let sender;
+let owner;
+let nonOwner;
 let networkFeeWallet;
 let accounts;
 
+const STANDARD_CONVERTER_TYPE = 3;
 const ONE_TOKEN = BigNumber.from(10).pow(BigNumber.from(18));
 const TOTAL_SUPPLY = ONE_TOKEN.mul(1000000);
 const MIN_RETURN = BigNumber.from(1);
 const MAX_CONVERSION_FEE = BigNumber.from(1000000);
 
+const INVALID_RESERVE_TOKEN = { address: ZERO_ADDRESS };
+
 describe('StandardPoolConverter', () => {
     const createPool = async (options = {}) => {
-        const { disabled, ethIndex, networkFeePercent, conversionFeePercent } = options;
+        const { disabled, ethIndex, networkFeePercent, conversionFeePercent, withReserves = true } = options;
 
         const poolToken = await Contracts.DSToken.deploy('PT', 'PT', 18);
-        let reserveToken1;
-        let reserveToken2;
-
-        switch (ethIndex) {
-            case 0:
-                reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
-                reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
-                break;
-            case 1:
-                reserveToken1 = { address: NATIVE_TOKEN_ADDRESS };
-                reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
-                break;
-            case 2:
-                reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
-                reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
-                break;
-            default:
-                throw new Error(`Unexpected ethIndex ${ethIndex}`);
-        }
 
         const converter = await Contracts.TestStandardPoolConverter.deploy(
             poolToken.address,
@@ -61,12 +45,38 @@ describe('StandardPoolConverter', () => {
             await converter.setConversionFee(conversionFeePercent * 10000);
         }
 
-        await converter.addReserve(reserveToken1.address, 500000);
-        await converter.addReserve(reserveToken2.address, 500000);
+        let reserveToken1;
+        let reserveToken2;
+
+        if (withReserves) {
+            switch (ethIndex) {
+                case 0:
+                    reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
+                    reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+                    break;
+                case 1:
+                    reserveToken1 = { address: NATIVE_TOKEN_ADDRESS };
+                    reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+                    break;
+                case 2:
+                    reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
+                    reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
+                    break;
+                default:
+                    throw new Error(`Unexpected ethIndex ${ethIndex}`);
+            }
+
+            await converter.addReserve(reserveToken1.address, 500000);
+            await converter.addReserve(reserveToken2.address, 500000);
+        }
 
         if (!disabled) {
             await poolToken.transferOwnership(converter.address);
-            await converter.acceptTokenOwnership();
+            const res = await converter.acceptTokenOwnership();
+
+            await expect(res)
+                .to.emit(converter, 'Activation')
+                .withArgs(STANDARD_CONVERTER_TYPE, poolToken.address, true);
         }
 
         now = await latest();
@@ -112,7 +122,10 @@ describe('StandardPoolConverter', () => {
 
     const convert = async (conversionPath, amount, minReturn) => {
         const [sourceToken, poolToken] = conversionPath;
-        await approve(sourceToken, bancorNetwork, amount);
+
+        if (sourceToken !== INVALID_RESERVE_TOKEN) {
+            await approve(sourceToken, bancorNetwork, amount);
+        }
 
         const value = sourceToken.address === NATIVE_TOKEN_ADDRESS ? amount : 0;
         const conversionPathAddresses = conversionPath.map((token) => token.address);
@@ -151,10 +164,10 @@ describe('StandardPoolConverter', () => {
         const address = account.address || account;
         if (typeof reserveToken === 'string') {
             const token = await Contracts.TestStandardToken.attach(reserveToken);
-            return token.allowance(sender.address, address);
+            return token.allowance(owner.address, address);
         }
 
-        return reserveToken.allowance(sender.address, address);
+        return reserveToken.allowance(owner.address, address);
     };
 
     const approve = async (reserveToken, account, amount, options = {}) => {
@@ -166,7 +179,7 @@ describe('StandardPoolConverter', () => {
         }
 
         if (!options.from) {
-            options.from = sender.address;
+            options.from = owner.address;
         }
 
         const address = account.address || account;
@@ -194,7 +207,7 @@ describe('StandardPoolConverter', () => {
     const transfer = async (reserveToken, account, amount) => {
         const reserveTokenAddress = reserveToken.address || reserveToken;
         if (reserveTokenAddress === NATIVE_TOKEN_ADDRESS) {
-            return await sender.sendTransaction({ to: account.address, value: amount });
+            return await owner.sendTransaction({ to: account.address, value: amount });
         }
 
         const address = account.address || account;
@@ -215,14 +228,12 @@ describe('StandardPoolConverter', () => {
     before(async () => {
         accounts = await ethers.getSigners();
 
-        sender = accounts[0];
-        networkFeeWallet = accounts[1];
+        owner = accounts[0];
+        nonOwner = accounts[1];
+        networkFeeWallet = accounts[2];
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await Contracts.ContractRegistry.deploy();
-
-        converterUpgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
-        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, converterUpgrader.address);
 
         const factory = await Contracts.ConverterFactory.deploy();
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, factory.address);
@@ -239,29 +250,18 @@ describe('StandardPoolConverter', () => {
     });
 
     const upgradeConverter = async (upgrader, converter) => {
-        let res;
-
-        // For versions 11 or higher, we just call upgrade on the converter.
-        if (converter.upgrade) {
-            res = await converter.upgrade();
-        } else {
-            // For previous versions we transfer ownership to the upgrader, then call upgradeOld on the upgrader,
-            // then accept ownership of the new and old converter. The end results should be the same.
-            await converter.transferOwnership(upgrader.address);
-            res = await upgrader.upgradeOld(converter.address, ethers.utils.formatBytes32String(''));
-            await converter.acceptOwnership();
-        }
+        const res = await converter.upgrade();
         const tx = await res.wait();
         const logs = tx.logs.filter((log) => log.event === 'ConverterUpgrade');
         expect(logs.length).to.be.at.most(1);
 
         if (logs.length === 1) {
-            return Contracts.TestStandardPoolConverter.attach(logs[0].args._newConverter);
+            return Contracts.TestStandardPoolConverter.attach(logs[0].args.newConverter);
         }
 
         const events = await upgrader.queryFilter('ConverterUpgrade', tx.blockNumber, tx.blockNumber);
 
-        return Contracts.TestStandardPoolConverter.attach(events[0].args._newConverter);
+        return Contracts.TestStandardPoolConverter.attach(events[0].args.newConverter);
     };
 
     for (const ethIndex of [0, 1, 2]) {
@@ -284,17 +284,262 @@ describe('StandardPoolConverter', () => {
         context(ethIndexDescription(), () => {
             describe('construction', () => {
                 it('verifies the Activation event after converter activation', async () => {
-                    const { converter, poolToken } = await createPool({ ethIndex, disabled: true });
-                    await poolToken.transferOwnership(converter.address);
-                    const res = await converter.acceptTokenOwnership();
+                    const { converter, poolToken } = await createPool({ ethIndex });
 
-                    await expect(res)
-                        .to.emit(converter, 'Activation')
-                        .withArgs(BigNumber.from(3), poolToken.address, true);
+                    expect(await converter.converterType()).to.equal(STANDARD_CONVERTER_TYPE);
+                    expect(await converter.isActive()).to.be.true;
+                    expect(await converter.anchor()).to.equal(poolToken.address);
+                    expect(await converter.registry()).to.equal(contractRegistry.address);
+                    expect(await converter.maxConversionFee()).to.equal(MAX_CONVERSION_FEE);
+                });
+
+                it('should revert when attempting to construct a converter with no anchor', async () => {
+                    await expect(
+                        Contracts.TestStandardPoolConverter.deploy(
+                            ZERO_ADDRESS,
+                            contractRegistry.address,
+                            MAX_CONVERSION_FEE
+                        )
+                    ).to.be.revertedWith('ERR_INVALID_ADDRESS');
+                });
+
+                it('should revert when attempting to construct a converter with no contract registry', async () => {
+                    const poolToken = await Contracts.DSToken.deploy('PT', 'PT', 18);
+
+                    await expect(
+                        Contracts.TestStandardPoolConverter.deploy(poolToken.address, ZERO_ADDRESS, MAX_CONVERSION_FEE)
+                    ).to.be.revertedWith('ERR_INVALID_ADDRESS');
+                });
+
+                it('should revert when attempting to construct a converter with invalid conversion fee', async () => {
+                    const poolToken = await Contracts.DSToken.deploy('PT', 'PT', 18);
+
+                    await expect(
+                        Contracts.TestStandardPoolConverter.deploy(
+                            poolToken.address,
+                            contractRegistry.address,
+                            MAX_CONVERSION_FEE.add(BigNumber.from(1))
+                        )
+                    ).to.be.revertedWith('ERR_INVALID_CONVERSION_FEE');
+                });
+
+                it('verifies that isActive returns true when the converter is not active', async () => {
+                    const { converter } = await createPool({ ethIndex, disabled: true });
+
+                    expect(await converter.isActive()).to.be.false;
+                });
+
+                if (ethIndex === 0) {
+                    it('should revert when sending ether to the converter fails if it has no ETH reserve', async () => {
+                        const { converter } = await createPool({ ethIndex });
+
+                        await expect(owner.sendTransaction({ to: converter.address, value: 100 })).to.be.revertedWith(
+                            'ERR_INVALID_RESERVE'
+                        );
+                    });
+                } else {
+                    it('verifies that sending ether to the converter succeeds if it has ETH reserve', async () => {
+                        const { converter } = await createPool({ ethIndex });
+
+                        await owner.sendTransaction({ to: converter.address, value: 100 });
+                    });
+                }
+            });
+
+            describe('anchor ownership', () => {
+                it('verifies that the converter can accept the anchor ownership', async () => {
+                    const { converter, poolToken } = await createPool({ ethIndex, disabled: true });
+
+                    await poolToken.transferOwnership(converter.address);
+                    await converter.acceptAnchorOwnership();
+
+                    expect(await poolToken.owner()).to.equal(converter.address);
+                });
+
+                it('should revert when attempting to accept an anchor ownership of a converter without any reserves', async () => {
+                    const { converter, poolToken } = await createPool({
+                        ethIndex,
+                        disabled: true,
+                        withReserves: false
+                    });
+
+                    await poolToken.transferOwnership(converter.address);
+
+                    // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
+                    await expect(converter.acceptAnchorOwnership()).to.be.reverted.but.not.to.be.revertedWith(
+                        'ERR_INVALID_RESERVE_COUNT'
+                    );
+                });
+
+                context('with an upgrader', () => {
+                    let upgrader;
+                    let converter;
+
+                    beforeEach(async () => {
+                        ({ converter } = await createPool({ ethIndex }));
+
+                        upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
+                        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+                    });
+
+                    afterEach(async () => {
+                        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+                    });
+
+                    it('should revert when the owner attempts to transfer the anchor ownership', async () => {
+                        // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
+                        await expect(converter.transferAnchorOwnership(nonOwner.address)).to.be.revertedWith(
+                            'ERR_ACCESS_DENIED'
+                        );
+                    });
+
+                    // eslint-disable-next-line max-len
+                    it('should revert when the upgrader contract attempts to transfer the anchor ownership while the upgrader is not the owner', async () => {
+                        const newUpgrader = accounts[5];
+
+                        await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, newUpgrader.address);
+
+                        // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
+                        await expect(
+                            converter.connect(newUpgrader).transferAnchorOwnership(nonOwner.address)
+                        ).to.be.reverted.but.not.to.be.revertedWith('ERR_ACCESS_DENIED');
+                    });
+
+                    context('when the owner is the upgrader contract', () => {
+                        beforeEach(async () => {
+                            await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, owner.address);
+                        });
+
+                        it('verifies that the owner can transfer the anchor ownership if the owner is the upgrader contract', async () => {
+                            await converter.transferAnchorOwnership(nonOwner.address);
+
+                            const anchorAddress = await converter.anchor();
+                            const token = await Contracts.DSToken.attach(anchorAddress);
+                            const newOwner = await token.newOwner();
+                            expect(newOwner).to.equal(nonOwner.address);
+                        });
+
+                        it('should revert when a non owner attempts to transfer the anchor ownership', async () => {
+                            // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
+                            await expect(
+                                converter.connect(nonOwner).transferAnchorOwnership(nonOwner.address)
+                            ).to.be.reverted.but.not.to.be.revertedWith('ERR_ACCESS_DENIED');
+                        });
+                    });
+                });
+            });
+
+            describe('upgrade sanity', () => {
+                beforeEach(async () => {
+                    const upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
+                    await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+                });
+
+                it('verifies that the owner can upgrade the converter while the converter is active', async () => {
+                    const { converter } = await createPool({ ethIndex });
+
+                    await converter.upgrade();
+                });
+
+                it('verifies that the owner can upgrade the converter while the converter is not active', async () => {
+                    const { converter } = await createPool({ ethIndex, disabled: true });
+
+                    await converter.upgrade();
+                });
+
+                it('should revert when a non owner attempts to upgrade the converter', async () => {
+                    const { converter } = await createPool({ ethIndex });
+
+                    // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
+                    await expect(converter.connect(nonOwner).upgrade()).to.be.reverted.but.not.to.be.revertedWith(
+                        'ERR_ACCESS_DENIED'
+                    );
+                });
+            });
+
+            describe('conversion fees', () => {
+                let converter;
+
+                beforeEach(async () => {
+                    ({ converter } = await createPool({ ethIndex }));
+                });
+
+                it('verifies the owner can update the fee', async () => {
+                    const newFee = MAX_CONVERSION_FEE.sub(BigNumber.from(10));
+                    await converter.setConversionFee(newFee);
+
+                    const conversionFee = await converter.conversionFee();
+                    expect(conversionFee).to.equal(newFee);
+                });
+
+                it('should revert when attempting to update the fee to an invalid value', async () => {
+                    await expect(
+                        converter.setConversionFee(MAX_CONVERSION_FEE.add(BigNumber.from(1)))
+                    ).to.be.revertedWith('ERR_INVALID_CONVERSION_FEE');
+                });
+
+                it('should revert when a non owner attempts to update the fee', async () => {
+                    const newFee = BigNumber.from(30000);
+
+                    // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
+                    await expect(
+                        converter.connect(nonOwner).setConversionFee(newFee)
+                    ).to.be.reverted.but.not.to.be.revertedWith('ERR_ACCESS_DENIED');
+                });
+
+                it('verifies that an event is fired when the owner updates the fee', async () => {
+                    const newFee = BigNumber.from(30000);
+
+                    await expect(await converter.setConversionFee(newFee))
+                        .to.emit(converter, 'ConversionFeeUpdate')
+                        .withArgs(BigNumber.from(0), newFee);
+                });
+
+                it('verifies that an event is fired when the owner updates the fee multiple times', async () => {
+                    let prevFee = BigNumber.from(0);
+                    for (let i = 1; i <= 10; ++i) {
+                        const newFee = BigNumber.from(10000 * i);
+
+                        await expect(await converter.setConversionFee(newFee))
+                            .to.emit(converter, 'ConversionFeeUpdate')
+                            .withArgs(prevFee, newFee);
+
+                        prevFee = newFee;
+                    }
                 });
             });
 
             describe('source and target amounts and fees', () => {
+                let converter;
+                let reserveToken1;
+                let reserveToken2;
+
+                context('error', () => {
+                    beforeEach(async () => {
+                        ({ converter, reserveToken1, reserveToken2 } = await createPool({
+                            ethIndex
+                        }));
+                    });
+
+                    it('should revert when attempting to get the target amount with an invalid source token address', async () => {
+                        await expect(
+                            converter.targetAmountAndFee(ZERO_ADDRESS, reserveToken1.address, 500)
+                        ).to.be.revertedWith('ERR_INVALID_RESERVE');
+                    });
+
+                    it('should revert when attempting to get the target amount with an invalid target token address', async () => {
+                        await expect(
+                            converter.targetAmountAndFee(reserveToken1.address, ZERO_ADDRESS, 500)
+                        ).to.be.revertedWith('ERR_INVALID_RESERVE');
+                    });
+
+                    it('should revert when attempting to get the target amount with identical source/target addresses', async () => {
+                        await expect(
+                            converter.targetAmountAndFee(reserveToken1.address, reserveToken1.address, 500)
+                        ).to.be.revertedWith('ERR_INVALID_RESERVES');
+                    });
+                });
+
                 const expectAlmostEqual = (amount1, amount2, maxError) => {
                     if (!amount1.eq(amount2)) {
                         const error = Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
@@ -305,10 +550,6 @@ describe('StandardPoolConverter', () => {
                 for (const amount of [0, 500, 1234, 5678, 9999, 12345, 98765]) {
                     for (const conversionFeePercent of [0, 5, 10, 25]) {
                         context(`when amount = ${amount}, conversionFeePercent = ${conversionFeePercent}%`, () => {
-                            let converter;
-                            let reserveToken1;
-                            let reserveToken2;
-
                             beforeEach(async () => {
                                 ({ converter, reserveToken1, reserveToken2 } = await createPool({
                                     ethIndex,
@@ -361,6 +602,29 @@ describe('StandardPoolConverter', () => {
                     ]);
                 });
 
+                it('should revert when attempting to convert with an invalid source token address', async () => {
+                    await expect(
+                        convert([INVALID_RESERVE_TOKEN, poolToken, reserveToken1], 500, MIN_RETURN)
+                    ).to.be.revertedWith('Address: call to non-contract');
+                });
+
+                it('should revert when attempting to convert with an invalid target token address', async () => {
+                    const amount = BigNumber.from(500);
+
+                    await expect(
+                        convert([reserveToken1, poolToken, INVALID_RESERVE_TOKEN], amount, MIN_RETURN)
+                    ).to.be.revertedWith('ERR_INVALID_RESERVE');
+                });
+
+                it('should revert when attempting to convert with identical source/target addresses', async () => {
+                    const amount = BigNumber.from(500);
+
+                    // TODO: this should break when hardhat fixes the error with solc/optimizer/revertMsg
+                    await expect(
+                        convert([reserveToken1, poolToken, reserveToken1], amount, MIN_RETURN)
+                    ).to.be.reverted.but.not.to.be.revertedWith('ERR_SAME_SOURCE_TARGET');
+                });
+
                 it('verifies that convert returns valid amount and fee after converting', async () => {
                     const amount = BigNumber.from(500);
                     const purchaseAmount = (
@@ -377,7 +641,7 @@ describe('StandardPoolConverter', () => {
                             reserveToken2.address,
                             amount,
                             purchaseAmount,
-                            sender.address
+                            owner.address
                         );
                 });
 
@@ -875,17 +1139,12 @@ describe('StandardPoolConverter', () => {
                 });
 
                 it('should revert when attempting to add liquidity with insufficient funds', async () => {
-                    const amount = await getBalance(reserveToken1, sender.address);
+                    const amount = await getBalance(reserveToken1, owner.address);
 
                     if (reserveToken1.address !== NATIVE_TOKEN_ADDRESS) {
                         await expect(
                             addLiquidity(converter, reserveToken1, reserveToken2, [amount.add(BigNumber.from(1)), 1000])
                         ).to.be.revertedWith('SafeMath: subtraction overflow');
-                    } else {
-                        // Not tested: Ethereum is handling this by itself. Tx doesn't occure if the wallet doesn't have the necessary value + gas.
-                        // expect(
-                        //     addLiquidity(converter, reserveToken1, reserveToken2, [amount.add(BigNumber.from(1)), 1000])
-                        // ).to.throw;
                     }
                 });
 
@@ -901,8 +1160,8 @@ describe('StandardPoolConverter', () => {
                     const token1Amount = reserve1Balance.mul(percentage).div(supply);
                     const token2Amount = reserve2Balance.mul(percentage).div(supply);
 
-                    const token1PrevBalance = await getBalance(reserveToken1, sender.address);
-                    const token2PrevBalance = await getBalance(reserveToken2, sender.address);
+                    const token1PrevBalance = await getBalance(reserveToken1, owner.address);
+                    const token2PrevBalance = await getBalance(reserveToken2, owner.address);
 
                     const { transactionCost } = await removeLiquidity(
                         converter,
@@ -911,8 +1170,8 @@ describe('StandardPoolConverter', () => {
                         supplyAmount
                     );
 
-                    const token1Balance = await getBalance(reserveToken1, sender.address);
-                    const token2Balance = await getBalance(reserveToken2, sender.address);
+                    const token1Balance = await getBalance(reserveToken1, owner.address);
+                    const token2Balance = await getBalance(reserveToken2, owner.address);
 
                     expect(token1Balance).to.equal(
                         token1PrevBalance
@@ -933,8 +1192,8 @@ describe('StandardPoolConverter', () => {
                     const reserve1Balance = await converter.reserveBalance(reserveToken1.address);
                     const reserve2Balance = await converter.reserveBalance(reserveToken2.address);
 
-                    const token1PrevBalance = await getBalance(reserveToken1, sender.address);
-                    const token2PrevBalance = await getBalance(reserveToken2, sender.address);
+                    const token1PrevBalance = await getBalance(reserveToken1, owner.address);
+                    const token2PrevBalance = await getBalance(reserveToken2, owner.address);
 
                     const totalSupply = await poolToken.totalSupply();
                     const { transactionCost } = await removeLiquidity(
@@ -944,8 +1203,8 @@ describe('StandardPoolConverter', () => {
                         totalSupply
                     );
 
-                    const token1Balance = await getBalance(reserveToken1, sender.address);
-                    const token2Balance = await getBalance(reserveToken2, sender.address);
+                    const token1Balance = await getBalance(reserveToken1, owner.address);
+                    const token2Balance = await getBalance(reserveToken2, owner.address);
 
                     expect(await poolToken.totalSupply()).to.equal(BigNumber.from(0));
 
@@ -1010,11 +1269,11 @@ describe('StandardPoolConverter', () => {
                                 for (const amount of amounts) {
                                     await addLiquidity(converter, reserveToken1, reserveToken2, [amount, amount]);
 
-                                    const balance = await getBalance(poolToken, sender.address);
+                                    const balance = await getBalance(poolToken, owner.address);
                                     lastAmount = balance.sub(lastAmount);
                                 }
-                                const prevBalance1 = await getBalance(reserveToken1, sender.address);
-                                const prevBalance2 = await getBalance(reserveToken2, sender.address);
+                                const prevBalance1 = await getBalance(reserveToken1, owner.address);
+                                const prevBalance2 = await getBalance(reserveToken2, owner.address);
 
                                 let transactionCost = BigNumber.from(0);
                                 for (const percent of percents) {
@@ -1027,8 +1286,8 @@ describe('StandardPoolConverter', () => {
 
                                     transactionCost = transactionCost.add(removeTransactionConst);
                                 }
-                                const balance1 = await getBalance(reserveToken1, sender.address);
-                                const balance2 = await getBalance(reserveToken2, sender.address);
+                                const balance1 = await getBalance(reserveToken1, owner.address);
+                                const balance2 = await getBalance(reserveToken2, owner.address);
                                 const amount = BigNumber.from(amounts[1]);
                                 expect(balance1).to.equal(
                                     prevBalance1
@@ -1068,7 +1327,7 @@ describe('StandardPoolConverter', () => {
                         }
 
                         const balancesBefore = await Promise.all(
-                            reserveTokens.map((reserveToken) => getBalance(reserveToken, sender.address))
+                            reserveTokens.map((reserveToken) => getBalance(reserveToken, owner.address))
                         );
 
                         const { transactionCost } = await addLiquidity(
@@ -1079,7 +1338,7 @@ describe('StandardPoolConverter', () => {
                         );
 
                         const balancesAfter = await Promise.all(
-                            reserveTokens.map((reserveToken) => getBalance(reserveToken, sender.address))
+                            reserveTokens.map((reserveToken) => getBalance(reserveToken, owner.address))
                         );
 
                         expect(balancesAfter[0]).to.equal(
@@ -1142,7 +1401,10 @@ describe('StandardPoolConverter', () => {
                     const balanceBefore1 = await getBalance(reserveToken1, networkFeeWallet);
                     const balanceBefore2 = await getBalance(reserveToken2, networkFeeWallet);
 
-                    const newConverter = await upgradeConverter(converterUpgrader, converter);
+                    const upgrader = await Contracts.ConverterUpgrader.deploy(contractRegistry.address);
+                    await contractRegistry.registerAddress(registry.CONVERTER_UPGRADER, upgrader.address);
+
+                    const newConverter = await upgradeConverter(upgrader, converter);
                     expect(newConverter.address).to.not.equal(converter.address);
 
                     await newConverter.processNetworkFees();
@@ -1390,7 +1652,7 @@ describe('StandardPoolConverter', () => {
                                             const reserveBalance1 = await getBalance(reserveToken1, converter);
                                             const reserveBalance2 = await getBalance(reserveToken2, converter);
 
-                                            const supplyAmount = await poolToken.balanceOf(sender.address);
+                                            const supplyAmount = await poolToken.balanceOf(owner.address);
                                             await removeLiquidity(
                                                 converter,
                                                 reserveToken1,
@@ -1501,7 +1763,7 @@ describe('StandardPoolConverter', () => {
                                             }
 
                                             for (let n = 0; n < 4; n++) {
-                                                const supplyAmount = await poolToken.balanceOf(sender.address);
+                                                const supplyAmount = await poolToken.balanceOf(owner.address);
                                                 await removeLiquidity(
                                                     converter,
                                                     reserveToken1,
@@ -1539,7 +1801,7 @@ describe('StandardPoolConverter', () => {
                                             }
 
                                             for (let n = 0; n < 4; n++) {
-                                                const supplyAmount = await poolToken.balanceOf(sender.address);
+                                                const supplyAmount = await poolToken.balanceOf(owner.address);
                                                 await removeLiquidity(
                                                     converter,
                                                     reserveToken1,
@@ -1759,7 +2021,7 @@ describe('StandardPoolConverter', () => {
                                                 conversion.amount
                                             );
 
-                                            const supplyAmount = await poolToken.balanceOf(sender.address);
+                                            const supplyAmount = await poolToken.balanceOf(owner.address);
                                             await removeLiquidity(
                                                 converter,
                                                 reserveToken1,

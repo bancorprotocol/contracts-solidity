@@ -36,91 +36,91 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
         mapping(address => List) table;
     }
 
-    Items private anchors;
-    Items private liquidityPools;
-    Lists private convertibleTokens;
+    Items private _anchors;
+    Items private _liquidityPools;
+    Lists private _convertibleTokens;
 
     /**
      * @dev initializes a new ConverterRegistryData instance
      *
-     * @param _registry address of a contract registry contract
+     * @param registry address of a contract registry contract
      */
-    constructor(IContractRegistry _registry) public ContractRegistryClient(_registry) {}
+    constructor(IContractRegistry registry) public ContractRegistryClient(registry) {}
 
     /**
      * @dev adds an anchor
      *
-     * @param _anchor anchor
+     * @param anchor anchor
      */
-    function addSmartToken(IConverterAnchor _anchor) external override only(CONVERTER_REGISTRY) {
-        addItem(anchors, address(_anchor));
+    function addSmartToken(IConverterAnchor anchor) external override only(CONVERTER_REGISTRY) {
+        addItem(_anchors, address(anchor));
     }
 
     /**
      * @dev removes an anchor
      *
-     * @param _anchor anchor
+     * @param anchor anchor
      */
-    function removeSmartToken(IConverterAnchor _anchor) external override only(CONVERTER_REGISTRY) {
-        removeItem(anchors, address(_anchor));
+    function removeSmartToken(IConverterAnchor anchor) external override only(CONVERTER_REGISTRY) {
+        removeItem(_anchors, address(anchor));
     }
 
     /**
      * @dev adds a liquidity pool
      *
-     * @param _liquidityPoolAnchor liquidity pool
+     * @param liquidityPoolAnchor liquidity pool
      */
-    function addLiquidityPool(IConverterAnchor _liquidityPoolAnchor) external override only(CONVERTER_REGISTRY) {
-        addItem(liquidityPools, address(_liquidityPoolAnchor));
+    function addLiquidityPool(IConverterAnchor liquidityPoolAnchor) external override only(CONVERTER_REGISTRY) {
+        addItem(_liquidityPools, address(liquidityPoolAnchor));
     }
 
     /**
      * @dev removes a liquidity pool
      *
-     * @param _liquidityPoolAnchor liquidity pool
+     * @param liquidityPoolAnchor liquidity pool
      */
-    function removeLiquidityPool(IConverterAnchor _liquidityPoolAnchor) external override only(CONVERTER_REGISTRY) {
-        removeItem(liquidityPools, address(_liquidityPoolAnchor));
+    function removeLiquidityPool(IConverterAnchor liquidityPoolAnchor) external override only(CONVERTER_REGISTRY) {
+        removeItem(_liquidityPools, address(liquidityPoolAnchor));
     }
 
     /**
      * @dev adds a convertible token
      *
-     * @param _convertibleToken    convertible token
-     * @param _anchor              associated anchor
+     * @param convertibleToken convertible token
+     * @param anchor associated anchor
      */
-    function addConvertibleToken(IReserveToken _convertibleToken, IConverterAnchor _anchor)
+    function addConvertibleToken(IReserveToken convertibleToken, IConverterAnchor anchor)
         external
         override
         only(CONVERTER_REGISTRY)
     {
-        List storage list = convertibleTokens.table[address(_convertibleToken)];
+        List storage list = _convertibleTokens.table[address(convertibleToken)];
         if (list.items.array.length == 0) {
-            list.index = convertibleTokens.array.length;
-            convertibleTokens.array.push(address(_convertibleToken));
+            list.index = _convertibleTokens.array.length;
+            _convertibleTokens.array.push(address(convertibleToken));
         }
-        addItem(list.items, address(_anchor));
+        addItem(list.items, address(anchor));
     }
 
     /**
      * @dev removes a convertible token
      *
-     * @param _convertibleToken    convertible token
-     * @param _anchor              associated anchor
+     * @param convertibleToken convertible token
+     * @param anchor associated anchor
      */
-    function removeConvertibleToken(IReserveToken _convertibleToken, IConverterAnchor _anchor)
+    function removeConvertibleToken(IReserveToken convertibleToken, IConverterAnchor anchor)
         external
         override
         only(CONVERTER_REGISTRY)
     {
-        List storage list = convertibleTokens.table[address(_convertibleToken)];
-        removeItem(list.items, address(_anchor));
+        List storage list = _convertibleTokens.table[address(convertibleToken)];
+        removeItem(list.items, address(anchor));
         if (list.items.array.length == 0) {
-            address lastConvertibleToken = convertibleTokens.array[convertibleTokens.array.length - 1];
-            convertibleTokens.table[lastConvertibleToken].index = list.index;
-            convertibleTokens.array[list.index] = lastConvertibleToken;
-            convertibleTokens.array.pop();
-            delete convertibleTokens.table[address(_convertibleToken)];
+            address lastConvertibleToken = _convertibleTokens.array[_convertibleTokens.array.length - 1];
+            _convertibleTokens.table[lastConvertibleToken].index = list.index;
+            _convertibleTokens.array[list.index] = lastConvertibleToken;
+            _convertibleTokens.array.pop();
+            delete _convertibleTokens.table[address(convertibleToken)];
         }
     }
 
@@ -130,7 +130,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @return number of anchors
      */
     function getSmartTokenCount() external view override returns (uint256) {
-        return anchors.array.length;
+        return _anchors.array.length;
     }
 
     /**
@@ -139,27 +139,29 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @return list of anchors
      */
     function getSmartTokens() external view override returns (address[] memory) {
-        return anchors.array;
+        return _anchors.array;
     }
 
     /**
      * @dev returns the anchor at a given index
      *
-     * @param _index index
+     * @param index index
+     *
      * @return anchor at the given index
      */
-    function getSmartToken(uint256 _index) external view override returns (IConverterAnchor) {
-        return IConverterAnchor(anchors.array[_index]);
+    function getSmartToken(uint256 index) external view override returns (IConverterAnchor) {
+        return IConverterAnchor(_anchors.array[index]);
     }
 
     /**
      * @dev checks whether or not a given value is an anchor
      *
-     * @param _value value
+     * @param value value
+     *
      * @return true if the given value is an anchor, false if not
      */
-    function isSmartToken(address _value) external view override returns (bool) {
-        return anchors.table[_value].valid;
+    function isSmartToken(address value) external view override returns (bool) {
+        return _anchors.table[value].valid;
     }
 
     /**
@@ -168,7 +170,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @return number of liquidity pools
      */
     function getLiquidityPoolCount() external view override returns (uint256) {
-        return liquidityPools.array.length;
+        return _liquidityPools.array.length;
     }
 
     /**
@@ -177,27 +179,29 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @return list of liquidity pools
      */
     function getLiquidityPools() external view override returns (address[] memory) {
-        return liquidityPools.array;
+        return _liquidityPools.array;
     }
 
     /**
      * @dev returns the liquidity pool at a given index
      *
-     * @param _index index
+     * @param index index
+     *
      * @return liquidity pool at the given index
      */
-    function getLiquidityPool(uint256 _index) external view override returns (IConverterAnchor) {
-        return IConverterAnchor(liquidityPools.array[_index]);
+    function getLiquidityPool(uint256 index) external view override returns (IConverterAnchor) {
+        return IConverterAnchor(_liquidityPools.array[index]);
     }
 
     /**
      * @dev checks whether or not a given value is a liquidity pool
      *
-     * @param _value value
+     * @param value value
+     *
      * @return true if the given value is a liquidity pool, false if not
      */
-    function isLiquidityPool(address _value) external view override returns (bool) {
-        return liquidityPools.table[_value].valid;
+    function isLiquidityPool(address value) external view override returns (bool) {
+        return _liquidityPools.table[value].valid;
     }
 
     /**
@@ -206,7 +210,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @return number of convertible tokens
      */
     function getConvertibleTokenCount() external view override returns (uint256) {
-        return convertibleTokens.array.length;
+        return _convertibleTokens.array.length;
     }
 
     /**
@@ -215,119 +219,125 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @return list of convertible tokens
      */
     function getConvertibleTokens() external view override returns (address[] memory) {
-        return convertibleTokens.array;
+        return _convertibleTokens.array;
     }
 
     /**
      * @dev returns the convertible token at a given index
      *
-     * @param _index index
+     * @param index index
+     *
      * @return convertible token at the given index
      */
-    function getConvertibleToken(uint256 _index) external view override returns (IReserveToken) {
-        return IReserveToken(convertibleTokens.array[_index]);
+    function getConvertibleToken(uint256 index) external view override returns (IReserveToken) {
+        return IReserveToken(_convertibleTokens.array[index]);
     }
 
     /**
      * @dev checks whether or not a given value is a convertible token
      *
-     * @param _value value
+     * @param value value
+     *
      * @return true if the given value is a convertible token, false if not
      */
-    function isConvertibleToken(address _value) external view override returns (bool) {
-        return convertibleTokens.table[_value].items.array.length > 0;
+    function isConvertibleToken(address value) external view override returns (bool) {
+        return _convertibleTokens.table[value].items.array.length > 0;
     }
 
     /**
      * @dev returns the number of anchors associated with a given convertible token
      *
-     * @param _convertibleToken convertible token
+     * @param convertibleToken convertible token
+     *
      * @return number of anchors
      */
-    function getConvertibleTokenSmartTokenCount(IReserveToken _convertibleToken)
+    function getConvertibleTokenSmartTokenCount(IReserveToken convertibleToken)
         external
         view
         override
         returns (uint256)
     {
-        return convertibleTokens.table[address(_convertibleToken)].items.array.length;
+        return _convertibleTokens.table[address(convertibleToken)].items.array.length;
     }
 
     /**
      * @dev returns the list of anchors associated with a given convertible token
      *
-     * @param _convertibleToken convertible token
+     * @param convertibleToken convertible token
+     *
      * @return list of anchors
      */
-    function getConvertibleTokenSmartTokens(IReserveToken _convertibleToken)
+    function getConvertibleTokenSmartTokens(IReserveToken convertibleToken)
         external
         view
         override
         returns (address[] memory)
     {
-        return convertibleTokens.table[address(_convertibleToken)].items.array;
+        return _convertibleTokens.table[address(convertibleToken)].items.array;
     }
 
     /**
      * @dev returns the anchor associated with a given convertible token at a given index
      *
-     * @param _index index
+     * @param index index
+     *
      * @return anchor
      */
-    function getConvertibleTokenSmartToken(IReserveToken _convertibleToken, uint256 _index)
+    function getConvertibleTokenSmartToken(IReserveToken convertibleToken, uint256 index)
         external
         view
         override
         returns (IConverterAnchor)
     {
-        return IConverterAnchor(convertibleTokens.table[address(_convertibleToken)].items.array[_index]);
+        return IConverterAnchor(_convertibleTokens.table[address(convertibleToken)].items.array[index]);
     }
 
     /**
      * @dev checks whether or not a given value is an anchor of a given convertible token
      *
-     * @param _convertibleToken convertible token
-     * @param _value value
+     * @param convertibleToken convertible token
+     * @param value value
+     *
      * @return true if the given value is an anchor of the given convertible token, false it not
      */
-    function isConvertibleTokenSmartToken(IReserveToken _convertibleToken, address _value)
+    function isConvertibleTokenSmartToken(IReserveToken convertibleToken, address value)
         external
         view
         override
         returns (bool)
     {
-        return convertibleTokens.table[address(_convertibleToken)].items.table[_value].valid;
+        return _convertibleTokens.table[address(convertibleToken)].items.table[value].valid;
     }
 
     /**
      * @dev adds an item to a list of items
      *
-     * @param _items list of items
-     * @param _value item's value
+     * @param items list of items
+     * @param value item's value
      */
-    function addItem(Items storage _items, address _value) internal validAddress(_value) {
-        Item storage item = _items.table[_value];
+    function addItem(Items storage items, address value) internal validAddress(value) {
+        Item storage item = items.table[value];
         require(!item.valid, "ERR_INVALID_ITEM");
 
-        item.index = _items.array.length;
-        _items.array.push(_value);
+        item.index = items.array.length;
+        items.array.push(value);
         item.valid = true;
     }
 
     /**
      * @dev removes an item from a list of items
      *
-     * @param _items list of items
-     * @param _value item's value
+     * @param items list of items
+     * @param value item's value
      */
-    function removeItem(Items storage _items, address _value) internal validAddress(_value) {
-        Item storage item = _items.table[_value];
+    function removeItem(Items storage items, address value) internal validAddress(value) {
+        Item storage item = items.table[value];
         require(item.valid, "ERR_INVALID_ITEM");
 
-        address lastValue = _items.array[_items.array.length - 1];
-        _items.table[lastValue].index = item.index;
-        _items.array[item.index] = lastValue;
-        _items.array.pop();
-        delete _items.table[_value];
+        address lastValue = items.array[items.array.length - 1];
+        items.table[lastValue].index = item.index;
+        items.array[item.index] = lastValue;
+        items.array.pop();
+        delete items.table[value];
     }
 }

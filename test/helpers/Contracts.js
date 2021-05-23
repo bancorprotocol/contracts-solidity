@@ -66,7 +66,6 @@ module.exports = {
     StandardPoolConverterFactory: deployOrAttach('StandardPoolConverterFactory'),
     TestBancorFormula: deployOrAttach('TestBancorFormula'),
     TestBancorNetwork: deployOrAttach('TestBancorNetwork'),
-    TestCall: deployOrAttach('TestCall'),
     TestCheckpointStore: deployOrAttach('TestCheckpointStore'),
     TestContractRegistryClient: deployOrAttach('TestContractRegistryClient'),
     TestConverterFactory: deployOrAttach('TestConverterFactory'),

@@ -21,84 +21,116 @@ contract ContractRegistryClient is Owned, Utils {
     bytes32 internal constant LIQUIDITY_PROTECTION = "LiquidityProtection";
     bytes32 internal constant NETWORK_SETTINGS = "NetworkSettings";
 
-    IContractRegistry public registry; // address of the current contract-registry
-    IContractRegistry public prevRegistry; // address of the previous contract-registry
-    bool public onlyOwnerCanUpdateRegistry; // only an owner can update the contract-registry
+    // address of the current contract registry
+    IContractRegistry private _registry;
+
+    // address of the previous contract registry
+    IContractRegistry private _prevRegistry;
+
+    // only the owner can update the contract registry
+    bool private _onlyOwnerCanUpdateRegistry;
 
     /**
      * @dev verifies that the caller is mapped to the given contract name
      *
-     * @param _contractName    contract name
+     * @param contractName contract name
      */
-    modifier only(bytes32 _contractName) {
-        _only(_contractName);
+    modifier only(bytes32 contractName) {
+        _only(contractName);
         _;
     }
 
     // error message binary size optimization
-    function _only(bytes32 _contractName) internal view {
-        require(msg.sender == addressOf(_contractName), "ERR_ACCESS_DENIED");
+    function _only(bytes32 contractName) internal view {
+        require(msg.sender == addressOf(contractName), "ERR_ACCESS_DENIED");
     }
 
     /**
      * @dev initializes a new ContractRegistryClient instance
      *
-     * @param  _registry   address of a contract-registry contract
+     * @param initialRegistry address of a contract registry contract
      */
-    constructor(IContractRegistry _registry) internal validAddress(address(_registry)) {
-        registry = IContractRegistry(_registry);
-        prevRegistry = IContractRegistry(_registry);
+    constructor(IContractRegistry initialRegistry) internal validAddress(address(initialRegistry)) {
+        _registry = IContractRegistry(initialRegistry);
+        _prevRegistry = IContractRegistry(initialRegistry);
     }
 
     /**
-     * @dev updates to the new contract-registry
+     * @dev updates to the new contract registry
      */
-    function updateRegistry() public {
+    function updateRegistry() external {
         // verify that this function is permitted
-        require(msg.sender == owner || !onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
+        require(msg.sender == owner() || !_onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
 
-        // get the new contract-registry
+        // get the new contract registry
         IContractRegistry newRegistry = IContractRegistry(addressOf(CONTRACT_REGISTRY));
 
-        // verify that the new contract-registry is different and not zero
-        require(newRegistry != registry && address(newRegistry) != address(0), "ERR_INVALID_REGISTRY");
+        // verify that the new contract registry is different and not zero
+        require(newRegistry != _registry && address(newRegistry) != address(0), "ERR_INVALID_REGISTRY");
 
-        // verify that the new contract-registry is pointing to a non-zero contract-registry
+        // verify that the new contract registry is pointing to a non-zero contract registry
         require(newRegistry.addressOf(CONTRACT_REGISTRY) != address(0), "ERR_INVALID_REGISTRY");
 
-        // save a backup of the current contract-registry before replacing it
-        prevRegistry = registry;
+        // save a backup of the current contract registry before replacing it
+        _prevRegistry = _registry;
 
-        // replace the current contract-registry with the new contract-registry
-        registry = newRegistry;
+        // replace the current contract registry with the new contract registry
+        _registry = newRegistry;
     }
 
     /**
-     * @dev restores the previous contract-registry
+     * @dev restores the previous contract registry
      */
-    function restoreRegistry() public ownerOnly {
-        // restore the previous contract-registry
-        registry = prevRegistry;
+    function restoreRegistry() external ownerOnly {
+        // restore the previous contract registry
+        _registry = _prevRegistry;
     }
 
     /**
-     * @dev restricts the permission to update the contract-registry
+     * @dev restricts the permission to update the contract registry
      *
-     * @param _onlyOwnerCanUpdateRegistry  indicates whether or not permission is restricted to owner only
+     * @param restrictOwnerOnly indicates whether or not permission is restricted to owner only
      */
-    function restrictRegistryUpdate(bool _onlyOwnerCanUpdateRegistry) public ownerOnly {
-        // change the permission to update the contract-registry
-        onlyOwnerCanUpdateRegistry = _onlyOwnerCanUpdateRegistry;
+    function restrictRegistryUpdate(bool restrictOwnerOnly) public ownerOnly {
+        // change the permission to update the contract registry
+        _onlyOwnerCanUpdateRegistry = restrictOwnerOnly;
+    }
+
+    /**
+     * @dev returns the address of the current contract registry
+     *
+     * @return the address of the current contract registry
+     */
+    function registry() public view returns (IContractRegistry) {
+        return _registry;
+    }
+
+    /**
+     * @dev returns the address of the previous contract registry
+     *
+     * @return the address of the previous contract registry
+     */
+    function prevRegistry() external view returns (IContractRegistry) {
+        return _prevRegistry;
+    }
+
+    /**
+     * @dev returns whether only the owner can update the contract registry
+     *
+     * @return whether only the owner can update the contract registry
+     */
+    function onlyOwnerCanUpdateRegistry() external view returns (bool) {
+        return _onlyOwnerCanUpdateRegistry;
     }
 
     /**
      * @dev returns the address associated with the given contract name
      *
-     * @param _contractName    contract name
+     * @param contractName contract name
      *
-     * @return contract address
+     * @return the address associated with the given contract name
      */
-    function addressOf(bytes32 _contractName) internal view returns (address) {
-        return registry.addressOf(_contractName);
+    function addressOf(bytes32 contractName) internal view returns (address) {
+        return _registry.addressOf(contractName);
     }
 }

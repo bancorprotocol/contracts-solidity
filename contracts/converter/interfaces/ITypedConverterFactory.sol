@@ -11,8 +11,8 @@ interface ITypedConverterFactory {
     function converterType() external pure returns (uint16);
 
     function createConverter(
-        IConverterAnchor _anchor,
-        IContractRegistry _registry,
-        uint32 _maxConversionFee
+        IConverterAnchor anchor,
+        IContractRegistry registry,
+        uint32 maxConversionFee
     ) external returns (IConverter);
 }

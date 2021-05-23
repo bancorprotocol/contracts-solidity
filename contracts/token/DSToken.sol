@@ -15,64 +15,57 @@ import "../utility/Utils.sol";
 contract DSToken is IDSToken, ERC20, Owned, Utils {
     using SafeMath for uint256;
 
-    uint8 private immutable tokenDecimals;
-
     /**
      * @dev triggered when the total supply is increased
      *
-     * @param _amount  amount that gets added to the supply
+     * @param amount amount that gets added to the supply
      */
-    event Issuance(uint256 _amount);
+    event Issuance(uint256 amount);
 
     /**
      * @dev triggered when the total supply is decreased
      *
-     * @param _amount  amount that gets removed from the supply
+     * @param amount amount that gets removed from the supply
      */
-    event Destruction(uint256 _amount);
+    event Destruction(uint256 amount);
 
     /**
      * @dev initializes a new DSToken instance
      *
-     * @param _name       token name
-     * @param _symbol     token short symbol, minimum 1 character
-     * @param _decimals   for display purposes only
+     * @param name token name
+     * @param symbol token symbol
      */
     constructor(
-        string memory _name,
-        string memory _symbol,
-        uint8 _decimals
-    ) public ERC20(_name, _symbol) {
-        tokenDecimals = _decimals;
-    }
-
-    function decimals() public view override returns (uint8) {
-        return tokenDecimals;
+        string memory name,
+        string memory symbol,
+        uint8 decimals
+    ) public ERC20(name, symbol) {
+        _setupDecimals(decimals);
     }
 
     /**
      * @dev increases the token supply and sends the new tokens to the given account
      * can only be called by the contract owner
      *
-     * @param _to      account to receive the new amount
-     * @param _amount  amount to increase the supply by
+     * @param recipient account to receive the new amount
+     * @param amount amount to increase the supply by
      */
-    function issue(address _to, uint256 _amount) public override ownerOnly validExternalAddress(_to) {
-        _mint(_to, _amount);
+    function issue(address recipient, uint256 amount) external override ownerOnly validExternalAddress(recipient) {
+        _mint(recipient, amount);
 
-        emit Issuance(_amount);
+        emit Issuance(amount);
     }
 
     /**
      * @dev removes tokens from the given account and decreases the token supply
      * can only be called by the contract owner
      *
-     * @param _from    account to remove the amount from
-     * @param _amount  amount to decrease the supply by
+     * @param recipient account to remove the amount from
+     * @param amount amount to decrease the supply by
      */
-    function destroy(address _from, uint256 _amount) public override ownerOnly {
-        _burn(_from, _amount);
+    function destroy(address recipient, uint256 amount) external override ownerOnly {
+        _burn(recipient, amount);
 
-        emit Destruction(_amount);
+        emit Destruction(amount);
     }
 }

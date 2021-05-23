@@ -6,59 +6,59 @@ import "../utility/MathEx.sol";
 contract TestMathEx {
     using MathEx for *;
 
-    function floorSqrtTest(uint256 _num) external pure returns (uint256) {
-        return MathEx.floorSqrt(_num);
+    function floorSqrtTest(uint256 num) external pure returns (uint256) {
+        return MathEx.floorSqrt(num);
     }
 
-    function ceilSqrtTest(uint256 _num) external pure returns (uint256) {
-        return MathEx.ceilSqrt(_num);
+    function ceilSqrtTest(uint256 num) external pure returns (uint256) {
+        return MathEx.ceilSqrt(num);
     }
 
     function poweredRatioTest(
-        uint256 _n,
-        uint256 _d,
-        uint256 _exp
+        uint256 n,
+        uint256 d,
+        uint256 exp
     ) external pure returns (uint256, uint256) {
-        return MathEx.poweredRatio(_n, _d, _exp);
+        return MathEx.poweredRatio(n, d, exp);
     }
 
     function reducedRatioTest(
-        uint256 _n,
-        uint256 _d,
-        uint256 _max
+        uint256 n,
+        uint256 d,
+        uint256 max
     ) external pure returns (uint256, uint256) {
-        return MathEx.reducedRatio(_n, _d, _max);
+        return MathEx.reducedRatio(n, d, max);
     }
 
     function normalizedRatioTest(
-        uint256 _a,
-        uint256 _b,
-        uint256 _scale
+        uint256 a,
+        uint256 b,
+        uint256 scale
     ) external pure returns (uint256, uint256) {
-        return MathEx.normalizedRatio(_a, _b, _scale);
+        return MathEx.normalizedRatio(a, b, scale);
     }
 
     function accurateRatioTest(
-        uint256 _a,
-        uint256 _b,
-        uint256 _scale
+        uint256 a,
+        uint256 b,
+        uint256 scale
     ) external pure returns (uint256, uint256) {
-        return MathEx.accurateRatio(_a, _b, _scale);
+        return MathEx.accurateRatio(a, b, scale);
     }
 
-    function roundDivTest(uint256 _n, uint256 _d) external pure returns (uint256) {
-        return MathEx.roundDiv(_n, _d);
+    function roundDivTest(uint256 n, uint256 d) external pure returns (uint256) {
+        return MathEx.roundDiv(n, d);
     }
 
-    function geometricMeanTest(uint256[] memory _values) external pure returns (uint256) {
-        return MathEx.geometricMean(_values);
+    function geometricMeanTest(uint256[] calldata values) external pure returns (uint256) {
+        return MathEx.geometricMean(values);
     }
 
-    function decimalLengthTest(uint256 _x) external pure returns (uint256) {
-        return MathEx.decimalLength(_x);
+    function decimalLengthTest(uint256 x) external pure returns (uint256) {
+        return MathEx.decimalLength(x);
     }
 
-    function roundDivUnsafeTest(uint256 _n, uint256 _d) external pure returns (uint256) {
-        return MathEx.roundDivUnsafe(_n, _d);
+    function roundDivUnsafeTest(uint256 n, uint256 d) external pure returns (uint256) {
+        return MathEx.roundDivUnsafe(n, d);
     }
 }
