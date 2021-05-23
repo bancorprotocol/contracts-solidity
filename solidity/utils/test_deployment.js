@@ -342,6 +342,10 @@ const run = async () => {
     await execute(bntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
     await execute(vbntTokenGovernance.methods.grantRole(ROLE_GOVERNOR, account.address));
 
+    const bntToken = await deployed(web3, 'DSToken', reserves.BNT.address);
+    await execute(bntToken.methods.transferOwnership(bntTokenGovernance._address));
+    await execute(bntTokenGovernance.methods.acceptTokenOwnership());
+
     const checkpointStore = await web3Func(deploy, 'checkpointStore', 'CheckpointStore', []);
     const liquidityProtectionSettings = await web3Func(
         deploy,
