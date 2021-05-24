@@ -24,7 +24,7 @@
         "profile": "PROFILE=1 yarn test",
         "size": "hardhat size-contracts",
         "verify": "hardhat verify",
-        "coverage": "NODE_OPTIONS='--max-old-space-size=8448' hardhat coverage",
+        "coverage": "NODE_OPTIONS='--max-old-space-size=8192' hardhat coverage",
         "flatten": "hardhat flatten",
         "lint": "yarn lint:js && yarn lint:sol",
         "lint:js": "eslint .",
