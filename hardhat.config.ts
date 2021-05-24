@@ -1,31 +1,33 @@
-const fs = require('fs');
-const path = require('path');
-const yargs = require('yargs/yargs');
-const { hideBin } = require('yargs/helpers');
-const { argv } = yargs(hideBin(process.argv));
+import fs from 'fs';
+import path from 'path';
+import { HardhatUserConfig } from 'hardhat/types/config';
 
-require('@nomiclabs/hardhat-waffle');
-require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-etherscan');
+// Import plugins
+import '@nomiclabs/hardhat-waffle';
+import '@nomiclabs/hardhat-etherscan';
 
-require('solidity-coverage');
-require('hardhat-contract-sizer');
-require('hardhat-abi-exporter');
-require('hardhat-gas-reporter');
+import 'solidity-coverage';
+import '@typechain/hardhat';
+import 'hardhat-contract-sizer';
+import 'hardhat-abi-exporter';
+import 'hardhat-gas-reporter';
 
 // Load Config
 const configPath = path.join(__dirname, '/config.json');
 const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
 
-const loadAPIKey = (apiKeyName) => {
+const loadAPIKey = (apiKeyName: string) => {
     return config.apiKeys ? (config.apiKeys[apiKeyName] ? config.apiKeys[apiKeyName] : '') : '';
+};
+
+const loadEnv = (envVar: string): any => {
+    return process.env[envVar];
 };
 
 // Config
 const configNetworks = config.networks || {};
-const APIKeyEtherscan = loadAPIKey('etherscan');
 
-module.exports = {
+const Config: HardhatUserConfig = {
     // Network Config
     networks: {
         // Hardhat network
@@ -55,7 +57,7 @@ module.exports = {
 
     // Plugins Config
     etherscan: {
-        apiKey: APIKeyEtherscan
+        apiKey: loadAPIKey('etherscan')
     },
     contractSizer: {
         alphaSort: true,
@@ -68,17 +70,18 @@ module.exports = {
     },
     gasReporter: {
         currency: 'USD',
-        enabled: process.env.PROFILE
+        enabled: loadEnv('PROFILE')
     },
-
+    typechain: {
+        outDir: 'typechain',
+        target: 'ethers-v5'
+    },
     // Test Config
     mocha: {
-        spec: argv.spec || 'test',
-        exit: true,
-        recursive: true,
-        before_timeout: 600000,
         timeout: 600000,
-        useColors: true,
-        bail: process.env.BAIL
+        color: true,
+        bail: loadEnv('BAIL')
     }
 };
+
+export default Config;

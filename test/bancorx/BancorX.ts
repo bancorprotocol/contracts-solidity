@@ -1,10 +1,13 @@
-const { expect } = require('chai');
-const { ethers } = require('hardhat');
-const { BigNumber } = require('ethers');
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { BancorX, ContractRegistry, TestStandardToken } from '../../typechain';
 
-const { advanceBlock } = require('../helpers/Time');
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { BigNumber } from 'ethers';
 
-const Contracts = require('../helpers/Contracts');
+import { advanceBlock } from '../helpers/Time';
+
+import Contracts from '../helpers/Contracts';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
@@ -19,27 +22,20 @@ const X_TRANSFER_ID = BigNumber.from(87654321);
 const EOS_ADDRESS = '0x3c69a194aaf415ba5d6afca734660d0a3d45acdc05d54cd1ca89a8988e7625b4';
 const EOS_BLOCKCHAIN = '0x4e8ebbefa452077428f93c9520d3edd60594ff452a29ac7d2ccc11d47f3ab95b';
 
-let bancorX;
+let bancorX: BancorX;
 
-let contractRegistry;
-let bancorXToken;
+let contractRegistry: ContractRegistry;
+let bancorXToken: TestStandardToken;
 
-let defaultSender;
-let reporter1;
-let reporter2;
-let reporter3;
-let nonOwner;
-let accounts;
+let defaultSender: SignerWithAddress;
+let reporter1: SignerWithAddress;
+let reporter2: SignerWithAddress;
+let reporter3: SignerWithAddress;
+let nonOwner: SignerWithAddress;
 
 describe('BancorX', () => {
     before(async () => {
-        accounts = await ethers.getSigners();
-
-        defaultSender = accounts[0];
-        reporter1 = accounts[1];
-        reporter2 = accounts[2];
-        reporter3 = accounts[3];
-        nonOwner = accounts[9];
+        [defaultSender, reporter1, reporter2, reporter3, nonOwner] = await ethers.getSigners();
     });
 
     beforeEach(async () => {

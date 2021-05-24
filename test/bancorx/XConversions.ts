@@ -1,10 +1,14 @@
-const { expect } = require('chai');
-const { ethers } = require('hardhat');
-const { BigNumber } = require('ethers');
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { BigNumber } from 'ethers';
 
-const { NATIVE_TOKEN_ADDRESS, registry } = require('../helpers/Constants');
+import { advanceBlock } from '../helpers/Time';
 
-const Contracts = require('../helpers/Contracts');
+import Contracts from '../helpers/Contracts';
+
+import { NATIVE_TOKEN_ADDRESS, registry } from '../helpers/Constants';
+import { BancorNetwork, BancorX, ContractRegistry, StandardPoolConverter, TestStandardToken } from '../../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 bnt
@@ -18,37 +22,29 @@ const EOS_BLOCKCHAIN = '0xd5e9a21dbc95b47e2750562a96d365aa5fb6a75c00000000000000
 const MIN_RETURN = BigNumber.from(1);
 const TX_ID = BigNumber.from(0);
 
-let contractRegistry;
+let contractRegistry: ContractRegistry;
 
-let bancorX;
-let bancorNetwork;
-let bntToken;
-let erc20Token;
-let erc20TokenConverter1;
-let erc20TokenConverter2;
-let ethBntPath;
-let bntEthPath;
-let erc20TokenBntPath;
-let bntErc20Path;
+let bancorX: BancorX;
+let bancorNetwork: BancorNetwork;
+let bntToken: TestStandardToken;
+let erc20Token: TestStandardToken;
+let erc20TokenConverter1: StandardPoolConverter;
+let erc20TokenConverter2: StandardPoolConverter;
+let ethBntPath: string[];
+let bntEthPath: string[];
+let erc20TokenBntPath: string[];
+let bntErc20Path: string[];
 
-let owner;
-let reporter1;
-let reporter2;
-let reporter3;
-let sender;
-let sender2;
-let accounts;
+let owner: SignerWithAddress;
+let reporter1: SignerWithAddress;
+let reporter2: SignerWithAddress;
+let reporter3: SignerWithAddress;
+let sender: SignerWithAddress;
+let sender2: SignerWithAddress;
 
 describe('XConversions', () => {
     before(async () => {
-        accounts = await ethers.getSigners();
-
-        owner = accounts[0];
-        reporter1 = accounts[1];
-        reporter2 = accounts[2];
-        reporter3 = accounts[3];
-        sender = accounts[5];
-        sender2 = accounts[6];
+        [owner, reporter1, reporter2, reporter3, sender, sender2] = await ethers.getSigners();
 
         // The following contracts are unaffected by the underlying tests, this can be shared.
         contractRegistry = await Contracts.ContractRegistry.deploy();
@@ -125,7 +121,13 @@ describe('XConversions', () => {
     });
 
     describe('basic tests', () => {
-        const reportAndRelease = async (to, amount, txId, blockchainType, xTransferId = 0) => {
+        const reportAndRelease = async (
+            to: string,
+            amount: BigNumber,
+            txId: BigNumber,
+            blockchainType: string,
+            xTransferId = BigNumber.from(0)
+        ) => {
             const reporters = [reporter1, reporter2, reporter3];
 
             for (let i = 0; i < reporters.length; ++i) {
