@@ -53,7 +53,7 @@ describe('ReserveToken', () => {
                         value: TOTAL_SUPPLY.div(BigNumber.from(2))
                     });
                 } else {
-                    token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', 18, TOTAL_SUPPLY);
+                    token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', TOTAL_SUPPLY);
 
                     await token.transfer(sender, TOTAL_SUPPLY.div(BigNumber.from(2)));
                 }

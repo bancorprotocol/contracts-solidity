@@ -15,6 +15,7 @@ let converter2;
 let converter3;
 let converter4;
 let bancorNetwork;
+let converterRegistry;
 let contractRegistry;
 
 let tokens;
@@ -43,10 +44,10 @@ describe('BancorNetwork', () => {
     const initTokens = async () => {
         tokens = {
             ETH: { address: NATIVE_TOKEN_ADDRESS },
-            BNT: await Contracts.TestStandardToken.deploy('BNT', 'BNT', 2, 10000000),
-            TKN1: await Contracts.TestStandardToken.deploy('TKN1', 'TKN1', 2, 1000000),
-            TKN2: await Contracts.TestNonStandardToken.deploy('TKN2', 'TKN2', 2, 2000000),
-            TKN3: await Contracts.TestStandardToken.deploy('TKN3', 'TKN3', 2, 3000000),
+            BNT: await Contracts.TestStandardToken.deploy('BNT', 'BNT', 10000000),
+            TKN1: await Contracts.TestStandardToken.deploy('TKN1', 'TKN1', 1000000),
+            TKN2: await Contracts.TestStandardToken.deploy('TKN2', 'TKN2', 2000000),
+            TKN3: await Contracts.TestStandardToken.deploy('TKN3', 'TKN3', 3000000),
             ANCR1: await Contracts.DSToken.deploy('Anchor1', 'ANCR1', 2),
             ANCR2: await Contracts.DSToken.deploy('Anchor2', 'ANCR2', 2),
             ANCR3: await Contracts.DSToken.deploy('Anchor3', 'ANCR3', 2),
@@ -146,7 +147,7 @@ describe('BancorNetwork', () => {
             bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
-            const converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
+            converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
             const converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY, converterRegistry.address);
             await contractRegistry.registerAddress(registry.CONVERTER_REGISTRY_DATA, converterRegistryData.address);
@@ -388,6 +389,36 @@ describe('BancorNetwork', () => {
             }
         }
 
+        it('should revert when attempting to convert a non-standard token', async () => {
+            const nonStandardToken = await Contracts.TestNonStandardToken.deploy('TKN', 'TKN', 2000000);
+            const anchor = await Contracts.DSToken.deploy('Anchor', 'ANCR', 2);
+            const converter = await Contracts.StandardPoolConverter.deploy(anchor.address, contractRegistry.address, 0);
+            await converter.addReserve(tokens.BNT.address, 500000);
+            await converter.addReserve(nonStandardToken.address, 500000);
+
+            await tokens.BNT.transfer(converter.address, 70000);
+            await nonStandardToken.transfer(converter.address, 25000);
+
+            await anchor.transferOwnership(converter.address);
+            await converter.acceptTokenOwnership();
+
+            await converterRegistry.addConverter(converter.address);
+
+            const amount = BigNumber.from(10000);
+            await nonStandardToken.connect(sender).approve(bancorNetwork.address, amount);
+
+            await expect(
+                bancorNetwork
+                    .connect(sender)
+                    .convertByPath2(
+                        [nonStandardToken.address, anchor.address, tokens.BNT.address],
+                        amount,
+                        MIN_RETURN,
+                        ZERO_ADDRESS
+                    )
+            ).to.be.revertedWith('SafeERC20: ERC20 operation did not succeed');
+        });
+
         it('verifies that conversionPath returns the correct path', async () => {
             const conversionPath = await bancorNetwork.conversionPath(tokens.TKN2.address, NATIVE_TOKEN_ADDRESS);
             const expectedPath = pathTokens.TKN2.ETH.map((token) => token.address);
@@ -413,7 +444,7 @@ describe('BancorNetwork', () => {
             ).to.be.revertedWith('ERR_ETH_AMOUNT_MISMATCH');
         });
 
-        it('should revert when calling convertFor with ETH reserve but without sending ether', async () => {
+        it('should revert when calling convertFor with ETH reserve but without sending ETH', async () => {
             const path = pathTokens.ETH.TKN3.map((token) => token.address);
             const value = BigNumber.from(10000);
 
@@ -422,7 +453,7 @@ describe('BancorNetwork', () => {
             );
         });
 
-        it('should revert when calling convertFor with ether amount lower than the ETH amount sent with the request', async () => {
+        it('should revert when calling convertFor with ETH amount lower than the ETH amount sent with the request', async () => {
             const path = pathTokens.ETH.TKN3.map((token) => token.address);
 
             const value = BigNumber.from(10000);
@@ -456,7 +487,7 @@ describe('BancorNetwork', () => {
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
-        it('should revert when calling convert with ETH reserve but without sending ether', async () => {
+        it('should revert when calling convert with ETH reserve but without sending ETH', async () => {
             const path = pathTokens.ETH.TKN3.map((token) => token.address);
             const value = BigNumber.from(1000);
 
@@ -465,7 +496,7 @@ describe('BancorNetwork', () => {
             );
         });
 
-        it('should revert when calling convert with ether amount different than the amount sent', async () => {
+        it('should revert when calling convert with ETH amount different than the amount sent', async () => {
             const path = pathTokens.ETH.TKN3.map((token) => token.address);
             const value = BigNumber.from(1000);
 
@@ -542,7 +573,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(bancorNetwork.claimAndConvertFor(path, value, MIN_RETURN, sender2.address)).to.be.revertedWith(
-                'SafeMath: subtraction overflow'
+                'ERC20: transfer amount exceeds allowance'
             );
         });
 
@@ -565,7 +596,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(bancorNetwork.claimAndConvert(path, value, MIN_RETURN)).to.be.revertedWith(
-                'SafeMath: subtraction overflow'
+                'ERC20: transfer amount exceeds allowance'
             );
         });
 
@@ -627,7 +658,7 @@ describe('BancorNetwork', () => {
             expect(balanceAfterTransfer).to.equal(balanceBeforeTransfer.add(targetAmount));
         });
 
-        it('should revert when calling convertFor2 with ETH reserve but without sending ether', async () => {
+        it('should revert when calling convertFor2 with ETH reserve but without sending ETH', async () => {
             const path = pathTokens.ETH.TKN2.map((token) => token.address);
             const value = BigNumber.from(1000);
 
@@ -636,7 +667,7 @@ describe('BancorNetwork', () => {
             ).to.be.revertedWith('ERR_INVALID_SOURCE_TOKEN');
         });
 
-        it('should revert when calling convertFor2 with ether amount different than the amount sent', async () => {
+        it('should revert when calling convertFor2 with ETH amount different than the amount sent', async () => {
             const path = pathTokens.ETH.TKN2.map((token) => token.address);
             const value = BigNumber.from(1000);
 
@@ -682,7 +713,7 @@ describe('BancorNetwork', () => {
             ).to.be.revertedWith('ERR_INVALID_PATH');
         });
 
-        it('should revert when calling convert2 with ETH reserve but without sending ether', async () => {
+        it('should revert when calling convert2 with ETH reserve but without sending ETH', async () => {
             const path = pathTokens.ETH.BNT.map((token) => token.address);
             const value = BigNumber.from(1000);
 
@@ -691,7 +722,7 @@ describe('BancorNetwork', () => {
             ).to.be.revertedWith('ERR_INVALID_SOURCE_TOKEN');
         });
 
-        it('should revert when calling convert2 with ether amount different than the amount sent', async () => {
+        it('should revert when calling convert2 with ETH amount different than the amount sent', async () => {
             const path = pathTokens.ETH.BNT.map((token) => token.address);
             const value = BigNumber.from(1000);
 
@@ -757,7 +788,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
             await expect(
                 bancorNetwork.claimAndConvertFor2(path, value, MIN_RETURN, sender2.address, ZERO_ADDRESS, 0)
-            ).to.be.revertedWith('SafeMath: subtraction overflow');
+            ).to.be.revertedWith('ERC20: transfer amount exceeds allowance');
         });
 
         it('verifies that claimAndConvert2 transfers the converted amount correctly', async () => {
@@ -785,7 +816,7 @@ describe('BancorNetwork', () => {
             const value = BigNumber.from(1000);
 
             await expect(bancorNetwork.claimAndConvert2(path, value, MIN_RETURN, ZERO_ADDRESS, 0)).to.be.revertedWith(
-                'SafeMath: subtraction overflow'
+                'ERC20: transfer amount exceeds allowance'
             );
         });
 

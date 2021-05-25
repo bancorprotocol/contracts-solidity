@@ -41,8 +41,8 @@ describe('TokenHolder', () => {
     beforeEach(async () => {
         holder = await Contracts.TokenHolder.deploy();
 
-        token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', 18, 100000);
-        token2 = await Contracts.TestStandardToken.deploy('ERC', 'ERC2', 18, 100000);
+        token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', 100000);
+        token2 = await Contracts.TestStandardToken.deploy('ERC', 'ERC2', 100000);
 
         await accounts[0].sendTransaction({ to: holder.address, value: 5000 });
         await token.transfer(holder.address, BigNumber.from(1000));
@@ -103,7 +103,7 @@ describe('TokenHolder', () => {
                         await expect(holder.withdrawTokens(tokenAddress, receiver.address, amount)).to.be.reverted;
                     } else {
                         await expect(holder.withdrawTokens(tokenAddress, receiver.address, amount)).to.be.revertedWith(
-                            'SafeMath: subtraction overflow'
+                            'ERC20: transfer amount exceeds balance'
                         );
                     }
                 });
@@ -176,7 +176,7 @@ describe('TokenHolder', () => {
             balances[token2.address] = balances[token2.address].add(BigNumber.from(1));
             await expect(
                 holder.withdrawTokensMultiple(tokenAddresses, receiver.address, Object.values(balances))
-            ).to.be.revertedWith('SafeMath: subtraction overflow');
+            ).to.be.revertedWith('ERC20: transfer amount exceeds balance');
         });
     });
 });

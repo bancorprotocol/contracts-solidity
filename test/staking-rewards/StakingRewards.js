@@ -191,9 +191,9 @@ describe('StakingRewards', () => {
         networkToken = await Contracts.DSToken.deploy('BNT', 'BNT', 18);
         await networkToken.issue(supervisor.address, TOTAL_SUPPLY);
 
-        reserveToken = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
-        reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
-        reserveToken3 = await Contracts.TestStandardToken.deploy('RSV3', 'RSV3', 18, TOTAL_SUPPLY);
+        reserveToken = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', TOTAL_SUPPLY);
+        reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', TOTAL_SUPPLY);
+        reserveToken3 = await Contracts.TestStandardToken.deploy('RSV3', 'RSV3', TOTAL_SUPPLY);
 
         networkTokenGovernance = await Contracts.TestTokenGovernance.deploy(networkToken.address);
         await networkTokenGovernance.grantRole(ROLE_GOVERNOR, supervisor.address);
@@ -1469,7 +1469,7 @@ describe('StakingRewards', () => {
                         let poolToken4;
 
                         beforeEach(async () => {
-                            reserveToken4 = await Contracts.TestStandardToken.deploy('RSV4', 'RSV4', 18, TOTAL_SUPPLY);
+                            reserveToken4 = await Contracts.TestStandardToken.deploy('RSV4', 'RSV4', TOTAL_SUPPLY);
 
                             poolToken4 = await createPoolToken(reserveToken4);
 

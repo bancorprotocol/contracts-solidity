@@ -490,8 +490,8 @@ describe('ConverterRegistry', () => {
         let erc20Token2;
 
         beforeEach(async () => {
-            erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ET1', 18, 1000000000);
-            erc20Token2 = await Contracts.TestStandardToken.deploy('TKN2', 'ET2', 18, 1000000000);
+            erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ET1', 1000000000);
+            erc20Token2 = await Contracts.TestStandardToken.deploy('TKN2', 'ET2', 1000000000);
         });
 
         const createConverters = async () => {
@@ -696,8 +696,8 @@ describe('ConverterRegistry', () => {
         let erc20Token2;
 
         beforeEach(async () => {
-            erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ET1', 18, 1000000000);
-            erc20Token2 = await Contracts.TestStandardToken.deploy('TKN2', 'ET2', 18, 1000000000);
+            erc20Token1 = await Contracts.TestStandardToken.deploy('TKN1', 'ET1', 1000000000);
+            erc20Token2 = await Contracts.TestStandardToken.deploy('TKN2', 'ET2', 1000000000);
         });
 
         const createConverters = async () => {

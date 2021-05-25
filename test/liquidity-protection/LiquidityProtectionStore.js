@@ -32,7 +32,7 @@ describe('LiquidityProtectionStore', () => {
 
     describe('general verification', () => {
         it('should revert when a non owner attempts to withdraw tokens', async () => {
-            const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, 1);
+            const erc20Token = await Contracts.TestStandardToken.deploy('TKN', 'TKN', 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await expect(
                 liquidityProtectionStore.connect(nonOwner).withdrawTokens(erc20Token.address, owner.address, 1)
@@ -57,7 +57,7 @@ describe('LiquidityProtectionStore', () => {
         });
 
         it('should succeed when the owner attempts to withdraw tokens', async () => {
-            const erc20Token = await Contracts.TestStandardToken.deploy('name', 'symbol', 0, 1);
+            const erc20Token = await Contracts.TestStandardToken.deploy('TKN', 'TKN', 1);
             await erc20Token.transfer(liquidityProtectionStore.address, 1);
             await liquidityProtectionStore.connect(owner).withdrawTokens(erc20Token.address, owner.address, 1);
             expect(await erc20Token.balanceOf(liquidityProtectionStore.address)).to.equal(BigNumber.from(0));

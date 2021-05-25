@@ -175,8 +175,8 @@ describe('ConverterUpgrader', () => {
     });
 
     beforeEach(async () => {
-        reserveToken1 = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', 18, RESERVE1_BALANCE);
-        reserveToken2 = await Contracts.TestStandardToken.deploy('ERC Token 2', 'ERC2', 18, RESERVE2_BALANCE);
+        reserveToken1 = await Contracts.TestStandardToken.deploy('ERC Token 1', 'ERC1', RESERVE1_BALANCE);
+        reserveToken2 = await Contracts.TestStandardToken.deploy('ERC Token 2', 'ERC2', RESERVE2_BALANCE);
     });
 
     const initFuncs = [

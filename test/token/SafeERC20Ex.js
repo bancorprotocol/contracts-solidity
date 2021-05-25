@@ -24,7 +24,7 @@ describe('SafeERC20Ex', () => {
         safeERC20 = await Contracts.TestSafeERC20Ex.deploy();
         sender = safeERC20.address;
 
-        token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', 18, TOTAL_SUPPLY);
+        token = await Contracts.TestStandardToken.deploy('ERC', 'ERC1', TOTAL_SUPPLY);
 
         await token.transfer(safeERC20.address, TOTAL_SUPPLY.div(BigNumber.from(2)));
     });
