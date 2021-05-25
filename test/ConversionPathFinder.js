@@ -146,7 +146,7 @@ describe('ConversionPathFinder', () => {
 
     beforeEach(async () => {
         for (const reserve of LAYOUT.reserves) {
-            const erc20Token = await Contracts.TestStandardToken.deploy('name', reserve.symbol, 18, 0);
+            const erc20Token = await Contracts.TestStandardToken.deploy('name', reserve.symbol, 0);
             addresses[reserve.symbol] = erc20Token.address;
         }
 

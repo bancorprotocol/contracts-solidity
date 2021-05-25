@@ -55,7 +55,7 @@ describe('XConversions', () => {
     });
 
     beforeEach(async () => {
-        bntToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', 18, BNT_AMOUNT);
+        bntToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', BNT_AMOUNT);
 
         bancorX = await Contracts.BancorX.deploy(
             MAX_LOCK_LIMIT,
@@ -77,7 +77,7 @@ describe('XConversions', () => {
         await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
         await contractRegistry.registerAddress(registry.BANCOR_X, bancorX.address);
 
-        erc20Token = await Contracts.TestStandardToken.deploy('Test Token', 'TST', 18, ethers.utils.parseEther('100'));
+        erc20Token = await Contracts.TestStandardToken.deploy('Test Token', 'TST', ethers.utils.parseEther('100'));
 
         // Create some converters.
         const poolToken1 = await Contracts.DSToken.deploy('Pool Token 1', 'POOL1', 18);

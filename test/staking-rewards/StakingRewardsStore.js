@@ -152,9 +152,9 @@ describe('StakingRewardsStore', () => {
     });
 
     beforeEach(async () => {
-        networkToken = await Contracts.TestStandardToken.deploy('TKN1', 'TKN1', 18, TOTAL_SUPPLY);
-        reserveToken = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
-        reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+        networkToken = await Contracts.TestStandardToken.deploy('TKN1', 'TKN1', TOTAL_SUPPLY);
+        reserveToken = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', TOTAL_SUPPLY);
+        reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', TOTAL_SUPPLY);
 
         poolToken = await createPoolToken(reserveToken);
         poolToken2 = await createPoolToken(reserveToken2);

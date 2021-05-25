@@ -44,7 +44,7 @@ describe('BancorX', () => {
 
     beforeEach(async () => {
         contractRegistry = await Contracts.ContractRegistry.deploy();
-        bancorXToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', 18, SUPPLY_AMOUNT);
+        bancorXToken = await Contracts.TestStandardToken.deploy('Bancor', 'BNT', SUPPLY_AMOUNT);
 
         bancorX = await Contracts.BancorX.deploy(
             MAX_LOCK_LIMIT,

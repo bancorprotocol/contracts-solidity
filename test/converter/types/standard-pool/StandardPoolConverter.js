@@ -51,15 +51,15 @@ describe('StandardPoolConverter', () => {
         if (withReserves) {
             switch (ethIndex) {
                 case 0:
-                    reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
-                    reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+                    reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', TOTAL_SUPPLY);
+                    reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', TOTAL_SUPPLY);
                     break;
                 case 1:
                     reserveToken1 = { address: NATIVE_TOKEN_ADDRESS };
-                    reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', 18, TOTAL_SUPPLY);
+                    reserveToken2 = await Contracts.TestStandardToken.deploy('RSV2', 'RSV2', TOTAL_SUPPLY);
                     break;
                 case 2:
-                    reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', 18, TOTAL_SUPPLY);
+                    reserveToken1 = await Contracts.TestStandardToken.deploy('RSV1', 'RSV1', TOTAL_SUPPLY);
                     reserveToken2 = { address: NATIVE_TOKEN_ADDRESS };
                     break;
                 default:
@@ -1144,7 +1144,7 @@ describe('StandardPoolConverter', () => {
                     if (reserveToken1.address !== NATIVE_TOKEN_ADDRESS) {
                         await expect(
                             addLiquidity(converter, reserveToken1, reserveToken2, [amount.add(BigNumber.from(1)), 1000])
-                        ).to.be.revertedWith('SafeMath: subtraction overflow');
+                        ).to.be.revertedWith('ERC20: transfer amount exceeds balanc');
                     }
                 });
 
