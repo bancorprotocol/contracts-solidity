@@ -12,6 +12,7 @@ require('solidity-coverage');
 require('hardhat-contract-sizer');
 require('hardhat-abi-exporter');
 require('hardhat-gas-reporter');
+require('@typechain/hardhat');
 
 // Load Config
 const configPath = path.join(__dirname, '/config.json');
@@ -69,6 +70,10 @@ module.exports = {
     gasReporter: {
         currency: 'USD',
         enabled: process.env.PROFILE
+    },
+    typechain: {
+        outDir: 'typechain',
+        target: 'ethers-v5'
     },
 
     // Test Config
