@@ -47,7 +47,7 @@ describe('BancorNetwork', () => {
             BNT: await Contracts.TestStandardToken.deploy('BNT', 'BNT', 10000000),
             TKN1: await Contracts.TestStandardToken.deploy('TKN1', 'TKN1', 1000000),
             TKN2: await Contracts.TestStandardToken.deploy('TKN2', 'TKN2', 2000000),
-            TKN3: await Contracts.TestStandardToken.deploy('TKN3', 'TKN3', 3000000),
+            TKN3: await Contracts.TestNonStandardToken.deploy('TKN3 (non-standard)', 'TKN3', 3000000),
             ANCR1: await Contracts.DSToken.deploy('Anchor1', 'ANCR1', 2),
             ANCR2: await Contracts.DSToken.deploy('Anchor2', 'ANCR2', 2),
             ANCR3: await Contracts.DSToken.deploy('Anchor3', 'ANCR3', 2),
@@ -388,36 +388,6 @@ describe('BancorNetwork', () => {
                 });
             }
         }
-
-        it('should revert when attempting to convert a non-standard token', async () => {
-            const nonStandardToken = await Contracts.TestNonStandardToken.deploy('TKN', 'TKN', 2000000);
-            const anchor = await Contracts.DSToken.deploy('Anchor', 'ANCR', 2);
-            const converter = await Contracts.StandardPoolConverter.deploy(anchor.address, contractRegistry.address, 0);
-            await converter.addReserve(tokens.BNT.address, 500000);
-            await converter.addReserve(nonStandardToken.address, 500000);
-
-            await tokens.BNT.transfer(converter.address, 70000);
-            await nonStandardToken.transfer(converter.address, 25000);
-
-            await anchor.transferOwnership(converter.address);
-            await converter.acceptTokenOwnership();
-
-            await converterRegistry.addConverter(converter.address);
-
-            const amount = BigNumber.from(10000);
-            await nonStandardToken.connect(sender).approve(bancorNetwork.address, amount);
-
-            await expect(
-                bancorNetwork
-                    .connect(sender)
-                    .convertByPath2(
-                        [nonStandardToken.address, anchor.address, tokens.BNT.address],
-                        amount,
-                        MIN_RETURN,
-                        ZERO_ADDRESS
-                    )
-            ).to.be.revertedWith('SafeERC20: ERC20 operation did not succeed');
-        });
 
         it('verifies that conversionPath returns the correct path', async () => {
             const conversionPath = await bancorNetwork.conversionPath(tokens.TKN2.address, NATIVE_TOKEN_ADDRESS);
