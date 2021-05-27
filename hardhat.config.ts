@@ -1,32 +1,31 @@
-const fs = require('fs');
-const path = require('path');
-const yargs = require('yargs/yargs');
-const { hideBin } = require('yargs/helpers');
-const { argv } = yargs(hideBin(process.argv));
+import fs from 'fs';
+import path from 'path';
 
-require('@nomiclabs/hardhat-waffle');
-require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-etherscan');
+import '@nomiclabs/hardhat-waffle';
+import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-etherscan';
 
-require('solidity-coverage');
-require('hardhat-contract-sizer');
-require('hardhat-abi-exporter');
-require('hardhat-gas-reporter');
-require('@typechain/hardhat');
+import 'solidity-coverage';
+import 'hardhat-contract-sizer';
+import 'hardhat-abi-exporter';
+import 'hardhat-gas-reporter';
+import '@typechain/hardhat';
 
 // Load Config
 const configPath = path.join(__dirname, '/config.json');
-const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
+const configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
 
-const loadAPIKey = (apiKeyName) => {
-    return config.apiKeys ? (config.apiKeys[apiKeyName] ? config.apiKeys[apiKeyName] : '') : '';
+const loadAPIKey = (apiKeyName: string) => {
+    return configFile.apiKeys ? (configFile.apiKeys[apiKeyName] ? configFile.apiKeys[apiKeyName] : '') : '';
 };
 
 // Config
-const configNetworks = config.networks || {};
+const configNetworks = configFile.networks || {};
 const APIKeyEtherscan = loadAPIKey('etherscan');
 
-module.exports = {
+import { HardhatUserConfig } from 'hardhat/config';
+
+const config: HardhatUserConfig = {
     // Network Config
     networks: {
         // Hardhat network
@@ -68,8 +67,8 @@ module.exports = {
         clear: true
     },
     gasReporter: {
-        currency: 'USD',
-        enabled: process.env.PROFILE
+        currency: 'USD'
+        // enabled: process.env.PROFILE
     },
     typechain: {
         outDir: 'typechain',
@@ -78,7 +77,6 @@ module.exports = {
 
     // Test Config
     mocha: {
-        spec: argv.spec || 'test',
         exit: true,
         recursive: true,
         before_timeout: 600000,
@@ -87,3 +85,5 @@ module.exports = {
         bail: process.env.BAIL
     }
 };
+
+export default config;
