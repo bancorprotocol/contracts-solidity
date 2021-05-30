@@ -55,7 +55,6 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
         contractRegistry.registerAddress(asciiToHex('BancorConverterRegistryData'), converterRegistryData.address)
     );
 
-    // initialize converter factory
     await execute(converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address));
 
     for (const reserve of getConfig().reserves) {
