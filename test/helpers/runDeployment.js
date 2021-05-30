@@ -67,10 +67,10 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
             const { symbol, decimals } = reserve;
             const name = symbol + ' DS Token';
             const supply = toWei(reserve.supply, decimals);
-            const nonce = await getTransactionCount(signer.getAddress());
+            const nonce = await getTransactionCount(await signer.getAddress());
             const token = await deploy('dsToken-' + symbol, 'DSToken', name, symbol, decimals);
-            if (nonce !== (await getTransactionCount(signer.getAddress()))) {
-                await execute(token.issue(signer.getAddress(), supply));
+            if (nonce !== (await getTransactionCount(await signer.getAddress()))) {
+                await execute(token.issue(await signer.getAddress(), supply));
             }
             reserves[symbol] = { address: token.address, decimals };
         }
@@ -127,8 +127,8 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
     const bntTokenGovernance = await deploy('bntTokenGovernance', 'TokenGovernance', reserves.BNT.address);
     const vbntTokenGovernance = await deploy('vbntTokenGovernance', 'TokenGovernance', reserves.vBNT.address);
 
-    await execute(bntTokenGovernance.grantRole(ROLE_GOVERNOR, signer.getAddress()));
-    await execute(vbntTokenGovernance.grantRole(ROLE_GOVERNOR, signer.getAddress()));
+    await execute(bntTokenGovernance.grantRole(ROLE_GOVERNOR, await signer.getAddress()));
+    await execute(vbntTokenGovernance.grantRole(ROLE_GOVERNOR, await signer.getAddress()));
 
     const checkpointStore = await deploy('checkpointStore', 'CheckpointStore');
 

@@ -2,6 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 
+const { providers } = require('ethers');
+const { LedgerSigner } = require('@ethersproject/hardware-wallets');
+
 const runDeployment = require('../test/helpers/runDeployment');
 
 const CFG_FILE_NAME = process.argv[2];
@@ -71,14 +74,14 @@ const send = async (transaction) => {
                 to: transaction._parent._address,
                 data: transaction.encodeABI(),
                 gas: Math.max(
-                    await transaction.estimateGas({ from: account.address, value: transaction.value }),
+                    await transaction.estimateGas({ from: await signer.getAddress(), value: transaction.value }),
                     MIN_GAS_LIMIT
                 ),
                 gasPrice: gasPrice || (await getGasPrice(web3)),
                 chainId: await web3.eth.net.getId(),
                 value: transaction.value
             };
-            const signed = await web3.eth.accounts.signTransaction(tx, account.privateKey);
+            const signed = await signer.signTransaction(tx);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
             return receipt;
         } catch (error) {
@@ -166,37 +169,59 @@ const getArtifact = (artifactName) => {
 
 let web3;
 let gasPrice;
-let account;
+let signer;
+const isLedger = !PRIVATE_KEY;
 
 const run = async () => {
-    web3 = new Web3(NODE_ADDRESS);
-    gasPrice = await getGasPrice(web3);
-    account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
-    account.getAddress = () => account.address;
+    try {
+        web3 = new Web3(NODE_ADDRESS);
 
-    let phase = 0;
-    if (getConfig().phase === undefined) {
-        setConfig({ phase });
-    }
+        if (!isLedger) {
+            console.log('Deploying using a local test key...');
 
-    const execute = async (transaction) => {
-        if (getConfig().phase === phase++) {
-            await send(transaction);
-            console.log(`phase ${phase} executed`);
+            signer = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
+            signer.getAddress = async () => signer.address;
+            signer.signTransaction = async (tx) => web3.eth.accounts.signTransaction(tx, signer.privateKey);
+        } else {
+            console.log('Deploying using a Ledger HW...');
+
+            const type = 'hid';
+            const path = `m/44'/60'/0'/0/0`;
+            signer = new LedgerSigner(web3, type, path);
+        }
+
+        console.log();
+
+        console.log('address', await signer.getAddress());
+
+        gasPrice = await getGasPrice(web3);
+
+        let phase = 0;
+        if (getConfig().phase === undefined) {
             setConfig({ phase });
         }
-    };
 
-    await runDeployment(
-        account,
-        deploy,
-        deployed,
-        execute,
-        getConfig,
-        Web3.utils.keccak256,
-        Web3.utils.asciiToHex,
-        web3.eth.getTransactionCount
-    );
+        const execute = async (transaction) => {
+            if (getConfig().phase === phase++) {
+                await send(transaction);
+                console.log(`phase ${phase} executed`);
+                setConfig({ phase });
+            }
+        };
+
+        await runDeployment(
+            signer,
+            deploy,
+            deployed,
+            execute,
+            getConfig,
+            Web3.utils.keccak256,
+            Web3.utils.asciiToHex,
+            web3.eth.getTransactionCount
+        );
+    } catch (error) {
+        console.error(error);
+    }
 
     web3.currentProvider.disconnect();
 };
