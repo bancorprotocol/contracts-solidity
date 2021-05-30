@@ -14,7 +14,6 @@ require('hardhat-abi-exporter');
 require('hardhat-gas-reporter');
 require('@typechain/hardhat');
 
-// Load Config
 const configPath = path.join(__dirname, '/config.json');
 const config = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
 
@@ -22,14 +21,11 @@ const loadAPIKey = (apiKeyName) => {
     return config.apiKeys ? (config.apiKeys[apiKeyName] ? config.apiKeys[apiKeyName] : '') : '';
 };
 
-// Config
 const configNetworks = config.networks || {};
 const APIKeyEtherscan = loadAPIKey('etherscan');
 
 module.exports = {
-    // Network Config
     networks: {
-        // Hardhat network
         hardhat: {
             gasPrice: 20000000000,
             gas: 9500000,
@@ -39,11 +35,9 @@ module.exports = {
             }
         },
 
-        // Load the rest of the Network config from a file
         ...configNetworks
     },
 
-    // Solidity Config
     solidity: {
         version: '0.6.12',
         settings: {
@@ -51,10 +45,12 @@ module.exports = {
                 enabled: true,
                 runs: 200
             }
+        },
+        metadata: {
+            bytecodeHash: 'none'
         }
     },
 
-    // Plugins Config
     etherscan: {
         apiKey: APIKeyEtherscan
     },
@@ -71,12 +67,7 @@ module.exports = {
         currency: 'USD',
         enabled: process.env.PROFILE
     },
-    typechain: {
-        outDir: 'typechain',
-        target: 'ethers-v5'
-    },
 
-    // Test Config
     mocha: {
         spec: argv.spec || 'test',
         exit: true,
