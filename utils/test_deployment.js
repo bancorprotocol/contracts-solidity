@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 
-const { providers } = require('ethers');
+const { BigNumber } = require('ethers');
 const { LedgerSigner } = require('@ethersproject/hardware-wallets');
 
 const runDeployment = require('../test/helpers/runDeployment');
@@ -77,18 +77,21 @@ const send = async (transaction) => {
                     await transaction.estimateGas({ from: await signer.getAddress(), value: transaction.value }),
                     MIN_GAS_LIMIT
                 ),
-                gasPrice: gasPrice || (await getGasPrice(web3)),
+                gasPrice: BigNumber.from(gasPrice || (await getGasPrice(web3))),
                 chainId: await web3.eth.net.getId(),
                 value: transaction.value
             };
+
             const signed = await signer.signTransaction(tx);
             const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
+
             return receipt;
         } catch (error) {
             if (STANDARD_ERRORS.some((suffix) => error.message.endsWith(suffix))) {
                 console.log(error.message + '; retrying...');
             } else {
                 console.log(error.message);
+
                 const receipt = await getTransactionReceipt(web3);
                 if (receipt) {
                     return receipt;
@@ -99,14 +102,16 @@ const send = async (transaction) => {
 };
 
 const deploy = async (contractId, contractName, ...contractArgs) => {
-    if (getConfig()[contractId] === undefined) {
+    if (!getConfig()[contractId]) {
         const artifact = getArtifact(contractName);
         const contract = new web3.eth.Contract(artifact.abi);
         const options = { data: artifact.bytecode, arguments: contractArgs };
         const transaction = contract.deploy(options);
         const receipt = await send(transaction);
         const args = transaction.encodeABI().slice(options.data.length);
+
         console.log(`${contractId} deployed at ${receipt.contractAddress}`);
+
         setConfig({
             [contractId]: {
                 name: contractName,
@@ -115,6 +120,7 @@ const deploy = async (contractId, contractName, ...contractArgs) => {
             }
         });
     }
+
     return deployed(contractName, getConfig()[contractId].addr);
 };
 
@@ -188,11 +194,11 @@ const run = async () => {
             const type = 'hid';
             const path = `m/44'/60'/0'/0/0`;
             signer = new LedgerSigner(web3, type, path);
+
+            console.log('Address:', await signer.getAddress());
         }
 
         console.log();
-
-        console.log('address', await signer.getAddress());
 
         gasPrice = await getGasPrice(web3);
 
@@ -202,11 +208,15 @@ const run = async () => {
         }
 
         const execute = async (transaction) => {
-            if (getConfig().phase === phase++) {
-                await send(transaction);
-                console.log(`phase ${phase} executed`);
-                setConfig({ phase });
+            if (getConfig().phase !== phase++) {
+                return;
             }
+
+            await send(transaction);
+
+            console.log(`phase ${phase} executed`);
+
+            setConfig({ phase });
         };
 
         await runDeployment(
