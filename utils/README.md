@@ -1,12 +1,12 @@
-## Utilities
+# Utilities
 
-### [Prerequisites](../../README.md#prerequisites)
+## [Prerequisites](../../README.md#prerequisites)
 
-### [Installation](../../README.md#installation)
+## [Installation](../../README.md#installation)
 
 Following installation, `yarn build` should be executed once.
 
-### Test Deployment
+## Test Deployment
 
 Deploys a set of contracts for testing purpose; can be used on both private and public networks:
 
