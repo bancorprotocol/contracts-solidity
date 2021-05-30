@@ -1,10 +1,10 @@
-const decimalToInteger = (value, decimals) => {
-    const parts = [...value.split('.'), ''];
-    return parts[0] + parts[1].padEnd(decimals, '0');
-};
+const { BigNumber } = require('ethers');
 
-const percentageToPPM = (value) => {
-    return decimalToInteger(value.replace('%', ''), 4);
+const MAX_CONVERSION_FEE = 1_000_000;
+const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
+
+const toWei = (value, decimals) => {
+    return BigNumber.from(value).mul(BigNumber.from(10).pow(decimals));
 };
 
 module.exports = async (account, deploy, deployed, execute, getConfig, keccak256, asciiToHex, getTransactionCount) => {
@@ -68,7 +68,7 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
             const name = reserve.symbol + ' DS Token';
             const symbol = reserve.symbol;
             const decimals = reserve.decimals;
-            const supply = decimalToInteger(reserve.supply, decimals);
+            const supply = toWei(reserve.supply, decimals);
             const nonce = await getTransactionCount(account.address);
             const token = await deploy('dsToken-' + symbol, 'DSToken', name, symbol, decimals);
             if (nonce !== (await getTransactionCount(account.address))) {
@@ -79,20 +79,22 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
     }
 
     for (const [converter, index] of getConfig().converters.map((converter, index) => [converter, index])) {
-        const type = converter.type;
+        const { type, symbol, decimals, fee } = converter;
         const name = converter.symbol + ' Liquidity Pool';
-        const symbol = converter.symbol;
-        const decimals = converter.decimals;
-        const fee = percentageToPPM(converter.fee);
         const tokens = converter.reserves.map((reserve) => reserves[reserve.symbol].address);
-        const weights = [percentageToPPM('50%'), percentageToPPM('50%')];
-        const amounts = converter.reserves.map((reserve) =>
-            decimalToInteger(reserve.balance, reserves[reserve.symbol].decimals)
-        );
+        const amounts = converter.reserves.map((reserve) => toWei(reserve.balance, reserves[reserve.symbol].decimals));
         const value = amounts[converter.reserves.findIndex((reserve) => reserve.symbol === 'ETH')];
 
         await execute(
-            converterRegistry.newConverter(type, name, symbol, decimals, percentageToPPM('100%'), tokens, weights)
+            converterRegistry.newConverter(
+                type,
+                name,
+                symbol,
+                decimals,
+                MAX_CONVERSION_FEE,
+                tokens,
+                STANDARD_POOL_CONVERTER_WEIGHTS
+            )
         );
 
         const converterAnchor = await deployed('IConverterAnchor', await converterRegistry.getAnchor(index));
@@ -194,18 +196,12 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
 
     const params = getConfig().liquidityProtectionParams;
 
-    const minNetworkTokenLiquidityForMinting = decimalToInteger(
-        params.minNetworkTokenLiquidityForMinting,
-        reserves.BNT.decimals
-    );
+    const minNetworkTokenLiquidityForMinting = toWei(params.minNetworkTokenLiquidityForMinting, reserves.BNT.decimals);
     await execute(
         liquidityProtectionSettings.setMinNetworkTokenLiquidityForMinting(minNetworkTokenLiquidityForMinting)
     );
 
-    const defaultNetworkTokenMintingLimit = decimalToInteger(
-        params.defaultNetworkTokenMintingLimit,
-        reserves.BNT.decimals
-    );
+    const defaultNetworkTokenMintingLimit = toWei(params.defaultNetworkTokenMintingLimit, reserves.BNT.decimals);
     await execute(liquidityProtectionSettings.setDefaultNetworkTokenMintingLimit(defaultNetworkTokenMintingLimit));
 
     await execute(
