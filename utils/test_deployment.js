@@ -172,6 +172,7 @@ const run = async () => {
     web3 = new Web3(NODE_ADDRESS);
     gasPrice = await getGasPrice(web3);
     account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
+    account.getAddress = () => account.address;
 
     let phase = 0;
     if (getConfig().phase === undefined) {
