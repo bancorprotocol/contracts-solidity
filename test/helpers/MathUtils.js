@@ -11,11 +11,6 @@ function ceilSqrt(n) {
     return Decimal(n).sqrt().ceil().toFixed();
 }
 
-function poweredRatio(a, b, exp) {
-    [a, b, exp] = [...arguments].map((x) => Decimal(x));
-    return [a, b].map((x) => x.pow(exp).toFixed());
-}
-
 function reducedRatio(a, b, max) {
     [a, b, max] = [...arguments].map((x) => Decimal(x));
     if (a.gt(max) || b.gt(max)) {
@@ -171,7 +166,6 @@ function toBigNumber(value) {
 module.exports = {
     floorSqrt,
     ceilSqrt,
-    poweredRatio,
     reducedRatio,
     normalizedRatio,
     accurateRatio,
