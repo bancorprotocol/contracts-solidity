@@ -97,8 +97,7 @@ describe('Deployment', () => {
             (...args) => args[0],
             () => config,
             ethers.utils.id,
-            ethers.utils.formatBytes32String,
-            ethers.provider.getTransactionCount
+            ethers.utils.formatBytes32String
         );
     });
 });

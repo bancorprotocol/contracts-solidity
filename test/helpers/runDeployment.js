@@ -7,7 +7,7 @@ const toWei = (value, decimals) => {
     return BigNumber.from(value).mul(BigNumber.from(10).pow(decimals));
 };
 
-module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256, asciiToHex, getTransactionCount) => {
+module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256, asciiToHex) => {
     const ROLE_OWNER = keccak256('ROLE_OWNER');
     const ROLE_GOVERNOR = keccak256('ROLE_GOVERNOR');
     const ROLE_MINTER = keccak256('ROLE_MINTER');
@@ -67,11 +67,10 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
             const { symbol, decimals } = reserve;
             const name = symbol + ' DS Token';
             const supply = toWei(reserve.supply, decimals);
-            const nonce = await getTransactionCount(await signer.getAddress());
             const token = await deploy('dsToken-' + symbol, 'DSToken', name, symbol, decimals);
-            if (nonce !== (await getTransactionCount(await signer.getAddress()))) {
-                await execute(token.issue(await signer.getAddress(), supply));
-            }
+
+            await execute(token.issue(await signer.getAddress(), supply));
+
             reserves[symbol] = { address: token.address, decimals };
         }
     }

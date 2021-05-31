@@ -70,20 +70,23 @@ const getTransactionReceipt = async (web3) => {
 const send = async (transaction) => {
     while (true) {
         try {
+            const signerAddress = await signer.getAddress();
+            const {
+                _parent: { _address: to },
+                value
+            } = transaction;
             const tx = {
-                to: transaction._parent._address,
+                to,
                 data: transaction.encodeABI(),
-                gas: Math.max(
-                    await transaction.estimateGas({ from: await signer.getAddress(), value: transaction.value }),
-                    MIN_GAS_LIMIT
-                ),
+                nonce: await web3.eth.getTransactionCount(signerAddress),
+                gasLimit: Math.max(await transaction.estimateGas({ from: signerAddress, value }), MIN_GAS_LIMIT),
                 gasPrice: BigNumber.from(gasPrice || (await getGasPrice(web3))),
-                chainId: await web3.eth.net.getId(),
-                value: transaction.value
+                chainId: await web3.eth.getChainId(),
+                value
             };
 
             const signed = await signer.signTransaction(tx);
-            const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction);
+            const receipt = await web3.eth.sendSignedTransaction(signed.rawTransaction || signed);
 
             return receipt;
         } catch (error) {
@@ -192,7 +195,7 @@ const run = async () => {
             console.log('Deploying using a Ledger HW...');
 
             const type = 'hid';
-            const path = `m/44'/60'/0'/0/0`;
+            const path = "m/44'/60'/0'/0";
             signer = new LedgerSigner(web3, type, path);
 
             console.log('Address:', await signer.getAddress());
@@ -219,16 +222,7 @@ const run = async () => {
             setConfig({ phase });
         };
 
-        await runDeployment(
-            signer,
-            deploy,
-            deployed,
-            execute,
-            getConfig,
-            Web3.utils.keccak256,
-            Web3.utils.asciiToHex,
-            web3.eth.getTransactionCount
-        );
+        await runDeployment(signer, deploy, deployed, execute, getConfig, Web3.utils.keccak256, Web3.utils.asciiToHex);
     } catch (error) {
         console.error(error);
     }
