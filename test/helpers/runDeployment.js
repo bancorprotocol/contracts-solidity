@@ -1,4 +1,7 @@
-const { BigNumber } = require('ethers');
+const {
+    BigNumber,
+    utils: { id, formatBytes32String }
+} = require('ethers');
 
 const MAX_CONVERSION_FEE = 1_000_000;
 const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
@@ -7,11 +10,11 @@ const toWei = (value, decimals) => {
     return BigNumber.from(value).mul(BigNumber.from(10).pow(decimals));
 };
 
-module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256, asciiToHex) => {
-    const ROLE_OWNER = keccak256('ROLE_OWNER');
-    const ROLE_GOVERNOR = keccak256('ROLE_GOVERNOR');
-    const ROLE_MINTER = keccak256('ROLE_MINTER');
-    const ROLE_PUBLISHER = keccak256('ROLE_PUBLISHER');
+module.exports = async (signer, deploy, deployed, execute, config) => {
+    const ROLE_OWNER = id('ROLE_OWNER');
+    const ROLE_GOVERNOR = id('ROLE_GOVERNOR');
+    const ROLE_MINTER = id('ROLE_MINTER');
+    const ROLE_PUBLISHER = id('ROLE_PUBLISHER');
 
     const reserves = {
         ETH: {
@@ -43,21 +46,30 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
     await deploy('standardPoolConverter', 'StandardPoolConverter', poolToken1.address, contractRegistry.address, 1000);
 
     // initialize contract registry
-    await execute(contractRegistry.registerAddress(asciiToHex('ContractRegistry'), contractRegistry.address));
-    await execute(contractRegistry.registerAddress(asciiToHex('ConverterFactory'), converterFactory.address));
-    await execute(contractRegistry.registerAddress(asciiToHex('BancorNetwork'), bancorNetwork.address));
-    await execute(contractRegistry.registerAddress(asciiToHex('NetworkSettings'), networkSettings.address));
+    await execute(contractRegistry.registerAddress(formatBytes32String('ContractRegistry'), contractRegistry.address));
+    await execute(contractRegistry.registerAddress(formatBytes32String('ConverterFactory'), converterFactory.address));
+    await execute(contractRegistry.registerAddress(formatBytes32String('BancorNetwork'), bancorNetwork.address));
+    await execute(contractRegistry.registerAddress(formatBytes32String('NetworkSettings'), networkSettings.address));
 
-    await execute(contractRegistry.registerAddress(asciiToHex('ConversionPathFinder'), conversionPathFinder.address));
-    await execute(contractRegistry.registerAddress(asciiToHex('BancorConverterUpgrader'), converterUpgrader.address));
-    await execute(contractRegistry.registerAddress(asciiToHex('BancorConverterRegistry'), converterRegistry.address));
     await execute(
-        contractRegistry.registerAddress(asciiToHex('BancorConverterRegistryData'), converterRegistryData.address)
+        contractRegistry.registerAddress(formatBytes32String('ConversionPathFinder'), conversionPathFinder.address)
+    );
+    await execute(
+        contractRegistry.registerAddress(formatBytes32String('BancorConverterUpgrader'), converterUpgrader.address)
+    );
+    await execute(
+        contractRegistry.registerAddress(formatBytes32String('BancorConverterRegistry'), converterRegistry.address)
+    );
+    await execute(
+        contractRegistry.registerAddress(
+            formatBytes32String('BancorConverterRegistryData'),
+            converterRegistryData.address
+        )
     );
 
     await execute(converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address));
 
-    for (const reserve of getConfig().reserves) {
+    for (const reserve of config.reserves) {
         if (reserve.address) {
             const token = await deployed('ERC20', reserve.address);
             const symbol = await token.symbol();
@@ -75,7 +87,7 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
         }
     }
 
-    for (const [converter, index] of getConfig().converters.map((converter, index) => [converter, index])) {
+    for (const [converter, index] of config.converters.map((converter, index) => [converter, index])) {
         const { type, symbol, decimals, fee } = converter;
         const name = converter.symbol + ' Liquidity Pool';
         const tokens = converter.reserves.map((reserve) => reserves[reserve.symbol].address);
@@ -120,7 +132,7 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
         };
     }
 
-    await execute(contractRegistry.registerAddress(asciiToHex('BNTToken'), reserves.BNT.address));
+    await execute(contractRegistry.registerAddress(formatBytes32String('BNTToken'), reserves.BNT.address));
     await execute(conversionPathFinder.setAnchorToken(reserves.BNT.address));
 
     const bntTokenGovernance = await deploy('bntTokenGovernance', 'TokenGovernance', reserves.BNT.address);
@@ -187,7 +199,9 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
     await execute(liquidityProtectionStats.grantRole(ROLE_OWNER, liquidityProtection.address));
     await execute(liquidityProtectionSystemStore.grantRole(ROLE_OWNER, liquidityProtection.address));
 
-    await execute(contractRegistry.registerAddress(asciiToHex('LiquidityProtection'), liquidityProtection.address));
+    await execute(
+        contractRegistry.registerAddress(formatBytes32String('LiquidityProtection'), liquidityProtection.address)
+    );
 
     await execute(liquidityProtectionStore.transferOwnership(liquidityProtection.address));
     await execute(liquidityProtection.acceptStoreOwnership());
@@ -195,7 +209,7 @@ module.exports = async (signer, deploy, deployed, execute, getConfig, keccak256,
     await execute(liquidityProtectionWallet.transferOwnership(liquidityProtection.address));
     await execute(liquidityProtection.acceptWalletOwnership());
 
-    const params = getConfig().liquidityProtectionParams;
+    const params = config.liquidityProtectionParams;
 
     const minNetworkTokenLiquidityForMinting = toWei(params.minNetworkTokenLiquidityForMinting, reserves.BNT.decimals);
     await execute(

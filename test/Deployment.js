@@ -95,9 +95,7 @@ describe('Deployment', () => {
             (...args) => Contracts[args[1]].deploy(...args.slice(2)),
             (...args) => Contracts[args[0]].attach(args[1]),
             (...args) => args[0],
-            () => config,
-            ethers.utils.id,
-            ethers.utils.formatBytes32String
+            config
         );
     });
 });

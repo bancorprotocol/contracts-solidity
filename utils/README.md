@@ -8,13 +8,20 @@ Following installation, `yarn build` should be executed once.
 
 ## Test Deployment
 
-Deploys a set of contracts for testing purpose; can be used on both private and public networks:
+Deploys a set of contracts for testing purposes and can be used on both private and public networks.
+
+For example:
 
 ```bash
-node test_deployment.js
-    Configuration file name
-    Ethereum node address
-    Account private key
+node test_deployment.js deploy --provider http://127.0.0.1:8545 --configPath ./local_config.json --key [TEST_KEY]
+
+node test_deployment.js deploy --provider https://ropsten.infura.io/v3/[PROJECT_ID] --configPath ./ropsten_config.json --ledger
+```
+
+For more info, please run:
+
+```bash
+node test_deployment.js --help
 ```
 
 The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
