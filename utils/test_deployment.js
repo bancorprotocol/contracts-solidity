@@ -216,7 +216,6 @@ const main = async () => {
                 default: "m/44'/60'/0'/0",
                 description: 'BIP39 path'
             })
-
             .middleware(({ provider }) => {
                 web3 = new Web3(provider);
             })
@@ -235,7 +234,7 @@ const main = async () => {
                 'deploy',
                 'Deploy the contracts',
                 () => {},
-                async ({ key, ledger, path, configPath }) => {
+                async ({ key, ledger, path }) => {
                     if (key) {
                         signer = web3.eth.accounts.privateKeyToAccount(key);
                         signer.getAddress = async () => signer.address;
