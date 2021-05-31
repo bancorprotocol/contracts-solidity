@@ -6,9 +6,8 @@ const {
 const MAX_CONVERSION_FEE = 1_000_000;
 const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
 
-const toWei = (value, decimals) => {
-    return BigNumber.from(value).mul(BigNumber.from(10).pow(decimals));
-};
+const toWei = (value, decimals) => BigNumber.from(value).mul(BigNumber.from(10).pow(decimals));
+const percentageToPPM = (value) => (Number(value.replace('%', '')) * 1_000_000) / 100;
 
 module.exports = async (signer, deploy, deployed, execute, config) => {
     const ROLE_OWNER = id('ROLE_OWNER');
@@ -110,7 +109,7 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
 
         const standardConverter = await deployed('StandardPoolConverter', await converterAnchor.owner());
         await execute(standardConverter.acceptOwnership());
-        await execute(standardConverter.setConversionFee(fee));
+        await execute(standardConverter.setConversionFee(percentageToPPM(fee)));
 
         if (amounts.every((amount) => amount > 0)) {
             for (let i = 0; i < converter.reserves.length; i++) {

@@ -31,7 +31,7 @@ const config = {
             type: 3,
             symbol: 'ETHBNT',
             decimals: 18,
-            fee: 10_000,
+            fee: '0.1%',
             reserves: [
                 {
                     symbol: 'ETH',
@@ -47,7 +47,7 @@ const config = {
             type: 3,
             symbol: 'XXXBNT',
             decimals: 18,
-            fee: 10_000,
+            fee: '0.1%',
             reserves: [
                 {
                     symbol: 'XXX',
@@ -63,7 +63,7 @@ const config = {
             type: 3,
             symbol: 'YYYBNT',
             decimals: 18,
-            fee: 20_000,
+            fee: '0.2%',
             reserves: [
                 {
                     symbol: 'YYY',
