@@ -183,6 +183,63 @@ describe('MathEx', () => {
         }
     }
 
+    for (const methodName of ['mulDivF', 'mulDivC']) {
+        for (const px of [0, 64, 128, 192, 255, 256]) {
+            for (const py of [0, 64, 128, 192, 255, 256]) {
+                for (const pz of [1, 64, 128, 192, 255, 256]) {
+                    for (const ax of px < 256 ? [-1, 0, +1] : [-1]) {
+                        for (const ay of py < 256 ? [-1, 0, +1] : [-1]) {
+                            for (const az of pz < 256 ? [-1, 0, +1] : [-1]) {
+                                const x = Decimal(2).pow(px).add(ax);
+                                const y = Decimal(2).pow(py).add(ay);
+                                const z = Decimal(2).pow(pz).add(az);
+                                testMulDiv(methodName, x.toHex(), y.toHex(), z.toHex());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (const methodName of ['mulDivF', 'mulDivC']) {
+        for (const px of [64, 128, 192, 256]) {
+            for (const py of [64, 128, 192, 256]) {
+                for (const pz of [64, 128, 192, 256]) {
+                    for (const ax of [Decimal(2).pow(px >> 1), 1]) {
+                        for (const ay of [Decimal(2).pow(py >> 1), 1]) {
+                            for (const az of [Decimal(2).pow(pz >> 1), 1]) {
+                                const x = Decimal(2).pow(px).sub(ax);
+                                const y = Decimal(2).pow(py).sub(ay);
+                                const z = Decimal(2).pow(pz).sub(az);
+                                testMulDiv(methodName, x.toHex(), y.toHex(), z.toHex());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (const methodName of ['mulDivF', 'mulDivC']) {
+        for (const px of [128, 192, 256]) {
+            for (const py of [128, 192, 256]) {
+                for (const pz of [128, 192, 256]) {
+                    for (const ax of [3, 5, 7]) {
+                        for (const ay of [3, 5, 7]) {
+                            for (const az of [3, 5, 7]) {
+                                const x = Decimal(2).pow(px).divToInt(ax);
+                                const y = Decimal(2).pow(py).divToInt(ay);
+                                const z = Decimal(2).pow(pz).divToInt(az);
+                                testMulDiv(methodName, x.toHex(), y.toHex(), z.toHex());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function expectAlmostEqual(actual, expected, range) {
         const x = Decimal(expected[0]).mul(actual[1].toString());
         const y = Decimal(expected[1]).mul(actual[0].toString());
@@ -191,5 +248,18 @@ describe('MathEx', () => {
             const relativeError = x.div(y).sub(1).abs();
             expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true;
         }
+    }
+
+    function testMulDiv(methodName, ...args) {
+        it(`${methodName}(${args.join(", ")})`, async () => {
+            const expected = Decimal(MathUtils[methodName](...args.map(x => Decimal(x))));
+            if (expected.lte(MAX_UINT256)) {
+                const actual = await mathContract[methodName](...args);
+                expect(actual.toString()).to.equal(expected.toFixed());
+            }
+            else {
+                await expect(mathContract[methodName](...args)).to.be.revertedWith('ERR_OVERFLOW');
+            }
+        });
     }
 });
