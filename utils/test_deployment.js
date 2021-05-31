@@ -262,8 +262,6 @@ const main = async () => {
     }
 
     web3.currentProvider.disconnect();
-
-    // process.exit(-1);
 };
 
 main();
