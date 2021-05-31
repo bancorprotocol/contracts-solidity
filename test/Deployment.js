@@ -8,17 +8,17 @@ const config = {
         {
             symbol: 'XXX',
             decimals: 18,
-            supply: 1829101
+            supply: 1_829_101
         },
         {
             symbol: 'YYY',
             decimals: 18,
-            supply: 3603801
+            supply: 3_603_801
         },
         {
             symbol: 'BNT',
             decimals: 18,
-            supply: 6914855
+            supply: 6_914_855
         },
         {
             symbol: 'vBNT',
