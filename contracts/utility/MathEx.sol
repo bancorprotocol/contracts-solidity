@@ -7,7 +7,6 @@ pragma solidity 0.6.12;
 library MathEx {
     uint256 private constant MAX_EXP_BIT_LEN = 4;
     uint256 private constant MAX_EXP = 2**MAX_EXP_BIT_LEN - 1;
-    uint256 private constant MAX_UINT128 = 2**128 - 1;
 
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a positive integer
@@ -37,42 +36,6 @@ library MathEx {
         uint256 x = floorSqrt(num);
 
         return x * x == num ? x : x + 1;
-    }
-
-    /**
-     * @dev computes a powered ratio
-     *
-     * @param n ratio numerator
-     * @param d ratio denominator
-     * @param exp ratio exponent
-     *
-     * @return powered ratio's numerator and denominator
-     */
-    function poweredRatio(
-        uint256 n,
-        uint256 d,
-        uint256 exp
-    ) internal pure returns (uint256, uint256) {
-        require(exp <= MAX_EXP, "ERR_EXP_TOO_LARGE");
-
-        uint256[MAX_EXP_BIT_LEN] memory ns;
-        uint256[MAX_EXP_BIT_LEN] memory ds;
-
-        (ns[0], ds[0]) = reducedRatio(n, d, MAX_UINT128);
-        for (uint256 i = 0; (exp >> i) > 1; ++i) {
-            (ns[i + 1], ds[i + 1]) = reducedRatio(ns[i]**2, ds[i]**2, MAX_UINT128);
-        }
-
-        uint256 newN = 1;
-        uint256 newD = 1;
-
-        for (uint256 i = 0; (exp >> i) > 0; ++i) {
-            if (((exp >> i) & 1) > 0) {
-                (newN, newD) = reducedRatio(newN * ns[i], newD * ds[i], MAX_UINT128);
-            }
-        }
-
-        return (newN, newD);
     }
 
     /**
