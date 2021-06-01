@@ -37,15 +37,15 @@ function roundDiv(a, b) {
     return a.div(b).toFixed(0, Decimal.ROUND_HALF_UP);
 }
 
-function mulDivF(a, b, c) {
+const mulDivF = (a, b, c) => {
     [a, b, c] = [...arguments].map((x) => Decimal(x));
     return a.mul(b).div(c).floor().toFixed();
-}
+};
 
-function mulDivC(a, b, c) {
+const mulDivC = (a, b, c) => {
     [a, b, c] = [...arguments].map((x) => Decimal(x));
     return a.mul(b).div(c).ceil().toFixed();
-}
+};
 
 function compareRatios(a, b, c, d) {
     [a, b, c, d] = [...arguments].map((x) => Decimal(x));
