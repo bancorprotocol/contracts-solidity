@@ -40,6 +40,27 @@ library MathEx {
     }
 
     /**
+     * @dev computes the product of two given ratios
+     *
+     * @param xn the 1st ratio numerator
+     * @param yn the 2nd ratio numerator
+     * @param xd the 1st ratio denominator
+     * @param yd the 2nd ratio denominator
+     *
+     * @return the product ratio numerator
+     * @return the product ratio denominator
+     */
+    function productRatio(uint256 xn, uint256 yn, uint256 xd, uint256 yd) internal pure returns (uint256, uint256) {
+        uint256 n = mulDivC(xn, yn, MAX_UINT256);
+        uint256 d = mulDivC(xd, yd, MAX_UINT256);
+        uint256 z = n > d ? n : d;
+        if (z > 1) {
+            return (mulDivC(xn, yn, z), mulDivC(xd, yd, z));
+        }
+        return (xn * yn, xd * yd);
+    }
+
+    /**
      * @dev computes a reduced-scalar ratio
      *
      * @param n ratio numerator
@@ -230,8 +251,9 @@ library MathEx {
     function inv256(uint256 d) private pure returns (uint256) {
         // use newton–raphson convergence method in order to find the root of `f(x) = 1 / x - d`
         uint256 x = 1;
-        for (uint256 i = 0; i < 8; ++i)
+        for (uint256 i = 0; i < 8; ++i) {
             x = unsafeMul(x, unsafeSub(2, unsafeMul(x, d))); // `x = x * (2 - x * d) mod 2 ^ 256`
+        }
         return x;
     }
 

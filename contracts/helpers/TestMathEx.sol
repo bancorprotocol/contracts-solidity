@@ -14,6 +14,15 @@ contract TestMathEx {
         return MathEx.ceilSqrt(num);
     }
 
+    function productRatioTest(
+        uint256 xn,
+        uint256 yn,
+        uint256 xd,
+        uint256 yd
+    ) external pure returns (uint256, uint256) {
+        return MathEx.productRatio(xn, yn, xd, yd);
+    }
+
     function reducedRatioTest(
         uint256 n,
         uint256 d,

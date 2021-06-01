@@ -9,6 +9,8 @@ const Contracts = require('../helpers/Contracts');
 const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);
 const SCALES = [6, 18, 30].map((n) => Decimal(10).pow(n)).concat(MAX_UINT128);
+const PR_TEST_ARRAY = [MAX_UINT128, MAX_UINT256.divToInt(2), MAX_UINT256.sub(MAX_UINT128), MAX_UINT256];
+const PR_MAX_ERROR = '0.00000000000000000000000000000000000001';
 
 describe('MathEx', () => {
     let mathContract;
@@ -36,6 +38,21 @@ describe('MathEx', () => {
                 const actual = await mathContract.ceilSqrtTest(x.toString());
                 expect(actual).to.equal(expected);
             });
+        }
+    }
+
+    for (const xn of PR_TEST_ARRAY) {
+        for (const yn of PR_TEST_ARRAY) {
+            for (const xd of PR_TEST_ARRAY) {
+                for (const yd of PR_TEST_ARRAY) {
+                    const [an, bn, ad, bd] = [xn, yn, xd, yd].map(val => val.toHex());
+                    it(`productRatio(${an}, ${bn}, ${ad}, ${bd})`, async () => {
+                        const expected = MathUtils.productRatio(an, bn, ad, bd);
+                        const actual = await mathContract.productRatioTest(an, bn, ad, bd);
+                        expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: PR_MAX_ERROR });
+                    });
+                }
+            }
         }
     }
 
@@ -246,7 +263,10 @@ describe('MathEx', () => {
         if (!x.eq(y)) {
             const absoluteError = x.sub(y).abs();
             const relativeError = x.div(y).sub(1).abs();
-            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.be.true;
+            expect(absoluteError.lte(range.maxAbsoluteError) || relativeError.lte(range.maxRelativeError)).to.equal(
+                true,
+                `\nabsoluteError = ${absoluteError.toFixed()}\nrelativeError = ${relativeError.toFixed(25)}`
+            );
         }
     }
 
