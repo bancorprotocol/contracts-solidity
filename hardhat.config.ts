@@ -18,9 +18,13 @@ const loadAPIKey = (apiKeyName: string) => {
     return configFile.apiKeys ? (configFile.apiKeys[apiKeyName] ? configFile.apiKeys[apiKeyName] : '') : '';
 };
 
+// Casting to unknown assume the good type is provided
+const loadENVKey = <T>(envKeyName: string) => {
+    return process.env[envKeyName] as unknown as T;
+};
+
 // Config
 const configNetworks = configFile.networks || {};
-const APIKeyEtherscan = loadAPIKey('etherscan');
 
 import { HardhatUserConfig } from 'hardhat/config';
 
@@ -53,7 +57,7 @@ const config: HardhatUserConfig = {
     },
 
     etherscan: {
-        apiKey: APIKeyEtherscan
+        apiKey: loadAPIKey('etherscan')
     },
     contractSizer: {
         alphaSort: true,
@@ -65,8 +69,8 @@ const config: HardhatUserConfig = {
         clear: true
     },
     gasReporter: {
-        currency: 'USD'
-        // enabled: process.env.PROFILE
+        currency: 'USD',
+        enabled: loadENVKey('PROFILE')
     },
 
     mocha: {
@@ -75,7 +79,7 @@ const config: HardhatUserConfig = {
         before_timeout: 600000,
         timeout: 600000,
         useColors: true,
-        bail: process.env.BAIL
+        bail: loadENVKey('BAIL')
     }
 };
 
