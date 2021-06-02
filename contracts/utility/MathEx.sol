@@ -249,7 +249,7 @@ library MathEx {
      * @dev returns the inverse of `d` modulo `2 ^ 256`, where `d` is congruent to `1` modulo `2`
      */
     function inv256(uint256 d) private pure returns (uint256) {
-        // use newton–raphson convergence method in order to find the root of `f(x) = 1 / x - d`
+        // approximate the root of `f(x) = 1 / x - d` using the newton–raphson convergence method
         uint256 x = 1;
         for (uint256 i = 0; i < 8; ++i) {
             x = unsafeMul(x, unsafeSub(2, unsafeMul(x, d))); // `x = x * (2 - x * d) mod 2 ^ 256`
