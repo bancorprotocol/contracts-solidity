@@ -11,7 +11,6 @@ import 'hardhat-abi-exporter';
 import 'hardhat-gas-reporter';
 import '@typechain/hardhat';
 
-// Load Config
 const configPath = path.join(__dirname, '/config.json');
 const configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
 
@@ -28,7 +27,6 @@ import { HardhatUserConfig } from 'hardhat/config';
 const config: HardhatUserConfig = {
     // Network Config
     networks: {
-        // Hardhat network
         hardhat: {
             gasPrice: 20000000000,
             gas: 9500000,
@@ -38,22 +36,22 @@ const config: HardhatUserConfig = {
             }
         },
 
-        // Load the rest of the Network config from a file
         ...configNetworks
     },
 
-    // Solidity Config
     solidity: {
         version: '0.6.12',
         settings: {
             optimizer: {
                 enabled: true,
                 runs: 200
+            },
+            metadata: {
+                bytecodeHash: 'none'
             }
         }
     },
 
-    // Plugins Config
     etherscan: {
         apiKey: APIKeyEtherscan
     },
@@ -70,12 +68,7 @@ const config: HardhatUserConfig = {
         currency: 'USD'
         // enabled: process.env.PROFILE
     },
-    typechain: {
-        outDir: 'typechain',
-        target: 'ethers-v5'
-    },
 
-    // Test Config
     mocha: {
         exit: true,
         recursive: true,

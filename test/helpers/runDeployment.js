@@ -130,6 +130,10 @@ module.exports = async (account, deploy, deployed, execute, getConfig, keccak256
     await execute(bntTokenGovernance.grantRole(ROLE_GOVERNOR, account.address));
     await execute(vbntTokenGovernance.grantRole(ROLE_GOVERNOR, account.address));
 
+    const bntToken = await deployed('DSToken', reserves.BNT.address);
+    await execute(bntToken.transferOwnership(bntTokenGovernance.address));
+    await execute(bntTokenGovernance.acceptTokenOwnership());
+
     const checkpointStore = await deploy('checkpointStore', 'CheckpointStore');
 
     const stakingRewardsStore = await deploy('stakingRewardsStore', 'StakingRewardsStore');
