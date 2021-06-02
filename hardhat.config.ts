@@ -23,13 +23,11 @@ const loadENVKey = <T>(envKeyName: string) => {
     return process.env[envKeyName] as unknown as T;
 };
 
-// Config
 const configNetworks = configFile.networks || {};
 
 import { HardhatUserConfig } from 'hardhat/config';
 
 const config: HardhatUserConfig = {
-    // Network Config
     networks: {
         hardhat: {
             gasPrice: 20000000000,
