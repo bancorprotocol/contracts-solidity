@@ -74,11 +74,8 @@ const config: HardhatUserConfig = {
     },
 
     mocha: {
-        exit: true,
-        recursive: true,
-        before_timeout: 600000,
         timeout: 600000,
-        useColors: true,
+        color: true,
         bail: loadENVKey('BAIL')
     }
 };
