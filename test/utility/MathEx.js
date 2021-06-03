@@ -270,15 +270,15 @@ describe('MathEx', () => {
         }
     }
 
-    function testMulDiv(methodName, ...args) {
-        it(`${methodName}(${args.join(", ")})`, async () => {
-            const expected = Decimal(MathUtils[methodName](...args.map(x => Decimal(x))));
+    function testMulDiv(methodName, x, y, z) {
+        it(`${methodName}(${x}, ${y}, ${z})`, async () => {
+            const expected = Decimal(MathUtils[methodName](x, y, z));
             if (expected.lte(MAX_UINT256)) {
-                const actual = await mathContract[methodName](...args);
+                const actual = await mathContract[methodName](x, y, z);
                 expect(actual.toString()).to.equal(expected.toFixed());
             }
             else {
-                await expect(mathContract[methodName](...args)).to.be.revertedWith('ERR_OVERFLOW');
+                await expect(mathContract[methodName](x, y, z)).to.be.revertedWith('ERR_OVERFLOW');
             }
         });
     }

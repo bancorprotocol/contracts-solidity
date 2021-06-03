@@ -186,21 +186,27 @@ library MathEx {
      */
     function mulDivF(uint256 x, uint256 y, uint256 z) internal pure returns (uint256) {
         (uint256 xyh, uint256 xyl) = mul512(x, y);
-        if (xyh == 0) { // `x * y < 2 ^ 256`
+    
+        // if `x * y < 2 ^ 256`
+        if (xyh == 0) {
             return xyl / z;
         }
-        if (xyh < z) { // `x * y / z < 2 ^ 256`
-            uint256 m = mulMod(x, y, z);                    // `m = x * y % z`
-            (uint256 nh, uint256 nl) = sub512(xyh, xyl, m); // `n = x * y - m` hence `n / z = floor(x * y / z)`
-            if (nh == 0) { // `n < 2 ^ 256`
-                return nl / z;
-            }
-            uint256 p = unsafeSub(0, z) & z; // `p` is the largest power of 2 which `z` is divisible by
-            uint256 q = div512(nh, nl, p);   // `n` is divisible by `p` because `n` is divisible by `z` and `z` is divisible by `p`
-            uint256 r = inv256(z / p);       // `z / p = 1 mod 2` hence `inverse(z / p) = 1 mod 2 ^ 256`
-            return unsafeMul(q, r);          // `q * r = (n / p) * inverse(z / p) = n / z`
+
+        // assert `x * y / z < 2 ^ 256`
+        require(xyh < z, "ERR_OVERFLOW");
+    
+        uint256 m = mulMod(x, y, z);                    // `m = x * y % z`
+        (uint256 nh, uint256 nl) = sub512(xyh, xyl, m); // `n = x * y - m` hence `n / z = floor(x * y / z)`
+
+        // if `n < 2 ^ 256`
+        if (nh == 0) {
+            return nl / z;
         }
-        revert("ERR_OVERFLOW"); // `x * y / z >= 2 ^ 256`
+
+        uint256 p = unsafeSub(0, z) & z; // `p` is the largest power of 2 which `z` is divisible by
+        uint256 q = div512(nh, nl, p);   // `n` is divisible by `p` because `n` is divisible by `z` and `z` is divisible by `p`
+        uint256 r = inv256(z / p);       // `z / p = 1 mod 2` hence `inverse(z / p) = 1 mod 2 ^ 256`
+        return unsafeMul(q, r);          // `q * r = (n / p) * inverse(z / p) = n / z`
     }
 
     /**
