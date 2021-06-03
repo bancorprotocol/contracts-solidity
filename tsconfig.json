@@ -6,9 +6,10 @@
         "esModuleInterop": true,
         "outDir": "dist",
         "paths": {
-            "typechain": ["./typechain"]
+            "typechain": ["./typechain"],
+            "contracts": ["./components/Contracts.ts"]
         }
     },
-    "include": ["scripts", "./test"],
+    "include": ["./scripts", "./test", "./tasks", "./components"],
     "files": ["./hardhat.config.ts"]
 }
