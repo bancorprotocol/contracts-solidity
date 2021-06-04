@@ -4,12 +4,15 @@
         "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "moduleResolution": "node",
         "outDir": "dist",
+        "baseUrl": ".",
         "paths": {
             "typechain": ["./typechain"],
             "contracts": ["./components/Contracts.ts"]
         }
     },
-    "include": ["./scripts", "./test", "./tasks", "./components"],
+    "include": ["./scripts", "./test", "./tasks", "./packages"],
     "files": ["./hardhat.config.ts"]
 }
