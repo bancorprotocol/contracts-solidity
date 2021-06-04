@@ -1,20 +1,27 @@
-## Utilities
+# Utilities
 
-### [Prerequisites](../../README.md#prerequisites)
+## [Prerequisites](../../README.md#prerequisites)
 
-### [Installation](../../README.md#installation)
+## [Installation](../../README.md#installation)
 
 Following installation, `yarn build` should be executed once.
 
-### Test Deployment
+## Test Deployment
 
-Deploys a set of contracts for testing purpose; can be used on both private and public networks:
+Deploys a set of contracts for testing purposes and can be used on both private and public networks.
+
+For example:
 
 ```bash
-node test_deployment.js
-    Configuration file name
-    Ethereum node address
-    Account private key
+node test_deployment.js deploy --provider http://127.0.0.1:8545 --configPath ./local_config.json --key [TEST_KEY]
+
+node test_deployment.js deploy --provider https://ropsten.infura.io/v3/[PROJECT_ID] --configPath ./ropsten_config.json --ledger
+```
+
+For more info, please run:
+
+```bash
+node test_deployment.js --help
 ```
 
 The configuration file is updated during the process, in order to allow resuming a prematurely-terminated execution.
@@ -27,22 +34,22 @@ Here is an example of the initial configuration file which should be provided to
         {
             "symbol": "XXX",
             "decimals": 18,
-            "supply": "1829101"
+            "supply": 1829101
         },
         {
             "symbol": "YYY",
             "decimals": 18,
-            "supply": "3603801"
+            "supply": 3603801
         },
         {
             "symbol": "BNT",
             "decimals": 18,
-            "supply": "6914855"
+            "supply": 6914855
         },
         {
             "symbol": "vBNT",
             "decimals": 18,
-            "supply": "0"
+            "supply": 0
         },
         {
             "address": "0xBde8bB00A7eF67007A96945B3a3621177B615C44",
@@ -66,11 +73,11 @@ Here is an example of the initial configuration file which should be provided to
             "reserves": [
                 {
                     "symbol": "ETH",
-                    "balance": "21"
+                    "balance": 21
                 },
                 {
                     "symbol": "BNT",
-                    "balance": "3092"
+                    "balance": 3092
                 }
             ]
         },
@@ -82,11 +89,11 @@ Here is an example of the initial configuration file which should be provided to
             "reserves": [
                 {
                     "symbol": "XXX",
-                    "balance": "582"
+                    "balance": 582
                 },
                 {
                     "symbol": "BNT",
-                    "balance": "2817"
+                    "balance": 2817
                 }
             ]
         },
@@ -98,18 +105,18 @@ Here is an example of the initial configuration file which should be provided to
             "reserves": [
                 {
                     "symbol": "YYY",
-                    "balance": "312"
+                    "balance": 312
                 },
                 {
                     "symbol": "BNT",
-                    "balance": "270"
+                    "balance": 270
                 }
             ]
         }
     ],
     "liquidityProtectionParams": {
-        "minNetworkTokenLiquidityForMinting": "100",
-        "defaultNetworkTokenMintingLimit": "750",
+        "minNetworkTokenLiquidityForMinting": 100,
+        "defaultNetworkTokenMintingLimit": 750,
         "minProtectionDelay": 600,
         "maxProtectionDelay": 3600,
         "lockDuration": 60,
