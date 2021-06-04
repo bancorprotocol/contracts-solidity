@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const MathUtils = require('../helpers/MathUtils');
+const { Decimal } = require('../helpers/MathUtils');
 const humanizeDuration = require('humanize-duration');
 const { set } = require('lodash');
 
@@ -13,15 +13,8 @@ const { duration, latest } = require('../helpers/Time');
 
 const { ZERO_ADDRESS } = require('../helpers/Constants');
 const { CONVERTER_FACTORY, CONVERTER_REGISTRY, CONVERTER_REGISTRY_DATA, LIQUIDITY_PROTECTION } = Constants.registry;
-const {
-    ROLE_SUPERVISOR,
-    ROLE_OWNER,
-    ROLE_MANAGER,
-    ROLE_GOVERNOR,
-    ROLE_MINTER,
-    ROLE_PUBLISHER,
-    ROLE_UPDATER
-} = Constants.roles;
+const { ROLE_SUPERVISOR, ROLE_OWNER, ROLE_MANAGER, ROLE_GOVERNOR, ROLE_MINTER, ROLE_PUBLISHER, ROLE_UPDATER } =
+    Constants.roles;
 
 const PPM_RESOLUTION = BigNumber.from(1000000);
 const MULTIPLIER_INCREMENT = PPM_RESOLUTION.div(BigNumber.from(4)); // 25%
@@ -130,7 +123,7 @@ describe('StakingRewards', () => {
 
     const expectAlmostEqual = (amount1, amount2, maxError = 0.0000000001) => {
         if (!amount1.eq(amount2)) {
-            const error = new MathUtils.Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
+            const error = new Decimal(amount1.toString()).div(amount2.toString()).sub(1).abs();
             expect(error.lte(maxError)).to.equal(true, `error = ${error.toFixed(maxError.length)}`);
         }
     };
@@ -469,13 +462,11 @@ describe('StakingRewards', () => {
                 reserveTokens.push(reserveTokenAddress);
             }
 
-            reserveAmounts[providerAddress][poolTokenAddress][reserveTokenAddress] = reserveAmounts[providerAddress][
-                poolTokenAddress
-            ][reserveTokenAddress].add(reserveAmount);
+            reserveAmounts[providerAddress][poolTokenAddress][reserveTokenAddress] =
+                reserveAmounts[providerAddress][poolTokenAddress][reserveTokenAddress].add(reserveAmount);
 
-            totalReserveAmounts[poolTokenAddress][reserveTokenAddress] = totalReserveAmounts[poolTokenAddress][
-                reserveTokenAddress
-            ].add(reserveAmount);
+            totalReserveAmounts[poolTokenAddress][reserveTokenAddress] =
+                totalReserveAmounts[poolTokenAddress][reserveTokenAddress].add(reserveAmount);
         };
 
         const addLiquidity = async (provider, poolToken, reserveToken, reserveAmount) => {
@@ -510,13 +501,11 @@ describe('StakingRewards', () => {
 
             expect(totalReserveAmounts[poolTokenAddress][reserveTokenAddress]).to.be.gte(reserveAmount);
 
-            reserveAmounts[providerAddress][poolTokenAddress][reserveTokenAddress] = reserveAmounts[providerAddress][
-                poolTokenAddress
-            ][reserveTokenAddress].sub(reserveAmount);
+            reserveAmounts[providerAddress][poolTokenAddress][reserveTokenAddress] =
+                reserveAmounts[providerAddress][poolTokenAddress][reserveTokenAddress].sub(reserveAmount);
 
-            totalReserveAmounts[poolTokenAddress][reserveTokenAddress] = totalReserveAmounts[poolTokenAddress][
-                reserveTokenAddress
-            ].sub(reserveAmount);
+            totalReserveAmounts[poolTokenAddress][reserveTokenAddress] =
+                totalReserveAmounts[poolTokenAddress][reserveTokenAddress].sub(reserveAmount);
 
             if (reserveAmounts[providerAddress][poolTokenAddress][reserveTokenAddress].eq(BigNumber.from(0))) {
                 providerPools[providerAddress][poolTokenAddress].splice(
@@ -670,7 +659,7 @@ describe('StakingRewards', () => {
 
             const reward = await staking.pendingRewards(providerAddress);
 
-            const effectiveTime = MathUtils.min(now, programEndTime);
+            const effectiveTime = BigNumber.min(now, programEndTime);
             const expectedReward = getExpectedRewards(
                 provider,
                 effectiveTime.sub(programStartTime),
@@ -689,7 +678,7 @@ describe('StakingRewards', () => {
 
             const reward = await staking.pendingPoolRewards(providerAddress, poolTokenAddress);
 
-            const effectiveTime = MathUtils.min(now, programEndTime);
+            const effectiveTime = BigNumber.min(now, programEndTime);
             const expectedReward = getExpectedPoolRewards(
                 provider,
                 poolTokenAddress,
@@ -710,7 +699,7 @@ describe('StakingRewards', () => {
 
             const reward = await staking.pendingReserveRewards(providerAddress, poolTokenAddress, reserveTokenAddress);
 
-            const effectiveTime = MathUtils.min(now, programEndTime);
+            const effectiveTime = BigNumber.min(now, programEndTime);
             const expectedReward = getExpectedReserveRewards(
                 provider,
                 poolTokenAddress,
@@ -730,7 +719,7 @@ describe('StakingRewards', () => {
 
             const reward = await staking.pendingRewards(providerAddress);
 
-            const effectiveTime = MathUtils.min(now, programEndTime);
+            const effectiveTime = BigNumber.min(now, programEndTime);
             const extraReward = getExpectedRewards(provider, effectiveTime.sub(prevNow), multiplierDuration);
             const multiplier = getRewardsMultiplier(multiplierDuration || effectiveTime.sub(programStartTime));
 
@@ -745,7 +734,7 @@ describe('StakingRewards', () => {
 
             const reward = await staking.pendingRewards(providerAddress);
 
-            const effectiveTime = MathUtils.min(now, programEndTime);
+            const effectiveTime = BigNumber.min(now, programEndTime);
             const expectedReward = getExpectedRewards(provider, effectiveTime.sub(prevNow), multiplierDuration);
 
             expect(reward).to.equal(expectedReward);
@@ -1239,7 +1228,7 @@ describe('StakingRewards', () => {
 
                             // Should retroactively apply the two weeks multiplier on the debt rewards.
                             const multiplier2 = getRewardsMultiplier(duration.weeks(1));
-                            let bestMultiplier = MathUtils.max(debMultiplier, multiplier2);
+                            let bestMultiplier = BigNumber.max(debMultiplier, multiplier2);
                             reward = await staking.pendingRewards(providerAddress);
 
                             let expectedRewards = getExpectedRewards(provider, duration.weeks(1)).add(
@@ -1254,7 +1243,7 @@ describe('StakingRewards', () => {
                             await setTime(now.add(duration.weeks(2)));
 
                             const multiplier3 = getRewardsMultiplier(duration.weeks(3));
-                            bestMultiplier = MathUtils.max(multiplier2, multiplier3);
+                            bestMultiplier = BigNumber.max(multiplier2, multiplier3);
                             reward = await staking.pendingRewards(providerAddress);
 
                             expectedRewards = getExpectedRewards(provider, duration.weeks(3)).add(
@@ -1291,7 +1280,7 @@ describe('StakingRewards', () => {
 
                             // Should retroactively apply the two weeks multiplier on the debt rewards.
                             const multiplier2 = getRewardsMultiplier(duration.weeks(2));
-                            let bestMultiplier = MathUtils.max(debMultiplier, multiplier2);
+                            let bestMultiplier = BigNumber.max(debMultiplier, multiplier2);
                             reward = await staking.pendingRewards(providerAddress);
 
                             let expectedRewards = getExpectedRewards(provider, duration.weeks(2)).add(
@@ -1306,7 +1295,7 @@ describe('StakingRewards', () => {
                             await setTime(now.add(duration.weeks(2)));
 
                             const multiplier3 = getRewardsMultiplier(duration.weeks(4));
-                            bestMultiplier = MathUtils.max(multiplier2, multiplier3);
+                            bestMultiplier = BigNumber.max(multiplier2, multiplier3);
                             reward = await staking.pendingRewards(providerAddress);
 
                             expectedRewards = getExpectedRewards(provider, duration.weeks(4)).add(
@@ -1346,7 +1335,7 @@ describe('StakingRewards', () => {
 
                             // Should retroactively apply the one weeks multiplier on the debt rewards.
                             const multiplier4 = getRewardsMultiplier(duration.weeks(1));
-                            bestMultiplier = MathUtils.max(debMultiplier2, multiplier4);
+                            bestMultiplier = BigNumber.max(debMultiplier2, multiplier4);
                             reward = await staking.pendingRewards(providerAddress);
 
                             expectedRewards = getExpectedRewards(provider, duration.weeks(1)).add(
@@ -1494,7 +1483,7 @@ describe('StakingRewards', () => {
 
                             let amount = reward.div(BigNumber.from(2));
                             while (reward.gt(BigNumber.from(0))) {
-                                amount = MathUtils.min(amount, reward);
+                                amount = BigNumber.min(amount, reward);
 
                                 reward = await testStaking(provider, amount, poolToken4);
                             }
@@ -1509,7 +1498,7 @@ describe('StakingRewards', () => {
 
                             amount = reward.div(BigNumber.from(2));
                             while (reward.gt(BigNumber.from(0))) {
-                                amount = MathUtils.min(amount, reward);
+                                amount = BigNumber.min(amount, reward);
 
                                 reward = await testStaking(provider, amount, poolToken4);
                             }
@@ -1529,7 +1518,7 @@ describe('StakingRewards', () => {
 
                             amount = reward.div(BigNumber.from(2));
                             while (reward.gt(BigNumber.from(0))) {
-                                amount = MathUtils.min(amount, reward);
+                                amount = BigNumber.min(amount, reward);
 
                                 reward = await testStaking(provider, amount, poolToken4);
                             }
@@ -1543,7 +1532,7 @@ describe('StakingRewards', () => {
 
                             amount = reward.div(BigNumber.from(2));
                             while (reward.gt(BigNumber.from(0))) {
-                                amount = MathUtils.min(amount, reward);
+                                amount = BigNumber.min(amount, reward);
 
                                 reward = await testStaking(provider, amount, poolToken4);
                             }

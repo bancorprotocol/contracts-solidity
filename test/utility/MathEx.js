@@ -1,10 +1,10 @@
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
-const { Decimal } = require('../helpers/MathUtils.js');
 const MathUtils = require('../helpers/MathUtils');
-
 const Contracts = require('../helpers/Contracts');
+
+const { Decimal, floorSqrt, ceilSqrt, reducedRatio, normalizedRatio, accurateRatio, roundDiv } = MathUtils;
 
 const MAX_UINT128 = Decimal(2).pow(128).sub(1);
 const MAX_UINT256 = Decimal(2).pow(256).sub(1);
@@ -21,9 +21,9 @@ describe('MathEx', () => {
         for (const k of n < 256 ? [-1, 0, +1] : [-1]) {
             const x = BigNumber.from(2).pow(BigNumber.from(n)).add(BigNumber.from(k));
             it(`Function floorSqrt(${x.toHexString()})`, async () => {
-                const expected = MathUtils.floorSqrt(x.toString());
+                const expected = floorSqrt(x);
                 const actual = await mathContract.floorSqrtTest(x.toString());
-                expect(actual).to.equal(expected);
+                expect(actual).to.equal(BigNumber.from(expected.toFixed()));
             });
         }
     }
@@ -32,9 +32,9 @@ describe('MathEx', () => {
         for (const k of n < 256 ? [-1, 0, +1] : [-1]) {
             const x = BigNumber.from(2).pow(BigNumber.from(n)).add(BigNumber.from(k));
             it(`Function ceilSqrt(${x.toHexString()})`, async () => {
-                const expected = MathUtils.ceilSqrt(x.toString());
+                const expected = ceilSqrt(x);
                 const actual = await mathContract.ceilSqrtTest(x.toString());
-                expect(actual).to.equal(expected);
+                expect(actual).to.equal(BigNumber.from(expected.toFixed()));
             });
         }
     }
@@ -43,7 +43,7 @@ describe('MathEx', () => {
         for (let a = 0; a < 10; a++) {
             for (let b = 1; b <= 10; b++) {
                 it(`reducedRatio(${a}, ${b}, ${scale.toFixed()})`, async () => {
-                    const expected = MathUtils.reducedRatio(a, b, scale);
+                    const expected = reducedRatio(a, b, scale);
                     const actual = await mathContract.reducedRatioTest(a, b, scale.toFixed());
                     expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0' });
                 });
@@ -57,7 +57,7 @@ describe('MathEx', () => {
             for (let j = Decimal(1); j.lte(scale); j = j.mul(10)) {
                 const b = MAX_UINT256.divToInt(scale).mul(j).add(1);
                 it(`reducedRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
-                    const expected = MathUtils.reducedRatio(a, b, scale);
+                    const expected = reducedRatio(a, b, scale);
                     const actual = await mathContract.reducedRatioTest(a.toFixed(), b.toFixed(), scale.toFixed());
                     expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0.135' });
                 });
@@ -69,7 +69,7 @@ describe('MathEx', () => {
         for (let a = 0; a < 10; a++) {
             for (let b = 1; b <= 10; b++) {
                 it(`normalizedRatio(${a}, ${b}, ${scale.toFixed()})`, async () => {
-                    const expected = MathUtils.normalizedRatio(a, b, scale);
+                    const expected = normalizedRatio(a, b, scale);
                     const actual = await mathContract.normalizedRatioTest(a, b, scale.toFixed());
                     expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0.00000241' });
                 });
@@ -83,7 +83,7 @@ describe('MathEx', () => {
             for (let j = Decimal(1); j.lte(scale); j = j.mul(10)) {
                 const b = MAX_UINT256.divToInt(scale).mul(j).add(1);
                 it(`normalizedRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
-                    const expected = MathUtils.normalizedRatio(a, b, scale);
+                    const expected = normalizedRatio(a, b, scale);
                     const actual = await mathContract.normalizedRatioTest(a.toFixed(), b.toFixed(), scale.toFixed());
                     expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0.135' });
                 });
@@ -95,7 +95,7 @@ describe('MathEx', () => {
         for (let a = 0; a < 10; a++) {
             for (let b = Math.max(a, 1); b <= 10; b++) {
                 it(`accurateRatio(${a}, ${b}, ${scale.toFixed()})`, async () => {
-                    const expected = MathUtils.accurateRatio(a, b, scale);
+                    const expected = accurateRatio(a, b, scale);
                     const actual = await mathContract.accurateRatioTest(a, b, scale.toFixed());
                     expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0.0000024' });
                 });
@@ -109,7 +109,7 @@ describe('MathEx', () => {
             for (let j = Decimal(i); j.lte(scale); j = j.mul(10)) {
                 const b = MAX_UINT256.divToInt(scale).mul(j).add(1);
                 it(`accurateRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
-                    const expected = MathUtils.accurateRatio(a, b, scale);
+                    const expected = accurateRatio(a, b, scale);
                     const actual = await mathContract.accurateRatioTest(a.toFixed(), b.toFixed(), scale.toFixed());
                     expectAlmostEqual(actual, expected, { maxAbsoluteError: '0', maxRelativeError: '0.135' });
                 });
@@ -132,7 +132,7 @@ describe('MathEx', () => {
         ]) {
             for (const b of [MAX_UINT256.sub(1), MAX_UINT256].filter((b) => b.gt(a))) {
                 it(`accurateRatio(${a.toFixed()}, ${b.toFixed()}, ${scale.toFixed()})`, async () => {
-                    const expected = MathUtils.accurateRatio(a, b, scale);
+                    const expected = accurateRatio(a, b, scale);
                     const actual = await mathContract.accurateRatioTest(a.toFixed(), b.toFixed(), scale.toFixed());
                     expectAlmostEqual(actual, expected, { maxAbsoluteError: '1.6', maxRelativeError: '0' });
                 });
@@ -143,9 +143,9 @@ describe('MathEx', () => {
     for (let n = 0; n < 10; n++) {
         for (let d = 1; d <= 10; d++) {
             it(`roundDiv(${n}, ${d})`, async () => {
-                const expected = MathUtils.roundDiv(n, d);
+                const expected = roundDiv(n, d);
                 const actual = await mathContract.roundDivTest(n, d);
-                expect(actual).to.equal(expected);
+                expect(actual).to.equal(BigNumber.from(expected.toFixed()));
             });
         }
     }
@@ -158,7 +158,7 @@ describe('MathEx', () => {
         it(`geometricMean([${values}])`, async () => {
             const expected = 10 ** (Math.round(values.join('').length / values.length) - 1);
             const actual = await mathContract.geometricMeanTest(values);
-            expect(actual).to.equal(BigNumber.from(expected));
+            expect(actual).to.equal(BigNumber.from(BigNumber.from(expected.toFixed())));
         });
     }
 
@@ -168,7 +168,7 @@ describe('MathEx', () => {
             it(`decimalLength(${x.toString()})`, async () => {
                 const expected = x.toString().length;
                 const actual = await mathContract.decimalLengthTest(x);
-                expect(actual).to.equal(BigNumber.from(expected));
+                expect(actual).to.equal(BigNumber.from(BigNumber.from(expected.toFixed())));
             });
         }
     }
@@ -178,14 +178,14 @@ describe('MathEx', () => {
             it(`roundDivUnsafe(${n}, ${d})`, async () => {
                 const expected = Math.round(n / d);
                 const actual = await mathContract.roundDivUnsafeTest(n, d);
-                expect(actual).to.equal(BigNumber.from(expected));
+                expect(actual).to.equal(BigNumber.from(BigNumber.from(expected.toFixed())));
             });
         }
     }
 
     function expectAlmostEqual(actual, expected, range) {
-        const x = Decimal(expected[0]).mul(actual[1].toString());
-        const y = Decimal(expected[1]).mul(actual[0].toString());
+        const x = expected[0].mul(actual[1].toString());
+        const y = expected[1].mul(actual[0].toString());
         if (!x.eq(y)) {
             const absoluteError = x.sub(y).abs();
             const relativeError = x.div(y).sub(1).abs();
