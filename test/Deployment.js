@@ -1,3 +1,5 @@
+const { ethers } = require('hardhat');
+
 const Contracts = require('./helpers/Contracts');
 const runDeployment = require('./helpers/runDeployment');
 
@@ -6,22 +8,22 @@ const config = {
         {
             symbol: 'XXX',
             decimals: 18,
-            supply: '1829101'
+            supply: 1_829_101
         },
         {
             symbol: 'YYY',
             decimals: 18,
-            supply: '3603801'
+            supply: 3_603_801
         },
         {
             symbol: 'BNT',
             decimals: 18,
-            supply: '6914855'
+            supply: 6_914_855
         },
         {
             symbol: 'vBNT',
             decimals: 18,
-            supply: '0'
+            supply: 0
         }
     ],
     converters: [
@@ -33,11 +35,11 @@ const config = {
             reserves: [
                 {
                     symbol: 'ETH',
-                    balance: '21'
+                    balance: 21
                 },
                 {
                     symbol: 'BNT',
-                    balance: '3092'
+                    balance: 3092
                 }
             ]
         },
@@ -49,11 +51,11 @@ const config = {
             reserves: [
                 {
                     symbol: 'XXX',
-                    balance: '582'
+                    balance: 582
                 },
                 {
                     symbol: 'BNT',
-                    balance: '2817'
+                    balance: 2817
                 }
             ]
         },
@@ -65,18 +67,18 @@ const config = {
             reserves: [
                 {
                     symbol: 'YYY',
-                    balance: '312'
+                    balance: 312
                 },
                 {
                     symbol: 'BNT',
-                    balance: '270'
+                    balance: 270
                 }
             ]
         }
     ],
     liquidityProtectionParams: {
-        minNetworkTokenLiquidityForMinting: '100',
-        defaultNetworkTokenMintingLimit: '750',
+        minNetworkTokenLiquidityForMinting: 100,
+        defaultNetworkTokenMintingLimit: 750,
         minProtectionDelay: 600,
         maxProtectionDelay: 3600,
         lockDuration: 60,
@@ -85,16 +87,15 @@ const config = {
 };
 
 describe('Deployment', () => {
-    it('run', async () => {
+    it('should properly deploy initial network', async () => {
         await runDeployment(
-            (await ethers.getSigners())[0],
+            (
+                await ethers.getSigners()
+            )[0],
             (...args) => Contracts[args[1]].deploy(...args.slice(2)),
             (...args) => Contracts[args[0]].attach(args[1]),
             (...args) => args[0],
-            () => config,
-            ethers.utils.id,
-            ethers.utils.formatBytes32String,
-            ethers.provider.getTransactionCount
+            config
         );
     });
 });
