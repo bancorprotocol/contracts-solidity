@@ -1,7 +1,7 @@
 const { BigNumber } = require('ethers');
 const { BN } = require('bn.js');
 const Decimal = require('decimal.js');
-Decimal.set({ precision: 100, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
+Decimal.set({ precision: 155, rounding: Decimal.ROUND_DOWN, toExpPos: 40 });
 
 function floorSqrt(n) {
     return Decimal(n).sqrt().floor().toFixed();
@@ -9,6 +9,11 @@ function floorSqrt(n) {
 
 function ceilSqrt(n) {
     return Decimal(n).sqrt().ceil().toFixed();
+}
+
+function productRatio(an, bn, ad, bd) {
+    [an, bn, ad, bd] = [...arguments].map((x) => Decimal(x));
+    return [an.mul(bn).toFixed(), ad.mul(bd).toFixed()];
 }
 
 function reducedRatio(a, b, max) {
@@ -35,6 +40,16 @@ function accurateRatio(a, b, scale) {
 function roundDiv(a, b) {
     [a, b] = [...arguments].map((x) => Decimal(x));
     return a.div(b).toFixed(0, Decimal.ROUND_HALF_UP);
+}
+
+function mulDivF(a, b, c) {
+    [a, b, c] = [...arguments].map((x) => Decimal(x));
+    return a.mul(b).div(c).floor().toFixed();
+}
+
+function mulDivC(a, b, c) {
+    [a, b, c] = [...arguments].map((x) => Decimal(x));
+    return a.mul(b).div(c).ceil().toFixed();
 }
 
 function compareRatios(a, b, c, d) {
@@ -166,10 +181,13 @@ function toBigNumber(value) {
 module.exports = {
     floorSqrt,
     ceilSqrt,
+    productRatio,
     reducedRatio,
     normalizedRatio,
     accurateRatio,
     roundDiv,
+    mulDivF,
+    mulDivC,
     compareRatios,
     weightedAverageForIntegers,
     weightedAverageForFractions,

@@ -1236,20 +1236,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ) internal pure returns (uint256) {
         uint256 n = MathEx.ceilSqrt(addRate.d.mul(removeRate.n)).mul(poolRate.n);
         uint256 d = MathEx.floorSqrt(addRate.n.mul(removeRate.d)).mul(poolRate.d);
-
-        uint256 x = n * poolAmount;
-        if (x / n == poolAmount) {
-            return x / d;
-        }
-
-        (uint256 hi, uint256 lo) = n > poolAmount ? (n, poolAmount) : (poolAmount, n);
-        (uint256 p, uint256 q) = MathEx.reducedRatio(hi, d, MAX_UINT256 / lo);
-        uint256 min = (hi / d).mul(lo);
-
-        if (q > 0) {
-            return Math.max(min, (p * lo) / q);
-        }
-        return min;
+        return MathEx.mulDivF(poolAmount, n, d);
     }
 
     /**
