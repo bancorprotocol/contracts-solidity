@@ -5,6 +5,9 @@ import "../../token/interfaces/IReserveToken.sol";
 
 import "./IConverterAnchor.sol";
 
+/**
+ * @dev Converter Registry interface
+ */
 interface IConverterRegistry {
     function getAnchorCount() external view returns (uint256);
 

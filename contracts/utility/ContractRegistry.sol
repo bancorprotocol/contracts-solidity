@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "./Owned.sol";
 import "./Utils.sol";
 import "./interfaces/IContractRegistry.sol";
@@ -29,16 +30,11 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
      * @dev triggered when an address pointed to by a contract name is modified
-     *
-     * @param contractName contract name
-     * @param contractAddress new contract address
      */
     event AddressUpdate(bytes32 indexed contractName, address contractAddress);
 
     /**
      * @dev returns the number of items in the registry
-     *
-     * @return number of items
      */
     function itemCount() external view returns (uint256) {
         return _contractNames.length;
@@ -46,10 +42,6 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
      * @dev returns a registered contract name
-     *
-     * @param index the index of the contract name to return
-     *
-     * @return a registered contract name
      */
     function contractNames(uint256 index) external view returns (string memory) {
         return _contractNames[index];
@@ -57,10 +49,6 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
      * @dev returns the address associated with the given contract name
-     *
-     * @param contractName contract name
-     *
-     * @return contract address
      */
     function addressOf(bytes32 contractName) public view override returns (address) {
         return _items[contractName].contractAddress;
@@ -69,8 +57,9 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
     /**
      * @dev registers a new address for the contract name in the registry
      *
-     * @param contractName contract name
-     * @param contractAddress contract address
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function registerAddress(bytes32 contractName, address contractAddress)
         external
@@ -103,7 +92,9 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
     /**
      * @dev removes an existing contract address from the registry
      *
-     * @param contractName contract name
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function unregisterAddress(bytes32 contractName) public ownerOnly {
         require(contractName.length > 0, "ERR_INVALID_NAME");
@@ -136,11 +127,8 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
      * @dev utility, converts bytes32 to a string
+     *
      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
-     *
-     * @param data the data to convert
-     *
-     * @return string representation of the given data
      */
     function bytes32ToString(bytes32 data) private pure returns (string memory) {
         bytes memory byteArray = new bytes(32);
@@ -153,11 +141,8 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
 
     /**
      * @dev utility, converts string to bytes32
+     *
      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
-     *
-     * @param str the data to convert
-     *
-     * @return string representation of the given data
      */
     function stringToBytes32(string memory str) private pure returns (bytes32) {
         bytes32 result;

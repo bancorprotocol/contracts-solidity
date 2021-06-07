@@ -62,11 +62,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev triggered when the burn reward has been changed
-     *
-     * @param prevBurnReward the previous burn reward (in units of PPM)
-     * @param newBurnReward the new burn reward (in units of PPM)
-     * @param prevMaxBurnRewardAmount the previous maximum burn reward
-     * @param newMaxBurnRewardAmount the new maximum burn reward
      */
     event BurnRewardUpdated(
         uint32 prevBurnReward,
@@ -77,28 +72,16 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev triggered during conversion of a single token during the burning event
-     *
-     * @param reserveToken the converted reserve token
-     * @param sourceAmount the amount of the converted reserve token
-     * @param targetAmount the network token amount the token were converted to
      */
     event Converted(IReserveToken reserveToken, uint256 sourceAmount, uint256 targetAmount);
 
     /**
      * @dev triggered after a completed burning event
-     *
-     * @param reserveTokens the converted reserve tokens
-     * @param sourceAmount the total network token amount the tokens were converted to
-     * @param burnedAmount the total burned amount in the burning event
      */
     event Burned(IReserveToken[] reserveTokens, uint256 sourceAmount, uint256 burnedAmount);
 
     /**
      * @dev initializes a new VortexBurner contract
-     *
-     * @param networkToken the address of the network token
-     * @param govTokenGovernance the address of the governance token security module
-     * @param registry the address of the contract registry
      */
     constructor(
         IERC20 networkToken,
@@ -122,8 +105,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the burn reward percentage and its maximum amount
-     *
-     * @return the burn reward percentage and its maximum amount
      */
     function burnReward() external view returns (uint32, uint256) {
         return (_burnReward, _maxBurnRewardAmount);
@@ -132,8 +113,9 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev allows the owner to set the burn reward percentage and its maximum amount
      *
-     * @param newBurnReward the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
-     * @param newMaxBurnRewardAmount the maximum burn reward to be sent to the caller of the burning event
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function setBurnReward(uint32 newBurnReward, uint256 newMaxBurnRewardAmount)
         external
@@ -148,8 +130,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the total amount of the burned governance tokens
-     *
-     * @return total amount of the burned governance tokens
      */
     function totalBurnedAmount() external view returns (uint256) {
         return _totalBurnedAmount;
@@ -157,8 +137,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev converts the provided tokens to governance tokens and burns them
-     *
-     * @param reserveTokens the reserve tokens to convert
      */
     function burn(IReserveToken[] calldata reserveTokens) external nonReentrant {
         ITokenHolder feeWallet = networkFeeWallet();
@@ -236,7 +214,9 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev transfers the ownership of the network fee wallet
      *
-     * @param newOwner the new owner of the network fee wallet
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function transferNetworkFeeWalletOwnership(address newOwner) external ownerOnly {
         networkFeeWallet().transferOwnership(newOwner);
@@ -251,10 +231,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the burning strategy for the specified tokens
-     *
-     * @param reserveTokens the reserve tokens to convert
-     *
-     * @return the the burning strategy for the specified tokens
      */
     function burnStrategy(IReserveToken[] calldata reserveTokens, ITokenHolder feeWallet)
         private
@@ -299,9 +275,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev applies the burn reward on the whole balance and returns the net amount and the reward
-     *
-     * @return network token target amount
-     * @return burn reward amount
      */
     function netNetworkConversionAmounts() private view returns (uint256, uint256) {
         uint256 amount = _networkToken.balanceOf(address(this));
@@ -312,11 +285,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev finds the converter anchor of the 50/50 standard pool converter between the specified token and the network token
-     *
-     * @param reserveToken the source token
-     * @param converterRegistry the converter registry
-     *
-     * @return the converter anchor of the 50/50 standard pool converter between the specified token
      */
     function networkTokenConverterAnchor(IReserveToken reserveToken, IConverterRegistry converterRegistry)
         private
@@ -347,8 +315,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the converter registry
-     *
-     * @return the converter registry
      */
     function converterRegistry() private view returns (IConverterRegistry) {
         return IConverterRegistry(addressOf(CONVERTER_REGISTRY));
@@ -356,8 +322,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the network contract
-     *
-     * @return the network contract
      */
     function bancorNetwork() private view returns (IBancorNetwork) {
         return IBancorNetwork(payable(addressOf(BANCOR_NETWORK)));
@@ -365,8 +329,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the network settings contract
-     *
-     * @return the network settings contract
      */
     function networkSetting() private view returns (INetworkSettings) {
         return INetworkSettings(addressOf(NETWORK_SETTINGS));
@@ -374,8 +336,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the network fee wallet
-     *
-     * @return the network fee wallet
      */
     function networkFeeWallet() private view returns (ITokenHolder) {
         return ITokenHolder(networkSetting().networkFeeWallet());

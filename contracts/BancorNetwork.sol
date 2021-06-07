@@ -63,13 +63,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev triggered when a conversion between two tokens occurs
-     *
-     * @param anchor  anchor governed by the converter
-     * @param sourceToken source reserve token
-     * @param targetToken target reserve token
-     * @param sourceAmount amount converted, in the source token
-     * @param targetAmount amount returned, minus conversion fee
-     * @param trader wallet that initiated the trade
      */
     event Conversion(
         IConverterAnchor indexed anchor,
@@ -82,19 +75,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev initializes a new BancorNetwork instance
-     *
-     * @param registry address of a contract registry contract
      */
     constructor(IContractRegistry registry) public ContractRegistryClient(registry) {}
 
     /**
      * @dev returns the conversion path between two tokens in the network
+     *
      * note that this method is quite expensive in terms of gas and should generally be called off-chain
-     *
-     * @param sourceToken source reserve token address
-     * @param targetToken target reserve token address
-     *
-     * @return conversion path between the two tokens
      */
     function conversionPath(IReserveToken sourceToken, IReserveToken targetToken)
         public
@@ -107,12 +94,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev returns the expected target amount of converting a given amount on a given path
+     *
      * note that there is no support for circular paths
-     *
-     * @param path conversion path (see conversion path format above)
-     * @param sourceAmount amount of path[0] tokens received from the sender
-     *
-     * @return expected target amount
      */
     function rateByPath(address[] memory path, uint256 sourceAmount) public view override returns (uint256) {
         // verify that the number of elements is larger than 2 and odd
@@ -133,16 +116,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     }
 
     /**
-     * @dev converts the token to any other token in the bancor network by following
-     * a predefined conversion path and transfers the result tokens to a target account
+     * @dev converts the token to any other token in the bancor network by following a predefined conversion path and
+     * transfers the result tokens to a target account
+     *
      * note that the network should already have been given allowance of the source token (if not ETH)
-     *
-     * @param path conversion path, see conversion path format above
-     * @param sourceAmount amount to convert from, in the source token
-     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-     * @param beneficiary account that will receive the conversion result or 0x0 to send the result to the sender account
-     *
-     * @return amount of tokens received from the conversion
      */
     function convertByPath2(
         address[] memory path,
@@ -172,19 +149,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     }
 
     /**
-      * @dev converts any other token to BNT in the bancor network by following
-      a predefined conversion path and transfers the result to an account on a different blockchain
-      * note that the network should already have been given allowance of the source token (if not ETH)
-      *
-      * @param path conversion path, see conversion path format above
-      * @param sourceAmount amount to convert from, in the source token
-      * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-      * @param targetBlockchain blockchain BNT will be issued on
-      * @param targetAccount address/account on the target blockchain to send the BNT to
-      * @param conversionId pre-determined unique (if non zero) id which refers to this transaction
-      *
-      * @return the amount of BNT received from this conversion
-    */
+     * @dev converts any other token to BNT in the bancor network by following a predefined conversion path and
+     * transfers the result to an account on a different blockchain
+     *
+     * note that the network should already have been given allowance of the source token (if not ETH)
+     */
     function xConvert(
         address[] memory path,
         uint256 sourceAmount,
@@ -212,19 +181,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     }
 
     /**
-     * @dev allows a user to convert a token that was sent from another blockchain into any other
-     * token on the BancorNetwork
-     * ideally this transaction is created before the previous conversion is even complete, so
+     * @dev allows a user to convert a token that was sent from another blockchain into any other token on the
+     * BancorNetwork
+     *
+     * note that ideally this transaction should've been created before the previous conversion is even complete, so
      * so the input amount isn't known at that point - the amount is actually take from the
      * BancorX contract directly by specifying the conversion id
-     *
-     * @param path conversion path
-     * @param bancorX address of the BancorX contract for the source token
-     * @param conversionId pre-determined unique (if non zero) id which refers to this conversion
-     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-     * @param beneficiary wallet to receive the conversion result
-     *
-     * @return amount of tokens received from the conversion
      */
     function completeXConversion(
         address[] memory path,
@@ -245,12 +207,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev executes the actual conversion by following the conversion path
-     *
-     * @param data conversion data, see ConversionStep struct above
-     * @param sourceAmount amount to convert from, in the source token
-     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-     *
-     * @return amount of tokens received from the conversion
      */
     function doConversion(
         ConversionStep[] memory data,
@@ -321,10 +277,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev validates msg.value and prepares the conversion source token for the conversion
-     *
-     * @param sourceToken source token of the first conversion step
-     * @param anchor converter anchor of the first conversion step
-     * @param sourceAmount amount to convert from, in the source token
      */
     function handleSourceToken(
         IReserveToken sourceToken,
@@ -352,10 +304,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev handles the conversion target token if the network still holds it at the end of the conversion
-     *
-     * @param data conversion data, see ConversionStep struct above
-     * @param targetAmount conversion target amount
-     * @param beneficiary wallet to receive the conversion result
      */
     function handleTargetToken(
         ConversionStep[] memory data,
@@ -376,11 +324,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
-     *
-     * @param path conversion path, see conversion path format above
-     * @param beneficiary wallet to receive the conversion result
-     *
-     * @return cached conversion data to be ingested later on by the conversion flow
      */
     function createConversionData(address[] memory path, address payable beneficiary)
         private

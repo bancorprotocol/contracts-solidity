@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "../liquidity-protection/LiquidityProtection.sol";
+
 import "./TestTime.sol";
 
 contract TestLiquidityProtection is LiquidityProtection, TestTime {

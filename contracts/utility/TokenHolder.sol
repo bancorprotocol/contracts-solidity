@@ -10,10 +10,10 @@ import "../token/ReserveToken.sol";
 
 /**
  * @dev This contract provides a safety mechanism for allowing the owner to
- * send tokens that were sent to the contract by mistake back to the sender.
+ * send tokens that were sent to the contract by mistake back to the sender
  *
- * We consider every contract to be a 'token holder' since it's currently not possible
- * for a contract to deny receiving tokens.
+ * we consider every contract to be a 'token holder' since it's currently not possible
+ * for a contract to deny receiving tokens
  */
 contract TokenHolder is ITokenHolder, Owned, Utils {
     using ReserveToken for IReserveToken;
@@ -23,11 +23,10 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
 
     /**
      * @dev withdraws funds held by the contract and sends them to an account
-     * can only be called by the owner
      *
-     * @param reserveToken reserve token contract address
-     * @param to account to receive the new amount
-     * @param amount amount to withdraw
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function withdrawTokens(
         IReserveToken reserveToken,
@@ -39,11 +38,10 @@ contract TokenHolder is ITokenHolder, Owned, Utils {
 
     /**
      * @dev withdraws multiple funds held by the contract and sends them to an account
-     * can only be called by the owner
      *
-     * @param reserveTokens reserve tokens contract addresses
-     * @param to account to receive the new amount
-     * @param amounts amounts to withdraw
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function withdrawTokensMultiple(
         IReserveToken[] calldata reserveTokens,

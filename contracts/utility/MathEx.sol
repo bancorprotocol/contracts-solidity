@@ -11,10 +11,6 @@ library MathEx {
 
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a positive integer
-     *
-     * @param num a positive integer
-     *
-     * @return the largest integer smaller than or equal to the square root of the positive integer
      */
     function floorSqrt(uint256 num) internal pure returns (uint256) {
         uint256 x = num / 2 + 1;
@@ -28,10 +24,6 @@ library MathEx {
 
     /**
      * @dev returns the smallest integer larger than or equal to the square root of a positive integer
-     *
-     * @param num a positive integer
-     *
-     * @return the smallest integer larger than or equal to the square root of the positive integer
      */
     function ceilSqrt(uint256 num) internal pure returns (uint256) {
         uint256 x = floorSqrt(num);
@@ -41,16 +33,13 @@ library MathEx {
 
     /**
      * @dev computes the product of two given ratios
-     *
-     * @param xn the 1st ratio numerator
-     * @param yn the 2nd ratio numerator
-     * @param xd the 1st ratio denominator
-     * @param yd the 2nd ratio denominator
-     *
-     * @return the product ratio numerator
-     * @return the product ratio denominator
      */
-    function productRatio(uint256 xn, uint256 yn, uint256 xd, uint256 yd) internal pure returns (uint256, uint256) {
+    function productRatio(
+        uint256 xn,
+        uint256 yn,
+        uint256 xd,
+        uint256 yd
+    ) internal pure returns (uint256, uint256) {
         uint256 n = mulDivC(xn, yn, MAX_UINT256);
         uint256 d = mulDivC(xd, yd, MAX_UINT256);
         uint256 z = n > d ? n : d;
@@ -62,12 +51,6 @@ library MathEx {
 
     /**
      * @dev computes a reduced-scalar ratio
-     *
-     * @param n ratio numerator
-     * @param d ratio denominator
-     * @param max maximum desired scalar
-     *
-     * @return ratio's numerator and denominator
      */
     function reducedRatio(
         uint256 n,
@@ -139,10 +122,6 @@ library MathEx {
 
     /**
      * @dev returns the average number of decimal digits in a given list of positive integers
-     *
-     * @param values list of positive integers
-     *
-     * @return the average number of decimal digits in the given list of positive integers
      */
     function geometricMean(uint256[] memory values) internal pure returns (uint256) {
         uint256 numOfDigits = 0;
@@ -155,10 +134,6 @@ library MathEx {
 
     /**
      * @dev returns the number of decimal digits in a given positive integer
-     *
-     * @param x positive integer
-     *
-     * @return the number of decimal digits in the given positive integer
      */
     function decimalLength(uint256 x) internal pure returns (uint256) {
         uint256 y = 0;
@@ -170,12 +145,8 @@ library MathEx {
 
     /**
      * @dev returns the nearest integer to a given quotient
-     * the computation is overflow-safe assuming that the input is sufficiently small
      *
-     * @param n quotient numerator
-     * @param d quotient denominator
-     *
-     * @return the nearest integer to the given quotient
+     * note the computation is overflow-safe assuming that the input is sufficiently small
      */
     function roundDivUnsafe(uint256 n, uint256 d) internal pure returns (uint256) {
         return (n + d / 2) / d;
@@ -184,9 +155,13 @@ library MathEx {
     /**
      * @dev returns the largest integer smaller than or equal to `x * y / z`
      */
-    function mulDivF(uint256 x, uint256 y, uint256 z) internal pure returns (uint256) {
+    function mulDivF(
+        uint256 x,
+        uint256 y,
+        uint256 z
+    ) internal pure returns (uint256) {
         (uint256 xyh, uint256 xyl) = mul512(x, y);
-    
+
         // if `x * y < 2 ^ 256`
         if (xyh == 0) {
             return xyl / z;
@@ -194,8 +169,8 @@ library MathEx {
 
         // assert `x * y / z < 2 ^ 256`
         require(xyh < z, "ERR_OVERFLOW");
-    
-        uint256 m = mulMod(x, y, z);                    // `m = x * y % z`
+
+        uint256 m = mulMod(x, y, z); // `m = x * y % z`
         (uint256 nh, uint256 nl) = sub512(xyh, xyl, m); // `n = x * y - m` hence `n / z = floor(x * y / z)`
 
         // if `n < 2 ^ 256`
@@ -204,15 +179,19 @@ library MathEx {
         }
 
         uint256 p = unsafeSub(0, z) & z; // `p` is the largest power of 2 which `z` is divisible by
-        uint256 q = div512(nh, nl, p);   // `n` is divisible by `p` because `n` is divisible by `z` and `z` is divisible by `p`
-        uint256 r = inv256(z / p);       // `z / p = 1 mod 2` hence `inverse(z / p) = 1 mod 2 ^ 256`
-        return unsafeMul(q, r);          // `q * r = (n / p) * inverse(z / p) = n / z`
+        uint256 q = div512(nh, nl, p); // `n` is divisible by `p` because `n` is divisible by `z` and `z` is divisible by `p`
+        uint256 r = inv256(z / p); // `z / p = 1 mod 2` hence `inverse(z / p) = 1 mod 2 ^ 256`
+        return unsafeMul(q, r); // `q * r = (n / p) * inverse(z / p) = n / z`
     }
 
     /**
      * @dev returns the smallest integer larger than or equal to `x * y / z`
      */
-    function mulDivC(uint256 x, uint256 y, uint256 z) internal pure returns (uint256) {
+    function mulDivC(
+        uint256 x,
+        uint256 y,
+        uint256 z
+    ) internal pure returns (uint256) {
         uint256 w = mulDivF(x, y, z);
         if (mulMod(x, y, z) > 0) {
             require(w < MAX_UINT256, "ERR_OVERFLOW");
@@ -236,7 +215,11 @@ library MathEx {
     /**
      * @dev returns the value of `2 ^ 256 * xh + xl - y`, where `2 ^ 256 * xh + xl >= y`
      */
-    function sub512(uint256 xh, uint256 xl, uint256 y) private pure returns (uint256, uint256) {
+    function sub512(
+        uint256 xh,
+        uint256 xl,
+        uint256 y
+    ) private pure returns (uint256, uint256) {
         if (xl >= y) {
             return (xh, xl - y);
         }
@@ -246,7 +229,11 @@ library MathEx {
     /**
      * @dev returns the value of `(2 ^ 256 * xh + xl) / pow2n`, where `xl` is divisible by `pow2n`
      */
-    function div512(uint256 xh, uint256 xl, uint256 pow2n) private pure returns (uint256) {
+    function div512(
+        uint256 xh,
+        uint256 xl,
+        uint256 pow2n
+    ) private pure returns (uint256) {
         uint256 pow2nInv = unsafeAdd(unsafeSub(0, pow2n) / pow2n, 1); // `1 << (256 - n)`
         return unsafeMul(xh, pow2nInv) | (xl / pow2n); // `(xh << (256 - n)) | (xl >> n)`
     }
@@ -294,7 +281,11 @@ library MathEx {
     /**
      * @dev returns `x * y % z`
      */
-    function mulMod(uint256 x, uint256 y, uint256 z) private pure returns (uint256) {
+    function mulMod(
+        uint256 x,
+        uint256 y,
+        uint256 z
+    ) private pure returns (uint256) {
         return mulmod(x, y, z);
     }
 }
