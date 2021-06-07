@@ -158,6 +158,57 @@ export async function deploy<T extends ContractFactory>(
     return factory.deploy(...(args || []));
 }
 
+export type ContractTypes =
+    | Contract
+    | BancorNetwork
+    | BancorX
+    | CheckpointStore
+    | ContractRegistry
+    | ConversionPathFinder
+    | ConverterFactory
+    | ConverterRegistry
+    | ConverterRegistryData
+    | ConverterUpgrader
+    | ConverterV27OrLowerWithFallback
+    | ConverterV28OrHigherWithFallback
+    | ConverterV28OrHigherWithoutFallback
+    | DSToken
+    | ERC20
+    | IConverterAnchor
+    | LiquidityProtection
+    | LiquidityProtectionSettings
+    | LiquidityProtectionStats
+    | LiquidityProtectionStore
+    | LiquidityProtectionSystemStore
+    | NetworkSettings
+    | Owned
+    | StakingRewards
+    | StakingRewardsStore
+    | StandardPoolConverter
+    | StandardPoolConverterFactory
+    | TestBancorNetwork
+    | TestCheckpointStore
+    | TestContractRegistryClient
+    | TestConverterFactory
+    | TestConverterRegistry
+    | TestLiquidityProtection
+    | TestLiquidityProvisionEventsSubscriber
+    | TestMathEx
+    | TestNonStandardToken
+    | TestReserveToken
+    | TestSafeERC20Ex
+    | TestStakingRewards
+    | TestStakingRewardsStore
+    | TestStandardPoolConverter
+    | TestStandardPoolConverterFactory
+    | TestStandardToken
+    | TestTokenGovernance
+    | TestTransferPositionCallback
+    | TestTypedConverterAnchorFactory
+    | TokenGovernance
+    | TokenHolder
+    | VortexBurner;
+
 export default {
     BancorNetwork: deployOrAttach<BancorNetwork, BancorNetwork__factory>(
         BancorNetwork__factory.prototype.deploy.length,

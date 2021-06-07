@@ -68,7 +68,6 @@
         "humanize-duration": "^3.26.0",
         "lodash": "^4.17.21",
         "mocha": "^8.4.0",
-        "module-alias": "^2.2.2",
         "prettier": "^2.3.0",
         "prettier-package-json": "^2.5.0",
         "prettier-plugin-solidity": "^1.0.0-beta.10",
@@ -77,14 +76,11 @@
         "solhint": "^3.3.4",
         "solidity-coverage": "^0.7.16",
         "ts-node": "^10.0.0",
+        "tsconfig-paths": "^3.9.0",
         "typechain": "^5.0.0",
         "typescript": "^4.3.2",
         "web3": "1.3.6",
         "yargs": "^17.0.1"
-    },
-    "_moduleAliases": {
-        "typechain": "./typechain",
-        "contracts": "./components/Contracts.ts"
     },
     "snyk": true
 }

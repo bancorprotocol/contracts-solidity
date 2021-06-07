@@ -13,6 +13,6 @@
             "contracts": ["./components/Contracts.ts"]
         }
     },
-    "include": ["./scripts", "./test", "./tasks", "./packages"],
+    "include": ["./scripts", "./test", "./tasks", "./packages", "./deployments"],
     "files": ["./hardhat.config.ts"]
 }

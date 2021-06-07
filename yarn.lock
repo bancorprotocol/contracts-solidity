@@ -40,6 +40,8 @@
 "@bancor/token-governance@bancorprotocol/token-governance":
   version "0.1.0"
   resolved "https://codeload.github.com/bancorprotocol/token-governance/tar.gz/72c40f70149cbd4b294556ee253bb0afd9620098"
+  dependencies:
+    "@openzeppelin/contracts" "3.2.0"
 
 "@deepcode/dcignore@^1.0.2":
   version "1.0.2"
@@ -731,6 +733,11 @@
   dependencies:
     sprintf-js "^1.1.2"
     utf8 "^3.0.0"
+
+"@openzeppelin/contracts@3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.2.0.tgz#3e6b3a7662d8ed64271ade96ef42655db983fd9d"
+  integrity sha512-bUOmkSoPkjnUyMiKo6RYnb0VHBk5D9KKDAgNLzF41aqAM3TeE0yGdFF5dVRcV60pZdJLlyFT/jjXIZCWyyEzAQ==
 
 "@openzeppelin/contracts@3.4.0":
   version "3.4.0"
@@ -8246,11 +8253,6 @@ mock-fs@^4.1.0:
   version "4.14.0"
   resolved "https://registry.yarnpkg.com/mock-fs/-/mock-fs-4.14.0.tgz#ce5124d2c601421255985e6e94da80a7357b1b18"
   integrity sha512-qYvlv/exQ4+svI3UOvPUpLDF0OMX5euvUH0Ny4N5QyRyhNdgAgUrVH3iUINSzEPLvx0kbo/Bp28GJKIqvE7URw==
-
-module-alias@^2.2.2:
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/module-alias/-/module-alias-2.2.2.tgz#151cdcecc24e25739ff0aa6e51e1c5716974c0e0"
-  integrity sha512-A/78XjoX2EmNvppVWEhM2oGk3x4lLxnkEA4jTbaK97QKSDjkIoOsKQlfylt/d3kKKi596Qy3NP5XrXJ6fZIC9Q==
 
 ms@2.0.0:
   version "2.0.0"

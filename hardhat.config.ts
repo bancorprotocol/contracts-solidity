@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-require('module-alias/register');
+import 'tsconfig-paths/register';
 
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-ethers';
