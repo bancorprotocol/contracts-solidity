@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../../converter/interfaces/IConverterAnchor.sol";
 
-/*
-    Liquidity Protection System Store interface
-*/
+/**
+ * @dev Liquidity Protection System Store interface
+ */
 interface ILiquidityProtectionSystemStore {
     function systemBalance(IERC20 poolToken) external view returns (uint256);
 

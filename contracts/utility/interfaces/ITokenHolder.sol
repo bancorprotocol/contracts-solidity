@@ -5,9 +5,9 @@ import "../../token/interfaces/IReserveToken.sol";
 
 import "./IOwned.sol";
 
-/*
-    Token Holder interface
-*/
+/**
+ * @dev Token Holder interface
+ */
 interface ITokenHolder is IOwned {
     receive() external payable;
 

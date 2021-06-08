@@ -19,8 +19,8 @@ import "../../../token/ReserveToken.sol";
 import "../../../INetworkSettings.sol";
 
 /**
- * @dev This contract is a specialized version of the converter, which is
- * optimized for a liquidity pool that has 2 reserves with 50%/50% weights.
+ * @dev This contract is a specialized version of the converter, which is optimized for a liquidity pool that has 2
+ * reserves with 50%/50% weights
  */
 contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistryClient, ReentrancyGuard, Time {
     using SafeMath for uint256;
@@ -51,12 +51,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev triggered after liquidity is added
-     *
-     * @param provider liquidity provider
-     * @param reserveToken reserve token address
-     * @param amount reserve token amount
-     * @param newBalance reserve token new balance
-     * @param newSupply pool token new supply
      */
     event LiquidityAdded(
         address indexed provider,
@@ -68,12 +62,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev triggered after liquidity is removed
-     *
-     * @param provider liquidity provider
-     * @param reserveToken reserve token address
-     * @param amount reserve token amount
-     * @param newBalance reserve token new balance
-     * @param newSupply pool token new supply
      */
     event LiquidityRemoved(
         address indexed provider,
@@ -85,10 +73,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev initializes a new StandardPoolConverter instance
-     *
-     * @param anchor anchor governed by the converter
-     * @param registry address of a contract registry contract
-     * @param maxConversionFee  maximum conversion fee, represented in ppm
      */
     constructor(
         IConverterAnchor anchor,
@@ -161,8 +145,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the converter type
-     *
-     * @return see the converter types in the the main contract doc
      */
     function converterType() public pure virtual override returns (uint16) {
         return 3;
@@ -170,8 +152,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev checks whether or not the converter version is 28 or higher
-     *
-     * @return true, since the converter version is 28 or higher
      */
     function isV28OrHigher() external pure returns (bool) {
         return true;
@@ -179,8 +159,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the converter anchor
-     *
-     * @return the converter anchor
      */
     function anchor() external view override returns (IConverterAnchor) {
         return _anchor;
@@ -188,8 +166,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the maximum conversion fee (in units of PPM)
-     *
-     * @return the maximum conversion fee (in units of PPM)
      */
     function maxConversionFee() external view override returns (uint32) {
         return _maxConversionFee;
@@ -197,8 +173,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the current conversion fee (in units of PPM)
-     *
-     * @return the current conversion fee (in units of PPM)
      */
     function conversionFee() external view override returns (uint32) {
         return _conversionFee;
@@ -206,8 +180,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the average rate info
-     *
-     * @return the average rate info
      */
     function averageRateInfo() external view returns (uint256) {
         return _averageRateInfo;
@@ -215,14 +187,15 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev deposits ether
-     * can only be called if the converter has an ETH reserve
+     *
+     * Requirements:
+     *
+     * - can only be used if the converter has an ETH reserve
      */
     receive() external payable override(IConverter) validReserve(ReserveToken.NATIVE_TOKEN_ADDRESS) {}
 
     /**
      * @dev returns true if the converter is active, false otherwise
-     *
-     * @return true if the converter is active, false otherwise
      */
     function isActive() public view virtual override returns (bool) {
         return _anchor.owner() == address(this);
@@ -230,11 +203,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev transfers the anchor ownership
-     * the new owner needs to accept the transfer
-     * can only be called by the converter upgrader while the upgrader is the owner
-     * note that prior to version 28, you should use 'transferAnchorOwnership' instead
      *
-     * @param newOwner new token owner
+     * Requirements:
+     *
+     * - the new owner needs to accept the transfer
+     * - can only be called by the converter upgrader while the upgrader is the owner
+     *
+     * note that prior to version 28, you should use 'transferAnchorOwnership' instead
      */
     function transferAnchorOwnership(address newOwner) public override ownerOnly only(CONVERTER_UPGRADER) {
         _anchor.transferOwnership(newOwner);
@@ -242,12 +217,15 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev accepts ownership of the anchor after an ownership transfer
-     * most converters are also activated as soon as they accept the anchor ownership
-     * can only be called by the contract owner
+     *
+     * Requirements:
+     *
+     * - most converters are also activated as soon as they accept the anchor ownership
+     * - the caller must be the owner of the contract
+     *
      * note that prior to version 28, you should use 'acceptTokenOwnership' instead
      */
     function acceptAnchorOwnership() public virtual override ownerOnly {
-        // verify the the converter has exactly two reserves
         require(_reserveTokens.length == 2, "ERR_INVALID_RESERVE_COUNT");
 
         _anchor.acceptOwnership();
@@ -259,9 +237,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev updates the current conversion fee
-     * can only be called by the contract owner
      *
-     * @param fee new conversion fee, represented in ppm
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function setConversionFee(uint32 fee) external override ownerOnly {
         require(fee <= _maxConversionFee, "ERR_INVALID_CONVERSION_FEE");
@@ -273,9 +252,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev transfers reserve balances to a new converter during an upgrade
-     * can only be called by the converter upgraded which should be set at its owner
      *
-     * @param newConverter address of the converter to receive the new amount
+     * Requirements:
+     *
+     * - can only be called by the converter upgrader which should have been set at its owner
      */
     function transferReservesOnUpgrade(address newConverter)
         external
@@ -296,7 +276,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev upgrades the converter to the latest version
-     * can only be called by the owner
+     *
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     *
      * note that the owner needs to call acceptOwnership on the new converter after the upgrade
      */
     function upgrade() external ownerOnly {
@@ -320,9 +304,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the number of reserve tokens
-     * note that prior to version 17, you should use 'connectorTokenCount' instead
      *
-     * @return number of reserve tokens
+     * note that prior to version 17, you should use 'connectorTokenCount' instead
      */
     function reserveTokenCount() public view override returns (uint16) {
         return uint16(_reserveTokens.length);
@@ -330,8 +313,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the array of reserve tokens
-     *
-     * @return array of reserve tokens
      */
     function reserveTokens() external view override returns (IReserveToken[] memory) {
         return _reserveTokens;
@@ -339,10 +320,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev defines a new reserve token for the converter
-     * can only be called by the owner while the converter is inactive
      *
-     * @param token address of the reserve token
-     * @param weight reserve weight, represented in ppm, 1-1000000
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     * - the converter must be inactive
      */
     function addReserve(IReserveToken token, uint32 weight)
         external
@@ -362,11 +344,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the reserve's weight
-     * added in version 28
-     *
-     * @param reserveToken reserve token contract address
-     *
-     * @return reserve weight
      */
     function reserveWeight(IReserveToken reserveToken) external view validReserve(reserveToken) returns (uint32) {
         return PPM_RESOLUTION / 2;
@@ -374,10 +351,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the balance of a given reserve token
-     *
-     * @param reserveToken reserve token contract address
-     *
-     * @return the balance of the given reserve token
      */
     function reserveBalance(IReserveToken reserveToken) public view override returns (uint256) {
         uint256 reserveId = _reserveIds[reserveToken];
@@ -388,8 +361,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the balances of both reserve tokens
-     *
-     * @return the balances of both reserve tokens
      */
     function reserveBalances() public view returns (uint256, uint256) {
         return reserveBalances(1, 2);
@@ -412,10 +383,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev calculates the accumulated network fee and transfers it to the network fee wallet
-     *
-     * @param value amount of ether to exclude from the ether reserve balance (if relevant)
-     *
-     * @return new reserve balances
      */
     function processNetworkFees(uint256 value) private returns (uint256, uint256) {
         syncReserveBalances(value);
@@ -434,10 +401,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the reserve balances of the given reserve tokens minus their corresponding fees
-     *
-     * @param baseReserveTokens reserve tokens
-     *
-     * @return reserve balances minus their corresponding fees
      */
     function baseReserveBalances(IReserveToken[] memory baseReserveTokens) private view returns (uint256[2] memory) {
         uint256 reserveId0 = _reserveIds[baseReserveTokens[0]];
@@ -450,15 +413,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev converts a specific amount of source tokens to target tokens
-     * can only be called by the bancor network contract
      *
-     * @param sourceToken source reserve token
-     * @param targetToken target reserve token
-     * @param sourceAmount amount of tokens to convert (in units of the source token)
-     * @param trader address of the caller who executed the conversion
-     * @param beneficiary wallet to receive the conversion result
+     * Requirements:
      *
-     * @return amount of tokens received (in units of the target token)
+     * - the caller must be the bancor network contract
      */
     function convert(
         IReserveToken sourceToken,
@@ -474,10 +432,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the conversion fee for a given target amount
-     *
-     * @param targetAmount target amount
-     *
-     * @return conversion fee
      */
     function calculateFee(uint256 targetAmount) private view returns (uint256) {
         return targetAmount.mul(_conversionFee) / PPM_RESOLUTION;
@@ -485,10 +439,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the conversion fee taken from a given target amount
-     *
-     * @param targetAmount  target amount
-     *
-     * @return conversion fee
      */
     function calculateFeeInv(uint256 targetAmount) private view returns (uint256) {
         return targetAmount.mul(_conversionFee).div(PPM_RESOLUTION - _conversionFee);
@@ -496,8 +446,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev loads the stored reserve balance for a given reserve id
-     *
-     * @param reserveId reserve id
      */
     function reserveBalance(uint256 reserveId) private view returns (uint256) {
         return decodeReserveBalance(_reserveBalances, reserveId);
@@ -505,9 +453,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev loads the stored reserve balances
-     *
-     * @param sourceId source reserve id
-     * @param targetId target reserve id
      */
     function reserveBalances(uint256 sourceId, uint256 targetId) private view returns (uint256, uint256) {
         require((sourceId == 1 && targetId == 2) || (sourceId == 2 && targetId == 1), "ERR_INVALID_RESERVES");
@@ -517,9 +462,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev stores the stored reserve balance for a given reserve id
-     *
-     * @param reserveId reserve id
-     * @param balance reserve balance
      */
     function setReserveBalance(uint256 reserveId, uint256 balance) private {
         require(balance <= MAX_UINT128, "ERR_RESERVE_BALANCE_OVERFLOW");
@@ -530,11 +472,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev stores the stored reserve balances
-     *
-     * @param sourceId source reserve id
-     * @param targetId target reserve id
-     * @param sourceBalance source reserve balance
-     * @param targetBalance target reserve balance
      */
     function setReserveBalances(
         uint256 sourceId,
@@ -549,8 +486,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev syncs the stored reserve balance for a given reserve with the real reserve balance
-     *
-     * @param reserveToken address of the reserve token
      */
     function syncReserveBalance(IReserveToken reserveToken) private {
         uint256 reserveId = _reserveIds[reserveToken];
@@ -560,8 +495,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev syncs all stored reserve balances, excluding a given amount of ether from the ether reserve balance (if relevant)
-     *
-     * @param value amount of ether to exclude from the ether reserve balance (if relevant)
      */
     function syncReserveBalances(uint256 value) private {
         IReserveToken _reserveToken0 = _reserveTokens[0];
@@ -574,13 +507,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev helper, dispatches the Conversion event
-     *
-     * @param sourceToken source ERC20 token
-     * @param targetToken target ERC20 token
-     * @param trader address of the caller who executed the conversion
-     * @param sourceAmount amount purchased/sold (in the source token)
-     * @param targetAmount amount returned (in the target token)
-     * @param feeAmount the fee amount
      */
     function dispatchConversionEvent(
         IReserveToken sourceToken,
@@ -595,13 +521,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the expected amount and expected fee for converting one reserve to another
-     *
-     * @param sourceToken address of the source reserve token contract
-     * @param targetToken address of the target reserve token contract
-     * @param sourceAmount amount of source reserve tokens converted
-     *
-     * @return expected amount in units of the target reserve token
-     * @return expected fee in units of the target reserve token
      */
     function targetAmountAndFee(
         IReserveToken sourceToken,
@@ -618,13 +537,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the expected amount and expected fee for converting one reserve to another
-     *
-     * @param sourceBalance balance in the source reserve token contract
-     * @param targetBalance balance in the target reserve token contract
-     * @param sourceAmount amount of source reserve tokens converted
-     *
-     * @return expected amount in units of the target reserve token
-     * @return expected fee in units of the target reserve token
      */
     function targetAmountAndFee(
         IReserveToken, /* sourceToken */
@@ -642,13 +554,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the required amount and expected fee for converting one reserve to another
-     *
-     * @param sourceToken address of the source reserve token contract
-     * @param targetToken address of the target reserve token contract
-     * @param targetAmount amount of target reserve tokens desired
-     *
-     * @return required amount in units of the source reserve token
-     * @return expected fee in units of the target reserve token
      */
     function sourceAmountAndFee(
         IReserveToken sourceToken,
@@ -668,15 +573,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev converts a specific amount of source tokens to target tokens
-     *
-     * @param sourceToken source reserve token
-     * @param targetToken target reserve token
-     * @param sourceAmount amount of tokens to convert (in units of the source token)
-     * @param trader address of the caller who executed the conversion
-     * @param beneficiary wallet to receive the conversion result
-     *
-     * @return amount of tokens received (in units of the target token)
+     * @dev converts a specific amount of source tokens to target tokens and returns the amount of tokens received
+     * (in units of the target token)
      */
     function doConvert(
         IReserveToken sourceToken,
@@ -728,11 +626,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the recent average rate of 1 token in the other reserve token units
-     *
-     * @param token token to get the rate for
-     *
-     * @return recent average rate between the reserves (numerator)
-     * @return recent average rate between the reserves (denominator)
      */
     function recentAverageRate(IReserveToken token) external view validReserve(token) returns (uint256, uint256) {
         // get the recent average rate of reserve 0
@@ -761,10 +654,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the recent average rate of 1 reserve token 0 in reserve token 1 units
-     *
-     * @param averageRateInfoData the average rate to use for the calculation
-     *
-     * @return recent average rate between the reserves
      */
     function calcRecentAverageRate(uint256 averageRateInfoData) private view returns (uint256) {
         // get the previous average rate and its update-time
@@ -803,20 +692,14 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev increases the pool's liquidity and mints new shares in the pool to the caller
-     *
-     * @param reserves address of each reserve token
-     * @param reserveAmounts amount of each reserve token
-     * @param minReturn token minimum return-amount
-     *
-     * @return amount of pool tokens issued
+     * @dev increases the pool's liquidity and mints new shares in the pool to the caller and returns the amount of pool
+     * tokens issued
      */
     function addLiquidity(
         IReserveToken[] memory reserves,
         uint256[] memory reserveAmounts,
         uint256 minReturn
     ) external payable nonReentrant active returns (uint256) {
-        // verify the user input
         verifyLiquidityInput(reserves, reserveAmounts, minReturn);
 
         // if one of the reserves is ETH, then verify that the input amount of ETH is equal to the input value of ETH
@@ -903,15 +786,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev get the amount of pool tokens to mint for the caller
-     * and the amount of reserve tokens to transfer from the caller
-     *
-     * @param amounts amount of each reserve token
-     * @param balances balance of each reserve token
-     * @param totalSupply total supply of pool tokens
-     *
-     * @return amount of pool tokens to mint for the caller
-     * @return amount of reserve tokens to transfer from the caller
+     * @dev get the amount of pool tokens to mint for the caller and the amount of reserve tokens to transfer from
+     * the caller
      */
     function addLiquidityAmounts(
         IReserveToken[] memory, /* reserves */
@@ -929,13 +805,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev decreases the pool's liquidity and burns the caller's shares in the pool
-     *
-     * @param amount token amount
-     * @param reserves address of each reserve token
-     * @param minReturnAmounts minimum return-amount of each reserve token
-     *
-     * @return the amount of each reserve token granted for the given amount of pool tokens
+     * @dev decreases the pool's liquidity and burns the caller's shares in the pool and returns the amount of each
+     * reserve token granted for the given amount of pool tokens
      */
     function removeLiquidity(
         uint256 amount,
@@ -998,16 +869,12 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     }
 
     /**
-     * @dev given the amount of one of the reserve tokens to add liquidity of,
-     * returns the required amount of each one of the other reserve tokens
-     * since an empty pool can be funded with any list of non-zero input amounts,
-     * this function assumes that the pool is not empty (has already been funded)
+     * @dev given the amount of one of the reserve tokens to add liquidity of, returns the required amount of each one
+     * of the other reserve tokens since an empty pool can be funded with any list of non-zero input amounts
      *
-     * @param reserves address of each reserve token
-     * @param index index of the relevant reserve token
-     * @param amount amount of the relevant reserve token
+     * Requirements:
      *
-     * @return the required amount of each one of the reserve tokens
+     * - this function assumes that the pool is not empty (has already been funded)
      */
     function addLiquidityCost(
         IReserveToken[] memory reserves,
@@ -1027,13 +894,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the amount of pool tokens entitled for given amounts of reserve tokens
-     * since an empty pool can be funded with any list of non-zero input amounts,
-     * this function assumes that the pool is not empty (has already been funded)
      *
-     * @param reserves address of each reserve token
-     * @param amounts  amount of each reserve token
+     * Requirements:
      *
-     * @return the amount of pool tokens entitled for the given amounts of reserve tokens
+     * - since an empty pool can be funded with any list of non-zero input amounts, this function assumes that the pool
+     * is not empty (has already been funded)
      */
     function addLiquidityReturn(IReserveToken[] memory reserves, uint256[] memory amounts)
         external
@@ -1049,11 +914,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
-     *
-     * @param amount amount of pool tokens
-     * @param reserves address of each reserve token
-     *
-     * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
     function removeLiquidityReturn(uint256 amount, IReserveToken[] memory reserves)
         external
@@ -1068,14 +928,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev verifies that a given array of tokens is identical to the converter's array of reserve tokens
-     * we take this input in order to allow specifying the corresponding reserve amounts in any order
+     * note that we take this input in order to allow specifying the corresponding reserve amounts in any order and that
      * this function rearranges the input arrays according to the converter's array of reserve tokens
-     *
-     * @param reserves array of reserve tokens
-     * @param amounts array of reserve amounts
-     * @param amount token amount
-     *
-     * @return true if the function has rearranged the input arrays; false otherwise
      */
     function verifyLiquidityInput(
         IReserveToken[] memory reserves,
@@ -1106,10 +960,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev checks whether or not both reserve amounts are larger than zero
-     *
-     * @param amounts  array of reserve amounts
-     *
-     * @return true if both reserve amounts are larger than zero; false otherwise
      */
     function validReserveAmounts(uint256[] memory amounts) private pure returns (bool) {
         return amounts[0] > 0 && amounts[1] > 0;
@@ -1117,12 +967,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the amount of each reserve token entitled for a given amount of pool tokens
-     *
-     * @param amount amount of pool tokens
-     * @param totalSupply total supply of pool tokens
-     * @param balances balance of each reserve token
-     *
-     * @return the amount of each reserve token entitled for the given amount of pool tokens
      */
     function removeLiquidityReserveAmounts(
         uint256 amount,
@@ -1138,11 +982,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev dispatches token rate update events for the reserve tokens and the pool token
-     *
-     * @param sourceToken address of the source reserve token
-     * @param targetToken address of the target reserve token
-     * @param sourceBalance balance of the source reserve token
-     * @param targetBalance balance of the target reserve token
      */
     function dispatchTokenRateUpdateEvents(
         IReserveToken sourceToken,
@@ -1214,10 +1053,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the largest integer smaller than or equal to the square root of a given value
-     *
-     * @param x the given value
-     *
-     * @return the largest integer smaller than or equal to the square root of the given value
      */
     function floorSqrt(uint256 x) private pure returns (uint256) {
         return x > 0 ? MathEx.floorSqrt(x) : 0;
@@ -1304,13 +1139,6 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
     /**
      * @dev returns the network wallet and fees
-     *
-     * @param reserveBalance0 1st reserve balance
-     * @param reserveBalance1 2nd reserve balance
-     *
-     * @return the network wallet
-     * @return the network fee on the 1st reserve
-     * @return the network fee on the 2nd reserve
      */
     function networkWalletAndFees(uint256 reserveBalance0, uint256 reserveBalance1)
         private

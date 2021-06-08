@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "../utility/CheckpointStore.sol";
+
 import "./TestTime.sol";
 
 contract TestCheckpointStore is CheckpointStore, TestTime {

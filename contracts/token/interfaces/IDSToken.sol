@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../converter/interfaces/IConverterAnchor.sol";
 import "../../utility/interfaces/IOwned.sol";
 
-/*
-    DSToken interface
-*/
+/**
+ * @dev DSToken interface
+ */
 interface IDSToken is IConverterAnchor, IERC20 {
     function issue(address recipient, uint256 amount) external;
 

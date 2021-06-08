@@ -7,9 +7,9 @@ import "../../token/interfaces/IReserveToken.sol";
 
 import "./ILiquidityProvisionEventsSubscriber.sol";
 
-/*
-    Liquidity Protection Store Settings interface
-*/
+/**
+ * @dev Liquidity Protection Settings interface
+ */
 interface ILiquidityProtectionSettings {
     function isPoolWhitelisted(IConverterAnchor poolAnchor) external view returns (bool);
 

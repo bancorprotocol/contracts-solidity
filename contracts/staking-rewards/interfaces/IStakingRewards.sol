@@ -8,19 +8,11 @@ import "./IStakingRewardsStore.sol";
 interface IStakingRewards is ILiquidityProvisionEventsSubscriber {
     /**
      * @dev triggered when pending rewards are being claimed
-     *
-     * @param provider the owner of the liquidity
-     * @param amount the total rewards amount
      */
     event RewardsClaimed(address indexed provider, uint256 amount);
 
     /**
      * @dev triggered when pending rewards are being staked in a pool
-     *
-     * @param provider the owner of the liquidity
-     * @param poolToken the pool token representing the rewards pool
-     * @param amount the reward amount
-     * @param newId the ID of the new position
      */
     event RewardsStaked(address indexed provider, IDSToken indexed poolToken, uint256 amount, uint256 indexed newId);
 

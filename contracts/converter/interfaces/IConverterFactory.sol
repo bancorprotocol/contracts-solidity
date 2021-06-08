@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "./IConverter.sol";
 import "./IConverterAnchor.sol";
 import "../../utility/interfaces/IContractRegistry.sol";
 
-/*
-    Converter Factory interface
-*/
+/**
+ * @dev Converter Factory interface
+ */
 interface IConverterFactory {
     function createAnchor(
         uint16 converterType,
