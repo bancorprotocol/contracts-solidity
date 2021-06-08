@@ -406,7 +406,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
      * - the owner needs to call acceptOwnership on the new contract after the upgrade
      */
     function upgrade(address[] memory newReporters) external ownerOnly {
-        IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(addressOf(BANCOR_X_UPGRADER));
+        IBancorXUpgrader bancorXUpgrader = IBancorXUpgrader(_addressOf(BANCOR_X_UPGRADER));
 
         transferOwnership(address(bancorXUpgrader));
 
@@ -429,7 +429,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         // verify lock limit
         require(_minLimit <= amount && amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
 
-        lockTokens(amount);
+        _lockTokens(amount);
 
         // set the previous lock limit and block number
         _prevLockLimit = currentLockLimit.sub(amount);
@@ -454,7 +454,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         // require that; minLimit <= amount <= currentLockLimit
         require(amount >= _minLimit && amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
 
-        lockTokens(amount);
+        _lockTokens(amount);
 
         // set the previous lock limit and block number
         _prevLockLimit = currentLockLimit.sub(amount);
@@ -520,7 +520,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
             emit XTransferComplete(to, xTransferId);
 
-            releaseTokens(to, amount);
+            _releaseTokens(to, amount);
         }
     }
 
@@ -568,7 +568,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     /**
      * @dev claims and locks tokens from msg.sender to be converted to tokens on another blockchain
      */
-    function lockTokens(uint256 amount) private {
+    function _lockTokens(uint256 amount) private {
         _token.safeTransferFrom(msg.sender, address(this), amount);
 
         emit TokensLock(msg.sender, amount);
@@ -577,7 +577,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     /**
      * @dev private method to release tokens held by the contract
      */
-    function releaseTokens(address to, uint256 amount) private {
+    function _releaseTokens(address to, uint256 amount) private {
         // get the current release limit
         uint256 currentReleaseLimit = getCurrentReleaseLimit();
 

@@ -49,28 +49,28 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
      * @dev adds an anchor
      */
     function addSmartToken(IConverterAnchor anchor) external override only(CONVERTER_REGISTRY) {
-        addItem(_anchors, address(anchor));
+        _addItem(_anchors, address(anchor));
     }
 
     /**
      * @dev removes an anchor
      */
     function removeSmartToken(IConverterAnchor anchor) external override only(CONVERTER_REGISTRY) {
-        removeItem(_anchors, address(anchor));
+        _removeItem(_anchors, address(anchor));
     }
 
     /**
      * @dev adds a liquidity pool
      */
     function addLiquidityPool(IConverterAnchor liquidityPoolAnchor) external override only(CONVERTER_REGISTRY) {
-        addItem(_liquidityPools, address(liquidityPoolAnchor));
+        _addItem(_liquidityPools, address(liquidityPoolAnchor));
     }
 
     /**
      * @dev removes a liquidity pool
      */
     function removeLiquidityPool(IConverterAnchor liquidityPoolAnchor) external override only(CONVERTER_REGISTRY) {
-        removeItem(_liquidityPools, address(liquidityPoolAnchor));
+        _removeItem(_liquidityPools, address(liquidityPoolAnchor));
     }
 
     /**
@@ -86,7 +86,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
             list.index = _convertibleTokens.array.length;
             _convertibleTokens.array.push(address(convertibleToken));
         }
-        addItem(list.items, address(anchor));
+        _addItem(list.items, address(anchor));
     }
 
     /**
@@ -98,7 +98,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
         only(CONVERTER_REGISTRY)
     {
         List storage list = _convertibleTokens.table[address(convertibleToken)];
-        removeItem(list.items, address(anchor));
+        _removeItem(list.items, address(anchor));
         if (list.items.array.length == 0) {
             address lastConvertibleToken = _convertibleTokens.array[_convertibleTokens.array.length - 1];
             _convertibleTokens.table[lastConvertibleToken].index = list.index;
@@ -243,7 +243,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
     /**
      * @dev adds an item to a list of items
      */
-    function addItem(Items storage items, address value) internal validAddress(value) {
+    function _addItem(Items storage items, address value) internal validAddress(value) {
         Item storage item = items.table[value];
         require(!item.valid, "ERR_INVALID_ITEM");
 
@@ -255,7 +255,7 @@ contract ConverterRegistryData is IConverterRegistryData, ContractRegistryClient
     /**
      * @dev removes an item from a list of items
      */
-    function removeItem(Items storage items, address value) internal validAddress(value) {
+    function _removeItem(Items storage items, address value) internal validAddress(value) {
         Item storage item = items.table[value];
         require(item.valid, "ERR_INVALID_ITEM");
 

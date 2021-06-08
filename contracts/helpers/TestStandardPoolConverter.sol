@@ -12,7 +12,7 @@ contract TestStandardPoolConverter is StandardPoolConverter, TestTime {
         uint32 maxConversionFee
     ) public StandardPoolConverter(token, registry, maxConversionFee) {}
 
-    function time() internal view override(Time, TestTime) returns (uint256) {
-        return TestTime.time();
+    function _time() internal view override(Time, TestTime) returns (uint256) {
+        return TestTime._time();
     }
 }

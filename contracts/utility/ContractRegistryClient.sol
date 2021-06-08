@@ -41,7 +41,7 @@ contract ContractRegistryClient is Owned, Utils {
 
     // error message binary size optimization
     function _only(bytes32 contractName) internal view {
-        require(msg.sender == addressOf(contractName), "ERR_ACCESS_DENIED");
+        require(msg.sender == _addressOf(contractName), "ERR_ACCESS_DENIED");
     }
 
     /**
@@ -60,7 +60,7 @@ contract ContractRegistryClient is Owned, Utils {
         require(msg.sender == owner() || !_onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
 
         // get the new contract registry
-        IContractRegistry newRegistry = IContractRegistry(addressOf(CONTRACT_REGISTRY));
+        IContractRegistry newRegistry = IContractRegistry(_addressOf(CONTRACT_REGISTRY));
 
         // verify that the new contract registry is different and not zero
         require(newRegistry != _registry && address(newRegistry) != address(0), "ERR_INVALID_REGISTRY");
@@ -115,7 +115,7 @@ contract ContractRegistryClient is Owned, Utils {
     /**
      * @dev returns the address associated with the given contract name
      */
-    function addressOf(bytes32 contractName) internal view returns (address) {
+    function _addressOf(bytes32 contractName) internal view returns (address) {
         return _registry.addressOf(contractName);
     }
 }

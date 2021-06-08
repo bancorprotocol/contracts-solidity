@@ -15,8 +15,8 @@ contract TestStakingRewards is StakingRewards, TestTime {
         IContractRegistry registry
     ) public StakingRewards(store, networkTokenGovernance, lastRemoveTimes, registry) {}
 
-    function time() internal view override(Time, TestTime) returns (uint256) {
-        return TestTime.time();
+    function _time() internal view override(Time, TestTime) returns (uint256) {
+        return TestTime._time();
     }
 
     function setStoreTime(uint256 currentTime) public {

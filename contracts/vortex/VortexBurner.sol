@@ -139,16 +139,16 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      * @dev converts the provided tokens to governance tokens and burns them
      */
     function burn(IReserveToken[] calldata reserveTokens) external nonReentrant {
-        ITokenHolder feeWallet = networkFeeWallet();
+        ITokenHolder feeWallet = _networkFeeWallet();
 
         // retrieve the burning strategy
-        Strategy memory strategy = burnStrategy(reserveTokens, feeWallet);
+        Strategy memory strategy = _burnStrategy(reserveTokens, feeWallet);
 
         // withdraw all token/ETH amounts to the contract
         feeWallet.withdrawTokensMultiple(reserveTokens, address(this), strategy.amounts);
 
         // convert all amounts to the network token and record conversion amounts
-        IBancorNetwork network = bancorNetwork();
+        IBancorNetwork network = _bancorNetwork();
 
         for (uint256 i = 0; i < strategy.paths.length; ++i) {
             // avoid empty conversions
@@ -182,7 +182,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         }
 
         // calculate the burn reward and reduce it from the total amount to convert
-        (uint256 sourceAmount, uint256 burnRewardAmount) = netNetworkConversionAmounts();
+        (uint256 sourceAmount, uint256 burnRewardAmount) = _netNetworkConversionAmounts();
 
         // in case there are network tokens to burn, convert them to the governance token
         if (sourceAmount > 0) {
@@ -219,25 +219,25 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
      * - the caller must be the owner of the contract
      */
     function transferNetworkFeeWalletOwnership(address newOwner) external ownerOnly {
-        networkFeeWallet().transferOwnership(newOwner);
+        _networkFeeWallet().transferOwnership(newOwner);
     }
 
     /**
      * @dev accepts the ownership of he network fee wallet
      */
     function acceptNetworkFeeOwnership() external ownerOnly {
-        networkFeeWallet().acceptOwnership();
+        _networkFeeWallet().acceptOwnership();
     }
 
     /**
      * @dev returns the burning strategy for the specified tokens
      */
-    function burnStrategy(IReserveToken[] calldata reserveTokens, ITokenHolder feeWallet)
+    function _burnStrategy(IReserveToken[] calldata reserveTokens, ITokenHolder feeWallet)
         private
         view
         returns (Strategy memory)
     {
-        IConverterRegistry registry = converterRegistry();
+        IConverterRegistry registry = _converterRegistry();
 
         Strategy memory strategy =
             Strategy({
@@ -255,7 +255,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             // don't look up for a converter for either the network or the governance token, since they are going to be
             // handled in a special way during the burn itself
             if (address(reserveToken) != address(_networkToken) && address(reserveToken) != address(_govToken)) {
-                path[1] = address(networkTokenConverterAnchor(reserveToken, registry));
+                path[1] = address(_networkTokenConverterAnchor(reserveToken, registry));
                 path[2] = address(_networkToken);
             }
 
@@ -267,7 +267,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
         // get the governance token converter path
         strategy.govPath[0] = address(_networkToken);
-        strategy.govPath[1] = address(networkTokenConverterAnchor(IReserveToken(address(_govToken)), registry));
+        strategy.govPath[1] = address(_networkTokenConverterAnchor(IReserveToken(address(_govToken)), registry));
         strategy.govPath[2] = address(_govToken);
 
         return strategy;
@@ -276,7 +276,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev applies the burn reward on the whole balance and returns the net amount and the reward
      */
-    function netNetworkConversionAmounts() private view returns (uint256, uint256) {
+    function _netNetworkConversionAmounts() private view returns (uint256, uint256) {
         uint256 amount = _networkToken.balanceOf(address(this));
         uint256 burnRewardAmount = Math.min(amount.mul(_burnReward) / PPM_RESOLUTION, _maxBurnRewardAmount);
 
@@ -286,7 +286,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev finds the converter anchor of the 50/50 standard pool converter between the specified token and the network token
      */
-    function networkTokenConverterAnchor(IReserveToken reserveToken, IConverterRegistry converterRegistry)
+    function _networkTokenConverterAnchor(IReserveToken reserveToken, IConverterRegistry converterRegistry)
         private
         view
         returns (IConverterAnchor)
@@ -316,28 +316,28 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev returns the converter registry
      */
-    function converterRegistry() private view returns (IConverterRegistry) {
-        return IConverterRegistry(addressOf(CONVERTER_REGISTRY));
+    function _converterRegistry() private view returns (IConverterRegistry) {
+        return IConverterRegistry(_addressOf(CONVERTER_REGISTRY));
     }
 
     /**
      * @dev returns the network contract
      */
-    function bancorNetwork() private view returns (IBancorNetwork) {
-        return IBancorNetwork(payable(addressOf(BANCOR_NETWORK)));
+    function _bancorNetwork() private view returns (IBancorNetwork) {
+        return IBancorNetwork(payable(_addressOf(BANCOR_NETWORK)));
     }
 
     /**
      * @dev returns the network settings contract
      */
-    function networkSetting() private view returns (INetworkSettings) {
-        return INetworkSettings(addressOf(NETWORK_SETTINGS));
+    function _networkSetting() private view returns (INetworkSettings) {
+        return INetworkSettings(_addressOf(NETWORK_SETTINGS));
     }
 
     /**
      * @dev returns the network fee wallet
      */
-    function networkFeeWallet() private view returns (ITokenHolder) {
-        return ITokenHolder(networkSetting().networkFeeWallet());
+    function _networkFeeWallet() private view returns (ITokenHolder) {
+        return ITokenHolder(_networkSetting().networkFeeWallet());
     }
 }
