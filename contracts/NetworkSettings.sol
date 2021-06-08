@@ -36,7 +36,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     }
 
     /**
-     * @dev returns the network fee parameters
+     * @dev returns the network fee parameters (in units of PPM)
      */
     function networkFeeParams() external view override returns (ITokenHolder, uint32) {
         return (_networkFeeWallet, _networkFee);
@@ -50,7 +50,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     }
 
     /**
-     * @dev returns the global network fee
+     * @dev returns the global network fee (in units of PPM)
      *
      * note that the network fee is a portion of the total fees from each pool
      */
@@ -75,7 +75,7 @@ contract NetworkSettings is INetworkSettings, Owned, Utils {
     }
 
     /**
-     * @dev sets the network fee
+     * @dev sets the network fee (in units of PPM)
      *
      * Requirements:
      *
