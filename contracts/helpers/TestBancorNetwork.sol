@@ -69,14 +69,14 @@ contract TestBancorNetwork is BancorNetwork {
     }
 
     function isV28OrHigherConverterExternal(IConverter converter) external view returns (bool) {
-        return super.isV28OrHigherConverter(converter);
+        return super._isV28OrHigherConverter(converter);
     }
 
     function getReturnOld() external view returns (uint256, uint256) {
-        return getReturn(IConverter(payable(address(_oldConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
+        return _getReturn(IConverter(payable(address(_oldConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
     }
 
     function getReturnNew() external view returns (uint256, uint256) {
-        return getReturn(IConverter(payable(address(_newConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
+        return _getReturn(IConverter(payable(address(_newConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
     }
 }

@@ -79,7 +79,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
             _items[contractName].nameIndex = _contractNames.length;
 
             // add the contract name to the name list
-            _contractNames.push(bytes32ToString(contractName));
+            _contractNames.push(_bytes32ToString(contractName));
         }
 
         // update the address in the registry
@@ -110,7 +110,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
             uint256 unregisterIndex = _items[contractName].nameIndex;
 
             _contractNames[unregisterIndex] = lastContractNameString;
-            bytes32 lastContractName = stringToBytes32(lastContractNameString);
+            bytes32 lastContractName = _stringToBytes32(lastContractNameString);
             RegistryItem storage registryItem = _items[lastContractName];
             registryItem.nameIndex = unregisterIndex;
         }
@@ -130,7 +130,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
      *
      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
      */
-    function bytes32ToString(bytes32 data) private pure returns (string memory) {
+    function _bytes32ToString(bytes32 data) private pure returns (string memory) {
         bytes memory byteArray = new bytes(32);
         for (uint256 i = 0; i < 32; i++) {
             byteArray[i] = data[i];
@@ -144,7 +144,7 @@ contract ContractRegistry is IContractRegistry, Owned, Utils {
      *
      * note that the bytes32 argument is assumed to be UTF8 encoded ASCII string
      */
-    function stringToBytes32(string memory str) private pure returns (bytes32) {
+    function _stringToBytes32(string memory str) private pure returns (bytes32) {
         bytes32 result;
 
         // solhint-disable-next-line no-inline-assembly

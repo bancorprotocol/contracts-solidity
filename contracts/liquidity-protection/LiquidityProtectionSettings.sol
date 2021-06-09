@@ -425,7 +425,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     function isPoolSupported(IConverterAnchor poolAnchor) external view override returns (bool) {
         // verify that the pool exists in the registry
-        IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
+        IConverterRegistry converterRegistry = IConverterRegistry(_addressOf(CONVERTER_REGISTRY));
         require(converterRegistry.isAnchor(address(poolAnchor)), "ERR_INVALID_ANCHOR");
 
         // get the converter
@@ -439,14 +439,14 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         // verify that one of the reserves is the network token
         IReserveToken reserve0Token = converter.connectorTokens(0);
         IReserveToken reserve1Token = converter.connectorTokens(1);
-        if (!isNetworkToken(reserve0Token) && !isNetworkToken(reserve1Token)) {
+        if (!_isNetworkToken(reserve0Token) && !_isNetworkToken(reserve1Token)) {
             return false;
         }
 
         // verify that the reserve weights are exactly 50%/50%
         if (
-            converterReserveWeight(converter, reserve0Token) != PPM_RESOLUTION / 2 ||
-            converterReserveWeight(converter, reserve1Token) != PPM_RESOLUTION / 2
+            _converterReserveWeight(converter, reserve0Token) != PPM_RESOLUTION / 2 ||
+            _converterReserveWeight(converter, reserve1Token) != PPM_RESOLUTION / 2
         ) {
             return false;
         }
@@ -457,7 +457,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     /**
      * @dev utility to get the reserve weight (including from older converters that don't support the new converterReserveWeight function)
      */
-    function converterReserveWeight(IConverter converter, IReserveToken reserveToken) private view returns (uint32) {
+    function _converterReserveWeight(IConverter converter, IReserveToken reserveToken) private view returns (uint32) {
         (, uint32 weight, , , ) = converter.connectors(reserveToken);
         return weight;
     }
@@ -465,7 +465,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
     /**
      * @dev returns whether the provided reserve token is the network token
      */
-    function isNetworkToken(IReserveToken reserveToken) private view returns (bool) {
+    function _isNetworkToken(IReserveToken reserveToken) private view returns (bool) {
         return address(reserveToken) == address(_networkToken);
     }
 }

@@ -44,7 +44,7 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
     function addCheckpoint(address target) external override validAddress(target) {
         require(hasRole(ROLE_OWNER, msg.sender), "ERR_ACCESS_DENIED");
 
-        addCheckpoint(target, time());
+        _addCheckpoint(target, _time());
     }
 
     /**
@@ -56,9 +56,9 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
      */
     function addPastCheckpoint(address target, uint256 timestamp) external override validAddress(target) {
         require(hasRole(ROLE_SEEDER, msg.sender), "ERR_ACCESS_DENIED");
-        require(timestamp < time(), "ERR_INVALID_TIME");
+        require(timestamp < _time(), "ERR_INVALID_TIME");
 
-        addCheckpoint(target, timestamp);
+        _addCheckpoint(target, timestamp);
     }
 
     /**
@@ -79,9 +79,9 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
             uint256 t = timestamps[i];
 
             _validAddress(addr);
-            require(t < time(), "ERR_INVALID_TIME");
+            require(t < _time(), "ERR_INVALID_TIME");
 
-            addCheckpoint(addr, t);
+            _addCheckpoint(addr, t);
         }
     }
 
@@ -99,7 +99,7 @@ contract CheckpointStore is ICheckpointStore, AccessControl, Utils, Time {
      *
      * - the caller must have the ROLE_SEEDER role
      */
-    function addCheckpoint(address target, uint256 timestamp) private {
+    function _addCheckpoint(address target, uint256 timestamp) private {
         require(data[target] <= timestamp, "ERR_WRONG_ORDER");
 
         data[target] = timestamp;

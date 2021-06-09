@@ -88,7 +88,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         view
         returns (address[] memory)
     {
-        IConversionPathFinder pathFinder = IConversionPathFinder(addressOf(CONVERSION_PATH_FINDER));
+        IConversionPathFinder pathFinder = IConversionPathFinder(_addressOf(CONVERSION_PATH_FINDER));
         return pathFinder.findPath(sourceToken, targetToken);
     }
 
@@ -109,7 +109,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             address anchor = path[i - 1];
             IReserveToken targetToken = IReserveToken(path[i]);
             IConverter converter = IConverter(payable(IConverterAnchor(anchor).owner()));
-            (amount, ) = getReturn(converter, sourceToken, targetToken, amount);
+            (amount, ) = _getReturn(converter, sourceToken, targetToken, amount);
         }
 
         return amount;
@@ -131,7 +131,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         require(path.length > 2 && path.length % 2 == 1, "ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
-        handleSourceToken(IReserveToken(path[0]), IConverterAnchor(path[1]), sourceAmount);
+        _handleSourceToken(IReserveToken(path[0]), IConverterAnchor(path[1]), sourceAmount);
 
         // check if beneficiary is set
         if (beneficiary == address(0)) {
@@ -139,11 +139,11 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         }
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(path, beneficiary);
-        uint256 amount = doConversion(data, sourceAmount, minReturn);
+        ConversionStep[] memory data = _createConversionData(path, beneficiary);
+        uint256 amount = _doConversion(data, sourceAmount, minReturn);
 
         // handle the conversion target tokens
-        handleTargetToken(data, amount, beneficiary);
+        _handleTargetToken(data, amount, beneficiary);
 
         return amount;
     }
@@ -163,10 +163,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         uint256 conversionId
     ) public payable greaterThanZero(minReturn) returns (uint256) {
         IReserveToken targetToken = IReserveToken(path[path.length - 1]);
-        IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
+        IBancorX bancorX = IBancorX(_addressOf(BANCOR_X));
 
         // verify that the destination token is BNT
-        require(targetToken == IReserveToken(addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
+        require(targetToken == IReserveToken(_addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
 
         // convert and get the resulting amount
         uint256 amount = convertByPath2(path, sourceAmount, minReturn, payable(address(this)));
@@ -208,7 +208,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev executes the actual conversion by following the conversion path
      */
-    function doConversion(
+    function _doConversion(
         ConversionStep[] memory data,
         uint256 sourceAmount,
         uint256 minReturn
@@ -278,13 +278,13 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev validates msg.value and prepares the conversion source token for the conversion
      */
-    function handleSourceToken(
+    function _handleSourceToken(
         IReserveToken sourceToken,
         IConverterAnchor anchor,
         uint256 sourceAmount
     ) private {
         IConverter firstConverter = IConverter(payable(anchor.owner()));
-        bool isNewerConverter = isV28OrHigherConverter(firstConverter);
+        bool isNewerConverter = _isV28OrHigherConverter(firstConverter);
 
         if (msg.value > 0) {
             require(msg.value == sourceAmount, "ERR_ETH_AMOUNT_MISMATCH");
@@ -305,7 +305,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev handles the conversion target token if the network still holds it at the end of the conversion
      */
-    function handleTargetToken(
+    function _handleTargetToken(
         ConversionStep[] memory data,
         uint256 targetAmount,
         address payable beneficiary
@@ -325,7 +325,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     /**
      * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
      */
-    function createConversionData(address[] memory path, address payable beneficiary)
+    function _createConversionData(address[] memory path, address payable beneficiary)
         private
         view
         returns (ConversionStep[] memory)
@@ -345,7 +345,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 sourceToken: IReserveToken(path[i]),
                 targetToken: targetToken, // requires knowledge about the next step, so initialize in the next phase
                 beneficiary: address(0), // set flags
-                isV28OrHigherConverter: isV28OrHigherConverter(converter)
+                isV28OrHigherConverter: _isV28OrHigherConverter(converter)
             });
         }
 
@@ -376,7 +376,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
 
     // using a static call to get the return from older converters
-    function getReturn(
+    function _getReturn(
         IConverter dest,
         IReserveToken sourceToken,
         IReserveToken targetToken,
@@ -402,7 +402,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     // using a static call to identify converter version
     // can't rely on the version number since the function had a different signature in older converters
-    function isV28OrHigherConverter(IConverter converter) internal view returns (bool) {
+    function _isV28OrHigherConverter(IConverter converter) internal view returns (bool) {
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
         (bool success, bytes memory returnData) = address(converter).staticcall{ gas: 4000 }(data);
 

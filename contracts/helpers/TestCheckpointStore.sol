@@ -6,7 +6,7 @@ import "../utility/CheckpointStore.sol";
 import "./TestTime.sol";
 
 contract TestCheckpointStore is CheckpointStore, TestTime {
-    function time() internal view virtual override(Time, TestTime) returns (uint256) {
-        return TestTime.time();
+    function _time() internal view virtual override(Time, TestTime) returns (uint256) {
+        return TestTime._time();
     }
 }

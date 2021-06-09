@@ -107,7 +107,7 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
     function isPoolParticipating(IDSToken poolToken) public view override returns (bool) {
         PoolProgram memory program = _programs[poolToken];
 
-        return program.endTime > time();
+        return program.endTime > _time();
     }
 
     /**
@@ -142,9 +142,9 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
         uint256 endTime,
         uint256 rewardRate
     ) external override onlyManager validAddress(address(poolToken)) {
-        uint256 currentTime = time();
+        uint256 currentTime = _time();
 
-        addPoolProgram(poolToken, reserveTokens, rewardShares, currentTime, endTime, rewardRate);
+        _addPoolProgram(poolToken, reserveTokens, rewardShares, currentTime, endTime, rewardRate);
 
         emit PoolProgramAdded(poolToken, currentTime, endTime, rewardRate);
     }
@@ -175,7 +175,7 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
         );
 
         for (uint256 i = 0; i < length; ++i) {
-            addPastPoolProgram(
+            _addPastPoolProgram(
                 poolTokens[i],
                 reserveTokens[i],
                 rewardShares[i],
@@ -189,7 +189,7 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
     /**
      * @dev adds a past program
      */
-    function addPastPoolProgram(
+    function _addPastPoolProgram(
         IDSToken poolToken,
         IReserveToken[2] calldata reserveTokens,
         uint32[2] calldata rewardShares,
@@ -197,15 +197,15 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
         uint256 endTime,
         uint256 rewardRate
     ) private validAddress(address(poolToken)) {
-        require(startTime < time(), "ERR_INVALID_TIME");
+        require(startTime < _time(), "ERR_INVALID_TIME");
 
-        addPoolProgram(poolToken, reserveTokens, rewardShares, startTime, endTime, rewardRate);
+        _addPoolProgram(poolToken, reserveTokens, rewardShares, startTime, endTime, rewardRate);
     }
 
     /**
      * @dev adds a program
      */
-    function addPoolProgram(
+    function _addPoolProgram(
         IDSToken poolToken,
         IReserveToken[2] calldata reserveTokens,
         uint32[2] calldata rewardShares,
@@ -213,7 +213,7 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
         uint256 endTime,
         uint256 rewardRate
     ) private {
-        require(startTime < endTime && endTime > time(), "ERR_INVALID_DURATION");
+        require(startTime < endTime && endTime > _time(), "ERR_INVALID_DURATION");
         require(rewardRate > 0, "ERR_ZERO_VALUE");
         require(rewardRate <= MAX_REWARD_RATE, "ERR_REWARD_RATE_TOO_HIGH");
         require(rewardShares[0].add(rewardShares[1]) == PPM_RESOLUTION, "ERR_INVALID_REWARD_SHARES");
@@ -268,7 +268,7 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
         require(isPoolParticipating(poolToken), "ERR_POOL_NOT_PARTICIPATING");
 
         PoolProgram storage program = _programs[poolToken];
-        require(newEndTime > time(), "ERR_INVALID_DURATION");
+        require(newEndTime > _time(), "ERR_INVALID_DURATION");
 
         program.endTime = newEndTime;
     }
@@ -525,7 +525,7 @@ contract StakingRewardsStore is IStakingRewardsStore, AccessControl, Utils, Time
      * - the caller must have the ROLE_OWNER role
      */
     function updateProviderLastClaimTime(address provider) external override onlyOwner {
-        uint256 time = time();
+        uint256 time = _time();
         _providerLastClaimTimes[provider] = time;
 
         emit ProviderLastClaimTimeUpdated(provider, time);
