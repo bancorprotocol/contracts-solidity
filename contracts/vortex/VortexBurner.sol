@@ -62,11 +62,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev triggered when the burn reward has been changed
-     *
-     * @param prevBurnReward the previous burn reward (in units of PPM)
-     * @param newBurnReward the new burn reward (in units of PPM)
-     * @param prevMaxBurnRewardAmount the previous maximum burn reward
-     * @param newMaxBurnRewardAmount the new maximum burn reward
      */
     event BurnRewardUpdated(
         uint32 prevBurnReward,
@@ -77,28 +72,16 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev triggered during conversion of a single token during the burning event
-     *
-     * @param reserveToken the converted reserve token
-     * @param sourceAmount the amount of the converted reserve token
-     * @param targetAmount the network token amount the token were converted to
      */
     event Converted(IReserveToken reserveToken, uint256 sourceAmount, uint256 targetAmount);
 
     /**
      * @dev triggered after a completed burning event
-     *
-     * @param reserveTokens the converted reserve tokens
-     * @param sourceAmount the total network token amount the tokens were converted to
-     * @param burnedAmount the total burned amount in the burning event
      */
     event Burned(IReserveToken[] reserveTokens, uint256 sourceAmount, uint256 burnedAmount);
 
     /**
      * @dev initializes a new VortexBurner contract
-     *
-     * @param networkToken the address of the network token
-     * @param govTokenGovernance the address of the governance token security module
-     * @param registry the address of the contract registry
      */
     constructor(
         IERC20 networkToken,
@@ -122,8 +105,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the burn reward percentage and its maximum amount
-     *
-     * @return the burn reward percentage and its maximum amount
      */
     function burnReward() external view returns (uint32, uint256) {
         return (_burnReward, _maxBurnRewardAmount);
@@ -132,8 +113,9 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev allows the owner to set the burn reward percentage and its maximum amount
      *
-     * @param newBurnReward the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
-     * @param newMaxBurnRewardAmount the maximum burn reward to be sent to the caller of the burning event
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function setBurnReward(uint32 newBurnReward, uint256 newMaxBurnRewardAmount)
         external
@@ -148,8 +130,6 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the total amount of the burned governance tokens
-     *
-     * @return total amount of the burned governance tokens
      */
     function totalBurnedAmount() external view returns (uint256) {
         return _totalBurnedAmount;
@@ -157,20 +137,18 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev converts the provided tokens to governance tokens and burns them
-     *
-     * @param reserveTokens the reserve tokens to convert
      */
     function burn(IReserveToken[] calldata reserveTokens) external nonReentrant {
-        ITokenHolder feeWallet = networkFeeWallet();
+        ITokenHolder feeWallet = _networkFeeWallet();
 
         // retrieve the burning strategy
-        Strategy memory strategy = burnStrategy(reserveTokens, feeWallet);
+        Strategy memory strategy = _burnStrategy(reserveTokens, feeWallet);
 
         // withdraw all token/ETH amounts to the contract
         feeWallet.withdrawTokensMultiple(reserveTokens, address(this), strategy.amounts);
 
         // convert all amounts to the network token and record conversion amounts
-        IBancorNetwork network = bancorNetwork();
+        IBancorNetwork network = _bancorNetwork();
 
         for (uint256 i = 0; i < strategy.paths.length; ++i) {
             // avoid empty conversions
@@ -204,7 +182,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         }
 
         // calculate the burn reward and reduce it from the total amount to convert
-        (uint256 sourceAmount, uint256 burnRewardAmount) = netNetworkConversionAmounts();
+        (uint256 sourceAmount, uint256 burnRewardAmount) = _netNetworkConversionAmounts();
 
         // in case there are network tokens to burn, convert them to the governance token
         if (sourceAmount > 0) {
@@ -236,32 +214,30 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     /**
      * @dev transfers the ownership of the network fee wallet
      *
-     * @param newOwner the new owner of the network fee wallet
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function transferNetworkFeeWalletOwnership(address newOwner) external ownerOnly {
-        networkFeeWallet().transferOwnership(newOwner);
+        _networkFeeWallet().transferOwnership(newOwner);
     }
 
     /**
      * @dev accepts the ownership of he network fee wallet
      */
     function acceptNetworkFeeOwnership() external ownerOnly {
-        networkFeeWallet().acceptOwnership();
+        _networkFeeWallet().acceptOwnership();
     }
 
     /**
      * @dev returns the burning strategy for the specified tokens
-     *
-     * @param reserveTokens the reserve tokens to convert
-     *
-     * @return the the burning strategy for the specified tokens
      */
-    function burnStrategy(IReserveToken[] calldata reserveTokens, ITokenHolder feeWallet)
+    function _burnStrategy(IReserveToken[] calldata reserveTokens, ITokenHolder feeWallet)
         private
         view
         returns (Strategy memory)
     {
-        IConverterRegistry registry = converterRegistry();
+        IConverterRegistry registry = _converterRegistry();
 
         Strategy memory strategy =
             Strategy({
@@ -279,7 +255,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
             // don't look up for a converter for either the network or the governance token, since they are going to be
             // handled in a special way during the burn itself
             if (address(reserveToken) != address(_networkToken) && address(reserveToken) != address(_govToken)) {
-                path[1] = address(networkTokenConverterAnchor(reserveToken, registry));
+                path[1] = address(_networkTokenConverterAnchor(reserveToken, registry));
                 path[2] = address(_networkToken);
             }
 
@@ -291,7 +267,7 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
         // get the governance token converter path
         strategy.govPath[0] = address(_networkToken);
-        strategy.govPath[1] = address(networkTokenConverterAnchor(IReserveToken(address(_govToken)), registry));
+        strategy.govPath[1] = address(_networkTokenConverterAnchor(IReserveToken(address(_govToken)), registry));
         strategy.govPath[2] = address(_govToken);
 
         return strategy;
@@ -299,11 +275,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev applies the burn reward on the whole balance and returns the net amount and the reward
-     *
-     * @return network token target amount
-     * @return burn reward amount
      */
-    function netNetworkConversionAmounts() private view returns (uint256, uint256) {
+    function _netNetworkConversionAmounts() private view returns (uint256, uint256) {
         uint256 amount = _networkToken.balanceOf(address(this));
         uint256 burnRewardAmount = Math.min(amount.mul(_burnReward) / PPM_RESOLUTION, _maxBurnRewardAmount);
 
@@ -312,13 +285,8 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev finds the converter anchor of the 50/50 standard pool converter between the specified token and the network token
-     *
-     * @param reserveToken the source token
-     * @param converterRegistry the converter registry
-     *
-     * @return the converter anchor of the 50/50 standard pool converter between the specified token
      */
-    function networkTokenConverterAnchor(IReserveToken reserveToken, IConverterRegistry converterRegistry)
+    function _networkTokenConverterAnchor(IReserveToken reserveToken, IConverterRegistry converterRegistry)
         private
         view
         returns (IConverterAnchor)
@@ -347,37 +315,29 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     /**
      * @dev returns the converter registry
-     *
-     * @return the converter registry
      */
-    function converterRegistry() private view returns (IConverterRegistry) {
-        return IConverterRegistry(addressOf(CONVERTER_REGISTRY));
+    function _converterRegistry() private view returns (IConverterRegistry) {
+        return IConverterRegistry(_addressOf(CONVERTER_REGISTRY));
     }
 
     /**
      * @dev returns the network contract
-     *
-     * @return the network contract
      */
-    function bancorNetwork() private view returns (IBancorNetwork) {
-        return IBancorNetwork(payable(addressOf(BANCOR_NETWORK)));
+    function _bancorNetwork() private view returns (IBancorNetwork) {
+        return IBancorNetwork(payable(_addressOf(BANCOR_NETWORK)));
     }
 
     /**
      * @dev returns the network settings contract
-     *
-     * @return the network settings contract
      */
-    function networkSetting() private view returns (INetworkSettings) {
-        return INetworkSettings(addressOf(NETWORK_SETTINGS));
+    function _networkSetting() private view returns (INetworkSettings) {
+        return INetworkSettings(_addressOf(NETWORK_SETTINGS));
     }
 
     /**
      * @dev returns the network fee wallet
-     *
-     * @return the network fee wallet
      */
-    function networkFeeWallet() private view returns (ITokenHolder) {
-        return ITokenHolder(networkSetting().networkFeeWallet());
+    function _networkFeeWallet() private view returns (ITokenHolder) {
+        return ITokenHolder(_networkSetting().networkFeeWallet());
     }
 }

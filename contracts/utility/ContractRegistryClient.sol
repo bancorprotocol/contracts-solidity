@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
+
 import "./Owned.sol";
 import "./Utils.sol";
 import "./interfaces/IContractRegistry.sol";
@@ -32,8 +33,6 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
      * @dev verifies that the caller is mapped to the given contract name
-     *
-     * @param contractName contract name
      */
     modifier only(bytes32 contractName) {
         _only(contractName);
@@ -42,13 +41,11 @@ contract ContractRegistryClient is Owned, Utils {
 
     // error message binary size optimization
     function _only(bytes32 contractName) internal view {
-        require(msg.sender == addressOf(contractName), "ERR_ACCESS_DENIED");
+        require(msg.sender == _addressOf(contractName), "ERR_ACCESS_DENIED");
     }
 
     /**
      * @dev initializes a new ContractRegistryClient instance
-     *
-     * @param initialRegistry address of a contract registry contract
      */
     constructor(IContractRegistry initialRegistry) internal validAddress(address(initialRegistry)) {
         _registry = IContractRegistry(initialRegistry);
@@ -63,7 +60,7 @@ contract ContractRegistryClient is Owned, Utils {
         require(msg.sender == owner() || !_onlyOwnerCanUpdateRegistry, "ERR_ACCESS_DENIED");
 
         // get the new contract registry
-        IContractRegistry newRegistry = IContractRegistry(addressOf(CONTRACT_REGISTRY));
+        IContractRegistry newRegistry = IContractRegistry(_addressOf(CONTRACT_REGISTRY));
 
         // verify that the new contract registry is different and not zero
         require(newRegistry != _registry && address(newRegistry) != address(0), "ERR_INVALID_REGISTRY");
@@ -88,8 +85,6 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
      * @dev restricts the permission to update the contract registry
-     *
-     * @param restrictOwnerOnly indicates whether or not permission is restricted to owner only
      */
     function restrictRegistryUpdate(bool restrictOwnerOnly) public ownerOnly {
         // change the permission to update the contract registry
@@ -98,8 +93,6 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
      * @dev returns the address of the current contract registry
-     *
-     * @return the address of the current contract registry
      */
     function registry() public view returns (IContractRegistry) {
         return _registry;
@@ -107,8 +100,6 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
      * @dev returns the address of the previous contract registry
-     *
-     * @return the address of the previous contract registry
      */
     function prevRegistry() external view returns (IContractRegistry) {
         return _prevRegistry;
@@ -116,8 +107,6 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
      * @dev returns whether only the owner can update the contract registry
-     *
-     * @return whether only the owner can update the contract registry
      */
     function onlyOwnerCanUpdateRegistry() external view returns (bool) {
         return _onlyOwnerCanUpdateRegistry;
@@ -125,12 +114,8 @@ contract ContractRegistryClient is Owned, Utils {
 
     /**
      * @dev returns the address associated with the given contract name
-     *
-     * @param contractName contract name
-     *
-     * @return the address associated with the given contract name
      */
-    function addressOf(bytes32 contractName) internal view returns (address) {
+    function _addressOf(bytes32 contractName) internal view returns (address) {
         return _registry.addressOf(contractName);
     }
 }

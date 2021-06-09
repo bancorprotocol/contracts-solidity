@@ -3,7 +3,6 @@ const { BigNumber } = require('ethers');
 const { ethers } = require('hardhat');
 
 const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS } = require('../helpers/Constants');
-const MathUtils = require('../helpers/MathUtils.js');
 const Contracts = require('../helpers/Contracts');
 
 const PPM_RESOLUTION = BigNumber.from(1_000_000);
@@ -356,9 +355,8 @@ describe('VortexBurner', () => {
                                                 if (tokenAddress === networkToken.address) {
                                                     // If the source token is the network token, don't try to convert it, but
                                                     // rather add its amount to the total amount to convert to the governance token.
-                                                    grossNetworkTokenConversionAmount = grossNetworkTokenConversionAmount.add(
-                                                        amount
-                                                    );
+                                                    grossNetworkTokenConversionAmount =
+                                                        grossNetworkTokenConversionAmount.add(amount);
                                                 } else if (tokenAddress === govToken.address) {
                                                     // if the source token is the governance token, don't try to convert it
                                                     // either, but rather include it in the amount to burn.
@@ -375,23 +373,21 @@ describe('VortexBurner', () => {
                                                     );
 
                                                     networkTokenConversionAmounts.push(targetAmount);
-                                                    grossNetworkTokenConversionAmount = grossNetworkTokenConversionAmount.add(
-                                                        targetAmount
-                                                    );
+                                                    grossNetworkTokenConversionAmount =
+                                                        grossNetworkTokenConversionAmount.add(targetAmount);
                                                 }
                                             }
 
                                             let netNetworkTokenConversionAmount = grossNetworkTokenConversionAmount;
                                             let burnRewardAmount = BigNumber.from(0);
                                             if (!burnReward.eq(BigNumber.from(0))) {
-                                                burnRewardAmount = MathUtils.min(
+                                                burnRewardAmount = BigNumber.min(
                                                     netNetworkTokenConversionAmount.mul(burnReward).div(PPM_RESOLUTION),
                                                     maxBurnRewardAmount
                                                 );
 
-                                                netNetworkTokenConversionAmount = netNetworkTokenConversionAmount.sub(
-                                                    burnRewardAmount
-                                                );
+                                                netNetworkTokenConversionAmount =
+                                                    netNetworkTokenConversionAmount.sub(burnRewardAmount);
                                             }
 
                                             // take into account that if one of the source tokens is the governance token -

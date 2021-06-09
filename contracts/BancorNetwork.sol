@@ -63,13 +63,6 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev triggered when a conversion between two tokens occurs
-     *
-     * @param anchor  anchor governed by the converter
-     * @param sourceToken source reserve token
-     * @param targetToken target reserve token
-     * @param sourceAmount amount converted, in the source token
-     * @param targetAmount amount returned, minus conversion fee
-     * @param trader wallet that initiated the trade
      */
     event Conversion(
         IConverterAnchor indexed anchor,
@@ -82,37 +75,27 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev initializes a new BancorNetwork instance
-     *
-     * @param registry address of a contract registry contract
      */
     constructor(IContractRegistry registry) public ContractRegistryClient(registry) {}
 
     /**
      * @dev returns the conversion path between two tokens in the network
+     *
      * note that this method is quite expensive in terms of gas and should generally be called off-chain
-     *
-     * @param sourceToken source reserve token address
-     * @param targetToken target reserve token address
-     *
-     * @return conversion path between the two tokens
      */
     function conversionPath(IReserveToken sourceToken, IReserveToken targetToken)
         public
         view
         returns (address[] memory)
     {
-        IConversionPathFinder pathFinder = IConversionPathFinder(addressOf(CONVERSION_PATH_FINDER));
+        IConversionPathFinder pathFinder = IConversionPathFinder(_addressOf(CONVERSION_PATH_FINDER));
         return pathFinder.findPath(sourceToken, targetToken);
     }
 
     /**
      * @dev returns the expected target amount of converting a given amount on a given path
+     *
      * note that there is no support for circular paths
-     *
-     * @param path conversion path (see conversion path format above)
-     * @param sourceAmount amount of path[0] tokens received from the sender
-     *
-     * @return expected target amount
      */
     function rateByPath(address[] memory path, uint256 sourceAmount) public view override returns (uint256) {
         // verify that the number of elements is larger than 2 and odd
@@ -126,23 +109,17 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
             address anchor = path[i - 1];
             IReserveToken targetToken = IReserveToken(path[i]);
             IConverter converter = IConverter(payable(IConverterAnchor(anchor).owner()));
-            (amount, ) = getReturn(converter, sourceToken, targetToken, amount);
+            (amount, ) = _getReturn(converter, sourceToken, targetToken, amount);
         }
 
         return amount;
     }
 
     /**
-     * @dev converts the token to any other token in the bancor network by following
-     * a predefined conversion path and transfers the result tokens to a target account
+     * @dev converts the token to any other token in the bancor network by following a predefined conversion path and
+     * transfers the result tokens to a target account
+     *
      * note that the network should already have been given allowance of the source token (if not ETH)
-     *
-     * @param path conversion path, see conversion path format above
-     * @param sourceAmount amount to convert from, in the source token
-     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-     * @param beneficiary account that will receive the conversion result or 0x0 to send the result to the sender account
-     *
-     * @return amount of tokens received from the conversion
      */
     function convertByPath2(
         address[] memory path,
@@ -154,7 +131,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         require(path.length > 2 && path.length % 2 == 1, "ERR_INVALID_PATH");
 
         // validate msg.value and prepare the source token for the conversion
-        handleSourceToken(IReserveToken(path[0]), IConverterAnchor(path[1]), sourceAmount);
+        _handleSourceToken(IReserveToken(path[0]), IConverterAnchor(path[1]), sourceAmount);
 
         // check if beneficiary is set
         if (beneficiary == address(0)) {
@@ -162,29 +139,21 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         }
 
         // convert and get the resulting amount
-        ConversionStep[] memory data = createConversionData(path, beneficiary);
-        uint256 amount = doConversion(data, sourceAmount, minReturn);
+        ConversionStep[] memory data = _createConversionData(path, beneficiary);
+        uint256 amount = _doConversion(data, sourceAmount, minReturn);
 
         // handle the conversion target tokens
-        handleTargetToken(data, amount, beneficiary);
+        _handleTargetToken(data, amount, beneficiary);
 
         return amount;
     }
 
     /**
-      * @dev converts any other token to BNT in the bancor network by following
-      a predefined conversion path and transfers the result to an account on a different blockchain
-      * note that the network should already have been given allowance of the source token (if not ETH)
-      *
-      * @param path conversion path, see conversion path format above
-      * @param sourceAmount amount to convert from, in the source token
-      * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-      * @param targetBlockchain blockchain BNT will be issued on
-      * @param targetAccount address/account on the target blockchain to send the BNT to
-      * @param conversionId pre-determined unique (if non zero) id which refers to this transaction
-      *
-      * @return the amount of BNT received from this conversion
-    */
+     * @dev converts any other token to BNT in the bancor network by following a predefined conversion path and
+     * transfers the result to an account on a different blockchain
+     *
+     * note that the network should already have been given allowance of the source token (if not ETH)
+     */
     function xConvert(
         address[] memory path,
         uint256 sourceAmount,
@@ -194,10 +163,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         uint256 conversionId
     ) public payable greaterThanZero(minReturn) returns (uint256) {
         IReserveToken targetToken = IReserveToken(path[path.length - 1]);
-        IBancorX bancorX = IBancorX(addressOf(BANCOR_X));
+        IBancorX bancorX = IBancorX(_addressOf(BANCOR_X));
 
         // verify that the destination token is BNT
-        require(targetToken == IReserveToken(addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
+        require(targetToken == IReserveToken(_addressOf(BNT_TOKEN)), "ERR_INVALID_TARGET_TOKEN");
 
         // convert and get the resulting amount
         uint256 amount = convertByPath2(path, sourceAmount, minReturn, payable(address(this)));
@@ -212,19 +181,12 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     }
 
     /**
-     * @dev allows a user to convert a token that was sent from another blockchain into any other
-     * token on the BancorNetwork
-     * ideally this transaction is created before the previous conversion is even complete, so
+     * @dev allows a user to convert a token that was sent from another blockchain into any other token on the
+     * BancorNetwork
+     *
+     * note that ideally this transaction should've been created before the previous conversion is even complete, so
      * so the input amount isn't known at that point - the amount is actually take from the
      * BancorX contract directly by specifying the conversion id
-     *
-     * @param path conversion path
-     * @param bancorX address of the BancorX contract for the source token
-     * @param conversionId pre-determined unique (if non zero) id which refers to this conversion
-     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be nonzero
-     * @param beneficiary wallet to receive the conversion result
-     *
-     * @return amount of tokens received from the conversion
      */
     function completeXConversion(
         address[] memory path,
@@ -245,14 +207,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev executes the actual conversion by following the conversion path
-     *
-     * @param data conversion data, see ConversionStep struct above
-     * @param sourceAmount amount to convert from, in the source token
-     * @param minReturn if the conversion results in an amount smaller than the minimum return - it is cancelled, must be greater than zero
-     *
-     * @return amount of tokens received from the conversion
      */
-    function doConversion(
+    function _doConversion(
         ConversionStep[] memory data,
         uint256 sourceAmount,
         uint256 minReturn
@@ -321,18 +277,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev validates msg.value and prepares the conversion source token for the conversion
-     *
-     * @param sourceToken source token of the first conversion step
-     * @param anchor converter anchor of the first conversion step
-     * @param sourceAmount amount to convert from, in the source token
      */
-    function handleSourceToken(
+    function _handleSourceToken(
         IReserveToken sourceToken,
         IConverterAnchor anchor,
         uint256 sourceAmount
     ) private {
         IConverter firstConverter = IConverter(payable(anchor.owner()));
-        bool isNewerConverter = isV28OrHigherConverter(firstConverter);
+        bool isNewerConverter = _isV28OrHigherConverter(firstConverter);
 
         if (msg.value > 0) {
             require(msg.value == sourceAmount, "ERR_ETH_AMOUNT_MISMATCH");
@@ -352,12 +304,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev handles the conversion target token if the network still holds it at the end of the conversion
-     *
-     * @param data conversion data, see ConversionStep struct above
-     * @param targetAmount conversion target amount
-     * @param beneficiary wallet to receive the conversion result
      */
-    function handleTargetToken(
+    function _handleTargetToken(
         ConversionStep[] memory data,
         uint256 targetAmount,
         address payable beneficiary
@@ -376,13 +324,8 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     /**
      * @dev creates a memory cache of all conversion steps data to minimize logic and external calls during conversions
-     *
-     * @param path conversion path, see conversion path format above
-     * @param beneficiary wallet to receive the conversion result
-     *
-     * @return cached conversion data to be ingested later on by the conversion flow
      */
-    function createConversionData(address[] memory path, address payable beneficiary)
+    function _createConversionData(address[] memory path, address payable beneficiary)
         private
         view
         returns (ConversionStep[] memory)
@@ -402,7 +345,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 sourceToken: IReserveToken(path[i]),
                 targetToken: targetToken, // requires knowledge about the next step, so initialize in the next phase
                 beneficiary: address(0), // set flags
-                isV28OrHigherConverter: isV28OrHigherConverter(converter)
+                isV28OrHigherConverter: _isV28OrHigherConverter(converter)
             });
         }
 
@@ -433,7 +376,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
     bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
 
     // using a static call to get the return from older converters
-    function getReturn(
+    function _getReturn(
         IConverter dest,
         IReserveToken sourceToken,
         IReserveToken targetToken,
@@ -459,7 +402,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
     // using a static call to identify converter version
     // can't rely on the version number since the function had a different signature in older converters
-    function isV28OrHigherConverter(IConverter converter) internal view returns (bool) {
+    function _isV28OrHigherConverter(IConverter converter) internal view returns (bool) {
         bytes memory data = abi.encodeWithSelector(IS_V28_OR_HIGHER_FUNC_SELECTOR);
         (bool success, bytes memory returnData) = address(converter).staticcall{ gas: 4000 }(data);
 

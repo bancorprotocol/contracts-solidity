@@ -14,6 +14,15 @@ contract TestMathEx {
         return MathEx.ceilSqrt(num);
     }
 
+    function productRatioTest(
+        uint256 xn,
+        uint256 yn,
+        uint256 xd,
+        uint256 yd
+    ) external pure returns (uint256, uint256) {
+        return MathEx.productRatio(xn, yn, xd, yd);
+    }
+
     function reducedRatioTest(
         uint256 n,
         uint256 d,
@@ -52,5 +61,13 @@ contract TestMathEx {
 
     function roundDivUnsafeTest(uint256 n, uint256 d) external pure returns (uint256) {
         return MathEx.roundDivUnsafe(n, d);
+    }
+
+    function mulDivF(uint256 x, uint256 y, uint256 z) external pure returns (uint256) {
+        return MathEx.mulDivF(x, y, z);
+    }
+
+    function mulDivC(uint256 x, uint256 y, uint256 z) external pure returns (uint256) {
+        return MathEx.mulDivC(x, y, z);
     }
 }

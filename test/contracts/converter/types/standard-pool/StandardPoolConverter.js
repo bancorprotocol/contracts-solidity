@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
-const { Decimal } = require('../../../helpers/MathUtils.js');
+const { Decimal } = require('../../../helpers/MathUtils');
 const { latest, duration } = require('../../../helpers/Time');
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../../../helpers/Constants');
 
@@ -1461,9 +1461,8 @@ describe('StandardPoolConverter', () => {
                                             );
 
                                             const expectedFeeBase = conversion.fee.mul(networkFeePercent).div(200);
-                                            const reserveBalance1 = ONE_TOKEN.mul(initialBalance1).add(
-                                                CONVERSION_AMOUNT
-                                            );
+                                            const reserveBalance1 =
+                                                ONE_TOKEN.mul(initialBalance1).add(CONVERSION_AMOUNT);
                                             const reserveBalance2 = ONE_TOKEN.mul(initialBalance2).sub(
                                                 conversion.amount
                                             );
@@ -1536,9 +1535,8 @@ describe('StandardPoolConverter', () => {
                                                 MIN_RETURN
                                             );
                                             const expectedFeeBase = conversion.fee.mul(networkFeePercent).div(200);
-                                            const reserveBalance1 = ONE_TOKEN.mul(initialBalance1).add(
-                                                CONVERSION_AMOUNT
-                                            );
+                                            const reserveBalance1 =
+                                                ONE_TOKEN.mul(initialBalance1).add(CONVERSION_AMOUNT);
                                             const reserveBalance2 = ONE_TOKEN.mul(initialBalance2).sub(
                                                 conversion.amount
                                             );
@@ -1666,9 +1664,10 @@ describe('StandardPoolConverter', () => {
                                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2
                                                 .mul(totalSupply)
                                                 .div(reserveBalance2);
-                                            const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
-                                                totalConversionFee2InPoolTokenUnits
-                                            );
+                                            const totalConversionFeeInPoolTokenUnits =
+                                                totalConversionFee1InPoolTokenUnits.add(
+                                                    totalConversionFee2InPoolTokenUnits
+                                                );
                                             const expectedFeeBase = totalConversionFeeInPoolTokenUnits
                                                 .mul(networkFeePercent)
                                                 .div(200);
@@ -1820,9 +1819,10 @@ describe('StandardPoolConverter', () => {
                                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2
                                                 .mul(totalSupply)
                                                 .div(reserveBalance2);
-                                            const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
-                                                totalConversionFee2InPoolTokenUnits
-                                            );
+                                            const totalConversionFeeInPoolTokenUnits =
+                                                totalConversionFee1InPoolTokenUnits.add(
+                                                    totalConversionFee2InPoolTokenUnits
+                                                );
                                             const expectedFeeBase = totalConversionFeeInPoolTokenUnits
                                                 .mul(networkFeePercent)
                                                 .div(200);
@@ -1941,9 +1941,10 @@ describe('StandardPoolConverter', () => {
                                             const totalConversionFee2InPoolTokenUnits = totalConversionFee2
                                                 .mul(totalSupply)
                                                 .div(reserveBalance2);
-                                            const totalConversionFeeInPoolTokenUnits = totalConversionFee1InPoolTokenUnits.add(
-                                                totalConversionFee2InPoolTokenUnits
-                                            );
+                                            const totalConversionFeeInPoolTokenUnits =
+                                                totalConversionFee1InPoolTokenUnits.add(
+                                                    totalConversionFee2InPoolTokenUnits
+                                                );
                                             const expectedFeeBase = totalConversionFeeInPoolTokenUnits
                                                 .mul(networkFeePercent)
                                                 .div(200);
@@ -2014,9 +2015,8 @@ describe('StandardPoolConverter', () => {
                                                 MIN_RETURN
                                             );
                                             const expectedFeeBase = conversion.fee.mul(networkFeePercent).div(200);
-                                            const reserveBalance1 = ONE_TOKEN.mul(initialBalance1).add(
-                                                conversionAmount
-                                            );
+                                            const reserveBalance1 =
+                                                ONE_TOKEN.mul(initialBalance1).add(conversionAmount);
                                             const reserveBalance2 = ONE_TOKEN.mul(initialBalance2).sub(
                                                 conversion.amount
                                             );

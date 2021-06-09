@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "../liquidity-protection/LiquidityProtection.sol";
+
 import "./TestTime.sol";
 
 contract TestLiquidityProtection is LiquidityProtection, TestTime {
@@ -44,7 +45,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         Fraction memory poolRate = Fraction({ n: poolRateN, d: poolRateD });
         Fraction memory addRate = Fraction({ n: addRateN, d: addRateD });
         Fraction memory removeRate = Fraction({ n: removeRateN, d: removeRateD });
-        return protectedAmountPlusFee(poolAmount, poolRate, addRate, removeRate);
+        return _protectedAmountPlusFee(poolAmount, poolRate, addRate, removeRate);
     }
 
     function impLossTest(
@@ -55,7 +56,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     ) external pure returns (uint256, uint256) {
         Fraction memory initialRate = Fraction({ n: initialRateN, d: initialRateD });
         Fraction memory currentRate = Fraction({ n: currentRateN, d: currentRateD });
-        Fraction memory impLossRate = impLoss(initialRate, currentRate);
+        Fraction memory impLossRate = _impLoss(initialRate, currentRate);
         return (impLossRate.n, impLossRate.d);
     }
 
@@ -69,12 +70,12 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     ) external pure returns (uint256) {
         Fraction memory loss = Fraction({ n: lossN, d: lossD });
         Fraction memory level = Fraction({ n: levelN, d: levelD });
-        return compensationAmount(amount, total, loss, level);
+        return _compensationAmount(amount, total, loss, level);
     }
 
     function averageRateTest(IDSToken poolToken, IReserveToken reserveToken) external view returns (uint256, uint256) {
-        (Fraction memory spotRate, Fraction memory averageRate) = reserveTokenRates(poolToken, reserveToken);
-        verifyRateDeviation(spotRate.n, spotRate.d, averageRate.n, averageRate.d);
+        (Fraction memory spotRate, Fraction memory averageRate) = _reserveTokenRates(poolToken, reserveToken);
+        _verifyRateDeviation(spotRate.n, spotRate.d, averageRate.n, averageRate.d);
         return (averageRate.n, averageRate.d);
     }
 
@@ -107,7 +108,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
             });
 
         uint256 targetAmount =
-            removeLiquidityTargetAmount(
+            _removeLiquidityTargetAmount(
                 IDSToken(0),
                 IReserveToken(0),
                 poolAmount,
@@ -120,7 +121,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         return targetAmount;
     }
 
-    function poolTokenRate(IDSToken poolToken, IReserveToken reserveToken)
+    function _poolTokenRate(IDSToken poolToken, IReserveToken reserveToken)
         internal
         view
         override
@@ -129,10 +130,10 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         if (_poolTokenRateOverride) {
             return Fraction({ n: _poolTokenRateN, d: _poolTokenRateD });
         }
-        return super.poolTokenRate(poolToken, reserveToken);
+        return super._poolTokenRate(poolToken, reserveToken);
     }
 
-    function time() internal view override(Time, TestTime) returns (uint256) {
-        return TestTime.time();
+    function _time() internal view override(Time, TestTime) returns (uint256) {
+        return TestTime._time();
     }
 }

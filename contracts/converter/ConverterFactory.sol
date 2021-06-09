@@ -7,16 +7,12 @@ import "./interfaces/ITypedConverterAnchorFactory.sol";
 import "../utility/Owned.sol";
 import "../token/DSToken.sol";
 
-/*
-    Converter Factory
-*/
+/**
+ * @dev Converter Factory
+ */
 contract ConverterFactory is IConverterFactory, Owned {
     /**
      * @dev triggered when a new converter is created
-     *
-     * @param converterType converter type
-     * @param converter new converter address
-     * @param converterOwner converter owner address
      */
     event NewConverter(uint16 indexed converterType, IConverter indexed converter, address indexed converterOwner);
 
@@ -25,10 +21,6 @@ contract ConverterFactory is IConverterFactory, Owned {
 
     /**
      * @dev returns the converter factory of a given converter type
-     *
-     * @param converterType converter type
-     *
-     * @return the converter factory of the given converter type
      */
     function converterFactories(uint16 converterType) external view returns (ITypedConverterFactory) {
         return _converterFactories[converterType];
@@ -36,10 +28,6 @@ contract ConverterFactory is IConverterFactory, Owned {
 
     /**
      * @dev returns the anchor factory of a given converter type
-     *
-     * @param converterType converter type
-     *
-     * @return the anchor factory of the given converter type
      */
     function anchorFactories(uint16 converterType) external view returns (ITypedConverterAnchorFactory) {
         return _anchorFactories[converterType];
@@ -47,9 +35,10 @@ contract ConverterFactory is IConverterFactory, Owned {
 
     /**
      * @dev registers a specific typed converter factory
-     * can only be called by the owner
      *
-     * @param factory typed converter factory
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function registerTypedConverterFactory(ITypedConverterFactory factory) external ownerOnly {
         _converterFactories[factory.converterType()] = factory;
@@ -57,9 +46,10 @@ contract ConverterFactory is IConverterFactory, Owned {
 
     /**
      * @dev registers a specific typed converter anchor factory
-     * can only be called by the owner
      *
-     * @param factory typed converter anchor factory
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function registerTypedConverterAnchorFactory(ITypedConverterAnchorFactory factory) external ownerOnly {
         _anchorFactories[factory.converterType()] = factory;
@@ -67,9 +57,10 @@ contract ConverterFactory is IConverterFactory, Owned {
 
     /**
      * @dev unregisters a specific typed converter factory
-     * can only be called by the owner
      *
-     * @param factory typed converter factory
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function unregisterTypedConverterFactory(ITypedConverterFactory factory) external ownerOnly {
         uint16 converterType = factory.converterType();
@@ -79,9 +70,10 @@ contract ConverterFactory is IConverterFactory, Owned {
 
     /**
      * @dev unregisters a specific typed converter anchor factory
-     * can only be called by the owner
      *
-     * @param factory typed converter anchor factory
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function unregisterTypedConverterAnchorFactory(ITypedConverterAnchorFactory factory) external ownerOnly {
         uint16 converterType = factory.converterType();
@@ -90,15 +82,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-     * @dev creates a new converter anchor with the given arguments and transfers
-     * the ownership to the caller
-     *
-     * @param converterType converter type
-     * @param name name
-     * @param symbol symbol
-     * @param decimals decimals
-     *
-     * @return new converter anchor
+     * @dev creates a new converter anchor with the given arguments and transfers the ownership to the caller
      */
     function createAnchor(
         uint16 converterType,
@@ -123,15 +107,7 @@ contract ConverterFactory is IConverterFactory, Owned {
     }
 
     /**
-     * @dev creates a new converter with the given arguments and transfers
-     * the ownership to the caller
-     *
-     * @param converterType converter type
-     * @param anchor anchor governed by the converter
-     * @param registry address of a contract registry contract
-     * @param maxConversionFee maximum conversion fee, represented in ppm
-     *
-     * @return new converter
+     * @dev creates a new converter with the given arguments and transfers the ownership to the caller
      */
     function createConverter(
         uint16 converterType,

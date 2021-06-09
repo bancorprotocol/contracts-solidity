@@ -19,10 +19,6 @@ library ReserveToken {
 
     /**
      * @dev returns whether the provided token represents an ERC20 or ETH reserve
-     *
-     * @param reserveToken the address of the reserve token
-     *
-     * @return whether the provided token represents an ERC20 or ETH reserve
      */
     function isNativeToken(IReserveToken reserveToken) internal pure returns (bool) {
         return reserveToken == NATIVE_TOKEN_ADDRESS;
@@ -30,11 +26,6 @@ library ReserveToken {
 
     /**
      * @dev returns the balance of the reserve token
-     *
-     * @param reserveToken the address of the reserve token
-     * @param account the address of the account to check
-     *
-     * @return the balance of the reserve token
      */
     function balanceOf(IReserveToken reserveToken, address account) internal view returns (uint256) {
         if (isNativeToken(reserveToken)) {
@@ -46,10 +37,6 @@ library ReserveToken {
 
     /**
      * @dev transfers a specific amount of the reserve token
-     *
-     * @param reserveToken the address of the reserve token
-     * @param to the destination address to transfer the amount to
-     * @param amount the amount to transfer
      */
     function safeTransfer(
         IReserveToken reserveToken,
@@ -69,12 +56,8 @@ library ReserveToken {
 
     /**
      * @dev transfers a specific amount of the reserve token from a specific holder using the allowance mechanism
-     * this function ignores a reserve token which represents an ETH reserve
      *
-     * @param reserveToken the address of the reserve token
-     * @param from the source address to transfer the amount from
-     * @param to the destination address to transfer the amount to
-     * @param amount the amount to transfer
+     * note that the function ignores a reserve token which represents an ETH reserve
      */
     function safeTransferFrom(
         IReserveToken reserveToken,
@@ -91,11 +74,8 @@ library ReserveToken {
 
     /**
      * @dev ensures that the spender has sufficient allowance
-     * this function ignores a reserve token which represents an ETH reserve
      *
-     * @param reserveToken the address of the reserve token
-     * @param spender the address allowed to spend
-     * @param amount the allowed amount to spend
+     * note that this function ignores a reserve token which represents an ETH reserve
      */
     function ensureApprove(
         IReserveToken reserveToken,
@@ -111,10 +91,6 @@ library ReserveToken {
 
     /**
      * @dev utility function that converts an IReserveToken to an IERC20
-     *
-     * @param reserveToken the address of the reserve token
-     *
-     * @return an IERC20
      */
     function toIERC20(IReserveToken reserveToken) private pure returns (IERC20) {
         return IERC20(address(reserveToken));

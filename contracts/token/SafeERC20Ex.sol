@@ -11,10 +11,6 @@ library SafeERC20Ex {
 
     /**
      * @dev ensures that the spender has sufficient allowance
-     *
-     * @param token the address of the token to ensure
-     * @param spender the address allowed to spend
-     * @param amount the allowed amount to spend
      */
     function ensureApprove(
         IERC20 token,

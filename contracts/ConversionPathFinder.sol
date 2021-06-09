@@ -20,15 +20,11 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
 
     /**
      * @dev initializes a new ConversionPathFinder instance
-     *
-     * @param registry address of a contract registry contract
      */
     constructor(IContractRegistry registry) public ContractRegistryClient(registry) {}
 
     /**
      * @dev returns the address of the anchor token
-     *
-     * @return the address of the anchor token
      */
     function anchorToken() external view returns (IERC20) {
         return _anchorToken;
@@ -37,7 +33,9 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
     /**
      * @dev updates the anchor token
      *
-     * @param newAnchorToken address of the new anchor token
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
      */
     function setAnchorToken(IERC20 newAnchorToken) external ownerOnly {
         _anchorToken = newAnchorToken;
@@ -45,11 +43,6 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
 
     /**
      * @dev generates a conversion path between a given pair of tokens in the Bancor Network
-     *
-     * @param sourceToken address of the source token
-     * @param targetToken address of the target token
-     *
-     * @return a path from the source token to the target token
      */
     function findPath(IReserveToken sourceToken, IReserveToken targetToken)
         external
@@ -57,32 +50,27 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
         override
         returns (address[] memory)
     {
-        IConverterRegistry converterRegistry = IConverterRegistry(addressOf(CONVERTER_REGISTRY));
-        address[] memory sourcePath = getPath(sourceToken, converterRegistry);
-        address[] memory targetPath = getPath(targetToken, converterRegistry);
-        return getShortestPath(sourcePath, targetPath);
+        IConverterRegistry converterRegistry = IConverterRegistry(_addressOf(CONVERTER_REGISTRY));
+        address[] memory sourcePath = _getPath(sourceToken, converterRegistry);
+        address[] memory targetPath = _getPath(targetToken, converterRegistry);
+        return _getShortestPath(sourcePath, targetPath);
     }
 
     /**
      * @dev generates a conversion path between a given token and the anchor token
-     *
-     * @param reserveToken address of the token
-     * @param converterRegistry address of the converter registry
-     *
-     * @return a path from the input token to the anchor token
      */
-    function getPath(IReserveToken reserveToken, IConverterRegistry converterRegistry)
+    function _getPath(IReserveToken reserveToken, IConverterRegistry converterRegistry)
         private
         view
         returns (address[] memory)
     {
         if (address(reserveToken) == address(_anchorToken)) {
-            return getInitialArray(address(reserveToken));
+            return _getInitialArray(address(reserveToken));
         }
 
         address[] memory anchors;
         if (converterRegistry.isAnchor(address(reserveToken))) {
-            anchors = getInitialArray(address(reserveToken));
+            anchors = _getInitialArray(address(reserveToken));
         } else {
             anchors = converterRegistry.getConvertibleTokenAnchors(reserveToken);
         }
@@ -93,9 +81,9 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
             for (uint256 i = 0; i < connectorTokenCount; ++i) {
                 IReserveToken connectorToken = converter.connectorTokens(i);
                 if (connectorToken != reserveToken) {
-                    address[] memory path = getPath(connectorToken, converterRegistry);
+                    address[] memory path = _getPath(connectorToken, converterRegistry);
                     if (path.length > 0) {
-                        return getExtendedArray(address(reserveToken), anchors[n], path);
+                        return _getExtendedArray(address(reserveToken), anchors[n], path);
                     }
                 }
             }
@@ -106,13 +94,8 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
 
     /**
      * @dev merges two paths with a common suffix into one
-     *
-     * @param sourcePath address of the source path
-     * @param targetPath address of the target path
-     *
-     * @return merged path
      */
-    function getShortestPath(address[] memory sourcePath, address[] memory targetPath)
+    function _getShortestPath(address[] memory sourcePath, address[] memory targetPath)
         private
         pure
         returns (address[] memory)
@@ -143,7 +126,7 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
                 path[length++] = path[p];
             }
 
-            return getPartialArray(path, length);
+            return _getPartialArray(path, length);
         }
 
         return new address[](0);
@@ -151,12 +134,8 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
 
     /**
      * @dev creates a new array containing a single item
-     *
-     * @param item item
-     *
-     * @return initial array
      */
-    function getInitialArray(address item) private pure returns (address[] memory) {
+    function _getInitialArray(address item) private pure returns (address[] memory) {
         address[] memory newArray = new address[](1);
         newArray[0] = item;
 
@@ -165,14 +144,8 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
 
     /**
      * @dev prepends two items to the beginning of an array
-     *
-     * @param item0 first item
-     * @param item1 second item
-     * @param array initial array
-     *
-     * @return extended array
      */
-    function getExtendedArray(
+    function _getExtendedArray(
         address item0,
         address item1,
         address[] memory array
@@ -188,13 +161,8 @@ contract ConversionPathFinder is IConversionPathFinder, ContractRegistryClient {
 
     /**
      * @dev extracts the prefix of a given array
-     *
-     * @param array given array
-     * @param length prefix length
-     *
-     * @return partial array
      */
-    function getPartialArray(address[] memory array, uint256 length) private pure returns (address[] memory) {
+    function _getPartialArray(address[] memory array, uint256 length) private pure returns (address[] memory) {
         address[] memory newArray = new address[](length);
         for (uint256 i = 0; i < length; ++i) {
             newArray[i] = array[i];

@@ -36,19 +36,11 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev triggered when the system balance for a given token is updated
-     *
-     * @param token         token address
-     * @param prevAmount    previous amount
-     * @param newAmount     new amount
      */
     event SystemBalanceUpdated(IERC20 indexed token, uint256 prevAmount, uint256 newAmount);
 
     /**
      * @dev triggered when the amount of network tokens minted into a specific pool is updated
-     *
-     * @param poolAnchor    pool anchor
-     * @param prevAmount    previous amount
-     * @param newAmount     new amount
      */
     event NetworkTokensMintedUpdated(IConverterAnchor indexed poolAnchor, uint256 prevAmount, uint256 newAmount);
 
@@ -63,9 +55,6 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev returns the system balance for a given token
-     *
-     * @param token token address
-     * @return system balance
      */
     function systemBalance(IERC20 token) external view override returns (uint256) {
         return _systemBalances[token];
@@ -73,10 +62,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev increases the system balance for a given token
-     * can be executed only by an owner
      *
-     * @param token token address
-     * @param amount token amount
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function incSystemBalance(IERC20 token, uint256 amount) external override ownerOnly validAddress(address(token)) {
         uint256 prevAmount = _systemBalances[token];
@@ -88,10 +77,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev decreases the system balance for a given token
-     * can be executed only by an owner
      *
-     * @param token token address
-     * @param amount token amount
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function decSystemBalance(IERC20 token, uint256 amount) external override ownerOnly validAddress(address(token)) {
         uint256 prevAmount = _systemBalances[token];
@@ -103,9 +92,6 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev returns the amount of network tokens minted into a specific pool
-     *
-     * @param poolAnchor    pool anchor
-     * @return amount of network tokens
      */
     function networkTokensMinted(IConverterAnchor poolAnchor) external view override returns (uint256) {
         return _networkTokensMinted[poolAnchor];
@@ -113,10 +99,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev increases the amount of network tokens minted into a specific pool
-     * can be executed only by an owner
      *
-     * @param poolAnchor    pool anchor
-     * @param amount        amount to increase the minted tokens by
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function incNetworkTokensMinted(IConverterAnchor poolAnchor, uint256 amount)
         external
@@ -133,10 +119,10 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
 
     /**
      * @dev decreases the amount of network tokens minted into a specific pool
-     * can be executed only by an owner
      *
-     * @param poolAnchor    pool anchor
-     * @param amount        amount to decrease the minted tokens by
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function decNetworkTokensMinted(IConverterAnchor poolAnchor, uint256 amount)
         external

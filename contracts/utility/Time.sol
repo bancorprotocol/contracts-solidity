@@ -8,7 +8,7 @@ contract Time {
     /**
      * @dev returns the current time
      */
-    function time() internal view virtual returns (uint256) {
+    function _time() internal view virtual returns (uint256) {
         return block.timestamp;
     }
 }

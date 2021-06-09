@@ -12,9 +12,6 @@ contract Owned is IOwned {
 
     /**
      * @dev triggered when the owner is updated
-     *
-     * @param prevOwner previous owner
-     * @param newOwner  new owner
      */
     event OwnerUpdate(address indexed prevOwner, address indexed newOwner);
 
@@ -39,10 +36,12 @@ contract Owned is IOwned {
 
     /**
      * @dev allows transferring the contract ownership
-     * the new owner still needs to accept the transfer
-     * can only be called by the contract owner
      *
-     * @param newOwner new contract owner
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     *
+     * note the new owner still needs to accept the transfer
      */
     function transferOwnership(address newOwner) public override ownerOnly {
         require(newOwner != _owner, "ERR_SAME_OWNER");
@@ -64,8 +63,6 @@ contract Owned is IOwned {
 
     /**
      * @dev returns the address of the current owner
-     *
-     * @return the address of the current owner
      */
     function owner() public view override returns (address) {
         return _owner;
@@ -73,8 +70,6 @@ contract Owned is IOwned {
 
     /**
      * @dev returns the address of the new owner candidate
-     *
-     * @return the address of the new owner candidate
      */
     function newOwner() external view returns (address) {
         return _newOwner;

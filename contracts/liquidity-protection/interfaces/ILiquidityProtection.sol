@@ -13,9 +13,9 @@ import "../../token/interfaces/IReserveToken.sol";
 
 import "../../converter/interfaces/IConverterAnchor.sol";
 
-/*
-    Liquidity Protection interface
-*/
+/**
+ * @dev Liquidity Protection interface
+ */
 interface ILiquidityProtection {
     function store() external view returns (ILiquidityProtectionStore);
 

@@ -53,13 +53,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev increases the total amounts
-     * can be executed only by an owner
      *
-     * @param provider          liquidity provider address
-     * @param poolToken         pool token address
-     * @param reserveToken      reserve token address
-     * @param poolAmount        pool token amount
-     * @param reserveAmount     reserve token amount
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function increaseTotalAmounts(
         address provider,
@@ -80,13 +77,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev decreases the total amounts
-     * can be executed only by an owner
      *
-     * @param provider          liquidity provider address
-     * @param poolToken         pool token address
-     * @param reserveToken      reserve token address
-     * @param poolAmount        pool token amount
-     * @param reserveAmount     reserve token amount
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function decreaseTotalAmounts(
         address provider,
@@ -107,10 +101,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev adds a pool to the list of pools of a liquidity provider
-     * can be executed only by an owner
      *
-     * @param provider  liquidity provider address
-     * @param poolToken pool token address
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function addProviderPool(address provider, IDSToken poolToken) external override ownerOnly returns (bool) {
         return _providerPools[provider].add(address(poolToken));
@@ -118,10 +112,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev removes a pool from the list of pools of a liquidity provider
-     * can be executed only by an owner
      *
-     * @param provider  liquidity provider address
-     * @param poolToken pool token address
+     * Requirements:
+     *
+     * - the caller must have the ROLE_OWNER role
      */
     function removeProviderPool(address provider, IDSToken poolToken) external override ownerOnly returns (bool) {
         return _providerPools[provider].remove(address(poolToken));
@@ -129,9 +123,6 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev returns the total amount of protected pool tokens
-     *
-     * @param poolToken pool token address
-     * @return total amount of protected pool tokens
      */
     function totalPoolAmount(IDSToken poolToken) external view override returns (uint256) {
         return _totalPoolAmounts[poolToken];
@@ -139,10 +130,6 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev returns the total amount of protected reserve tokens
-     *
-     * @param poolToken     pool token address
-     * @param reserveToken  reserve token address
-     * @return total amount of protected reserve tokens
      */
     function totalReserveAmount(IDSToken poolToken, IReserveToken reserveToken)
         external
@@ -155,11 +142,6 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev returns the total amount of a liquidity provider's protected reserve tokens
-     *
-     * @param provider      liquidity provider address
-     * @param poolToken     pool token address
-     * @param reserveToken  reserve token address
-     * @return total amount of the liquidity provider's protected reserve tokens
      */
     function totalProviderAmount(
         address provider,
@@ -171,9 +153,6 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev returns the list of pools of a liquidity provider
-     *
-     * @param provider  liquidity provider address
-     * @return pool tokens
      */
     function providerPools(address provider) external view override returns (IDSToken[] memory) {
         EnumerableSet.AddressSet storage set = _providerPools[provider];
@@ -187,10 +166,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the total amount of protected pool tokens
-     * can be executed only by a seeder
      *
-     * @param poolTokens    pool token addresses
-     * @param poolAmounts   pool token amounts
+     * Requirements:
+     *
+     * - the caller must have the ROLE_SEEDER role
      */
     function seedPoolAmounts(IDSToken[] calldata poolTokens, uint256[] calldata poolAmounts) external seederOnly {
         uint256 length = poolTokens.length;
@@ -201,11 +180,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the total amount of protected reserve tokens
-     * can be executed only by a seeder
      *
-     * @param poolTokens        pool token addresses
-     * @param reserveTokens     reserve token addresses
-     * @param reserveAmounts    reserve token amounts
+     * Requirements:
+     *
+     * - the caller must have the ROLE_SEEDER role
      */
     function seedReserveAmounts(
         IDSToken[] calldata poolTokens,
@@ -220,12 +198,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the total amount of protected reserve tokens per liquidity provider
-     * can be executed only by a seeder
      *
-     * @param providers         liquidity provider addresses
-     * @param poolTokens        pool token addresses
-     * @param reserveTokens     reserve token addresses
-     * @param reserveAmounts    reserve token amounts
+     * Requirements:
+     *
+     * - the caller must have the ROLE_SEEDER role
      */
     function seedProviderAmounts(
         address[] calldata providers,
@@ -241,10 +217,10 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
 
     /**
      * @dev seeds the list of pools per liquidity provider
-     * can be executed only by a seeder
      *
-     * @param providers     liquidity provider addresses
-     * @param poolTokens    pool token addresses
+     * Requirements:
+     *
+     * - the caller must have the ROLE_SEEDER role
      */
     function seedProviderPools(address[] calldata providers, IDSToken[] calldata poolTokens) external seederOnly {
         uint256 length = providers.length;

@@ -6,9 +6,9 @@ import "../../converter/interfaces/IConverterAnchor.sol";
 import "../../token/interfaces/IDSToken.sol";
 import "../../token/interfaces/IReserveToken.sol";
 
-/*
-    Liquidity Protection Stats interface
-*/
+/**
+ * @dev Liquidity Protection Stats interface
+ */
 interface ILiquidityProtectionStats {
     function increaseTotalAmounts(
         address provider,

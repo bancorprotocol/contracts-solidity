@@ -5,6 +5,9 @@ import "../../token/interfaces/IReserveToken.sol";
 
 import "./IConverterAnchor.sol";
 
+/**
+ * @dev Converter Registry Data interface
+ */
 interface IConverterRegistryData {
     function addSmartToken(IConverterAnchor anchor) external;
 

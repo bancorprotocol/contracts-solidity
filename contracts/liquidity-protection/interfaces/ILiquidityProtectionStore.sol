@@ -8,9 +8,9 @@ import "../../token/interfaces/IReserveToken.sol";
 
 import "../../utility/interfaces/IOwned.sol";
 
-/*
-    Liquidity Protection Store interface
-*/
+/**
+ * @dev Liquidity Protection Store interface
+ */
 interface ILiquidityProtectionStore is IOwned {
     function withdrawTokens(
         IReserveToken token,

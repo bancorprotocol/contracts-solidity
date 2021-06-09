@@ -9,9 +9,9 @@ import "../../utility/interfaces/IOwned.sol";
 
 import "../../token/interfaces/IReserveToken.sol";
 
-/*
-    Converter interface
-*/
+/**
+ * @dev Converter interface
+ */
 interface IConverter is IOwned {
     function converterType() external pure returns (uint16);
 
@@ -83,22 +83,11 @@ interface IConverter is IOwned {
 
     /**
      * @dev triggered when the converter is activated
-     *
-     * @param converterType converter type
-     * @param anchor converter anchor
-     * @param activated true if the converter was activated, false if it was deactivated
      */
     event Activation(uint16 indexed converterType, IConverterAnchor indexed anchor, bool indexed activated);
 
     /**
      * @dev triggered when a conversion between two tokens occurs
-     *
-     * @param sourceToken source reserve token
-     * @param targetToken target reserve token
-     * @param trader wallet that initiated the trade
-     * @param sourceAmount input amount in units of the source token
-     * @param targetAmount output amount minus conversion fee in units of the target token
-     * @param conversionFee conversion fee in units of the target token
      */
     event Conversion(
         IReserveToken indexed sourceToken,
@@ -111,20 +100,13 @@ interface IConverter is IOwned {
 
     /**
      * @dev triggered when the rate between two tokens in the converter changes
-     * note that the event might be dispatched for rate updates between any two tokens in the converter
      *
-     * @param token1 address of the first token
-     * @param token2 address of the second token
-     * @param rateN rate of 1 unit of `token1` in `token2` (numerator)
-     * @param rateD rate of 1 unit of `token1` in `token2` (denominator)
+     * note that the event might be dispatched for rate updates between any two tokens in the converter
      */
     event TokenRateUpdate(address indexed token1, address indexed token2, uint256 rateN, uint256 rateD);
 
     /**
      * @dev triggered when the conversion fee is updated
-     *
-     * @param prevFee previous fee percentage, represented in units of PPM
-     * @param newFee new fee percentage, represented in units of PPM
      */
     event ConversionFeeUpdate(uint32 prevFee, uint32 newFee);
 }
