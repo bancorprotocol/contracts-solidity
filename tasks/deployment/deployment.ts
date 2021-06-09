@@ -1,8 +1,8 @@
 import { ethers } from 'hardhat';
-import Contracts from 'contracts';
+import Contracts, { Contract } from 'contracts';
 import { DeploymentConfig, BancorSystem } from './types';
 import { Signer } from '@ethersproject/abstract-signer';
-import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
+import { ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
 
 const {
     BigNumber,
@@ -15,11 +15,12 @@ const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
 const toWei = (value: number, decimals: number) => BigNumber.from(value).mul(BigNumber.from(10).pow(decimals));
 const percentageToPPM = (value: string) => (Number(value.replace('%', '')) * 1_000_000) / 100;
 
-export type deployFct = <C extends Contract>(toDeployContract: Promise<C>) => Promise<C>;
-const basicDeploy: deployFct = async <C extends Contract>(toDeployContract: Promise<C>): Promise<C> => {
-    return await toDeployContract;
+export type deployFct = <C extends Contract>(name: string, toDeployContract: Promise<C>) => Promise<C>;
+const basicDeploy: deployFct = async <C extends Contract>(_: string, toDeployContract: Promise<C>): Promise<C> => {
+    const contract = await toDeployContract;
+    await contract.deployTransaction.wait();
+    return contract;
 };
-
 export type executeFct = (txExecution: Promise<ContractTransaction>) => Promise<ContractReceipt>;
 const basicExecute = async (txExecution: Promise<ContractTransaction>): Promise<ContractReceipt> => {
     return (await txExecution).wait();
@@ -37,18 +38,36 @@ export const deploySystem = async (
     const ROLE_PUBLISHER = id('ROLE_PUBLISHER');
 
     // main contracts
-    const contractRegistry = await deploy(Contracts.ContractRegistry.deploy());
-    const converterFactory = await deploy(Contracts.ConverterFactory.deploy());
-    const bancorNetwork = await deploy(Contracts.BancorNetwork.deploy(contractRegistry.address));
-    const conversionPathFinder = await deploy(Contracts.ConversionPathFinder.deploy(contractRegistry.address));
-    const converterUpgrader = await deploy(Contracts.ConverterUpgrader.deploy(contractRegistry.address));
-    const converterRegistry = await deploy(Contracts.ConverterRegistry.deploy(contractRegistry.address));
-    const converterRegistryData = await deploy(Contracts.ConverterRegistryData.deploy(contractRegistry.address));
+    const contractRegistry = await deploy('contractRegistry', Contracts.ContractRegistry.deploy());
+    const converterFactory = await deploy('converterFactory', Contracts.ConverterFactory.deploy());
+    const bancorNetwork = await deploy('bancorNetwork', Contracts.BancorNetwork.deploy(contractRegistry.address));
+    const conversionPathFinder = await deploy(
+        'conversionPathFinder',
+        Contracts.ConversionPathFinder.deploy(contractRegistry.address)
+    );
+    const converterUpgrader = await deploy(
+        'converterUpgrader',
+        Contracts.ConverterUpgrader.deploy(contractRegistry.address)
+    );
+    const converterRegistry = await deploy(
+        'converterRegistry',
+        Contracts.ConverterRegistry.deploy(contractRegistry.address)
+    );
+    const converterRegistryData = await deploy(
+        'converterRegistryData',
+        Contracts.ConverterRegistryData.deploy(contractRegistry.address)
+    );
 
-    const networkFeeWallet = await deploy(Contracts.TokenHolder.deploy());
-    const networkSettings = await deploy(Contracts.NetworkSettings.deploy(networkFeeWallet.address, 0));
+    const networkFeeWallet = await deploy('networkFeeWallet', Contracts.TokenHolder.deploy());
+    const networkSettings = await deploy(
+        'networkSettings',
+        Contracts.NetworkSettings.deploy(networkFeeWallet.address, 0)
+    );
 
-    const standardPoolConverterFactory = await deploy(Contracts.StandardPoolConverterFactory.deploy());
+    const standardPoolConverterFactory = await deploy(
+        'standardPoolConverterFactory',
+        Contracts.StandardPoolConverterFactory.deploy()
+    );
 
     // initialize contract registry
     await execute(contractRegistry.registerAddress(formatBytes32String('ContractRegistry'), contractRegistry.address));
@@ -75,6 +94,7 @@ export const deploySystem = async (
 
     // initialize network tokens
     const bntToken = await deploy(
+        'bntToken',
         Contracts.DSToken.deploy(
             config.networkToken.symbol + ' Token',
             config.networkToken.symbol,
@@ -82,6 +102,7 @@ export const deploySystem = async (
         )
     );
     const vbntToken = await deploy(
+        'vbntToken',
         Contracts.DSToken.deploy(
             config.networkGovToken.symbol + ' Token',
             config.networkGovToken.symbol,
@@ -95,6 +116,7 @@ export const deploySystem = async (
     );
 
     const liquidityProtectionSettings = await deploy(
+        'liquidityProtectionSettings',
         Contracts.LiquidityProtectionSettings.deploy(bntToken.address, contractRegistry.address)
     );
 
@@ -114,7 +136,7 @@ export const deploySystem = async (
             const { symbol, decimals } = reserve;
             const name = symbol + 'Token';
             const supply = toWei(reserve.supply, decimals);
-            const token = await deploy(Contracts.TestStandardToken.deploy(name, symbol, supply));
+            const token = await deploy(symbol, Contracts.TestStandardToken.deploy(name, symbol, supply));
             reserves[symbol] = {
                 address: token.address,
                 decimals: await token.decimals()
@@ -178,8 +200,11 @@ export const deploySystem = async (
     await execute(contractRegistry.registerAddress(formatBytes32String('BNTToken'), bntToken.address));
     await execute(conversionPathFinder.setAnchorToken(bntToken.address));
 
-    const bntTokenGovernance = await Contracts.TokenGovernance.deploy(bntToken.address);
-    const vbntTokenGovernance = await Contracts.TokenGovernance.deploy(vbntToken.address);
+    const bntTokenGovernance = await deploy('bntTokenGovernance', Contracts.TokenGovernance.deploy(bntToken.address));
+    const vbntTokenGovernance = await deploy(
+        'vbntTokenGovernance',
+        Contracts.TokenGovernance.deploy(vbntToken.address)
+    );
 
     await execute(bntTokenGovernance.grantRole(ROLE_GOVERNOR, await signer.getAddress()));
     await execute(vbntTokenGovernance.grantRole(ROLE_GOVERNOR, await signer.getAddress()));
@@ -187,10 +212,11 @@ export const deploySystem = async (
     await execute(bntToken.transferOwnership(bntTokenGovernance.address));
     await execute(bntTokenGovernance.acceptTokenOwnership());
 
-    const checkpointStore = await deploy(Contracts.CheckpointStore.deploy());
+    const checkpointStore = await deploy('checkpointStore', Contracts.CheckpointStore.deploy());
 
-    const stakingRewardsStore = await deploy(Contracts.StakingRewardsStore.deploy());
+    const stakingRewardsStore = await deploy('stakingRewardsStore', Contracts.StakingRewardsStore.deploy());
     const stakingRewards = await deploy(
+        'stakingRewards',
         Contracts.StakingRewards.deploy(
             stakingRewardsStore.address,
             bntTokenGovernance.address,
@@ -199,12 +225,22 @@ export const deploySystem = async (
         )
     );
 
-    const liquidityProtectionStore = await deploy(Contracts.LiquidityProtectionStore.deploy());
-    const liquidityProtectionStats = await deploy(Contracts.LiquidityProtectionStats.deploy());
-    const liquidityProtectionSystemStore = await deploy(Contracts.LiquidityProtectionSystemStore.deploy());
-    const liquidityProtectionWallet = await deploy(Contracts.TokenHolder.deploy());
+    const liquidityProtectionStore = await deploy(
+        'liquidityProtectionStore',
+        Contracts.LiquidityProtectionStore.deploy()
+    );
+    const liquidityProtectionStats = await deploy(
+        'liquidityProtectionStats',
+        Contracts.LiquidityProtectionStats.deploy()
+    );
+    const liquidityProtectionSystemStore = await deploy(
+        'liquidityProtectionSystemStore',
+        Contracts.LiquidityProtectionSystemStore.deploy()
+    );
+    const liquidityProtectionWallet = await deploy('liquidityProtectionWallet', Contracts.TokenHolder.deploy());
 
     const liquidityProtection = await deploy(
+        'liquidityProtection',
         Contracts.LiquidityProtection.deploy(
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
@@ -260,6 +296,7 @@ export const deploySystem = async (
     await execute(liquidityProtectionSettings.setLockDuration(params.lockDuration));
 
     const vortexBurner = await deploy(
+        'vortexBurner',
         Contracts.VortexBurner.deploy(bntToken.address, vbntTokenGovernance.address, contractRegistry.address)
     );
 

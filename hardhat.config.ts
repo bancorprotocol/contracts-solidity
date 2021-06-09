@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+import { HardhatUserConfig } from 'hardhat/config';
+
 import 'tsconfig-paths/register';
 
 import '@nomiclabs/hardhat-waffle';
@@ -12,8 +14,6 @@ import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 import 'hardhat-abi-exporter';
 import 'hardhat-gas-reporter';
-
-import { HardhatUserConfig } from 'hardhat/config';
 
 import 'tasks';
 

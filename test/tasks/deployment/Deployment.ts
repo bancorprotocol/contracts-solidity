@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 
-import { deploySystem } from 'scripts/deployment/deployment';
-import { DeploymentConfig } from 'scripts/deployment/types';
+import { deploySystem } from 'tasks/deployment/deployment';
+import { DeploymentConfig } from 'tasks/deployment/types';
 
 const testDeploymentConfig: DeploymentConfig = {
     networkToken: {

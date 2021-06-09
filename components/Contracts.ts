@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { Contract, ContractFactory, Overrides as OldOverrides } from '@ethersproject/contracts';
+import { Contract as OldContract, ContractFactory, Overrides as OldOverrides } from '@ethersproject/contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 
 import {
@@ -113,6 +113,8 @@ type ReplaceLast<F, TReplace> = F extends (...args: infer T) => infer R
 
 type Overrides = OldOverrides & { from?: SignerWithAddress };
 
+export type Contract = OldContract & { __contractName__: string };
+
 const deployOrAttach = <C extends Contract, F extends ContractFactory>(
     deployParamLength: number,
     contractName: string
@@ -133,9 +135,15 @@ const deployOrAttach = <C extends Contract, F extends ContractFactory>(
                 );
                 delete overrides.from;
 
-                return (await contractFactory.deploy(...args, overrides)) as C;
+                const contract = (await contractFactory.deploy(...args, overrides)) as C;
+                contract.__contractName__ = contractName;
+                return contract;
             }
-            return (await (await ethers.getContractFactory(contractName, defaultSigner)).deploy(...args)) as C;
+            const contract = (await (
+                await ethers.getContractFactory(contractName, defaultSigner)
+            ).deploy(...args)) as C;
+            contract.__contractName__ = contractName;
+            return contract;
         },
         attach: attachOnly<C>(contractName).attach
     };
@@ -145,7 +153,9 @@ const attachOnly = <C extends Contract>(contractName: string) => {
     return {
         attach: async (address: string, signer?: SignerWithAddress): Promise<C> => {
             let defaultSigner = (await ethers.getSigners())[0];
-            return (await ethers.getContractAt(contractName, address, signer ? signer : defaultSigner)) as C;
+            const contract = (await ethers.getContractAt(contractName, address, signer ? signer : defaultSigner)) as C;
+            contract.__contractName__ = contractName;
+            return contract;
         }
     };
 };
@@ -201,42 +211,47 @@ export type ContractTypes =
     | TokenHolder
     | VortexBurner;
 
+type ContractName = { __contractName__: string };
+
 export default {
-    BancorNetwork: deployOrAttach<BancorNetwork, BancorNetwork__factory>(
+    BancorNetwork: deployOrAttach<BancorNetwork & ContractName, BancorNetwork__factory>(
         BancorNetwork__factory.prototype.deploy.length,
         'BancorNetwork'
     ),
-    BancorX: deployOrAttach<BancorX, BancorX__factory>(BancorX__factory.prototype.deploy.length, 'BancorX'),
-    CheckpointStore: deployOrAttach<CheckpointStore, CheckpointStore__factory>(
+    BancorX: deployOrAttach<BancorX & ContractName, BancorX__factory>(
+        BancorX__factory.prototype.deploy.length,
+        'BancorX'
+    ),
+    CheckpointStore: deployOrAttach<CheckpointStore & ContractName, CheckpointStore__factory>(
         CheckpointStore__factory.prototype.deploy.length,
         'CheckpointStore'
     ),
-    ContractRegistry: deployOrAttach<ContractRegistry, ContractRegistry__factory>(
+    ContractRegistry: deployOrAttach<ContractRegistry & ContractName, ContractRegistry__factory>(
         ContractRegistry__factory.prototype.deploy.length,
         'ContractRegistry'
     ),
-    ConversionPathFinder: deployOrAttach<ConversionPathFinder, ConversionPathFinder__factory>(
+    ConversionPathFinder: deployOrAttach<ConversionPathFinder & ContractName, ConversionPathFinder__factory>(
         ConversionPathFinder__factory.prototype.deploy.length,
         'ConversionPathFinder'
     ),
-    ConverterFactory: deployOrAttach<ConverterFactory, ConverterFactory__factory>(
+    ConverterFactory: deployOrAttach<ConverterFactory & ContractName, ConverterFactory__factory>(
         ConverterFactory__factory.prototype.deploy.length,
         'ConverterFactory'
     ),
-    ConverterRegistry: deployOrAttach<ConverterRegistry, ConverterRegistry__factory>(
+    ConverterRegistry: deployOrAttach<ConverterRegistry & ContractName, ConverterRegistry__factory>(
         ConverterRegistry__factory.prototype.deploy.length,
         'ConverterRegistry'
     ),
-    ConverterRegistryData: deployOrAttach<ConverterRegistryData, ConverterRegistryData__factory>(
+    ConverterRegistryData: deployOrAttach<ConverterRegistryData & ContractName, ConverterRegistryData__factory>(
         ConverterRegistryData__factory.prototype.deploy.length,
         'ConverterRegistryData'
     ),
-    ConverterUpgrader: deployOrAttach<ConverterUpgrader, ConverterUpgrader__factory>(
+    ConverterUpgrader: deployOrAttach<ConverterUpgrader & ContractName, ConverterUpgrader__factory>(
         ConverterUpgrader__factory.prototype.deploy.length,
         'ConverterUpgrader'
     ),
     ConverterV27OrLowerWithFallback: deployOrAttach<
-        ConverterV27OrLowerWithFallback,
+        ConverterV27OrLowerWithFallback & ContractName,
         ConverterV27OrLowerWithFallback__factory
     >(ConverterV27OrLowerWithFallback__factory.prototype.deploy.length, 'ConverterV27OrLowerWithFallback'),
     ConverterV27OrLowerWithoutFallback: deployOrAttach<Contract, ContractFactory>(
@@ -244,145 +259,148 @@ export default {
         'ConverterV27OrLowerWithoutFallback'
     ),
     ConverterV28OrHigherWithFallback: deployOrAttach<
-        ConverterV28OrHigherWithFallback,
+        ConverterV28OrHigherWithFallback & ContractName,
         ConverterV28OrHigherWithFallback__factory
     >(ConverterV28OrHigherWithFallback__factory.prototype.deploy.length, 'ConverterV28OrHigherWithFallback'),
     ConverterV28OrHigherWithoutFallback: deployOrAttach<
-        ConverterV28OrHigherWithoutFallback,
+        ConverterV28OrHigherWithoutFallback & ContractName,
         ConverterV28OrHigherWithoutFallback__factory
     >(ConverterV28OrHigherWithoutFallback__factory.prototype.deploy.length, 'ConverterV28OrHigherWithoutFallback'),
-    DSToken: deployOrAttach<DSToken, DSToken__factory>(DSToken__factory.prototype.deploy.length, 'DSToken'),
-    ERC20: deployOrAttach<ERC20, ERC20__factory>(ERC20__factory.prototype.deploy.length, 'ERC20'),
-    IConverterAnchor: attachOnly<IConverterAnchor>('IConverterAnchor'),
-    LiquidityProtection: deployOrAttach<LiquidityProtection, LiquidityProtection__factory>(
+    DSToken: deployOrAttach<DSToken & ContractName, DSToken__factory>(
+        DSToken__factory.prototype.deploy.length,
+        'DSToken'
+    ),
+    ERC20: deployOrAttach<ERC20 & ContractName, ERC20__factory>(ERC20__factory.prototype.deploy.length, 'ERC20'),
+    IConverterAnchor: attachOnly<IConverterAnchor & ContractName>('IConverterAnchor'),
+    LiquidityProtection: deployOrAttach<LiquidityProtection & ContractName, LiquidityProtection__factory>(
         LiquidityProtection__factory.prototype.deploy.length,
         'LiquidityProtection'
     ),
-    LiquidityProtectionSettings: deployOrAttach<LiquidityProtectionSettings, LiquidityProtectionSettings__factory>(
-        LiquidityProtectionSettings__factory.prototype.deploy.length,
-        'LiquidityProtectionSettings'
-    ),
-    LiquidityProtectionStats: deployOrAttach<LiquidityProtectionStats, LiquidityProtectionStats__factory>(
-        LiquidityProtectionStats__factory.prototype.deploy.length,
-        'LiquidityProtectionStats'
-    ),
-    LiquidityProtectionStore: deployOrAttach<LiquidityProtectionStore, LiquidityProtectionStore__factory>(
-        LiquidityProtectionStore__factory.prototype.deploy.length,
-        'LiquidityProtectionStore'
-    ),
+    LiquidityProtectionSettings: deployOrAttach<
+        LiquidityProtectionSettings & ContractName,
+        LiquidityProtectionSettings__factory
+    >(LiquidityProtectionSettings__factory.prototype.deploy.length, 'LiquidityProtectionSettings'),
+    LiquidityProtectionStats: deployOrAttach<
+        LiquidityProtectionStats & ContractName,
+        LiquidityProtectionStats__factory
+    >(LiquidityProtectionStats__factory.prototype.deploy.length, 'LiquidityProtectionStats'),
+    LiquidityProtectionStore: deployOrAttach<
+        LiquidityProtectionStore & ContractName,
+        LiquidityProtectionStore__factory
+    >(LiquidityProtectionStore__factory.prototype.deploy.length, 'LiquidityProtectionStore'),
     LiquidityProtectionSystemStore: deployOrAttach<
-        LiquidityProtectionSystemStore,
+        LiquidityProtectionSystemStore & ContractName,
         LiquidityProtectionSystemStore__factory
     >(LiquidityProtectionSystemStore__factory.prototype.deploy.length, 'LiquidityProtectionSystemStore'),
-    NetworkSettings: deployOrAttach<NetworkSettings, NetworkSettings__factory>(
+    NetworkSettings: deployOrAttach<NetworkSettings & ContractName, NetworkSettings__factory>(
         NetworkSettings__factory.prototype.deploy.length,
         'NetworkSettings'
     ),
-    Owned: deployOrAttach<Owned, Owned__factory>(Owned__factory.prototype.deploy.length, 'Owned'),
-    StakingRewards: deployOrAttach<StakingRewards, StakingRewards__factory>(
+    Owned: deployOrAttach<Owned & ContractName, Owned__factory>(Owned__factory.prototype.deploy.length, 'Owned'),
+    StakingRewards: deployOrAttach<StakingRewards & ContractName, StakingRewards__factory>(
         StakingRewards__factory.prototype.deploy.length,
         'StakingRewards'
     ),
-    StakingRewardsStore: deployOrAttach<StakingRewardsStore, StakingRewardsStore__factory>(
+    StakingRewardsStore: deployOrAttach<StakingRewardsStore & ContractName, StakingRewardsStore__factory>(
         StakingRewardsStore__factory.prototype.deploy.length,
         'StakingRewardsStore'
     ),
-    StandardPoolConverter: deployOrAttach<StandardPoolConverter, StandardPoolConverter__factory>(
+    StandardPoolConverter: deployOrAttach<StandardPoolConverter & ContractName, StandardPoolConverter__factory>(
         StandardPoolConverter__factory.prototype.deploy.length,
         'StandardPoolConverter'
     ),
-    StandardPoolConverterFactory: deployOrAttach<StandardPoolConverterFactory, StandardPoolConverterFactory__factory>(
-        StandardPoolConverterFactory__factory.prototype.deploy.length,
-        'StandardPoolConverterFactory'
-    ),
-    TestBancorNetwork: deployOrAttach<TestBancorNetwork, TestBancorNetwork__factory>(
+    StandardPoolConverterFactory: deployOrAttach<
+        StandardPoolConverterFactory & ContractName,
+        StandardPoolConverterFactory__factory
+    >(StandardPoolConverterFactory__factory.prototype.deploy.length, 'StandardPoolConverterFactory'),
+    TestBancorNetwork: deployOrAttach<TestBancorNetwork & ContractName, TestBancorNetwork__factory>(
         TestBancorNetwork__factory.prototype.deploy.length,
         'TestBancorNetwork'
     ),
-    TestCheckpointStore: deployOrAttach<TestCheckpointStore, TestCheckpointStore__factory>(
+    TestCheckpointStore: deployOrAttach<TestCheckpointStore & ContractName, TestCheckpointStore__factory>(
         TestCheckpointStore__factory.prototype.deploy.length,
         'TestCheckpointStore'
     ),
-    TestContractRegistryClient: deployOrAttach<TestContractRegistryClient, TestContractRegistryClient__factory>(
-        TestContractRegistryClient__factory.prototype.deploy.length,
-        'TestContractRegistryClient'
-    ),
-    TestConverterFactory: deployOrAttach<TestConverterFactory, TestConverterFactory__factory>(
+    TestContractRegistryClient: deployOrAttach<
+        TestContractRegistryClient & ContractName,
+        TestContractRegistryClient__factory
+    >(TestContractRegistryClient__factory.prototype.deploy.length, 'TestContractRegistryClient'),
+    TestConverterFactory: deployOrAttach<TestConverterFactory & ContractName, TestConverterFactory__factory>(
         TestConverterFactory__factory.prototype.deploy.length,
         'TestConverterFactory'
     ),
-    TestConverterRegistry: deployOrAttach<TestConverterRegistry, TestConverterRegistry__factory>(
+    TestConverterRegistry: deployOrAttach<TestConverterRegistry & ContractName, TestConverterRegistry__factory>(
         TestConverterRegistry__factory.prototype.deploy.length,
         'TestConverterRegistry'
     ),
-    TestLiquidityProtection: deployOrAttach<TestLiquidityProtection, TestLiquidityProtection__factory>(
+    TestLiquidityProtection: deployOrAttach<TestLiquidityProtection & ContractName, TestLiquidityProtection__factory>(
         TestLiquidityProtection__factory.prototype.deploy.length,
         'TestLiquidityProtection'
     ),
     TestLiquidityProvisionEventsSubscriber: deployOrAttach<
-        TestLiquidityProvisionEventsSubscriber,
+        TestLiquidityProvisionEventsSubscriber & ContractName,
         TestLiquidityProvisionEventsSubscriber__factory
     >(
         TestLiquidityProvisionEventsSubscriber__factory.prototype.deploy.length,
         'TestLiquidityProvisionEventsSubscriber'
     ),
-    TestMathEx: deployOrAttach<TestMathEx, TestMathEx__factory>(
+    TestMathEx: deployOrAttach<TestMathEx & ContractName, TestMathEx__factory>(
         TestMathEx__factory.prototype.deploy.length,
         'TestMathEx'
     ),
-    TestNonStandardToken: deployOrAttach<TestNonStandardToken, TestNonStandardToken__factory>(
+    TestNonStandardToken: deployOrAttach<TestNonStandardToken & ContractName, TestNonStandardToken__factory>(
         TestNonStandardToken__factory.prototype.deploy.length,
         'TestNonStandardToken'
     ),
-    TestReserveToken: deployOrAttach<TestReserveToken, TestReserveToken__factory>(
+    TestReserveToken: deployOrAttach<TestReserveToken & ContractName, TestReserveToken__factory>(
         TestReserveToken__factory.prototype.deploy.length,
         'TestReserveToken'
     ),
-    TestSafeERC20Ex: deployOrAttach<TestSafeERC20Ex, TestSafeERC20Ex__factory>(
+    TestSafeERC20Ex: deployOrAttach<TestSafeERC20Ex & ContractName, TestSafeERC20Ex__factory>(
         TestSafeERC20Ex__factory.prototype.deploy.length,
         'TestSafeERC20Ex'
     ),
-    TestStakingRewards: deployOrAttach<TestStakingRewards, TestStakingRewards__factory>(
+    TestStakingRewards: deployOrAttach<TestStakingRewards & ContractName, TestStakingRewards__factory>(
         TestStakingRewards__factory.prototype.deploy.length,
         'TestStakingRewards'
     ),
-    TestStakingRewardsStore: deployOrAttach<TestStakingRewardsStore, TestStakingRewardsStore__factory>(
+    TestStakingRewardsStore: deployOrAttach<TestStakingRewardsStore & ContractName, TestStakingRewardsStore__factory>(
         TestStakingRewardsStore__factory.prototype.deploy.length,
         'TestStakingRewardsStore'
     ),
-    TestStandardPoolConverter: deployOrAttach<TestStandardPoolConverter, TestStandardPoolConverter__factory>(
-        TestStandardPoolConverter__factory.prototype.deploy.length,
-        'TestStandardPoolConverter'
-    ),
+    TestStandardPoolConverter: deployOrAttach<
+        TestStandardPoolConverter & ContractName,
+        TestStandardPoolConverter__factory
+    >(TestStandardPoolConverter__factory.prototype.deploy.length, 'TestStandardPoolConverter'),
     TestStandardPoolConverterFactory: deployOrAttach<
-        TestStandardPoolConverterFactory,
+        TestStandardPoolConverterFactory & ContractName,
         TestStandardPoolConverterFactory__factory
     >(TestStandardPoolConverterFactory__factory.prototype.deploy.length, 'TestStandardPoolConverterFactory'),
-    TestStandardToken: deployOrAttach<TestStandardToken, TestStandardToken__factory>(
+    TestStandardToken: deployOrAttach<TestStandardToken & ContractName, TestStandardToken__factory>(
         TestStandardToken__factory.prototype.deploy.length,
         'TestStandardToken'
     ),
-    TestTokenGovernance: deployOrAttach<TestTokenGovernance, TestTokenGovernance__factory>(
+    TestTokenGovernance: deployOrAttach<TestTokenGovernance & ContractName, TestTokenGovernance__factory>(
         TestTokenGovernance__factory.prototype.deploy.length,
         'TestTokenGovernance'
     ),
-    TestTransferPositionCallback: deployOrAttach<TestTransferPositionCallback, TestTransferPositionCallback__factory>(
-        TestTransferPositionCallback__factory.prototype.deploy.length,
-        'TestTransferPositionCallback'
-    ),
+    TestTransferPositionCallback: deployOrAttach<
+        TestTransferPositionCallback & ContractName,
+        TestTransferPositionCallback__factory
+    >(TestTransferPositionCallback__factory.prototype.deploy.length, 'TestTransferPositionCallback'),
     TestTypedConverterAnchorFactory: deployOrAttach<
-        TestTypedConverterAnchorFactory,
+        TestTypedConverterAnchorFactory & ContractName,
         TestTypedConverterAnchorFactory__factory
     >(TestTypedConverterAnchorFactory__factory.prototype.deploy.length, 'TestTypedConverterAnchorFactory'),
-    TokenGovernance: deployOrAttach<TokenGovernance, TokenGovernance__factory>(
+    TokenGovernance: deployOrAttach<TokenGovernance & ContractName, TokenGovernance__factory>(
         TokenGovernance__factory.prototype.deploy.length,
         'TokenGovernance'
     ),
-    TokenHolder: deployOrAttach<TokenHolder, TokenHolder__factory>(
+    TokenHolder: deployOrAttach<TokenHolder & ContractName, TokenHolder__factory>(
         TokenHolder__factory.prototype.deploy.length,
         'TokenHolder'
     ),
-    VortexBurner: deployOrAttach<VortexBurner, VortexBurner__factory>(
+    VortexBurner: deployOrAttach<VortexBurner & ContractName, VortexBurner__factory>(
         VortexBurner__factory.prototype.deploy.length,
         'VortexBurner'
     )
