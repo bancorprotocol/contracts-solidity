@@ -1,33 +1,24 @@
-type networkToken = {
-    address?: string;
+type token = {
+    symbol: string;
+    decimals: number;
+};
+
+type networkToken = token & {
     supply: number;
-
-    symbol: string;
-    decimals: number;
-
-    protected?: boolean;
 };
 
-type chainToken = {
+type chainToken = token & {
     address: string;
-    symbol: string;
-    decimals: number;
 };
 
-export type deployedTokenReserve = {
+export type deployedTokenReserve = token & {
     __typename: 'deployed';
-
-    symbol: string;
     address: string;
-    decimals: number;
 };
 
-export type toDeployTokenReserve = {
+export type toDeployTokenReserve = token & {
     __typename: 'toDeploy';
-
     supply: number;
-    symbol: string;
-    decimals: number;
 };
 
 export type DeploymentConfig = {
@@ -53,3 +44,5 @@ export type DeploymentConfig = {
         lockDuration: number;
     };
 };
+
+export type BancorSystem = {};

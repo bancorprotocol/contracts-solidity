@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
-import { deployFct, deployment, executeFct } from './deployment';
-import { testDeploymentConfig } from './config';
+import { deployFct, deploySystem, executeFct } from './deployment';
+import { testDeploymentConfig } from './exemple.config';
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
 
 const deploy: deployFct = async <C extends Contract>(toDeployContract: Promise<C>): Promise<C> => {
@@ -19,7 +19,7 @@ const execute: executeFct = async (txExecution: Promise<ContractTransaction>): P
 };
 
 const main = async () => {
-    await deployment((await ethers.getSigners())[0], testDeploymentConfig, deploy, execute);
+    await deploySystem((await ethers.getSigners())[0], testDeploymentConfig, deploy, execute);
 };
 
 main()

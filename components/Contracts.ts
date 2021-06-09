@@ -1,6 +1,6 @@
+import { ethers } from 'hardhat';
 import { Contract, ContractFactory, Overrides as OldOverrides } from '@ethersproject/contracts';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { ethers } from 'hardhat';
 
 import {
     BancorNetwork,
@@ -149,14 +149,6 @@ const attachOnly = <C extends Contract>(contractName: string) => {
         }
     };
 };
-
-export async function deploy<T extends ContractFactory>(
-    name: string,
-    args?: Parameters<T['deploy']>
-): Promise<ReturnType<T['deploy']>> {
-    const factory = (await ethers.getContractFactory(name)) as any;
-    return factory.deploy(...(args || []));
-}
 
 export type ContractTypes =
     | Contract

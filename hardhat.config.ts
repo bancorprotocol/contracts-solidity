@@ -6,12 +6,16 @@ import 'tsconfig-paths/register';
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-etherscan';
+import '@typechain/hardhat';
 
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 import 'hardhat-abi-exporter';
 import 'hardhat-gas-reporter';
-import '@typechain/hardhat';
+
+import { HardhatUserConfig } from 'hardhat/config';
+
+import 'tasks';
 
 const configPath = path.join(__dirname, '/config.json');
 const configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
@@ -26,8 +30,6 @@ const loadENVKey = <T>(envKeyName: string) => {
 };
 
 const configNetworks = configFile.networks || {};
-
-import { HardhatUserConfig } from 'hardhat/config';
 
 const config: HardhatUserConfig = {
     networks: {

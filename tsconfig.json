@@ -10,9 +10,10 @@
         "baseUrl": ".",
         "paths": {
             "typechain": ["./typechain"],
-            "contracts": ["./components/Contracts.ts"]
+            "contracts": ["./components/Contracts.ts"],
+            "scripts": ["./scripts"]
         }
     },
-    "include": ["./scripts", "./test", "./tasks", "./packages", "./deployments"],
+    "include": ["./scripts", "./test", "./tasks"],
     "files": ["./hardhat.config.ts"]
 }

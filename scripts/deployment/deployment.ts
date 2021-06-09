@@ -1,7 +1,6 @@
 import { ethers } from 'hardhat';
-import Contracts, { ContractTypes } from 'contracts';
-import { DeploymentConfig } from './types';
-import { BancorSystem } from '../types/deployment';
+import Contracts from 'contracts';
+import { DeploymentConfig, BancorSystem } from './types';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Contract, ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
 
@@ -26,7 +25,7 @@ const basicExecute = async (txExecution: Promise<ContractTransaction>): Promise<
     return (await txExecution).wait();
 };
 
-export const deployment = async (
+export const deploySystem = async (
     signer: Signer,
     config: DeploymentConfig,
     deploy: deployFct = basicDeploy,
@@ -75,24 +74,20 @@ export const deployment = async (
     await execute(converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address));
 
     // initialize network tokens
-    const bntToken = config.networkToken.address
-        ? await Contracts.DSToken.attach(config.networkToken.address)
-        : await deploy(
-              Contracts.DSToken.deploy(
-                  config.networkToken.symbol + ' Token',
-                  config.networkToken.symbol,
-                  config.networkToken.decimals
-              )
-          );
-    const vbntToken = config.networkGovToken.address
-        ? await Contracts.DSToken.attach(config.networkGovToken.address)
-        : await deploy(
-              Contracts.DSToken.deploy(
-                  config.networkGovToken.symbol + ' Token',
-                  config.networkGovToken.symbol,
-                  config.networkGovToken.decimals
-              )
-          );
+    const bntToken = await deploy(
+        Contracts.DSToken.deploy(
+            config.networkToken.symbol + ' Token',
+            config.networkToken.symbol,
+            config.networkToken.decimals
+        )
+    );
+    const vbntToken = await deploy(
+        Contracts.DSToken.deploy(
+            config.networkGovToken.symbol + ' Token',
+            config.networkGovToken.symbol,
+            config.networkGovToken.decimals
+        )
+    );
 
     // give some BNT for adding dual liquidity
     await execute(

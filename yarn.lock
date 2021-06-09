@@ -1234,6 +1234,11 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.1.tgz#a6ca6a9a0ff366af433f42f5f0e124794ff6b8f1"
   integrity sha512-FTgBI767POY/lKNDNbIzgAX6miIDBs6NTCbdlDb8TrWovHsSvaVIZDlTqym29C6UqhzwcJx4CYr+AlrMywA0cA==
 
+"@typechain/ethers-v5@7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-7.0.0.tgz#cadb5262b3827d1616c21f4ba86a36a71269bd7e"
+  integrity sha512-ykNaqYcQ1yC928x8bogL9LECUg0osfqqHCKBhP7qbGlNfvC/bvTiIfnjQUgXUYWEJRx5r0Y78vcKMo8F3sJTBA==
+
 "@typechain/ethers-v5@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-2.0.0.tgz#cd3ca1590240d587ca301f4c029b67bfccd08810"
@@ -1241,15 +1246,12 @@
   dependencies:
     ethers "^5.0.2"
 
-"@typechain/ethers-v5@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-7.0.0.tgz#cadb5262b3827d1616c21f4ba86a36a71269bd7e"
-  integrity sha512-ykNaqYcQ1yC928x8bogL9LECUg0osfqqHCKBhP7qbGlNfvC/bvTiIfnjQUgXUYWEJRx5r0Y78vcKMo8F3sJTBA==
-
-"@typechain/hardhat@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-2.0.1.tgz#93ddf1ff3a03ca2112c5f20aac598d3faae4d54b"
-  integrity sha512-R5q9M9IDYIs9fgqz9zEJrAVKE5N9HOMhhvrr81oSEZvoHkI8NZrr6pLWsqdifYqHnT00ww6ZxllPIrBjW1qnxA==
+"@typechain/hardhat@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-2.0.2.tgz#5cc1e9aba565404f1ee21e430bcda63d9dc97c69"
+  integrity sha512-Bd+8dEdqUBJiQBtCIdzKd/Q7FMuHaggO7DI39aZwOGBo07CyWmdfiRpvfRqnX3SEIrzQsrJ/5YS5EoQjVR39BQ==
+  dependencies:
+    fs-extra "^9.1.0"
 
 "@types/abstract-leveldown@*":
   version "5.0.1"
@@ -2085,6 +2087,11 @@ asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha1-x57Zf380y48robyXkLzDZkdLS3k=
+
+at-least-node@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/at-least-node/-/at-least-node-1.0.0.tgz#602cd4b46e844ad4effc92a8011a3c46e0238dc2"
+  integrity sha512-+q/t7Ekv1EDY2l6Gda6LLiX14rU9TV20Wa3ofeQmwPFZbOMo9DXrLbOjFaaclkXKWidIaopwAObQDqwWtGUjqg==
 
 atob@^2.1.2:
   version "2.1.2"
@@ -5583,6 +5590,16 @@ fs-extra@^8.1.0:
     graceful-fs "^4.2.0"
     jsonfile "^4.0.0"
     universalify "^0.1.0"
+
+fs-extra@^9.1.0:
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-9.1.0.tgz#5954460c764a8da2094ba3554bf839e6b9a7c86d"
+  integrity sha512-hcg3ZmepS30/7BSFqRvoo3DOMQu7IjqxO5nCDt+zM9XWjb33Wg7ziNT+Qvqbuc3+gWpzO02JubVyk2G4Zvo1OQ==
+  dependencies:
+    at-least-node "^1.0.0"
+    graceful-fs "^4.2.0"
+    jsonfile "^6.0.1"
+    universalify "^2.0.0"
 
 fs-minipass@^1.2.5:
   version "1.2.7"
