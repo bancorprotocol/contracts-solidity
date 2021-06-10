@@ -11,7 +11,8 @@
         "paths": {
             "typechain": ["./typechain"],
             "contracts": ["./components/Contracts.ts"],
-            "scripts": ["./scripts"]
+            "scripts": ["./scripts"],
+            "types": ["./components/Types.ts"]
         }
     },
     "include": ["./scripts", "./test", "./tasks"],

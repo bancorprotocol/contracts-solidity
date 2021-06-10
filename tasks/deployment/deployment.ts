@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import DefaultContracts, { Contract } from 'contracts';
-import { DeploymentConfig, BancorSystem } from './types';
+import { DeploymentConfig, BancorSystem } from 'types';
 import { Signer } from '@ethersproject/abstract-signer';
 import { ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
 
@@ -308,31 +308,44 @@ export const deploySystem = async (
     await execute(vortexBurner.acceptNetworkFeeOwnership());
 
     return {
-        contractRegistry: contractRegistry.address,
-        converterFactory: converterFactory.address,
-        bancorNetwork: bancorNetwork.address,
-        conversionPathFinder: conversionPathFinder.address,
-        converterUpgrader: converterUpgrader.address,
-        converterRegistry: converterRegistry.address,
-        converterRegistryData: converterRegistryData.address,
-        networkFeeWallet: networkFeeWallet.address,
-        networkSettings: networkSettings.address,
-        standardPoolConverterFactory: standardPoolConverterFactory.address,
-        bntToken: bntToken.address,
-        vbntToken: vbntToken.address,
-        liquidityProtectionSettings: liquidityProtectionSettings.address,
-        reserves: reserves,
+        system: {
+            bntToken: bntToken.address,
+            vbntToken: vbntToken.address,
+
+            bancorNetwork: bancorNetwork.address,
+            contractRegistry: contractRegistry.address,
+            networkFeeWallet: networkFeeWallet.address,
+            networkSettings: networkSettings.address,
+            conversionPathFinder: conversionPathFinder.address,
+            vortexBurner: vortexBurner.address
+        },
+        converter: {
+            converterFactory: converterFactory.address,
+            converterUpgrader: converterUpgrader.address,
+            converterRegistry: converterRegistry.address,
+            converterRegistryData: converterRegistryData.address,
+            standardPoolConverterFactory: standardPoolConverterFactory.address
+        },
         converters: converters,
-        bntTokenGovernance: bntTokenGovernance.address,
-        vbntTokenGovernance: vbntTokenGovernance.address,
-        checkpointStore: checkpointStore.address,
-        stakingRewardsStore: stakingRewardsStore.address,
-        stakingRewards: stakingRewards.address,
-        liquidityProtectionStore: liquidityProtectionStore.address,
-        liquidityProtectionStats: liquidityProtectionStats.address,
-        liquidityProtectionSystemStore: liquidityProtectionSystemStore.address,
-        liquidityProtectionWallet: liquidityProtectionWallet.address,
-        liquidityProtection: liquidityProtection.address,
-        vortexBurner: vortexBurner.address
+
+        governance: {
+            bntTokenGovernance: bntTokenGovernance.address,
+            vbntTokenGovernance: vbntTokenGovernance.address
+        },
+        liquidityProtection: {
+            liquidityProtectionSettings: liquidityProtectionSettings.address,
+            liquidityProtectionStore: liquidityProtectionStore.address,
+            liquidityProtectionStats: liquidityProtectionStats.address,
+            liquidityProtectionSystemStore: liquidityProtectionSystemStore.address,
+            liquidityProtectionWallet: liquidityProtectionWallet.address,
+            liquidityProtection: liquidityProtection.address,
+            checkpointStore: checkpointStore.address
+        },
+        stakingRewards: {
+            stakingRewardsStore: stakingRewardsStore.address,
+            stakingRewards: stakingRewards.address
+        },
+
+        reserves: reserves
     };
 };

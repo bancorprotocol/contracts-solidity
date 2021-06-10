@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { LedgerSigner } from '@ethersproject/hardware-wallets';
-import { DeploymentConfig } from './types';
+import { DeploymentConfig } from 'types';
 import { deployFct, deploySystem, executeFct } from 'tasks/deployment/deployment';
 import { ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
 import { Contract } from 'contracts';
