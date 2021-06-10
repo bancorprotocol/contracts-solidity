@@ -20,4 +20,7 @@ coverage.json
 allFiredEvents
 scTopics
 
+deployments-data/*localhost.json
+deployments-data/*hardhat.json
+
 config.json

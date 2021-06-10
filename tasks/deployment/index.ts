@@ -6,4 +6,4 @@ task('deploy', 'Deploy')
     .addParam('configPath', 'Deployment Configuration file path', 'exemple.deployment.json', types.inputFile)
     .addParam('ledgerPath', 'Ledger path', "m/44'/60'/0'/0", types.string)
     //
-    .setAction(lazyAction('tasks/deployment/task.ts'));
+    .setAction(lazyAction('tasks/deployment/deployment.ts'));

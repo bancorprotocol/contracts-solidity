@@ -64,8 +64,6 @@ export type BancorSystem = {
         converterRegistryData: string;
         standardPoolConverterFactory: string;
     };
-    converters: { [symbol: string]: { address: string; symbol: string } };
-
     governance: {
         bntTokenGovernance: string;
         vbntTokenGovernance: string;
@@ -83,6 +81,4 @@ export type BancorSystem = {
         stakingRewardsStore: string;
         stakingRewards: string;
     };
-
-    reserves: { [symbol: string]: { address: string; decimals: number } };
 };

@@ -1,8 +1,11 @@
+import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { LedgerSigner } from '@ethersproject/hardware-wallets';
+import { loadConfig, saveConfig, deploy, execute } from '../utils';
 import { ethers } from 'hardhat';
 import DefaultContracts, { Contract } from 'contracts';
 import { DeploymentConfig, BancorSystem } from 'types';
 import { Signer } from '@ethersproject/abstract-signer';
-import { ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
+import { basicDeploy, basicExecute, deployFct, executeFct } from 'tasks/utils';
 
 const {
     BigNumber,
@@ -14,17 +17,6 @@ const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
 
 const toWei = (value: number, decimals: number) => BigNumber.from(value).mul(BigNumber.from(10).pow(decimals));
 const percentageToPPM = (value: string) => (Number(value.replace('%', '')) * 1_000_000) / 100;
-
-export type deployFct = <C extends Contract>(name: string, toDeployContract: Promise<C>) => Promise<C>;
-const basicDeploy: deployFct = async <C extends Contract>(_: string, toDeployContract: Promise<C>): Promise<C> => {
-    const contract = await toDeployContract;
-    await contract.deployTransaction.wait();
-    return contract;
-};
-export type executeFct = (txExecution: Promise<ContractTransaction>) => Promise<ContractReceipt>;
-const basicExecute = async (txExecution: Promise<ContractTransaction>): Promise<ContractReceipt> => {
-    return (await txExecution).wait();
-};
 
 export const deploySystem = async (
     signer: Signer,
@@ -195,7 +187,7 @@ export const deploySystem = async (
         }
 
         if (converter.protected) {
-            await execute(liquidityProtectionSettings.addPoolToWhitelist(converterAnchor.address));
+            await execute(liquidityProtectionSettings.addPoolToWhitelist(standardConverter.address));
         }
 
         index++;
@@ -326,7 +318,6 @@ export const deploySystem = async (
             converterRegistryData: converterRegistryData.address,
             standardPoolConverterFactory: standardPoolConverterFactory.address
         },
-        converters: converters,
 
         governance: {
             bntTokenGovernance: bntTokenGovernance.address,
@@ -344,8 +335,24 @@ export const deploySystem = async (
         stakingRewards: {
             stakingRewardsStore: stakingRewardsStore.address,
             stakingRewards: stakingRewards.address
-        },
-
-        reserves: reserves
+        }
     };
+};
+
+export default async (
+    args: {
+        ledger: boolean;
+        configPath: string;
+        ledgerPath: string;
+    },
+    hre: HardhatRuntimeEnvironment
+) => {
+    const signer = args.ledger
+        ? new LedgerSigner(hre.ethers.provider, 'hid', args.ledgerPath)
+        : (await hre.ethers.getSigners())[0];
+    const config = await loadConfig<DeploymentConfig>(args.configPath);
+
+    const deployedSystem = await deploySystem(signer, config, deploy, execute);
+    await saveConfig('bancorSystem', deployedSystem);
+    console.log('Deployed !');
 };
