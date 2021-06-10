@@ -7,7 +7,7 @@ const humanizeDuration = require('humanize-duration');
 const { set } = require('lodash');
 
 const Constants = require('../helpers/Constants');
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 const { duration, latest } = require('../helpers/Time');
 

@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { ZERO_ADDRESS } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('./../../Components/Contracts').default;
 
 const portion1 = BigNumber.from(111);
 const portion2 = BigNumber.from(222);

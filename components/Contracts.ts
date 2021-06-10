@@ -128,7 +128,7 @@ const deployOrAttach = <C extends Contract, F extends ContractFactory>(
             let defaultSigner = passedSigner ? passedSigner : (await ethers.getSigners())[0];
 
             // If similar then last param is override
-            if (args.length === deployParamLength) {
+            if (args.length != 0 && args.length === deployParamLength) {
                 const overrides = args.pop() as Overrides;
 
                 const contractFactory = await ethers.getContractFactory(
@@ -268,7 +268,7 @@ const getContracts = (signer?: Signer) => {
             ConverterV27OrLowerWithFallback & ContractName,
             ConverterV27OrLowerWithFallback__factory
         >(ConverterV27OrLowerWithFallback__factory.prototype.deploy.length, 'ConverterV27OrLowerWithFallback'),
-        ConverterV27OrLowerWithoutFallback: deployOrAttach<Contract, ContractFactory>(
+        ConverterV27OrLowerWithoutFallback: deployOrAttach<Contract & ContractName, ContractFactory>(
             ContractFactory.prototype.deploy.length,
             'ConverterV27OrLowerWithoutFallback',
             signer

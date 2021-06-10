@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS } = require('../helpers/Constants');
 
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 const TOTAL_SUPPLY = BigNumber.from(1_000_000);
 

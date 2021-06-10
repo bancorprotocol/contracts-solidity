@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 
 const { registry } = require('../helpers/Constants');
 
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 let accounts;
 let owner;

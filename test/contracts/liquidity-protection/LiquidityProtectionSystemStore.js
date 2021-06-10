@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { roles } = require('../helpers/Constants');
 
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 let liquidityProtectionSystemStore;
 

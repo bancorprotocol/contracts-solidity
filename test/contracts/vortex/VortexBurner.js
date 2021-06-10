@@ -3,7 +3,7 @@ const { BigNumber } = require('ethers');
 const { ethers } = require('hardhat');
 
 const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS } = require('../helpers/Constants');
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 const PPM_RESOLUTION = BigNumber.from(1_000_000);
 

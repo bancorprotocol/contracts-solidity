@@ -5,7 +5,7 @@ const { BigNumber } = require('ethers');
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry, roles } = require('../helpers/Constants');
 
 const ConverterHelper = require('../helpers/ConverterHelper');
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 chai.use(require('chai-arrays'));
 const { expect } = chai;
@@ -66,7 +66,9 @@ describe('LiquidityProtectionSettings', () => {
 
         const converterFactory = await Contracts.ConverterFactory.deploy();
         await converterFactory.registerTypedConverterFactory(
-            (await Contracts.TestStandardPoolConverterFactory.deploy()).address
+            (
+                await Contracts.TestStandardPoolConverterFactory.deploy()
+            ).address
         );
 
         const bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);

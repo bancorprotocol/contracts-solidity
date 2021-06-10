@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { roles } = require('../helpers/Constants');
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 chai.use(require('chai-arrays'));
 const { expect } = chai;

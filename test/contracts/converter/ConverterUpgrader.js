@@ -6,7 +6,7 @@ const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../helpers/Con
 
 const ConverterHelper = require('../helpers/ConverterHelper');
 
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 const CONVERSION_FEE = BigNumber.from(1000);
 const MAX_CONVERSION_FEE = BigNumber.from(30000);
@@ -170,7 +170,9 @@ describe('ConverterUpgrader', () => {
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);
 
         await converterFactory.registerTypedConverterFactory(
-            (await Contracts.StandardPoolConverterFactory.deploy()).address
+            (
+                await Contracts.StandardPoolConverterFactory.deploy()
+            ).address
         );
     });
 

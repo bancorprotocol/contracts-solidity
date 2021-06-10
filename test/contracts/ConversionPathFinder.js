@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const Contracts = require('./helpers/Contracts');
+const Contracts = require('./../../Components/Contracts').default;
 
 chai.use(require('chai-arrays'));
 const { expect } = chai;
@@ -136,7 +136,9 @@ describe('ConversionPathFinder', () => {
         pathFinder = await Contracts.ConversionPathFinder.deploy(contractRegistry.address);
 
         await converterFactory.registerTypedConverterFactory(
-            (await Contracts.StandardPoolConverterFactory.deploy()).address
+            (
+                await Contracts.StandardPoolConverterFactory.deploy()
+            ).address
         );
 
         await contractRegistry.registerAddress(registry.CONVERTER_FACTORY, converterFactory.address);

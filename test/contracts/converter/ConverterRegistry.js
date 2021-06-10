@@ -2,7 +2,7 @@ const chai = require('chai');
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../helpers/Constants');
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 chai.use(require('chai-arrays'));
 const { expect } = chai;
@@ -21,7 +21,9 @@ describe('ConverterRegistry', () => {
         converterFactory = await Contracts.ConverterFactory.deploy();
 
         await converterFactory.registerTypedConverterFactory(
-            (await Contracts.StandardPoolConverterFactory.deploy()).address
+            (
+                await Contracts.StandardPoolConverterFactory.deploy()
+            ).address
         );
     });
 

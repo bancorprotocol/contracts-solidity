@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { BigNumber } = require('ethers');
 
 const MathUtils = require('../helpers/MathUtils');
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 const { Decimal, floorSqrt, ceilSqrt, reducedRatio, normalizedRatio, accurateRatio, roundDiv } = MathUtils;
 

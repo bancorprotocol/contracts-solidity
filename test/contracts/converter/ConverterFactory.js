@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const Constants = require('../helpers/Constants');
 
-const Contracts = require('../helpers/Contracts');
+const Contracts = require('../../../Components/Contracts').default;
 
 const Factories = {
     StandardPoolConverterFactory: Contracts.StandardPoolConverterFactory
