@@ -1,1 +1,2 @@
 import './deployment';
+import './management';

@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import Contracts, { Contract } from 'contracts';
+import DefaultContracts, { Contract } from 'contracts';
 import { DeploymentConfig, BancorSystem } from './types';
 import { Signer } from '@ethersproject/abstract-signer';
 import { ContractReceipt, ContractTransaction } from '@ethersproject/contracts';
@@ -36,6 +36,8 @@ export const deploySystem = async (
     const ROLE_GOVERNOR = id('ROLE_GOVERNOR');
     const ROLE_MINTER = id('ROLE_MINTER');
     const ROLE_PUBLISHER = id('ROLE_PUBLISHER');
+
+    const Contracts = DefaultContracts.connect(signer);
 
     // main contracts
     const contractRegistry = await deploy('contractRegistry', Contracts.ContractRegistry.deploy());
@@ -151,6 +153,7 @@ export const deploySystem = async (
         }
     }
 
+    const converters: { [symbol: string]: { address: string; symbol: string } } = {};
     var index = 0;
     for (const converter of config.converters) {
         const { symbol, decimals, fee } = converter;
@@ -174,6 +177,7 @@ export const deploySystem = async (
         const converterAnchor = await Contracts.IConverterAnchor.attach(await converterRegistry.getAnchor(index));
 
         const standardConverter = await Contracts.StandardPoolConverter.attach(await converterAnchor.owner());
+        converters[converter.symbol] = { symbol: converter.symbol, address: standardConverter.address };
         await execute(standardConverter.acceptOwnership());
         await execute(standardConverter.setConversionFee(percentageToPPM(fee)));
 
@@ -303,5 +307,32 @@ export const deploySystem = async (
     await execute(networkFeeWallet.transferOwnership(vortexBurner.address));
     await execute(vortexBurner.acceptNetworkFeeOwnership());
 
-    return {};
+    return {
+        contractRegistry: contractRegistry.address,
+        converterFactory: converterFactory.address,
+        bancorNetwork: bancorNetwork.address,
+        conversionPathFinder: conversionPathFinder.address,
+        converterUpgrader: converterUpgrader.address,
+        converterRegistry: converterRegistry.address,
+        converterRegistryData: converterRegistryData.address,
+        networkFeeWallet: networkFeeWallet.address,
+        networkSettings: networkSettings.address,
+        standardPoolConverterFactory: standardPoolConverterFactory.address,
+        bntToken: bntToken.address,
+        vbntToken: vbntToken.address,
+        liquidityProtectionSettings: liquidityProtectionSettings.address,
+        reserves: reserves,
+        converters: converters,
+        bntTokenGovernance: bntTokenGovernance.address,
+        vbntTokenGovernance: vbntTokenGovernance.address,
+        checkpointStore: checkpointStore.address,
+        stakingRewardsStore: stakingRewardsStore.address,
+        stakingRewards: stakingRewards.address,
+        liquidityProtectionStore: liquidityProtectionStore.address,
+        liquidityProtectionStats: liquidityProtectionStats.address,
+        liquidityProtectionSystemStore: liquidityProtectionSystemStore.address,
+        liquidityProtectionWallet: liquidityProtectionWallet.address,
+        liquidityProtection: liquidityProtection.address,
+        vortexBurner: vortexBurner.address
+    };
 };
