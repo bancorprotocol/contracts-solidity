@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS } = require('../helpers/Constants');
 
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 let holder;
 let token;

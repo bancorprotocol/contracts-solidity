@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const Constants = require('../helpers/Constants');
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 const { ZERO_ADDRESS } = require('../helpers/Constants');
 const { CONVERTER_FACTORY, CONVERTER_REGISTRY, CONVERTER_REGISTRY_DATA } = Constants.registry;

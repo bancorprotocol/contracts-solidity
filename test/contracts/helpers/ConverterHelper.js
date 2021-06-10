@@ -5,7 +5,7 @@ const { ethers } = require('hardhat');
 const { ContractFactory } = require('ethers');
 const { ZERO_ADDRESS } = require('./Constants');
 
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 module.exports.new = async (
     type,

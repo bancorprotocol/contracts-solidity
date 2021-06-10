@@ -2,7 +2,7 @@ const chai = require('chai');
 const { BigNumber } = require('ethers');
 
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../helpers/Constants');
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 chai.use(require('chai-arrays'));
 const { expect } = chai;

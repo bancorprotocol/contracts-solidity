@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 const { BigNumber } = require('ethers');
 
 const { registry } = require('../helpers/Constants');
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 const contractName1 = 'red';
 const contractName2 = 'blue';

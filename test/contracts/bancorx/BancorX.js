@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { advanceBlock } = require('../helpers/Time');
 
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 const MAX_LOCK_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens
 const MAX_RELEASE_LIMIT = BigNumber.from('1000000000000000000000'); // 1000 tokens

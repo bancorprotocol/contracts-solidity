@@ -3,7 +3,7 @@ const { ethers } = require('hardhat');
 
 const { NATIVE_TOKEN_ADDRESS, registry } = require('./helpers/Constants');
 
-const Contracts = require('./../../Components/Contracts').default;
+const Contracts = require('./../../components/Contracts').default;
 
 chai.use(require('chai-arrays'));
 const { expect } = chai;

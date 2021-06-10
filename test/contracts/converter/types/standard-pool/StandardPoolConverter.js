@@ -6,7 +6,7 @@ const { Decimal } = require('../../../helpers/MathUtils');
 const { latest, duration } = require('../../../helpers/Time');
 const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('../../../helpers/Constants');
 
-const Contracts = require('../../../../../Components/Contracts').default;
+const Contracts = require('../../../../../components/Contracts').default;
 
 let now;
 let bancorNetwork;

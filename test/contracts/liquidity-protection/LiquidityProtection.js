@@ -5,7 +5,7 @@ const { BigNumber } = require('ethers');
 const { ZERO_ADDRESS, registry, roles, MAX_UINT256, NATIVE_TOKEN_ADDRESS } = require('../helpers/Constants');
 const { duration, latest } = require('../helpers/Time');
 
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 const { Decimal } = require('../helpers/MathUtils');
 
 chai.use(require('chai-arrays'));

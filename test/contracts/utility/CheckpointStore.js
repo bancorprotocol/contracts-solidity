@@ -6,7 +6,7 @@ const { duration } = require('../helpers/Time');
 const { roles } = require('../helpers/Constants');
 const { ROLE_OWNER, ROLE_SEEDER } = roles;
 
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 let checkpointStore;
 

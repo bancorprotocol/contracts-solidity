@@ -4,7 +4,7 @@ const { BigNumber } = require('ethers');
 
 const { ZERO_ADDRESS } = require('../helpers/Constants');
 
-const Contracts = require('../../../Components/Contracts').default;
+const Contracts = require('../../../components/Contracts').default;
 
 const name = 'Token1';
 const symbol = 'TKN1';
