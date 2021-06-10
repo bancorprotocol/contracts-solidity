@@ -1,3 +1,8 @@
+### 0.6.39
+General
+* Fixed a minor issue in the test deployment script
+
+
 ### 0.6.38
 LiquidityProtection
 * `transferPositionAndCall` replaced by `transferPositionAndNotify` with predefined callback interface
