@@ -1,4 +1,4 @@
-*Work on Bancor V3 is in progress and future changes will be incrementally merged into this repo. Stay tuned!*
+## 🎉🎉 *Work on Bancor V3 is in progress and future changes will be incrementally merged into this repo. Stay tuned!* 🎉🎉 ##
 
 # Bancor Protocol Contracts v0.6 (beta)
 
