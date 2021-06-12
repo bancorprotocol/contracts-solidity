@@ -30,22 +30,6 @@
     ],
     "converters": [
         {
-            "symbol": "BNTETH",
-            "decimals": 18,
-            "fee": "0.1%",
-            "protected": true,
-            "reserves": [
-                {
-                    "symbol": "BNT",
-                    "balance": 3092
-                },
-                {
-                    "symbol": "ETH",
-                    "balance": 21
-                }
-            ]
-        },
-        {
             "symbol": "BNTXXX",
             "decimals": 18,
             "fee": "0.1%",

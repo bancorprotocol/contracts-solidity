@@ -1,0 +1,38 @@
+{
+    "system": {
+        "bntToken": "0x1F573D6Fb3F13d689FF844B4cE37794d79a7FF1C",
+        "vbntToken": "0x48Fb253446873234F2fEBbF9BdeAA72d9d387f94",
+
+        "bancorNetwork": "0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0",
+        "contractRegistry": "0x52Ae12ABe5D8BD778BD5397F99cA900624CfADD4",
+        "networkFeeWallet": "0xeBcC959479634EEC5A4d7162e36f8B8cc763f491",
+        "networkSettings": "0x59d03727D8f3Fc695CA74f2DFdF0fd698424e0A2",
+        "conversionPathFinder": "0xA48E64a3A60594E893BBBBa28f8e0eA576bBE489",
+        "vortexBurner": "0x2f87b1fca1769BC3361700078e1985b2Dc0f1142"
+    },
+    "converter": {
+        "converterFactory": "0x4ade0e57Bc2E129f62547af4d620fB40d28EA269",
+        "converterUpgrader": "0x7DfB5180878B43C6Ff5aA6A2Ea55Db20Bcc87410",
+        "converterRegistry": "0xC0205e203F423Bcd8B2a4d6f8C8A154b0Aa60F19",
+        "converterRegistryData": "0x2BF0B9119535a7a5E9a3f8aD1444594845c3A86B",
+        "standardPoolConverterFactory": "0xff7015744DCB1389dfe0C072cE209C57eEeb9F3d"
+    },
+
+    "governance": {
+        "bntTokenGovernance": "0xa489C2b5b36835A327851Ab917A80562B5AFC244",
+        "vbntTokenGovernance": "0x0887ae1251E180d7D453aeDEBee26e1639f20113"
+    },
+    "liquidityProtection": {
+        "liquidityProtectionSettings": "0xF7D28FaA1FE9Ea53279fE6e3Cde75175859bdF46",
+        "liquidityProtectionStore": "0xf5FAB5DBD2f3bf675dE4cB76517d4767013cfB55",
+        "liquidityProtectionStats": "0x9712Bb50DC6Efb8a3d7D12cEA500a50967d2d471",
+        "liquidityProtectionSystemStore": "0xc4C5634De585d43DaEC8fA2a6Fb6286cd9B87131",
+        "liquidityProtectionWallet": "0xD1D846312B819743974786050848D9B3d06b9b55",
+        "liquidityProtection": "0x853c2D147a1BD7edA8FE0f58fb3C5294dB07220e",
+        "checkpointStore": "0xF8a2FB650e25a26CE839D64bE8a0aBbCb0b87B32"
+    },
+    "stakingRewards": {
+        "stakingRewardsStore": "0x891AfF26593Da95e574E3f62619dAD6624FB5693",
+        "stakingRewards": "0x4B90695C2013FC60df1e168c2bCD4Fd12f5C9841"
+    }
+}

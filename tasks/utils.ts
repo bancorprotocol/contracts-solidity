@@ -13,30 +13,51 @@ export const basicDeploy: deployFct = async <C extends Contract>(
     toDeployContract: Promise<C>
 ): Promise<C> => {
     const contract = await toDeployContract;
-    await contract.deployTransaction.wait();
+    const receipt = await contract.deployTransaction.wait();
+
+    if (receipt.status !== 1) {
+        throw new Error('Deploy failed');
+    }
+
     return contract;
 };
 export const basicExecute = async (txExecution: Promise<ContractTransaction>): Promise<ContractReceipt> => {
-    return (await txExecution).wait();
+    const tx = await txExecution;
+    const receipt = await tx.wait();
+
+    if (receipt.status !== 1) {
+        throw new Error('Tx failed');
+    }
+
+    return receipt;
 };
 
 // Advanced
-export const deploy: deployFct = async <C extends Contract>(name: string, toDeployContract: Promise<C>): Promise<C> => {
+export const advancedDeploy: deployFct = async <C extends Contract>(
+    name: string,
+    toDeployContract: Promise<C>
+): Promise<C> => {
     const contract = await toDeployContract;
     console.log(`Deploying contract ${name} (${contract.__contractName__})`);
     console.log('Tx: ', contract.deployTransaction.hash);
 
     console.log('Waiting to be mined ...');
-    await contract.deployTransaction.wait();
+    const receipt = await contract.deployTransaction.wait();
+
+    if (receipt.status !== 1) {
+        throw new Error('Deploy failed');
+    }
 
     console.log(`Deployed at ${contract.address} 🚀 `);
     return contract;
 };
-export const execute: executeFct = async (txExecution: Promise<ContractTransaction>): Promise<ContractReceipt> => {
+export const advancedExecute: executeFct = async (
+    txExecution: Promise<ContractTransaction>
+): Promise<ContractReceipt> => {
     const tx = await txExecution;
     console.log('Executing tx: ', tx.hash);
 
-    const receipt = await (await txExecution).wait();
+    const receipt = await tx.wait();
 
     if (receipt.status !== 1) {
         throw new Error('Tx failed');

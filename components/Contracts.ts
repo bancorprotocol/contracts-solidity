@@ -1,6 +1,6 @@
 import { ethers } from 'hardhat';
 import { Contract as OldContract, ContractFactory, Overrides as OldOverrides } from '@ethersproject/contracts';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { Signer } from '@ethersproject/abstract-signer';
 
 import {
     BancorNetwork,
@@ -99,7 +99,6 @@ import {
     VortexBurner,
     VortexBurner__factory
 } from 'typechain';
-import { Signer } from '@ethersproject/abstract-signer';
 
 // Replace type of the last param of a function
 type LastIndex<T extends readonly any[]> = ((...t: T) => void) extends (x: any, ...r: infer R) => void
@@ -112,8 +111,7 @@ type ReplaceLast<F, TReplace> = F extends (...args: infer T) => infer R
     ? (...args: ReplaceLastParam<T, TReplace>) => R
     : never;
 
-type Overrides = OldOverrides & { from?: SignerWithAddress };
-
+export type Overrides = OldOverrides & { from?: Signer };
 export type Contract = OldContract & { __contractName__: string };
 
 const deployOrAttach = <C extends Contract, F extends ContractFactory>(
@@ -153,7 +151,7 @@ const deployOrAttach = <C extends Contract, F extends ContractFactory>(
 
 const attachOnly = <C extends Contract>(contractName: string, passedSigner?: Signer) => {
     return {
-        attach: async (address: string, signer?: SignerWithAddress): Promise<C> => {
+        attach: async (address: string, signer?: Signer): Promise<C> => {
             let defaultSigner = passedSigner ? passedSigner : (await ethers.getSigners())[0];
             const contract = (await ethers.getContractAt(contractName, address, signer ? signer : defaultSigner)) as C;
             contract.__contractName__ = contractName;
