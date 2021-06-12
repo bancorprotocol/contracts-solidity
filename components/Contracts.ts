@@ -215,6 +215,7 @@ type ContractName = { __contractName__: string };
 
 const getContracts = (signer?: Signer) => {
     return {
+        // Link every contract to a default signer
         connect: (signer: Signer) => getContracts(signer),
 
         BancorNetwork: deployOrAttach<BancorNetwork & ContractName, BancorNetwork__factory>(
