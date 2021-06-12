@@ -1,6 +1,7 @@
 import { ethers } from 'hardhat';
 
 import { deploySystem } from 'tasks/deployment/deployment';
+import { basicDeploy, basicExecute } from 'tasks/utils';
 import { DeploymentConfig } from 'types';
 
 const testDeploymentConfig: DeploymentConfig = {
@@ -95,6 +96,6 @@ const testDeploymentConfig: DeploymentConfig = {
 
 describe('Deployment', () => {
     it('should properly deploy initial network', async () => {
-        await deploySystem((await ethers.getSigners())[0], testDeploymentConfig);
+        await deploySystem((await ethers.getSigners())[0], testDeploymentConfig, {}, basicDeploy, basicExecute);
     });
 });
