@@ -239,10 +239,22 @@ contract StakingRewards is IStakingRewards, AccessControl, Time, Utils, Contract
     }
 
     /**
-     * @dev stakes specific pending rewards from all participating pools
+     * @dev stakes all pending rewards into another participating pool
      */
-    function stakeRewards(uint256 maxAmount, IDSToken poolToken) external override returns (uint256, uint256) {
-        return _stakeRewards(msg.sender, maxAmount, poolToken, _liquidityProtectionStats());
+    function stakeRewards(uint256 maxAmount, IDSToken newPoolToken) external override returns (uint256, uint256) {
+        return _stakeRewards(msg.sender, maxAmount, newPoolToken, _liquidityProtectionStats());
+    }
+
+    /**
+     * @dev stakes specific pending rewards into another participating pool
+     */
+    function stakeReserveRewards(
+        IDSToken poolToken,
+        IReserveToken reserveToken,
+        uint256 maxAmount,
+        IDSToken newPoolToken
+    ) external override returns (uint256, uint256) {
+        return _stakeRewards(msg.sender, poolToken, reserveToken, maxAmount, newPoolToken, _liquidityProtectionStats());
     }
 
     /**
@@ -520,7 +532,7 @@ contract StakingRewards is IStakingRewards, AccessControl, Time, Utils, Contract
     }
 
     /**
-     * @dev claims and stakes specific provider's pending rewards for a specific list of participating pools
+     * @dev claims and stakes specific provider's pending rewards from a specific list of participating pools
      */
     function _stakeRewards(
         address provider,
@@ -534,6 +546,37 @@ contract StakingRewards is IStakingRewards, AccessControl, Time, Utils, Contract
             return (amount, 0);
         }
 
+        return (amount, _stakeClaimedRewards(amount, provider, newPoolToken));
+    }
+
+    /**
+     * @dev claims and stakes specific provider's pending rewards from a specific list of participating pools
+     */
+    function _stakeRewards(
+        address provider,
+        IDSToken poolToken,
+        IReserveToken reserveToken,
+        uint256 maxAmount,
+        IDSToken newPoolToken,
+        ILiquidityProtectionStats lpStats
+    ) private returns (uint256, uint256) {
+        uint256 amount =
+            _claimPendingRewards(provider, poolToken, reserveToken, _poolProgram(poolToken), maxAmount, lpStats, false);
+        if (amount == 0) {
+            return (amount, 0);
+        }
+
+        return (amount, _stakeClaimedRewards(amount, provider, newPoolToken));
+    }
+
+    /**
+     * @dev stakes claimed rewards into another participating pool
+     */
+    function _stakeClaimedRewards(
+        uint256 amount,
+        address provider,
+        IDSToken newPoolToken
+    ) private returns (uint256) {
         // approve the LiquidityProtection contract to pull the rewards
         ILiquidityProtection liquidityProtection = _liquidityProtection();
         address liquidityProtectionAddress = address(liquidityProtection);
@@ -551,7 +594,7 @@ contract StakingRewards is IStakingRewards, AccessControl, Time, Utils, Contract
 
         emit RewardsStaked(provider, newPoolToken, amount, newId);
 
-        return (amount, newId);
+        return newId;
     }
 
     /**

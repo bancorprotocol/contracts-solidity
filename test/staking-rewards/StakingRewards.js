@@ -860,6 +860,74 @@ describe('StakingRewards', () => {
             return newReward;
         };
 
+        const testReserveStaking = async (
+            provider,
+            poolToken,
+            reserveToken,
+            amount,
+            newPoolToken,
+            participating = false
+        ) => {
+            const { address: poolTokenAddress } = poolToken;
+            const { address: reserveTokenAddress } = reserveToken;
+            const { address: providerAddress } = provider;
+            const { address: newPoolTokenAddress } = newPoolToken;
+
+            const reward = await staking.pendingRewards(providerAddress);
+            const poolReward = await staking.pendingPoolRewards(providerAddress, poolTokenAddress);
+            const reserveReward = await staking.pendingReserveRewards(
+                providerAddress,
+                poolTokenAddress,
+                reserveTokenAddress
+            );
+
+            const data = await staking
+                .connect(provider)
+                .callStatic.stakeReserveRewards(poolTokenAddress, reserveTokenAddress, amount, newPoolTokenAddress);
+            const staked = data[0];
+            const newId = data[1];
+
+            const prevTotalProviderClaimed = await staking.totalClaimedRewards(providerAddress);
+            await expect(
+                staking
+                    .connect(provider)
+                    .stakeReserveRewards(poolTokenAddress, reserveTokenAddress, amount, newPoolTokenAddress)
+            )
+                .to.emit(staking, 'RewardsStaked')
+                .withArgs(providerAddress, newPoolTokenAddress, amount, newId);
+
+            // If we're staking to a participating pool, don't forget to update the local liquidity state for staking.
+            if (participating) {
+                addTestLiquidity(provider, newPoolToken, networkToken, amount);
+            }
+
+            expect(await staking.totalClaimedRewards(providerAddress)).to.equal(prevTotalProviderClaimed.add(staked));
+
+            const position = await getPosition(provider, newId);
+            expect(position.poolToken).to.equal(newPoolTokenAddress);
+            expect(position.reserveToken).to.equal(networkToken.address);
+            expect(position.reserveAmount).to.equal(amount);
+
+            const newReserveReward = await staking.pendingReserveRewards(
+                providerAddress,
+                poolTokenAddress,
+                reserveTokenAddress
+            );
+
+            // Take into account that there might be very small imprecisions when dealing with multipliers
+            if (newReserveReward.eq(BigNumber.from(0))) {
+                expect(newReserveReward).to.be.closeTo(reserveReward.sub(amount), BigNumber.from(1));
+            } else {
+                expectAlmostEqual(newReserveReward, reserveReward.sub(amount));
+            }
+
+            const diff = reserveReward.sub(newReserveReward);
+            expect(await staking.pendingRewards(providerAddress)).to.equal(reward.sub(diff));
+            expect(await staking.pendingPoolRewards(providerAddress, poolTokenAddress)).to.equal(poolReward.sub(diff));
+
+            return newReserveReward;
+        };
+
         const tests = (providersIndices = []) => {
             for (let i = 0; i < providersIndices.length; ++i) {
                 context(`provider #${providersIndices[i]}`, () => {
@@ -1611,6 +1679,205 @@ describe('StakingRewards', () => {
                             );
 
                             expect(await staking.pendingRewards(providerAddress)).to.equal(BigNumber.from(0));
+                        });
+
+                        it('should partially stake reserve specific rewards', async () => {
+                            // Should partially claim rewards for the duration of 5 hours.
+                            await setTime(now.add(duration.hours(5)));
+
+                            for (const token of [networkToken, reserveToken]) {
+                                let reward = await staking.pendingReserveRewards(
+                                    providerAddress,
+                                    poolToken.address,
+                                    token.address
+                                );
+                                expect(reward).to.equal(
+                                    getExpectedReserveRewards(
+                                        provider,
+                                        poolToken.address,
+                                        token.address,
+                                        now.sub(prevNow)
+                                    )
+                                );
+
+                                let amount = reward.div(BigNumber.from(2));
+                                while (reward.gt(BigNumber.from(0))) {
+                                    amount = BigNumber.min(amount, reward);
+
+                                    reward = await testReserveStaking(provider, poolToken, token, amount, poolToken4);
+                                }
+
+                                expect(
+                                    await staking.pendingReserveRewards(
+                                        providerAddress,
+                                        poolToken.address,
+                                        token.address
+                                    )
+                                ).to.equal(BigNumber.from(0));
+                            }
+
+                            await setTime(programStartTime.add(duration.days(1)));
+
+                            for (const token of [networkToken, reserveToken]) {
+                                let reward = await staking.pendingReserveRewards(
+                                    providerAddress,
+                                    poolToken.address,
+                                    token.address
+                                );
+                                expect(reward).to.equal(
+                                    getExpectedReserveRewards(
+                                        provider,
+                                        poolToken.address,
+                                        token.address,
+                                        now.sub(prevNow)
+                                    )
+                                );
+
+                                let amount = reward.div(BigNumber.from(2));
+                                while (reward.gt(BigNumber.from(0))) {
+                                    amount = BigNumber.min(amount, reward);
+
+                                    reward = await testReserveStaking(provider, poolToken, token, amount, poolToken4);
+                                }
+
+                                expect(
+                                    await staking.pendingReserveRewards(
+                                        providerAddress,
+                                        poolToken.address,
+                                        token.address
+                                    )
+                                ).to.equal(BigNumber.from(0));
+                            }
+
+                            // Should return all weekly rewards, excluding previously granted rewards, but without the
+                            // multiplier bonus.
+                            await setTime(now.add(duration.weeks(1)));
+                            await staking.connect(provider).claimRewards();
+
+                            // Should return all the rewards for the two weeks, excluding previously granted rewards
+                            await setTime(now.add(duration.weeks(2)));
+
+                            for (const token of [networkToken, reserveToken]) {
+                                let reward = await staking.pendingReserveRewards(
+                                    providerAddress,
+                                    poolToken.address,
+                                    token.address
+                                );
+                                expect(reward).to.equal(
+                                    getExpectedReserveRewards(
+                                        provider,
+                                        poolToken.address,
+                                        token.address,
+                                        now.sub(prevNow),
+                                        duration.weeks(2)
+                                    )
+                                );
+
+                                let amount = reward.div(BigNumber.from(2));
+                                while (reward.gt(BigNumber.from(0))) {
+                                    amount = BigNumber.min(amount, reward);
+
+                                    reward = await testReserveStaking(provider, poolToken, token, amount, poolToken4);
+                                }
+
+                                expect(
+                                    await staking.pendingReserveRewards(
+                                        providerAddress,
+                                        poolToken.address,
+                                        token.address
+                                    )
+                                ).to.equal(BigNumber.from(0));
+                            }
+
+                            // Should return all program rewards, excluding previously granted rewards + max retroactive
+                            // multipliers.
+                            await setTime(programEndTime);
+
+                            for (const token of [networkToken, reserveToken]) {
+                                let reward = await staking.pendingReserveRewards(
+                                    providerAddress,
+                                    poolToken.address,
+                                    token.address
+                                );
+                                expect(reward).to.equal(
+                                    getExpectedReserveRewards(
+                                        provider,
+                                        poolToken.address,
+                                        token.address,
+                                        now.sub(prevNow),
+                                        duration.weeks(4)
+                                    )
+                                );
+
+                                let amount = reward.div(BigNumber.from(2));
+                                while (reward.gt(BigNumber.from(0))) {
+                                    amount = BigNumber.min(amount, reward);
+
+                                    reward = await testReserveStaking(provider, poolToken, token, amount, poolToken4);
+                                }
+                            }
+                        });
+
+                        it('should not allow staking more than the reserve specific claimable rewards', async () => {
+                            await setTime(programStartTime.add(duration.weeks(1)));
+
+                            for (const token of [networkToken, reserveToken]) {
+                                const reward = await staking.pendingReserveRewards(
+                                    providerAddress,
+                                    poolToken.address,
+                                    token.address
+                                );
+                                expect(reward).to.equal(
+                                    getExpectedReserveRewards(
+                                        provider,
+                                        poolToken.address,
+                                        token.address,
+                                        now.sub(prevNow)
+                                    )
+                                );
+                                if (reward.eq(BigNumber.from(0))) {
+                                    continue;
+                                }
+
+                                const amount = reward.mul(BigNumber.from(10000));
+                                const data = await staking
+                                    .connect(provider)
+                                    .callStatic.stakeReserveRewards(
+                                        poolToken.address,
+                                        token.address,
+                                        amount,
+                                        poolToken4.address
+                                    );
+                                const staked = data[0];
+                                const newId = data[1];
+                                expect(staked).to.equal(reward);
+
+                                await expect(
+                                    staking
+                                        .connect(provider)
+                                        .stakeReserveRewards(
+                                            poolToken.address,
+                                            token.address,
+                                            amount,
+                                            poolToken4.address
+                                        )
+                                )
+                                    .to.emit(staking, 'RewardsStaked')
+                                    .withArgs(providerAddress, poolToken4.address, reward, newId);
+
+                                const position = await getPosition(provider, newId);
+                                expect(position.poolToken).to.equal(poolToken4.address);
+                                expect(position.reserveToken).to.equal(networkToken.address);
+                                expect(position.reserveAmount).to.equal(reward);
+
+                                expect(
+                                    await staking.pendingReserveRewards(
+                                        providerAddress,
+                                        poolToken.address,
+                                        token.address
+                                    )
+                                ).to.equal(BigNumber.from(0));
+                            }
                         });
                     });
                 });
