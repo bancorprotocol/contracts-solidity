@@ -57,6 +57,7 @@
         "eslint-plugin-node": "^11.1.0",
         "eslint-plugin-promise": "^4.3.1",
         "eslint-plugin-standard": "^4.1.0",
+        "humanize-duration": "^3.27.0",
         "husky": "^5.0.9",
         "memdown": "^5.1.0",
         "mocha": "^8.3.0",

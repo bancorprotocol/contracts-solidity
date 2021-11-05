@@ -100,7 +100,7 @@ const deploy = async (web3, account, gasPrice, contractId, contractName, contrac
         const bin = fs.readFileSync(path.join(ARTIFACTS_DIR, contractName + '.bin'), { encoding: 'utf8' });
         const contract = new web3.eth.Contract(JSON.parse(abi));
         const options = { data: '0x' + bin, arguments: contractArgs };
-        const transaction = contract.deploy(options);
+        const transaction = contract.new(options);
         const receipt = await send(web3, account, gasPrice, transaction);
         const args = transaction.encodeABI().slice(options.data.length);
         console.log(`${contractId} deployed at ${receipt.contractAddress}`);
