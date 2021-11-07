@@ -15,5 +15,6 @@
     "singleQuote": true,
     "trailingComma": "none",
     "arrowParens": "always",
-    "bracketSpacing": true
+    "bracketSpacing": true,
+    "function-paren-newline": "never"
 }
