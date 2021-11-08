@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity 0.6.12;
 
+import "@openzeppelin/contracts/drafts/ERC20Permit.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "./interfaces/IBancorXUpgrader.sol";
@@ -307,7 +308,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         // verify lock limit
         require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
 
-        lockTokens(_amount);
+        lockTokens(msg.sender, _amount);
 
         // set the previous lock limit and block number
         prevLockLimit = currentLockLimit.sub(_amount);
@@ -337,7 +338,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
         // require that; minLimit <= _amount <= currentLockLimit
         require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_TOO_HIGH");
 
-        lockTokens(_amount);
+        lockTokens(msg.sender, _amount);
 
         // set the previous lock limit and block number
         prevLockLimit = currentLockLimit.sub(_amount);
@@ -345,6 +346,51 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
 
         // emit XTransfer event
         emit XTransfer(msg.sender, _toBlockchain, _to, _amount, _id);
+    }
+
+    /**
+     * @dev claims tokens from a signer (calculated from provided signature) to be converted to tokens on another blockchain
+     *
+     * @param _toBlockchain    blockchain on which tokens will be issued
+     * @param _to              address to send the tokens to
+     * @param _amount          the amount of tokens to transfer
+     * @param _deadline        permit deadline
+     * @param _signer          address to claim tokens from
+     * @param _v               ECDSA signature recovery identifier
+     * @param _r               ECDSA signature number
+     * @param _s               ECDSA signature number
+     * @param _id              pre-determined unique (if non zero) id which refers to this transaction
+     */
+    function xTransfer(
+        bytes32 _toBlockchain,
+        bytes32 _to,
+        uint256 _amount,
+        uint256 _deadline,
+        address _signer,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s,
+        uint256 _id
+    ) public xTransfersAllowed {
+        // get the current lock limit
+        uint256 currentLockLimit = getCurrentLockLimit();
+
+        // require that; minLimit <= _amount <= currentLockLimit
+        require(_amount >= minLimit && _amount <= currentLockLimit, "ERR_AMOUNT_NOT_IN_RANGE");
+
+        // Permit function enables to give allowance to a spender, without a payment of the signer, due to the fact
+        // that any account can call permit, provided that it has the signature (_v, _r, _s parameters).
+        // Example: https://deweb-io.github.io/token/permit_demo.html
+        ERC20Permit(address(token)).permit(_signer, address(this), _amount, _deadline, _v, _r, _s);
+
+        lockTokens(_signer, _amount);
+
+        // set the previous lock limit and block number
+        prevLockLimit = currentLockLimit.sub(_amount);
+        prevLockBlockNumber = block.number;
+
+        // emit XTransfer event
+        emit XTransfer(_signer, _toBlockchain, _to, _amount, _id);
     }
 
     /**
@@ -463,10 +509,10 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
      *
      * @param _amount  the amount of tokens to lock
      */
-    function lockTokens(uint256 _amount) private {
-        token.safeTransferFrom(msg.sender, address(this), _amount);
+    function lockTokens(address _sender, uint256 _amount) private {
+        token.safeTransferFrom(_sender, address(this), _amount);
 
-        emit TokensLock(msg.sender, _amount);
+        emit TokensLock(_sender, _amount);
     }
 
     /**
