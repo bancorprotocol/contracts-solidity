@@ -13,6 +13,10 @@ const LIM_INC_PER_BLOCK = new BN('1000000000000000000'); // 1 token
 const MIN_REQ_REPORTS = new BN(3);
 const TX_ID = new BN(0);
 
+/**
+ * Using both web3 and ethers.js libraries since web3 doesn't support sign typed data v3.
+ * Therefore need to represent amounts of tokens for both web3 and ethers.
+ */
 const TEST_AMOUNT_WEB3 = new BN('1000000000000000000'); // 1 token
 const TEST_AMOUNT_ETHERS = ethers.utils.parseEther('1'); // 1 token
 
