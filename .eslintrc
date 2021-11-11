@@ -1,5 +1,5 @@
 {
-    "extends": "standard",
+    "extends": ["standard", "prettier"],
     "env": {
         "mocha": true
     },
@@ -16,11 +16,10 @@
         "no-plusplus": "off",
         "no-await-in-loop": "off",
         "no-restricted-syntax": "off",
-        "function-paren-newline": ["error", "consistent"],
-        "space-before-function-paren": "error",
         "no-continue": "off",
         "arrow-body-style": "off",
-        "no-loop-func": "off"
+        "no-loop-func": "off",
+        "no-unused-expressions": "off"
     },
     "globals": {
         "assert": true,
