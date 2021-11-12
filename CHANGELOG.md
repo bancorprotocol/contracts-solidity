@@ -1,3 +1,25 @@
+### 0.7.0
+General
+* Major upgrade, many improvements and cleanups in preparation for v3 integration
+* Updated the dev stack/infrastructure platform from truffle to hardhat
+* Major tests upgrade for robustness and flexibility
+* Replaced auto-generated getters with private state vars + dedicated custom getters
+* Upgraded/Optimized extended math utils
+* Replaced any OpenZeppelin supported contract with the OZ version
+* Updated conventions based on the latest OpenZeppelin standard
+* Added some utility functions in various contracts for more code reuse
+* Cleaned up some terminology issues
+* Removed legacy contracts
+* Updated docs conventions - removed params/return definitions, added `requirements` section where appropriate
+* Added prettier auto formatting
+* Cleaned up directory structure
+* Upgraded all dependencies
+* Added CI support
+
+StakingRewards
+* Added support for staking rewards from a specific pool (reduced gas cost option)
+
+
 ### 0.6.39
 General
 * Fixed a minor issue in the test deployment script

@@ -1,6 +1,6 @@
 ## 🎉🎉 *Work on Bancor V3 is in progress and future changes will be incrementally merged into this repo. Stay tuned!* 🎉🎉 ##
 
-# Bancor Protocol Contracts v0.6 (beta)
+# Bancor Protocol Contracts v0.7 (beta)
 
 [![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://docs.bancor.network/)
 [![NPM Package](https://img.shields.io/npm/v/@bancor/contracts-solidity.svg)](https://www.npmjs.org/package/@bancor/contracts-solidity)
