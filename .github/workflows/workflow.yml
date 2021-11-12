@@ -1,0 +1,28 @@
+name: Build, Test
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - master
+    pull_request:
+
+jobs:
+    build-test:
+        runs-on: ubuntu-latest
+        steps:
+            ### Setup action's dependencies
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: '16'
+
+            ### Build
+            - name: Install Dependencies
+              run: yarn install
+            - name: Build
+              run: yarn build
+
+            ### Testing
+            - name: Test
+              run: yarn test
