@@ -156,6 +156,10 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
         contractRegistry.address
     );
 
+    await execute(
+        contractRegistry.registerAddress(formatBytes32String('StakingRewards'), stakingRewards.address)
+    );
+
     const liquidityProtectionSettings = await deploy(
         'liquidityProtectionSettings',
         'LiquidityProtectionSettings',
