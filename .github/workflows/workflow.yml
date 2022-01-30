@@ -9,7 +9,7 @@ on:
 
 jobs:
     build-test:
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         timeout-minutes: 600
 
         steps:
