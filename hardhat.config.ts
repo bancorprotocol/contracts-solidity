@@ -42,6 +42,11 @@ const config: HardhatUserConfig = {
         ...configNetworks
     },
 
+    typechain: {
+        outDir: 'typechain',
+        target: 'ethers-v5'
+    },
+
     solidity: {
         version: '0.6.12',
         settings: {
