@@ -227,6 +227,8 @@ describe('StakingRewards', () => {
         liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
         liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
         liquidityProtection = await Contracts.TestLiquidityProtection.deploy(
+            accounts[0].address, // bancor network v3, not used in this context
+            accounts[0].address, // bancor vault v3, not used in this context
             liquidityProtectionSettings.address,
             liquidityProtectionStore.address,
             liquidityProtectionStats.address,

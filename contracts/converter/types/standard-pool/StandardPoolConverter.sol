@@ -663,7 +663,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         // get the elapsed time since the previous average rate was calculated
         uint256 currentTime = _time();
-        uint256 timeElapsed = currentTime.sub(prevAverageRateT);
+        uint256 timeElapsed = currentTime - prevAverageRateT;
 
         // if the previous average rate was calculated in the current block, the average rate remains unchanged
         if (timeElapsed == 0) {
