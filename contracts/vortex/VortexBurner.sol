@@ -239,12 +239,11 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     {
         IConverterRegistry registry = _converterRegistry();
 
-        Strategy memory strategy =
-            Strategy({
-                paths: new address[][](reserveTokens.length),
-                amounts: new uint256[](reserveTokens.length),
-                govPath: new address[](3)
-            });
+        Strategy memory strategy = Strategy({
+            paths: new address[][](reserveTokens.length),
+            amounts: new uint256[](reserveTokens.length),
+            govPath: new address[](3)
+        });
 
         for (uint256 i = 0; i < reserveTokens.length; ++i) {
             IReserveToken reserveToken = reserveTokens[i];
@@ -302,12 +301,11 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
         standardReserveWeights[1] = STANDARD_POOL_RESERVE_WEIGHT;
 
         // find the standard pool converter between the specified token and the network token
-        IConverterAnchor anchor =
-            converterRegistry.getLiquidityPoolByConfig(
-                STANDARD_POOL_CONVERTER_TYPE,
-                reserveTokens,
-                standardReserveWeights
-            );
+        IConverterAnchor anchor = converterRegistry.getLiquidityPoolByConfig(
+            STANDARD_POOL_CONVERTER_TYPE,
+            reserveTokens,
+            standardReserveWeights
+        );
         require(address(anchor) != address(0), "ERR_INVALID_RESERVE_TOKEN");
 
         return anchor;

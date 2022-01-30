@@ -63,11 +63,19 @@ contract TestMathEx {
         return MathEx.roundDivUnsafe(n, d);
     }
 
-    function mulDivF(uint256 x, uint256 y, uint256 z) external pure returns (uint256) {
+    function mulDivF(
+        uint256 x,
+        uint256 y,
+        uint256 z
+    ) external pure returns (uint256) {
         return MathEx.mulDivF(x, y, z);
     }
 
-    function mulDivC(uint256 x, uint256 y, uint256 z) external pure returns (uint256) {
+    function mulDivC(
+        uint256 x,
+        uint256 y,
+        uint256 z
+    ) external pure returns (uint256) {
         return MathEx.mulDivC(x, y, z);
     }
 }

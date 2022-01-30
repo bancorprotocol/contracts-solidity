@@ -138,7 +138,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     }
 
     // validates that the caller is a reporter
-    modifier reporterOnly {
+    modifier reporterOnly() {
         _reporterOnly();
 
         _;
@@ -150,7 +150,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     }
 
     // allows execution only when xTransfers are enabled
-    modifier xTransfersAllowed {
+    modifier xTransfersAllowed() {
         _xTransfersAllowed();
 
         _;
@@ -162,7 +162,7 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
     }
 
     // allows execution only when reporting is enabled
-    modifier reportingAllowed {
+    modifier reportingAllowed() {
         _reportingAllowed();
 
         _;
@@ -542,8 +542,9 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
      */
     function getCurrentLockLimit() public view returns (uint256) {
         // prevLockLimit + ((currBlockNumber - prevLockBlockNumber) * limitIncPerBlock)
-        uint256 currentLockLimit =
-            _prevLockLimit.add(((block.number).sub(_prevLockBlockNumber)).mul(_limitIncPerBlock));
+        uint256 currentLockLimit = _prevLockLimit.add(
+            ((block.number).sub(_prevLockBlockNumber)).mul(_limitIncPerBlock)
+        );
         if (currentLockLimit > _maxLockLimit) {
             return _maxLockLimit;
         }
@@ -556,8 +557,9 @@ contract BancorX is IBancorX, TokenHolder, ContractRegistryClient {
      */
     function getCurrentReleaseLimit() public view returns (uint256) {
         // prevReleaseLimit + ((currBlockNumber - prevReleaseBlockNumber) * limitIncPerBlock)
-        uint256 currentReleaseLimit =
-            _prevReleaseLimit.add(((block.number).sub(_prevReleaseBlockNumber)).mul(_limitIncPerBlock));
+        uint256 currentReleaseLimit = _prevReleaseLimit.add(
+            ((block.number).sub(_prevReleaseBlockNumber)).mul(_limitIncPerBlock)
+        );
         if (currentReleaseLimit > _maxReleaseLimit) {
             return _maxReleaseLimit;
         }

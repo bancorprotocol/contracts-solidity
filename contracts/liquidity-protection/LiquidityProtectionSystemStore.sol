@@ -24,7 +24,7 @@ contract LiquidityProtectionSystemStore is ILiquidityProtectionSystemStore, Acce
     mapping(IConverterAnchor => uint256) private _networkTokensMinted;
 
     // allows execution only by an owner
-    modifier ownerOnly {
+    modifier ownerOnly() {
         _hasRole(ROLE_OWNER);
         _;
     }
