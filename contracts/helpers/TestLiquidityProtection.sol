@@ -101,26 +101,24 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         _poolTokenRateN = poolTokenRateN;
         _poolTokenRateD = poolTokenRateD;
 
-        PackedRates memory packedRates =
-            PackedRates({
-                addSpotRateN: addSpotRateN,
-                addSpotRateD: addSpotRateD,
-                removeSpotRateN: removeSpotRateN,
-                removeSpotRateD: removeSpotRateD,
-                removeAverageRateN: removeAverageRateN,
-                removeAverageRateD: removeAverageRateD
-            });
+        PackedRates memory packedRates = PackedRates({
+            addSpotRateN: addSpotRateN,
+            addSpotRateD: addSpotRateD,
+            removeSpotRateN: removeSpotRateN,
+            removeSpotRateD: removeSpotRateD,
+            removeAverageRateN: removeAverageRateN,
+            removeAverageRateD: removeAverageRateD
+        });
 
-        uint256 targetAmount =
-            _removeLiquidityTargetAmount(
-                IDSToken(0),
-                IReserveToken(0),
-                poolAmount,
-                reserveAmount,
-                packedRates,
-                addTimestamp,
-                removeTimestamp
-            );
+        uint256 targetAmount = _removeLiquidityTargetAmount(
+            IDSToken(0),
+            IReserveToken(0),
+            poolAmount,
+            reserveAmount,
+            packedRates,
+            addTimestamp,
+            removeTimestamp
+        );
         _poolTokenRateOverride = false;
         return targetAmount;
     }

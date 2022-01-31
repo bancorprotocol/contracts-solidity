@@ -65,7 +65,11 @@ contract TestBancorNetwork is BancorNetwork {
     address private _networkToken;
     address private _bancorVault;
 
-    constructor(IContractRegistry registry, uint256 amount, uint256 fee) public BancorNetwork(registry) {
+    constructor(
+        IContractRegistry registry,
+        uint256 amount,
+        uint256 fee
+    ) public BancorNetwork(registry) {
         _oldConverter = new OldConverter(amount);
         _newConverter = new NewConverter(amount, fee);
     }
@@ -92,8 +96,8 @@ contract TestBancorNetwork is BancorNetwork {
 
     function migrateLiquidity(
         IReserveToken reserveToken,
-        address /* provider */,
-        uint256 /* amount */,
+        address, /* provider */
+        uint256, /* amount */
         uint256 availableAmount,
         uint256 originalAmount
     ) external payable {

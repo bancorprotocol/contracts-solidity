@@ -592,8 +592,13 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         (uint256 sourceBalance, uint256 targetBalance) = _loadReserveBalances(sourceId, targetId);
 
         // get the target amount minus the conversion fee and the conversion fee
-        (uint256 targetAmount, uint256 fee) =
-            _targetAmountAndFee(sourceToken, targetToken, sourceBalance, targetBalance, sourceAmount);
+        (uint256 targetAmount, uint256 fee) = _targetAmountAndFee(
+            sourceToken,
+            targetToken,
+            sourceBalance,
+            targetBalance,
+            sourceAmount
+        );
 
         // ensure that the trade gives something in return
         require(targetAmount != 0, "ERR_ZERO_TARGET_AMOUNT");
@@ -798,8 +803,10 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 index = amounts[0].mul(balances[1]) < amounts[1].mul(balances[0]) ? 0 : 1;
         uint256 amount = _fundSupplyAmount(totalSupply, balances[index], amounts[index]);
 
-        uint256[2] memory newAmounts =
-            [_fundCost(totalSupply, balances[0], amount), _fundCost(totalSupply, balances[1], amount)];
+        uint256[2] memory newAmounts = [
+            _fundCost(totalSupply, balances[0], amount),
+            _fundCost(totalSupply, balances[1], amount)
+        ];
 
         return (amount, newAmounts);
     }
@@ -1156,8 +1163,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
             return (ITokenHolder(address(0)), 0, 0);
         }
 
-        (ITokenHolder networkFeeWallet, uint32 networkFee) =
-            INetworkSettings(_addressOf(NETWORK_SETTINGS)).networkFeeParams();
+        (ITokenHolder networkFeeWallet, uint32 networkFee) = INetworkSettings(_addressOf(NETWORK_SETTINGS))
+            .networkFeeParams();
         uint256 n = (currPoint - prevPoint) * networkFee;
         uint256 d = currPoint * PPM_RESOLUTION;
 

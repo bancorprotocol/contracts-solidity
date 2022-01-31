@@ -25,13 +25,13 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
     mapping(address => EnumerableSet.AddressSet) private _providerPools;
 
     // allows execution only by an owner
-    modifier ownerOnly {
+    modifier ownerOnly() {
         _hasRole(ROLE_OWNER);
         _;
     }
 
     // allows execution only by a seeder
-    modifier seederOnly {
+    modifier seederOnly() {
         _hasRole(ROLE_SEEDER);
         _;
     }
@@ -71,8 +71,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
         );
         _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][
             reserveToken
-        ]
-            .add(reserveAmount);
+        ].add(reserveAmount);
     }
 
     /**
@@ -95,8 +94,7 @@ contract LiquidityProtectionStats is ILiquidityProtectionStats, AccessControl {
         );
         _totalProviderAmounts[provider][poolToken][reserveToken] = _totalProviderAmounts[provider][poolToken][
             reserveToken
-        ]
-            .sub(reserveAmount);
+        ].sub(reserveAmount);
     }
 
     /**

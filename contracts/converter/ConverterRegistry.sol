@@ -477,8 +477,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
 
         // find the reserve token which has the smallest number of converter anchors
         for (uint256 i = 1; i < reserveTokens.length; i++) {
-            uint256 convertibleTokenAnchorCount =
-                converterRegistryData.getConvertibleTokenSmartTokenCount(reserveTokens[i]);
+            uint256 convertibleTokenAnchorCount = converterRegistryData.getConvertibleTokenSmartTokenCount(
+                reserveTokens[i]
+            );
             if (minAnchorCount > convertibleTokenAnchorCount) {
                 minAnchorCount = convertibleTokenAnchorCount;
                 index = i;
@@ -523,8 +524,9 @@ contract ConverterRegistry is IConverterRegistry, ContractRegistryClient {
 
     // utility to get the converter type (including from older converters that don't support the new converterType function)
     function _getConverterType(IConverter converter, uint256 reserveTokenCount) private view returns (uint16) {
-        (bool success, bytes memory returnData) =
-            address(converter).staticcall(abi.encodeWithSelector(CONVERTER_TYPE_FUNC_SELECTOR));
+        (bool success, bytes memory returnData) = address(converter).staticcall(
+            abi.encodeWithSelector(CONVERTER_TYPE_FUNC_SELECTOR)
+        );
         if (success && returnData.length == 32) {
             return abi.decode(returnData, (uint16));
         }

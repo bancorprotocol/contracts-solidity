@@ -23,7 +23,7 @@ contract Owned is IOwned {
     }
 
     // allows execution by the owner only
-    modifier ownerOnly {
+    modifier ownerOnly() {
         _ownerOnly();
 
         _;

@@ -307,7 +307,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * - the caller must have the ROLE_OWNER role
      */
-    function setMinNetworkTokenLiquidityForMinting(uint256 amount) external onlyOwner() {
+    function setMinNetworkTokenLiquidityForMinting(uint256 amount) external onlyOwner {
         emit MinNetworkTokenLiquidityForMintingUpdated(_minNetworkTokenLiquidityForMinting, amount);
 
         _minNetworkTokenLiquidityForMinting = amount;
@@ -320,7 +320,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * - the caller must have the ROLE_OWNER role
      */
-    function setDefaultNetworkTokenMintingLimit(uint256 amount) external onlyOwner() {
+    function setDefaultNetworkTokenMintingLimit(uint256 amount) external onlyOwner {
         emit DefaultNetworkTokenMintingLimitUpdated(_defaultNetworkTokenMintingLimit, amount);
 
         _defaultNetworkTokenMintingLimit = amount;
@@ -335,7 +335,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      */
     function setNetworkTokenMintingLimit(IConverterAnchor poolAnchor, uint256 amount)
         external
-        onlyOwner()
+        onlyOwner
         validAddress(address(poolAnchor))
     {
         emit NetworkTokenMintingLimitUpdated(poolAnchor, _networkTokenMintingLimits[poolAnchor], amount);
@@ -350,7 +350,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * - the caller must have the ROLE_OWNER role
      */
-    function setProtectionDelays(uint256 minDelay, uint256 maxDelay) external onlyOwner() {
+    function setProtectionDelays(uint256 minDelay, uint256 maxDelay) external onlyOwner {
         require(minDelay < maxDelay, "ERR_INVALID_PROTECTION_DELAY");
 
         emit ProtectionDelaysUpdated(_minProtectionDelay, minDelay, _maxProtectionDelay, maxDelay);
@@ -366,7 +366,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * - the caller must have the ROLE_OWNER role
      */
-    function setMinNetworkCompensation(uint256 amount) external onlyOwner() {
+    function setMinNetworkCompensation(uint256 amount) external onlyOwner {
         emit MinNetworkCompensationUpdated(_minNetworkCompensation, amount);
 
         _minNetworkCompensation = amount;
@@ -379,7 +379,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * - the caller must have the ROLE_OWNER role
      */
-    function setLockDuration(uint256 duration) external onlyOwner() {
+    function setLockDuration(uint256 duration) external onlyOwner {
         emit LockDurationUpdated(_lockDuration, duration);
 
         _lockDuration = duration;
@@ -392,7 +392,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
      *
      * - the caller must have the ROLE_OWNER role
      */
-    function setAverageRateMaxDeviation(uint32 deviation) external onlyOwner() validPortion(deviation) {
+    function setAverageRateMaxDeviation(uint32 deviation) external onlyOwner validPortion(deviation) {
         emit AverageRateMaxDeviationUpdated(_averageRateMaxDeviation, deviation);
 
         _averageRateMaxDeviation = deviation;
@@ -409,7 +409,7 @@ contract LiquidityProtectionSettings is ILiquidityProtectionSettings, AccessCont
         IConverterAnchor poolAnchor,
         IReserveToken reserveToken,
         bool disable
-    ) external onlyOwner() {
+    ) external onlyOwner {
         emit AddLiquidityDisabled(poolAnchor, reserveToken, disable);
 
         _addLiquidityDisabled[poolAnchor][reserveToken] = disable;
