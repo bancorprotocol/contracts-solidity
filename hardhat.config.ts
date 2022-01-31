@@ -35,10 +35,16 @@ const config: HardhatUserConfig = {
             accounts: {
                 count: 10,
                 accountsBalance: '10000000000000000000000000000'
-            }
+            },
+            allowUnlimitedContractSize: true
         },
 
         ...configNetworks
+    },
+
+    typechain: {
+        outDir: 'typechain',
+        target: 'ethers-v5'
     },
 
     solidity: {

@@ -22,6 +22,8 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
         }
     };
 
+    const signerAddress = await signer.getAddress();
+
     // main contracts
     const contractRegistry = await deploy('contractRegistry', 'ContractRegistry');
     const converterFactory = await deploy('converterFactory', 'ConverterFactory');
@@ -80,7 +82,7 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
             const supply = toWei(reserve.supply, decimals);
             const token = await deploy('dsToken-' + symbol, 'DSToken', name, symbol, decimals);
 
-            await execute(token.issue(await signer.getAddress(), supply));
+            await execute(token.issue(signerAddress, supply));
 
             reserves[symbol] = { address: token.address, decimals };
         }
@@ -137,8 +139,8 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
     const bntTokenGovernance = await deploy('bntTokenGovernance', 'TokenGovernance', reserves.BNT.address);
     const vbntTokenGovernance = await deploy('vbntTokenGovernance', 'TokenGovernance', reserves.vBNT.address);
 
-    await execute(bntTokenGovernance.grantRole(ROLE_GOVERNOR, await signer.getAddress()));
-    await execute(vbntTokenGovernance.grantRole(ROLE_GOVERNOR, await signer.getAddress()));
+    await execute(bntTokenGovernance.grantRole(ROLE_GOVERNOR, signerAddress));
+    await execute(vbntTokenGovernance.grantRole(ROLE_GOVERNOR, signerAddress));
 
     const bntToken = await deployed('DSToken', reserves.BNT.address);
     await execute(bntToken.transferOwnership(bntTokenGovernance.address));
@@ -154,10 +156,6 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
         bntTokenGovernance.address,
         checkpointStore.address,
         contractRegistry.address
-    );
-
-    await execute(
-        contractRegistry.registerAddress(formatBytes32String('StakingRewards'), stakingRewards.address)
     );
 
     const liquidityProtectionSettings = await deploy(
@@ -178,6 +176,8 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
     const liquidityProtection = await deploy(
         'liquidityProtection',
         'LiquidityProtection',
+        signerAddress, // bancor network v3, not used in this context
+        signerAddress, // bancor vault v3, not used in this context
         liquidityProtectionSettings.address,
         liquidityProtectionStore.address,
         liquidityProtectionStats.address,

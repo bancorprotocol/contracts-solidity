@@ -62,8 +62,10 @@ contract ConverterV28OrHigherWithFallback {
 contract TestBancorNetwork is BancorNetwork {
     OldConverter private _oldConverter;
     NewConverter private _newConverter;
+    address private _networkToken;
+    address private _bancorVault;
 
-    constructor(uint256 amount, uint256 fee) public BancorNetwork(IContractRegistry(address(1))) {
+    constructor(IContractRegistry registry, uint256 amount, uint256 fee) public BancorNetwork(registry) {
         _oldConverter = new OldConverter(amount);
         _newConverter = new NewConverter(amount, fee);
     }
@@ -78,5 +80,30 @@ contract TestBancorNetwork is BancorNetwork {
 
     function getReturnNew() external view returns (uint256, uint256) {
         return _getReturn(IConverter(payable(address(_newConverter))), IReserveToken(0), IReserveToken(0), uint256(0));
+    }
+
+    function setNetworkToken(address networkToken) external {
+        _networkToken = networkToken;
+    }
+
+    function setBancorVault(address bancorVault) external {
+        _bancorVault = bancorVault;
+    }
+
+    function migrateLiquidity(
+        IReserveToken reserveToken,
+        address /* provider */,
+        uint256 /* amount */,
+        uint256 availableAmount,
+        uint256 originalAmount
+    ) external payable {
+        uint256 amountToTransfer = address(reserveToken) == _networkToken ? originalAmount : availableAmount;
+        if (reserveToken.isNativeToken()) {
+            assert(msg.value == amountToTransfer);
+            reserveToken.safeTransfer(_bancorVault, amountToTransfer);
+        } else {
+            require(msg.value == 0);
+            reserveToken.safeTransferFrom(msg.sender, _bancorVault, amountToTransfer);
+        }
     }
 }

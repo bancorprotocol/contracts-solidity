@@ -142,7 +142,7 @@ describe('BancorNetwork', () => {
 
     describe('conversions', () => {
         beforeEach(async () => {
-            network = await Contracts.TestBancorNetwork.deploy(0, 0);
+            network = await Contracts.TestBancorNetwork.deploy(contractRegistry.address, 0, 0);
 
             bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);

@@ -11,6 +11,8 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     uint256 private _poolTokenRateD;
 
     constructor(
+        IBancorNetworkV3 networkV3,
+        address payable vaultV3,
         ILiquidityProtectionSettings settings,
         ILiquidityProtectionStore store,
         ILiquidityProtectionStats stats,
@@ -22,6 +24,8 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     )
         public
         LiquidityProtection(
+            networkV3,
+            vaultV3,
             settings,
             store,
             stats,
