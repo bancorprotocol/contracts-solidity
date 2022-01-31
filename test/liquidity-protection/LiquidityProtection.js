@@ -2255,7 +2255,7 @@ describe('LiquidityProtection', () => {
                             });
 
                             it('verifies that the owner can migrate system pool tokens', async () => {
-                                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
+                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
                                 const protectionId = protectionIds[0];
                                 let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
                                 protection = getProtection(protection);
