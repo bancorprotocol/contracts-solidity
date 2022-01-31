@@ -1,3 +1,11 @@
+### 0.7.1
+General
+* Added support for migrating positions into v3
+* Upgraded prettier and updated style/format
+* Upgraded and cleaned up CI support
+* Upgraded all dependencies
+
+
 ### 0.7.0
 General
 * Major upgrade, many improvements and cleanups in preparation for v3 integration
