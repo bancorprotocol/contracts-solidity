@@ -1,3 +1,8 @@
+### 0.7.2
+General
+* Fixed typechain exports
+
+
 ### 0.7.1
 General
 * Added support for migrating positions into v3
