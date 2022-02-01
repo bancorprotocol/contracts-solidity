@@ -85,16 +85,3 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
-
-// Patch BigNumber to include a min and a max functions.
-import { BigNumber } from 'ethers';
-
-declare module 'ethers' {
-    class BigNumber {
-        static min(a: any, b: any): boolean;
-        static max(a: any, b: any): boolean;
-    }
-}
-
-BigNumber.min = (a: any, b: any) => (BigNumber.from(a).gt(b) ? b : a);
-BigNumber.max = (a: any, b: any) => (BigNumber.from(a).gt(b) ? a : b);
