@@ -12,11 +12,13 @@
     },
     "author": "Yudi Levi",
     "license": "SEE LICENSE IN LICENSE",
+    "main": "typechain/index.js",
+    "types": "typechain/index.d.ts",
     "files": [
         "/contracts/**/*.sol",
-        "/artifacts/contracts/**/*.json",
-        "/typechain/**/*.ts",
-        "!/contracts/helpers"
+        "!/contracts/helpers",
+        "/artifacts",
+        "/typechain"
     ],
     "scripts": {
         "build": "hardhat compile",
