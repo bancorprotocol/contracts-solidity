@@ -8,11 +8,8 @@
         "sourceMap": true,
         "strict": true,
         "esModuleInterop": true,
-        "baseUrl": "./",
-        "paths": {
-            "*": ["node_modules/*"]
-        }
+        "outDir": "./dist"
     },
-    "include": ["scripts", "./test", "./components"],
+    "include": ["scripts", "./test", "./components", "./typechain"],
     "files": ["./hardhat.config.ts"]
 }
