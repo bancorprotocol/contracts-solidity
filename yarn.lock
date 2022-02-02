@@ -1292,18 +1292,18 @@
   dependencies:
     ethers "^5.0.2"
 
-"@typechain/ethers-v5@^7.1.2":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-7.2.0.tgz#d559cffe0efe6bdbc20e644b817f6fa8add5e8f8"
-  integrity sha512-jfcmlTvaaJjng63QsT49MT6R1HFhtO/TBMWbyzPFSzMmVIqb2tL6prnKBs4ZJrSvmgIXWy+ttSjpaxCTq8D/Tw==
+"@typechain/ethers-v5@^8.0.5":
+  version "8.0.5"
+  resolved "https://registry.yarnpkg.com/@typechain/ethers-v5/-/ethers-v5-8.0.5.tgz#d469420e9a73deb7fa076cde9edb45d713dd1b8c"
+  integrity sha512-ntpj4cS3v4WlDu+hSKSyj9A3o1tKtWC30RX1gobeYymZColeJiUemC1Kgfa0MWGmInm5CKxoHVhEvYVgPOZn1A==
   dependencies:
     lodash "^4.17.15"
     ts-essentials "^7.0.1"
 
-"@typechain/hardhat@^2.3.0":
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-2.3.1.tgz#1e8a6e3795e115a5d5348526282b5c597fab0b78"
-  integrity sha512-BQV8OKQi0KAzLXCdsPO0pZBNQQ6ra8A2ucC26uFX/kquRBtJu1yEyWnVSmtr07b5hyRoJRpzUeINLnyqz4/MAw==
+"@typechain/hardhat@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@typechain/hardhat/-/hardhat-3.1.0.tgz#88bd9e9d55e30fbece6fbb34c03ecd40a8b2013a"
+  integrity sha512-C6Be6l+vTpao19PvMH2CB/lhL1TRLkhdPkvQCF/zqkY1e+0iqY2Bb9Jd3PTt6I8QvMm89ZDerrCJC9927ZHmlg==
   dependencies:
     fs-extra "^9.1.0"
 
