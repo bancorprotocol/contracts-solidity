@@ -73,6 +73,8 @@ describe('LiquidityProtection', () => {
         }
     };
 
+    const min = (a, b) => (BigNumber.from(a).gt(b) ? b : a);
+
     for (const converterType of [STANDARD_CONVERTER_TYPE]) {
         context(getConverterName(converterType), () => {
             const initPool = async (isETH = false, whitelist = true, standard = true) => {
@@ -3682,7 +3684,7 @@ describe('LiquidityProtection', () => {
                                         baseTokenAddress,
                                         amounts[2]
                                     );
-                                    const amount = BigNumber.min(amounts[3], await getNetworkTokenMaxAmount());
+                                    const amount = min(amounts[3], await getNetworkTokenMaxAmount());
                                     await addProtectedLiquidity(
                                         poolToken.address,
                                         networkToken,
@@ -3770,7 +3772,7 @@ describe('LiquidityProtection', () => {
                                         baseTokenAddress,
                                         amounts[2]
                                     );
-                                    const amount = BigNumber.min(amounts[3], await getNetworkTokenMaxAmount());
+                                    const amount = min(amounts[3], await getNetworkTokenMaxAmount());
                                     await addProtectedLiquidity(
                                         poolToken.address,
                                         networkToken,

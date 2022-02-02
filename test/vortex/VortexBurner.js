@@ -334,6 +334,8 @@ describe('VortexBurner', () => {
                                 context(
                                     `with ${burnReward.toString()} burn reward, capped at ${maxBurnRewardAmount.toString()}`,
                                     () => {
+                                        const min = (a, b) => (BigNumber.from(a).gt(b) ? b : a);
+
                                         const getExpectedResults = async () => {
                                             const selectedTokens = testTokens.map((symbol) => data[symbol]);
                                             const convertibleTokens = [];
@@ -381,7 +383,7 @@ describe('VortexBurner', () => {
                                             let netNetworkTokenConversionAmount = grossNetworkTokenConversionAmount;
                                             let burnRewardAmount = BigNumber.from(0);
                                             if (!burnReward.eq(BigNumber.from(0))) {
-                                                burnRewardAmount = BigNumber.min(
+                                                burnRewardAmount = min(
                                                     netNetworkTokenConversionAmount.mul(burnReward).div(PPM_RESOLUTION),
                                                     maxBurnRewardAmount
                                                 );
