@@ -18,7 +18,8 @@
         "/contracts/**/*.sol",
         "!/contracts/helpers",
         "/artifacts",
-        "/typechain"
+        "/typechain",
+        "/dist"
     ],
     "scripts": {
         "build": "hardhat compile",
