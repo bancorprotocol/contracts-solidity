@@ -34,7 +34,7 @@
         "lint:sol": "solhint --max-warnings 0 \"contracts/**/*.sol\"",
         "format": "prettier --check --write contracts/**/*.sol test/**/*.js utils/**/*.js --config .prettierrc",
         "snyk-protect": "snyk protect",
-        "prepare": "yarn clean && yarn build && && yarn snyk-protect && tsc && copyfiles -u 1 \"typechain/**/*.d.ts\" dist/typechain",
+        "prepare": "yarn clean && yarn build && yarn snyk-protect && tsc && copyfiles -u 1 \"typechain/**/*.d.ts\" dist/typechain",
         "clean": "rm -rf artifacts cache data typechain"
     },
     "dependencies": {
