@@ -1,4 +1,4 @@
-### 0.7.2-4
+### 0.7.2-5
 General
 * Fixed typechain exports
 
