@@ -238,8 +238,7 @@ describe('StakingRewards', () => {
             liquidityProtectionSystemStore.address,
             liquidityProtectionWallet.address,
             networkTokenGovernance.address,
-            govTokenGovernance.address,
-            checkpointStore.address
+            govTokenGovernance.address
         );
 
         await contractRegistry.registerAddress(LIQUIDITY_PROTECTION, liquidityProtection.address);
