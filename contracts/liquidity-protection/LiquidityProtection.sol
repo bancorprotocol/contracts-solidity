@@ -546,7 +546,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * removes network tokens
      */
     function removeLiquidity(uint256 id, uint32 portion) external override nonReentrant validPortion(portion) {
-        _removeLiquidity(msg.sender, id, portion, false);
+        _removeLiquidity(msg.sender, id, portion);
     }
 
     /**
@@ -555,18 +555,17 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function _removeLiquidity(
         address payable provider,
         uint256 id,
-        uint32 portion,
-        bool isMigrating
+        uint32 portion
     ) internal {
         // remove the position from the store and update the stats and the last removal checkpoint
-        Position memory removedPos = _removePosition(provider, id, portion, isMigrating);
+        Position memory removedPos = _removePosition(provider, id, portion);
 
         // add the pool tokens to the system
         _systemStore.incSystemBalance(removedPos.poolToken, removedPos.poolAmount);
 
         // if removing network token liquidity, burn the governance tokens from the caller. we need to transfer the
         // tokens to the contract itself, since only token holders can burn their tokens
-        if (!isMigrating && _isNetworkToken(removedPos.reserveToken)) {
+        if (_isNetworkToken(removedPos.reserveToken)) {
             _govToken.safeTransferFrom(provider, address(this), removedPos.reserveAmount);
             _govTokenGovernance.burn(removedPos.reserveAmount);
         }
@@ -595,27 +594,14 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             removedPos.reserveAmount,
             packedRates,
             removedPos.timestamp,
-            isMigrating ? MAX_UINT256 : _time()
+            _time()
         );
 
         // remove network token liquidity
         if (_isNetworkToken(removedPos.reserveToken)) {
-            if (isMigrating) {
-                // mint network tokens for this contract and migrate them
-                _mintNetworkTokens(address(this), removedPos.poolToken, removedPos.reserveAmount);
-                _networkToken.approve(address(_networkV3), removedPos.reserveAmount);
-                _networkV3.migrateLiquidity(
-                    IReserveToken(address(_networkToken)),
-                    provider,
-                    targetAmount,
-                    targetAmount,
-                    removedPos.reserveAmount
-                );
-            } else {
-                // mint network tokens for the caller and lock them
-                _mintNetworkTokens(address(_wallet), removedPos.poolToken, targetAmount);
-                _lockTokens(provider, targetAmount);
-            }
+            // mint network tokens for the caller and lock them
+            _mintNetworkTokens(address(_wallet), removedPos.poolToken, targetAmount);
+            _lockTokens(provider, targetAmount);
             return;
         }
 
@@ -639,42 +625,134 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // transfer the base tokens to the caller
         uint256 baseBalance = removedPos.reserveToken.balanceOf(address(this));
-        if (isMigrating) {
-            uint256 value;
-            if (removedPos.reserveToken.isNativeToken()) {
-                value = baseBalance;
-            } else {
-                IERC20(address(removedPos.reserveToken)).safeApprove(address(_networkV3), baseBalance);
-            }
-            _networkV3.migrateLiquidity{ value: value }(
-                removedPos.reserveToken,
-                provider,
-                targetAmount,
-                baseBalance,
-                removedPos.reserveAmount
-            );
-        } else {
-            removedPos.reserveToken.safeTransfer(provider, baseBalance);
+        removedPos.reserveToken.safeTransfer(provider, baseBalance);
 
-            // compensate the caller with network tokens if still needed
-            uint256 delta = _networkCompensation(targetAmount, baseBalance, packedRates);
-            if (delta > 0) {
-                // check if there's enough network token balance, otherwise mint more
-                uint256 networkBalance = _networkToken.balanceOf(address(this));
-                if (networkBalance < delta) {
-                    _networkTokenGovernance.mint(address(this), delta - networkBalance);
-                }
-
-                // lock network tokens for the caller
-                _networkToken.safeTransfer(address(_wallet), delta);
-                _lockTokens(provider, delta);
+        // compensate the caller with network tokens if still needed
+        uint256 delta = _networkCompensation(targetAmount, baseBalance, packedRates);
+        if (delta > 0) {
+            // check if there's enough network token balance, otherwise mint more
+            uint256 networkBalance = _networkToken.balanceOf(address(this));
+            if (networkBalance < delta) {
+                _networkTokenGovernance.mint(address(this), delta - networkBalance);
             }
+
+            // lock network tokens for the caller
+            _networkToken.safeTransfer(address(_wallet), delta);
+            _lockTokens(provider, delta);
         }
 
         // if the contract still holds network tokens, burn them
         uint256 networkBalance = _networkToken.balanceOf(address(this));
         if (networkBalance > 0) {
             _burnNetworkTokens(removedPos.poolToken, networkBalance);
+        }
+    }
+
+    /**
+     * @dev migrates a list of positions to v3
+     *
+     * Requirements:
+     *
+     * - the caller must be the owner of all of the positions
+     */
+    function migratePositions(uint256[] calldata positionIds) external nonReentrant {
+        IDSToken poolToken;
+        IReserveToken reserveToken;
+
+        uint256 poolAmount = 0;
+        uint256 reserveAmount = 0;
+        uint256 targetAmount = 0;
+
+        for (uint256 i = 0; i < positionIds.length; i++) {
+            Position memory removedPos = _removePosition(msg.sender, positionIds[i], PPM_RESOLUTION);
+            if (i == 0) {
+                poolToken = removedPos.poolToken;
+                reserveToken = removedPos.reserveToken;
+            } else {
+                require(removedPos.reserveToken == reserveToken, "illegal position ids");
+            }
+
+            // get the pool token amount
+            poolAmount = poolAmount.add(removedPos.poolAmount);
+
+            // get the reserve token amount
+            reserveAmount = reserveAmount.add(removedPos.reserveAmount);
+
+            // get the various rates between the reserves upon adding liquidity and now
+            PackedRates memory packedRates = _packRates(
+                removedPos.poolToken,
+                removedPos.reserveToken,
+                removedPos.reserveRateN,
+                removedPos.reserveRateD
+            );
+
+            // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
+            _verifyRateDeviation(
+                packedRates.removeSpotRateN,
+                packedRates.removeSpotRateD,
+                packedRates.removeAverageRateN,
+                packedRates.removeAverageRateD
+            );
+
+            // get the target token amount
+            targetAmount = targetAmount.add(
+                _removeLiquidityTargetAmount(
+                    removedPos.poolToken,
+                    removedPos.reserveToken,
+                    removedPos.poolAmount,
+                    removedPos.reserveAmount,
+                    packedRates,
+                    removedPos.timestamp,
+                    MAX_UINT256
+                )
+            );
+        }
+
+        // add the pool tokens to the system
+        _systemStore.incSystemBalance(poolToken, poolAmount);
+
+        // remove network token liquidity
+        if (_isNetworkToken(reserveToken)) {
+            // mint network tokens for this contract and migrate them
+            _mintNetworkTokens(address(this), poolToken, reserveAmount);
+            _networkToken.approve(address(_networkV3), reserveAmount);
+            _networkV3.migrateLiquidity(
+                IReserveToken(address(_networkToken)),
+                msg.sender,
+                targetAmount,
+                targetAmount,
+                reserveAmount
+            );
+            return;
+        }
+
+        // remove base token liquidity
+
+        // calculate the amount of pool tokens required for liquidation
+        // note that the amount is doubled since it's not possible to liquidate one reserve only
+        Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
+        uint256 poolLiquidationAmount = _liquidationAmount(targetAmount, poolRate, poolToken, 0);
+
+        // withdraw the pool tokens from the wallet
+        _withdrawPoolTokens(poolToken, poolLiquidationAmount);
+
+        // remove liquidity
+        _removeLiquidity(poolToken, poolLiquidationAmount, reserveToken, IReserveToken(address(_networkToken)));
+
+        // transfer the base tokens to the caller
+        uint256 baseBalance = reserveToken.balanceOf(address(this));
+        uint256 value;
+        if (reserveToken.isNativeToken()) {
+            value = baseBalance;
+        } else {
+            IERC20(address(reserveToken)).safeApprove(address(_networkV3), baseBalance);
+        }
+        _networkV3.migrateLiquidity{ value: value }(reserveToken, msg.sender, targetAmount, baseBalance, reserveAmount);
+
+        // if the contract still holds network tokens, burn them
+        uint256 networkBalance = _networkToken.balanceOf(address(this));
+        if (networkBalance > 0) {
+            _burnNetworkTokens(poolToken, networkBalance);
         }
     }
 
@@ -752,20 +830,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev migrates a list of positions to v3
-     *
-     * Requirements:
-     *
-     * - the caller must be the owner of all of the positions
-     */
-    function migratePositions(uint256[] calldata positionIds) external nonReentrant {
-        uint256 length = positionIds.length;
-        for (uint256 i = 0; i < length; i++) {
-            _removeLiquidity(msg.sender, positionIds[i], PPM_RESOLUTION, true);
-        }
-    }
-
-    /**
      * @dev migrates system pool tokens to v3
      *
      * Requirements:
@@ -806,7 +870,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         address newProvider
     ) internal returns (uint256) {
         // remove the position from the store and update the stats and the last removal checkpoint
-        Position memory removedPos = _removePosition(provider, id, PPM_RESOLUTION, false);
+        Position memory removedPos = _removePosition(provider, id, PPM_RESOLUTION);
 
         // add the position to the store, update the stats, and return the new id
         return
@@ -930,8 +994,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function _removePosition(
         address provider,
         uint256 id,
-        uint32 portion,
-        bool isMigrating
+        uint32 portion
     ) private returns (Position memory) {
         Position memory pos = _providerPosition(id, provider);
 
@@ -978,10 +1041,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // update the statistics
         _stats.decreaseTotalAmounts(pos.provider, pos.poolToken, pos.reserveToken, pos.poolAmount, pos.reserveAmount);
 
-        if (!isMigrating) {
-            // update last liquidity removal checkpoint
-            _lastRemoveCheckpointStore.addCheckpoint(provider);
-        }
+        // update last liquidity removal checkpoint
+        _lastRemoveCheckpointStore.addCheckpoint(provider);
 
         return pos;
     }
