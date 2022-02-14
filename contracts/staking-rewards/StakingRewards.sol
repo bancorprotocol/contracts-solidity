@@ -863,10 +863,9 @@ contract StakingRewards is IStakingRewards, AccessControl, Time, Utils, Contract
             poolRewardsData.rewardPerToken.add( // the aggregated reward rate
                 stakingEndTime
                 .sub(stakingStartTime) // the duration of the staking
-                .mul(program.rewardRate) // multiplied by the rate
-                .mul(REWARD_RATE_FACTOR).mul(_rewardShare(reserveToken, program)).div( // and factored to increase precision
-                        totalReserveAmount.mul(PPM_RESOLUTION)
-                    ) // and applied the specific token share of the whole reward // and divided by the total protected tokens amount in the pool
+                .mul(program.rewardRate).mul(REWARD_RATE_FACTOR).mul(_rewardShare(reserveToken, program)).div( // multiplied by the rate // and factored to increase precision
+                    totalReserveAmount.mul(PPM_RESOLUTION)
+                ) // and applied the specific token share of the whole reward // and divided by the total protected tokens amount in the pool
             );
     }
 
