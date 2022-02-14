@@ -3477,7 +3477,7 @@ describe('LiquidityProtection', () => {
              * - Per provider amount of ETH in the ETH/BNT pool
              * - Per provider amount of BNT in the ETH/BNT pool
              */
-            describe.only('liquidity-migration tests', () => {
+            describe('liquidity-migration tests', () => {
                 const NUM_OF_PROVIDERS = 3;
                 const NUM_OF_POSITIONS_PER_PROVIDER = 9;
 
