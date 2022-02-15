@@ -679,6 +679,11 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         IDSToken poolToken = migrationUnit.poolToken;
         IReserveToken reserveToken = migrationUnit.reserveToken;
 
+        (Fraction memory removeSpotRate, Fraction memory removeAverageRate) = _reserveTokenRates(
+            poolToken,
+            reserveToken
+        );
+
         uint256 poolAmount = 0;
         uint256 reserveAmount = 0;
         uint256 targetAmount = 0;
@@ -698,10 +703,10 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
             // get the various rates between the reserves upon adding liquidity and now
             PackedRates memory packedRates = _packRates(
-                removedPos.poolToken,
-                removedPos.reserveToken,
                 removedPos.reserveRateN,
-                removedPos.reserveRateD
+                removedPos.reserveRateD,
+                removeSpotRate,
+                removeAverageRate
             );
 
             // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
@@ -1124,14 +1129,21 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             reserveToken
         );
 
-        assert(
-            (addSpotRateN |
-                addSpotRateD |
-                removeSpotRate.n |
-                removeSpotRate.d |
-                removeAverageRate.n |
-                removeAverageRate.d) <= MAX_UINT128
-        );
+        assert((removeSpotRate.n | removeSpotRate.d | removeAverageRate.n | removeAverageRate.d) <= MAX_UINT128);
+
+        return _packRates(addSpotRateN, addSpotRateD, removeSpotRate, removeAverageRate);
+    }
+
+    /**
+     * @dev returns the various rates between the reserves
+     */
+    function _packRates(
+        uint256 addSpotRateN,
+        uint256 addSpotRateD,
+        Fraction memory removeSpotRate,
+        Fraction memory removeAverageRate
+    ) internal view returns (PackedRates memory) {
+        assert((addSpotRateN | addSpotRateD) <= MAX_UINT128);
 
         return
             PackedRates({
