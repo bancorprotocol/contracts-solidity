@@ -3428,17 +3428,17 @@ describe('LiquidityProtection', () => {
             });
 
             /**
-             * The liquidity-migration tests consist of 3 standard-converter pools:
+             * the migration tests consist of 3 standard pools:
              * - XXX/BNT
              * - YYY/BNT
              * - ETH/BNT
-             * The deployer of the pools adds an initial liquidity to each one of them.
-             * Each one of 3 providers then adds 9 positions of protected-liquidity to each reserve token on each pool.
-             * The protected-liquidity amounts range between 1% - 9% of the available space on each side of each pool.
-             * The primary test verifies that each provider can migrate 6 positions, 27 positions and 54 positions.
-             * The verification process compares the state of the system before and after each migration request.
+             * the deployer of the pools adds an initial liquidity to each one of them
+             * each one of 3 providers then adds 9 positions of protected liquidity to each reserve token on each pool
+             * the protected liquidity amounts range between 1% - 9% of the available space on each side of each pool
+             * the primary test verifies that each provider can migrate 6 positions, 27 positions and 54 positions
+             * the verification process compares the state of the system before and after each migration request
              *
-             * The state of the system includes the following balances:
+             * the state of the system includes the following balances:
              * +---------------+--------------------+-----------------+-----------------------------+
              * |               | Liquidity Provider | V3 Bancor Vault | Liquidity Protection Wallet |
              * +---------------+--------------------+-----------------+-----------------------------+
@@ -3454,30 +3454,30 @@ describe('LiquidityProtection', () => {
              * +---------------+--------------------+-----------------+-----------------------------+
              * | Pool Token    |          I         |        I        |              D              |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * The ones marked I are expected to be identical before and after each migration request
-             * The ones marked D are expected to be different before and after each migration request
+             * the ones marked I are expected to be identical before and after each migration request
+             * the ones marked D are expected to be different before and after each migration request
              *
-             * The state of the system also includes the following counters:
-             * - System balance in the XXX/BNT pool
-             * - System balance in the YYY/BNT pool
-             * - System balance in the ETH/BNT pool
-             * - Total amount of XXX/BNT pool tokens
-             * - Total amount of YYY/BNT pool tokens
-             * - Total amount of ETH/BNT pool tokens
-             * - Total amount of XXX in the XXX/BNT pool
-             * - Total amount of BNT in the XXX/BNT pool
-             * - Total amount of YYY in the YYY/BNT pool
-             * - Total amount of BNT in the YYY/BNT pool
-             * - Total amount of ETH in the ETH/BNT pool
-             * - Total amount of BNT in the ETH/BNT pool
-             * - Per provider amount of XXX in the XXX/BNT pool
-             * - Per provider amount of BNT in the XXX/BNT pool
-             * - Per provider amount of YYY in the YYY/BNT pool
-             * - Per provider amount of BNT in the YYY/BNT pool
-             * - Per provider amount of ETH in the ETH/BNT pool
-             * - Per provider amount of BNT in the ETH/BNT pool
+             * the state of the system also includes the following counters:
+             * - system balance in the XXX/BNT pool
+             * - system balance in the YYY/BNT pool
+             * - system balance in the ETH/BNT pool
+             * - total amount of XXX/BNT pool tokens
+             * - total amount of YYY/BNT pool tokens
+             * - total amount of ETH/BNT pool tokens
+             * - total amount of XXX in the XXX/BNT pool
+             * - total amount of BNT in the XXX/BNT pool
+             * - total amount of YYY in the YYY/BNT pool
+             * - total amount of BNT in the YYY/BNT pool
+             * - total amount of ETH in the ETH/BNT pool
+             * - total amount of BNT in the ETH/BNT pool
+             * - per provider amount of XXX in the XXX/BNT pool
+             * - per provider amount of BNT in the XXX/BNT pool
+             * - per provider amount of YYY in the YYY/BNT pool
+             * - per provider amount of BNT in the YYY/BNT pool
+             * - per provider amount of ETH in the ETH/BNT pool
+             * - per provider amount of BNT in the ETH/BNT pool
              */
-            describe('liquidity-migration tests', () => {
+            describe('migration tests', () => {
                 const NUM_OF_PROVIDERS = 3;
                 const NUM_OF_POSITIONS_PER_PROVIDER = 9;
 
