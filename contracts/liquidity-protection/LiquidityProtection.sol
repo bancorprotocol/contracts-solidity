@@ -664,7 +664,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      */
     function migratePositions(MigrationUnit[] calldata migrationUnits) external nonReentrant {
         for (uint256 i = 0; i < migrationUnits.length; i++) {
-            migratePositions(migrationUnits[i]);
+            _migratePositions(migrationUnits[i]);
         }
     }
 
@@ -675,7 +675,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * - the caller must be the owner of all of the positions
      */
-    function migratePositions(MigrationUnit calldata migrationUnit) internal {
+    function _migratePositions(MigrationUnit calldata migrationUnit) internal {
         IDSToken poolToken = migrationUnit.poolToken;
         IReserveToken reserveToken = migrationUnit.reserveToken;
 
