@@ -3795,9 +3795,14 @@ describe('LiquidityProtection', () => {
                         expect(currState.walletBaseBalance).to.equal(prevState.walletBaseBalance);
                         expect(currState.walletNetworkBalance).to.equal(prevState.walletNetworkBalance);
 
-                        expect(currState.vaultBaseBalance).to.equal(prevState.vaultBaseBalance.add(deltaPoolAmount)); // TODO: investigate
-                        expect(currState.walletPoolBalance).to.equal(prevState.walletPoolBalance.sub(deltaPoolAmount));
-                        expect(currState.systemBalance).to.equal(prevState.systemBalance.sub(deltaPoolAmount));
+                        expectAlmostEqual(
+                            currState.walletPoolBalance,
+                            prevState.walletPoolBalance.sub(deltaPoolAmount),
+                            '0'
+                        );
+                        expect(currState.walletPoolBalance.sub(currState.systemBalance)).to.equal(
+                            prevState.walletPoolBalance.sub(prevState.systemBalance)
+                        );
 
                         expect(currState.totalPoolAmount).to.equal(prevState.totalPoolAmount);
                         expect(currState.totalBaseAmount).to.equal(prevState.totalBaseAmount);
