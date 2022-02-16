@@ -3579,7 +3579,6 @@ describe('LiquidityProtection', () => {
 
                         const baseTokenBalance = TOTAL_SUPPLY.div(15);
                         const networkTokenBalance = TOTAL_SUPPLY.div(20);
-                        const value = baseToken.isETH ? baseTokenBalance : 0;
 
                         await converter.acceptOwnership();
                         await baseToken.approve(converter.address, baseTokenBalance);
@@ -3588,7 +3587,7 @@ describe('LiquidityProtection', () => {
                             [baseToken.address, networkToken.address],
                             [baseTokenBalance, networkTokenBalance],
                             1,
-                            { value }
+                            { value: baseToken.isETH ? baseTokenBalance : 0 }
                         );
                         await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
 
@@ -3596,17 +3595,16 @@ describe('LiquidityProtection', () => {
 
                         for (const provider of providers) {
                             for (let i = 1; i <= NUM_OF_POSITIONS; i++) {
-                                const baseAmount = await poolAvailableSpace(0, i);
-                                const value = baseToken.isETH ? baseAmount : 0;
+                                const baseAmount = await poolAvailableSpace(poolToken, 0, i);
                                 await baseToken.approve(liquidityProtection.address, baseAmount);
                                 await liquidityProtection.addLiquidityFor(
                                     provider.address,
                                     poolToken.address,
                                     baseToken.address,
                                     baseAmount,
-                                    { value }
+                                    { value: baseToken.isETH ? baseAmount : 0 }
                                 );
-                                const networkAmount = await poolAvailableSpace(1, i);
+                                const networkAmount = await poolAvailableSpace(poolToken, 1, i);
                                 await networkToken.approve(liquidityProtection.address, networkAmount);
                                 await liquidityProtection.addLiquidityFor(
                                     provider.address,
