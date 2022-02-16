@@ -3497,6 +3497,9 @@ describe('LiquidityProtection', () => {
                     positionIds: positionIds.filter((_, i) => filter(positions[i], poolToken, reserveToken))
                 });
 
+                const poolAvailableSpace = async (poolToken, index, percent) =>
+                    (await liquidityProtection.poolAvailableSpace(poolToken.address))[index].mul(percent).div(100);
+
                 const readState = async (baseToken, provider) => ({
                     providerGovBalance: await govToken.balanceOf(provider.address),
                     providerBaseBalance: await baseToken.balanceOf(provider.address),
@@ -3593,9 +3596,7 @@ describe('LiquidityProtection', () => {
 
                         for (const provider of providers) {
                             for (let i = 1; i <= NUM_OF_POSITIONS; i++) {
-                                const baseAmount = (await liquidityProtection.poolAvailableSpace(poolToken.address))[0]
-                                    .mul(i)
-                                    .div(100);
+                                const baseAmount = await poolAvailableSpace(0, i);
                                 const value = baseToken.isETH ? baseAmount : 0;
                                 await baseToken.approve(liquidityProtection.address, baseAmount);
                                 await liquidityProtection.addLiquidityFor(
@@ -3605,11 +3606,7 @@ describe('LiquidityProtection', () => {
                                     baseAmount,
                                     { value }
                                 );
-                                const networkAmount = (
-                                    await liquidityProtection.poolAvailableSpace(poolToken.address)
-                                )[1]
-                                    .mul(i)
-                                    .div(100);
+                                const networkAmount = await poolAvailableSpace(1, i);
                                 await networkToken.approve(liquidityProtection.address, networkAmount);
                                 await liquidityProtection.addLiquidityFor(
                                     provider.address,
