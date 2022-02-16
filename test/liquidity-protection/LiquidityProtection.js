@@ -3477,14 +3477,13 @@ describe('LiquidityProtection', () => {
              * - per provider amount of ETH in the ETH/BNT pool
              * - per provider amount of BNT in the ETH/BNT pool
              */
-            describe('migration tests', () => {
+            describe.only('migration tests', () => {
+                const NUM_OF_POOLS = 3;
                 const NUM_OF_PROVIDERS = 3;
-                const NUM_OF_POSITIONS_PER_PROVIDER = 9;
+                const NUM_OF_POSITIONS_PER_PROVIDER = 9; // number of positions per provider per pool per reserve
 
                 let providers;
-                let xxxToken;
-                let yyyToken;
-                let ethToken;
+                let baseTokens;
 
                 const filter = (position, poolToken, reserveToken) =>
                     position.poolToken === poolToken.address && position.reserveToken === reserveToken.address;
@@ -3541,19 +3540,23 @@ describe('LiquidityProtection', () => {
                     await bancorNetwork.setNetworkToken(networkToken.address);
                     await bancorNetwork.setBancorVault(bancorVault.address);
 
-                    xxxToken = await Contracts.DSToken.deploy('XXX', 'XXX', 18);
-                    yyyToken = await Contracts.DSToken.deploy('YYY', 'YYY', 18);
-                    ethToken = {
-                        isETH: true,
-                        address: NATIVE_TOKEN_ADDRESS,
-                        name: async () => 'ETH',
-                        symbol: async () => 'ETH',
-                        issue: async () => null,
-                        approve: async () => null,
-                        balanceOf: async (account) => ethers.provider.getBalance(account)
-                    };
+                    baseTokens = [
+                        {
+                            isETH: true,
+                            address: NATIVE_TOKEN_ADDRESS,
+                            name: async () => 'ETH',
+                            symbol: async () => 'ETH',
+                            issue: async () => null,
+                            approve: async () => null,
+                            balanceOf: async (account) => ethers.provider.getBalance(account)
+                        }
+                    ];
 
-                    for (const baseToken of [xxxToken, yyyToken, ethToken]) {
+                    for (let i = 1; i < NUM_OF_POOLS; i++) {
+                        baseTokens.push(await Contracts.DSToken.deploy(`TKN${i}`, `TKN${i}`, 18));
+                    }
+
+                    for (const baseToken of baseTokens) {
                         await baseToken.issue(owner.address, TOTAL_SUPPLY);
                         await converterRegistry.newConverter(
                             STANDARD_CONVERTER_TYPE,
@@ -3630,7 +3633,7 @@ describe('LiquidityProtection', () => {
                         NUM_OF_POSITIONS_PER_PROVIDER
                     ]) {
                         it(`verifies that provider ${i + 1} can migrate ${
-                            numOfPositionsPerProvider * 6
+                            numOfPositionsPerProvider * NUM_OF_POOLS * 2
                         } positions`, async () => {
                             const somePositions = (_, index) =>
                                 index % (NUM_OF_POSITIONS_PER_PROVIDER * 2) < numOfPositionsPerProvider * 2;
@@ -3645,12 +3648,12 @@ describe('LiquidityProtection', () => {
                             );
 
                             const prevStates = {};
-                            for (const baseToken of [xxxToken, yyyToken, ethToken]) {
+                            for (const baseToken of baseTokens) {
                                 prevStates[baseToken.address] = await readState(baseToken, providers[i]);
                             }
 
                             const migrationUnits = [];
-                            for (const baseToken of [xxxToken, yyyToken, ethToken]) {
+                            for (const baseToken of baseTokens) {
                                 migrationUnits.push(
                                     getMigrationUnit(protectedLiquidityIds, positions, baseToken.poolToken, baseToken),
                                     getMigrationUnit(
@@ -3666,10 +3669,10 @@ describe('LiquidityProtection', () => {
                                 .connect(providers[i])
                                 .migratePositions(migrationUnits);
                             const gasCost = await getTransactionCost(receipt);
-                            prevStates[ethToken.address].providerBaseBalance =
-                                prevStates[ethToken.address].providerBaseBalance.sub(gasCost);
+                            prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
+                                prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
 
-                            for (const baseToken of [xxxToken, yyyToken, ethToken]) {
+                            for (const baseToken of baseTokens) {
                                 const basePositions = getPositions(positions, baseToken.poolToken, baseToken);
                                 const networkPositions = getPositions(positions, baseToken.poolToken, networkToken);
                                 const baseReserveAmount = basePositions.reduce(
@@ -3705,8 +3708,8 @@ describe('LiquidityProtection', () => {
                                 expect(currState.walletNetworkBalance).to.equal(prevState.walletNetworkBalance);
 
                                 expect(currState.vaultNetworkBalance).to.equal(
-                                    prevState.vaultNetworkBalance.add(networkReserveAmount.mul(3))
-                                ); // TODO: investigate
+                                    prevState.vaultNetworkBalance.add(networkReserveAmount.mul(NUM_OF_POOLS))
+                                );
 
                                 expectAlmostEqual(
                                     currState.vaultBaseBalance,
@@ -3762,18 +3765,18 @@ describe('LiquidityProtection', () => {
                     );
 
                     const prevStates = {};
-                    for (const baseToken of [xxxToken, yyyToken, ethToken]) {
+                    for (const baseToken of baseTokens) {
                         prevStates[baseToken.address] = await readState(baseToken, owner);
                     }
 
                     const receipt = await liquidityProtection.migrateSystemPoolTokens(
-                        [xxxToken, yyyToken, ethToken].map((baseToken) => baseToken.poolToken.address)
+                        baseTokens.map((baseToken) => baseToken.poolToken.address)
                     );
                     const gasCost = await getTransactionCost(receipt);
-                    prevStates[ethToken.address].providerBaseBalance =
-                        prevStates[ethToken.address].providerBaseBalance.sub(gasCost);
+                    prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
+                        prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
 
-                    for (const baseToken of [xxxToken, yyyToken, ethToken]) {
+                    for (const baseToken of baseTokens) {
                         const basePositions = getPositions(positions, baseToken.poolToken, baseToken);
                         const networkPositions = getPositions(positions, baseToken.poolToken, networkToken);
                         const basePoolAmount = basePositions.reduce((a, b) => a.add(b.poolAmount), BigNumber.from(0));
@@ -3822,8 +3825,8 @@ describe('LiquidityProtection', () => {
                     const migrationUnit = getMigrationUnit(
                         protectedLiquidityIds,
                         positions,
-                        xxxToken.poolToken,
-                        xxxToken
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
                     );
 
                     migrationUnit.positionIds.push(migrationUnit.positionIds.reduce((a, b) => a + b.toString(), ''));
@@ -3845,14 +3848,14 @@ describe('LiquidityProtection', () => {
                     const migrationUnit1 = getMigrationUnit(
                         protectedLiquidityIds,
                         positions,
-                        xxxToken.poolToken,
-                        xxxToken
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
                     );
                     const migrationUnit2 = getMigrationUnit(
                         protectedLiquidityIds,
                         positions,
-                        yyyToken.poolToken,
-                        yyyToken
+                        baseTokens[1].poolToken,
+                        baseTokens[1]
                     );
 
                     migrationUnit1.positionIds.push(migrationUnit2.positionIds[0]);
@@ -3874,8 +3877,8 @@ describe('LiquidityProtection', () => {
                     const migrationUnit = getMigrationUnit(
                         protectedLiquidityIds,
                         positions,
-                        xxxToken.poolToken,
-                        xxxToken
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
                     );
 
                     migrationUnit.positionIds.push(migrationUnit.positionIds[0]);
@@ -3897,8 +3900,8 @@ describe('LiquidityProtection', () => {
                     const migrationUnit = getMigrationUnit(
                         protectedLiquidityIds,
                         positions,
-                        xxxToken.poolToken,
-                        xxxToken
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
                     );
 
                     await liquidityProtection.connect(providers[0]).migratePositions([migrationUnit]);
@@ -3920,8 +3923,8 @@ describe('LiquidityProtection', () => {
                     const migrationUnit = getMigrationUnit(
                         protectedLiquidityIds,
                         positions,
-                        xxxToken.poolToken,
-                        xxxToken
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
                     );
 
                     await expect(
@@ -3942,11 +3945,11 @@ describe('LiquidityProtection', () => {
                     const migrationUnit = getMigrationUnit(
                         protectedLiquidityIds,
                         positions,
-                        xxxToken.poolToken,
-                        xxxToken
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
                     );
 
-                    await liquidityProtectionSettings.removePoolFromWhitelist(xxxToken.poolToken.address);
+                    await liquidityProtectionSettings.removePoolFromWhitelist(baseTokens[0].poolToken.address);
                     await expect(
                         liquidityProtection.connect(providers[0]).migratePositions([migrationUnit])
                     ).to.be.revertedWith('ERR_POOL_NOT_WHITELISTED');
@@ -3954,7 +3957,9 @@ describe('LiquidityProtection', () => {
 
                 it('verifies that a non-owner cannot migrate system pool tokens', async () => {
                     await expect(
-                        liquidityProtection.connect(providers[0]).migrateSystemPoolTokens([xxxToken.poolToken.address])
+                        liquidityProtection
+                            .connect(providers[0])
+                            .migrateSystemPoolTokens([baseTokens[0].poolToken.address])
                     ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
             });
