@@ -3477,10 +3477,10 @@ describe('LiquidityProtection', () => {
              * - per provider amount of ETH in the ETH/BNT pool
              * - per provider amount of BNT in the ETH/BNT pool
              */
-            describe.only('migration tests', () => {
+            describe('migration tests', () => {
                 const NUM_OF_POOLS = 3;
                 const NUM_OF_PROVIDERS = 3;
-                const NUM_OF_POSITIONS_PER_PROVIDER = 9; // number of positions per provider per pool per reserve
+                const NUM_OF_POSITIONS = 9; // number of positions per provider per pool per reserve
 
                 let providers;
                 let baseTokens;
@@ -3592,7 +3592,7 @@ describe('LiquidityProtection', () => {
                         await liquidityProtection.setTime(now);
 
                         for (const provider of providers) {
-                            for (let i = 1; i <= NUM_OF_POSITIONS_PER_PROVIDER; i++) {
+                            for (let i = 1; i <= NUM_OF_POSITIONS; i++) {
                                 const baseAmount = (await liquidityProtection.poolAvailableSpace(poolToken.address))[0]
                                     .mul(i)
                                     .div(100);
@@ -3627,16 +3627,11 @@ describe('LiquidityProtection', () => {
                 });
 
                 for (let i = 0; i < NUM_OF_PROVIDERS; i++) {
-                    for (const numOfPositionsPerProvider of [
-                        1,
-                        NUM_OF_POSITIONS_PER_PROVIDER / 2,
-                        NUM_OF_POSITIONS_PER_PROVIDER
-                    ]) {
+                    for (const numOfPositions of [1, NUM_OF_POSITIONS / 2, NUM_OF_POSITIONS]) {
                         it(`verifies that provider ${i + 1} can migrate ${
-                            numOfPositionsPerProvider * NUM_OF_POOLS * 2
+                            numOfPositions * NUM_OF_POOLS * 2
                         } positions`, async () => {
-                            const somePositions = (_, index) =>
-                                index % (NUM_OF_POSITIONS_PER_PROVIDER * 2) < numOfPositionsPerProvider * 2;
+                            const somePositions = (_, index) => index % (NUM_OF_POSITIONS * 2) < numOfPositions * 2;
                             const protectedLiquidityIds = (
                                 await liquidityProtectionStore.protectedLiquidityIds(providers[i].address)
                             ).filter(somePositions);
@@ -3746,7 +3741,7 @@ describe('LiquidityProtection', () => {
 
                             expect(
                                 await liquidityProtectionStore.protectedLiquidityIds(providers[i].address)
-                            ).to.have.lengthOf((NUM_OF_POSITIONS_PER_PROVIDER - numOfPositionsPerProvider) * 6);
+                            ).to.have.lengthOf((NUM_OF_POSITIONS - numOfPositions) * NUM_OF_POOLS * 2);
                         });
                     }
                 }
