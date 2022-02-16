@@ -663,7 +663,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * - the caller must be the owner of all of the positions
      */
     function migratePositions(MigrationUnit[] calldata migrationUnits) external nonReentrant {
-        for (uint256 i = 0; i < migrationUnits.length; i++) {
+        uint256 length = migrationUnits.length;
+        for (uint256 i = 0; i < length; ++i) {
             _migratePositions(migrationUnits[i]);
         }
     }
@@ -691,7 +692,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 reserveAmount = 0;
         uint256 targetAmount = 0;
 
-        for (uint256 i = 0; i < migrationUnit.positionIds.length; i++) {
+        uint256 length = migrationUnit.positionIds.length;
+        for (uint256 i = 0; i < length; ++i) {
             Position memory removedPos = _removePosition(msg.sender, migrationUnit.positionIds[i], PPM_RESOLUTION);
             require(
                 removedPos.poolToken == poolToken && removedPos.reserveToken == reserveToken,
@@ -715,8 +717,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             // get the target token amount
             targetAmount = targetAmount.add(
                 _removeLiquidityTargetAmount(
-                    removedPos.poolToken,
-                    removedPos.reserveToken,
+                    poolToken,
+                    reserveToken,
                     removedPos.poolAmount,
                     removedPos.reserveAmount,
                     packedRates,
@@ -1137,7 +1139,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 addSpotRateD,
         Fraction memory removeSpotRate,
         Fraction memory removeAverageRate
-    ) internal view returns (PackedRates memory) {
+    ) internal pure returns (PackedRates memory) {
         assert((addSpotRateN | addSpotRateD) <= MAX_UINT128);
 
         return
