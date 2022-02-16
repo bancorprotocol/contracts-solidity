@@ -3574,7 +3574,7 @@ describe('LiquidityProtection', () => {
                         const converterAddress = await poolToken.owner();
                         const converter = await Contracts.TestStandardPoolConverter.attach(converterAddress);
 
-                        const baseTokenBalance = TOTAL_SUPPLY.div(10);
+                        const baseTokenBalance = TOTAL_SUPPLY.div(15);
                         const networkTokenBalance = TOTAL_SUPPLY.div(20);
                         const value = baseToken.isETH ? baseTokenBalance : 0;
 
@@ -3709,17 +3709,17 @@ describe('LiquidityProtection', () => {
                                 expectAlmostEqual(
                                     currState.vaultBaseBalance,
                                     prevState.vaultBaseBalance.add(baseReserveAmount),
-                                    '0.00000000000000000003795'
+                                    '0.0000000000000000004427'
                                 );
                                 expectAlmostEqual(
                                     currState.walletPoolBalance,
                                     prevState.walletPoolBalance.sub(basePoolAmount.mul(2)),
-                                    '0.00000000000000000000032'
+                                    '0.0000000000000000000032'
                                 );
                                 expectAlmostEqual(
                                     currState.systemBalance,
                                     prevState.systemBalance.sub(deltaPoolAmount),
-                                    '0.00000000000000000000218'
+                                    '0.0000000000000000000218'
                                 );
 
                                 expect(currState.totalPoolAmount).to.equal(
@@ -3798,7 +3798,7 @@ describe('LiquidityProtection', () => {
                         expectAlmostEqual(
                             currState.walletPoolBalance,
                             prevState.walletPoolBalance.sub(deltaPoolAmount),
-                            '0'
+                            '0.0000000000000000000032'
                         );
                         expect(currState.walletPoolBalance.sub(currState.systemBalance)).to.equal(
                             prevState.walletPoolBalance.sub(prevState.systemBalance)
