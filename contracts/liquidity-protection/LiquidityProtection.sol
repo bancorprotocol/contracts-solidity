@@ -684,6 +684,14 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             reserveToken
         );
 
+        // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
+        _verifyRateDeviation(
+            removeSpotRate.n,
+            removeSpotRate.d,
+            removeAverageRate.n,
+            removeAverageRate.d
+        );
+
         uint256 poolAmount = 0;
         uint256 reserveAmount = 0;
         uint256 targetAmount = 0;
@@ -707,14 +715,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 removedPos.reserveRateD,
                 removeSpotRate,
                 removeAverageRate
-            );
-
-            // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
-            _verifyRateDeviation(
-                packedRates.removeSpotRateN,
-                packedRates.removeSpotRateD,
-                packedRates.removeAverageRateN,
-                packedRates.removeAverageRateD
             );
 
             // get the target token amount
