@@ -685,12 +685,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         );
 
         // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
-        _verifyRateDeviation(
-            removeSpotRate.n,
-            removeSpotRate.d,
-            removeAverageRate.n,
-            removeAverageRate.d
-        );
+        _verifyRateDeviation(removeSpotRate.n, removeSpotRate.d, removeAverageRate.n, removeAverageRate.d);
 
         uint256 poolAmount = 0;
         uint256 reserveAmount = 0;
