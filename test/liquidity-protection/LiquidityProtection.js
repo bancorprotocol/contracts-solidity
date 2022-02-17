@@ -3859,7 +3859,7 @@ describe('LiquidityProtection', () => {
                     ).to.be.revertedWith('ERR_INVALID_MIGRATION_UNIT');
                 });
 
-                it('should revert when attempting to migrate a position more than once in the same transaction', async () => {
+                it('should revert when attempting to migrate a position more than once in the same migration unit', async () => {
                     const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
                         providers[0].address
                     );
@@ -3879,6 +3879,33 @@ describe('LiquidityProtection', () => {
                     migrationUnit.positionIds.push(migrationUnit.positionIds[0]);
                     await expect(
                         liquidityProtection.connect(providers[0]).migratePositions([migrationUnit])
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
+                });
+
+                it('should revert when attempting to migrate a position more than once in separate migration units', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const migrationUnit1 = getMigrationUnit(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+                    const migrationUnit2 = {
+                        poolToken: migrationUnit1.poolToken,
+                        reserveToken: migrationUnit1.reserveToken,
+                        positionIds: [migrationUnit1.positionIds[0]]
+                    };
+
+                    await expect(
+                        liquidityProtection.connect(providers[0]).migratePositions([migrationUnit1, migrationUnit2])
                     ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
 
