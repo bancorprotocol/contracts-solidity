@@ -3509,10 +3509,10 @@ describe('LiquidityProtection', () => {
                     vaultBaseBalance: await baseToken.balanceOf(bancorVault.address),
                     vaultNetworkBalance: await networkToken.balanceOf(bancorVault.address),
                     vaultPoolBalance: await baseToken.poolToken.balanceOf(bancorVault.address),
-                    walletGovBalance: await govToken.balanceOf(liquidityProtectionWallet.address),
-                    walletBaseBalance: await baseToken.balanceOf(liquidityProtectionWallet.address),
-                    walletNetworkBalance: await networkToken.balanceOf(liquidityProtectionWallet.address),
-                    walletPoolBalance: await baseToken.poolToken.balanceOf(liquidityProtectionWallet.address),
+                    protectionGovBalance: await govToken.balanceOf(liquidityProtectionWallet.address),
+                    protectionBaseBalance: await baseToken.balanceOf(liquidityProtectionWallet.address),
+                    protectionNetworkBalance: await networkToken.balanceOf(liquidityProtectionWallet.address),
+                    protectionPoolBalance: await baseToken.poolToken.balanceOf(liquidityProtectionWallet.address),
 
                     systemBalance: await liquidityProtectionSystemStore.systemBalance(baseToken.poolToken.address),
                     totalPoolAmount: await liquidityProtectionStats.totalPoolAmount(baseToken.poolToken.address),
@@ -3693,9 +3693,9 @@ describe('LiquidityProtection', () => {
                                 expect(currState.providerPoolBalance).to.equal(prevState.providerPoolBalance);
                                 expect(currState.vaultGovBalance).to.equal(prevState.vaultGovBalance);
                                 expect(currState.vaultPoolBalance).to.equal(prevState.vaultPoolBalance);
-                                expect(currState.walletGovBalance).to.equal(prevState.walletGovBalance);
-                                expect(currState.walletBaseBalance).to.equal(prevState.walletBaseBalance);
-                                expect(currState.walletNetworkBalance).to.equal(prevState.walletNetworkBalance);
+                                expect(currState.protectionGovBalance).to.equal(prevState.protectionGovBalance);
+                                expect(currState.protectionBaseBalance).to.equal(prevState.protectionBaseBalance);
+                                expect(currState.protectionNetworkBalance).to.equal(prevState.protectionNetworkBalance);
 
                                 expect(currState.vaultNetworkBalance).to.equal(
                                     prevState.vaultNetworkBalance.add(networkReserveAmount.mul(NUM_OF_POOLS))
@@ -3707,8 +3707,8 @@ describe('LiquidityProtection', () => {
                                     '0.0000000000000000004427'
                                 );
                                 expectAlmostEqual(
-                                    currState.walletPoolBalance,
-                                    prevState.walletPoolBalance.sub(basePoolAmount.mul(2)),
+                                    currState.protectionPoolBalance,
+                                    prevState.protectionPoolBalance.sub(basePoolAmount.mul(2)),
                                     '0.0000000000000000000032'
                                 );
                                 expectAlmostEqual(
@@ -3786,17 +3786,17 @@ describe('LiquidityProtection', () => {
                         expect(currState.vaultGovBalance).to.equal(prevState.vaultGovBalance);
                         expect(currState.vaultPoolBalance).to.equal(prevState.vaultPoolBalance);
                         expect(currState.vaultNetworkBalance).to.equal(prevState.vaultNetworkBalance);
-                        expect(currState.walletGovBalance).to.equal(prevState.walletGovBalance);
-                        expect(currState.walletBaseBalance).to.equal(prevState.walletBaseBalance);
-                        expect(currState.walletNetworkBalance).to.equal(prevState.walletNetworkBalance);
+                        expect(currState.protectionGovBalance).to.equal(prevState.protectionGovBalance);
+                        expect(currState.protectionBaseBalance).to.equal(prevState.protectionBaseBalance);
+                        expect(currState.protectionNetworkBalance).to.equal(prevState.protectionNetworkBalance);
 
                         expectAlmostEqual(
-                            currState.walletPoolBalance,
-                            prevState.walletPoolBalance.sub(deltaPoolAmount),
+                            currState.protectionPoolBalance,
+                            prevState.protectionPoolBalance.sub(deltaPoolAmount),
                             '0.0000000000000000000032'
                         );
-                        expect(currState.walletPoolBalance.sub(currState.systemBalance)).to.equal(
-                            prevState.walletPoolBalance.sub(prevState.systemBalance)
+                        expect(currState.protectionPoolBalance.sub(currState.systemBalance)).to.equal(
+                            prevState.protectionPoolBalance.sub(prevState.systemBalance)
                         );
 
                         expect(currState.totalPoolAmount).to.equal(prevState.totalPoolAmount);
