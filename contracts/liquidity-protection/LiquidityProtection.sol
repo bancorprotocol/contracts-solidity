@@ -680,6 +680,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         IDSToken poolToken = migrationUnit.poolToken;
         IReserveToken reserveToken = migrationUnit.reserveToken;
 
+        Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
+
         (Fraction memory removeSpotRate, Fraction memory removeAverageRate) = _reserveTokenRates(
             poolToken,
             reserveToken
@@ -717,8 +719,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             // get the target token amount
             targetAmount = targetAmount.add(
                 _removeLiquidityTargetAmount(
-                    poolToken,
-                    reserveToken,
+                    poolRate,
                     removedPos.poolAmount,
                     removedPos.reserveAmount,
                     packedRates,
@@ -750,7 +751,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
         uint256 poolLiquidationAmount = _liquidationAmount(targetAmount, poolRate, poolToken, 0);
 
         // withdraw the pool tokens from the wallet
@@ -791,6 +791,28 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // get the rate between the pool token and the reserve token
         Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
 
+        return
+            _removeLiquidityTargetAmount(
+                poolRate,
+                poolAmount,
+                reserveAmount,
+                packedRates,
+                addTimestamp,
+                removeTimestamp
+            );
+    }
+
+    /**
+     * @dev returns the amount the provider will receive for removing liquidity
+     */
+    function _removeLiquidityTargetAmount(
+        Fraction memory poolRate,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        PackedRates memory packedRates,
+        uint256 addTimestamp,
+        uint256 removeTimestamp
+    ) internal view returns (uint256) {
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: packedRates.addSpotRateN, d: packedRates.addSpotRateD });
         Fraction memory removeSpotRate = Fraction({ n: packedRates.removeSpotRateN, d: packedRates.removeSpotRateD });
