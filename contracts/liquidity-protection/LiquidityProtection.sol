@@ -793,14 +793,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // calculate the protection level
         Fraction memory level = _protectionLevel(addTimestamp, removeTimestamp);
 
-        return
-            _removeLiquidityTargetAmount(
-                poolRate,
-                poolAmount,
-                reserveAmount,
-                packedRates,
-                level
-            );
+        return _removeLiquidityTargetAmount(poolRate, poolAmount, reserveAmount, packedRates, level);
     }
 
     /**
