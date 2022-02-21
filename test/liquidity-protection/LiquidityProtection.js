@@ -3491,7 +3491,7 @@ describe('LiquidityProtection', () => {
                 const getPositions = (positions, poolToken, reserveToken) =>
                     positions.filter((position) => filter(position, poolToken, reserveToken));
 
-                const getMigrationUnit = (positionIds, positions, poolToken, reserveToken) => ({
+                const getPositionList = (positionIds, positions, poolToken, reserveToken) => ({
                     poolToken: poolToken.address,
                     reserveToken: reserveToken.address,
                     positionIds: positionIds.filter((_, i) => filter(positions[i], poolToken, reserveToken))
@@ -3642,11 +3642,11 @@ describe('LiquidityProtection', () => {
                                 prevStates[baseToken.address] = await readState(baseToken, providers[i]);
                             }
 
-                            const migrationUnits = [];
+                            const positionLists = [];
                             for (const baseToken of baseTokens) {
-                                migrationUnits.push(
-                                    getMigrationUnit(protectedLiquidityIds, positions, baseToken.poolToken, baseToken),
-                                    getMigrationUnit(
+                                positionLists.push(
+                                    getPositionList(protectedLiquidityIds, positions, baseToken.poolToken, baseToken),
+                                    getPositionList(
                                         protectedLiquidityIds,
                                         positions,
                                         baseToken.poolToken,
@@ -3657,7 +3657,7 @@ describe('LiquidityProtection', () => {
 
                             const receipt = await liquidityProtection
                                 .connect(providers[i])
-                                .migratePositions(migrationUnits);
+                                .migratePositions(positionLists);
                             const gasCost = await getTransactionCost(receipt);
                             prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
                                 prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
@@ -3817,20 +3817,20 @@ describe('LiquidityProtection', () => {
                     const positions = protectedLiquidities.map((protectedLiquidity) =>
                         getProtection(protectedLiquidity)
                     );
-                    const migrationUnit = getMigrationUnit(
+                    const positionList = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[0].poolToken,
                         baseTokens[0]
                     );
 
-                    migrationUnit.positionIds.push(migrationUnit.positionIds.reduce((a, b) => a + b.toString(), ''));
+                    positionList.positionIds.push(positionList.positionIds.reduce((a, b) => a + b.toString(), ''));
                     await expect(
-                        liquidityProtection.connect(providers[0]).migratePositions([migrationUnit])
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
                     ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
 
-                it('should revert when attempting to migrate positions of different types in the same migration unit', async () => {
+                it('should revert when attempting to migrate positions of different types in the same position list', async () => {
                     const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
                         providers[0].address
                     );
@@ -3840,26 +3840,26 @@ describe('LiquidityProtection', () => {
                     const positions = protectedLiquidities.map((protectedLiquidity) =>
                         getProtection(protectedLiquidity)
                     );
-                    const migrationUnit1 = getMigrationUnit(
+                    const positionList1 = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[0].poolToken,
                         baseTokens[0]
                     );
-                    const migrationUnit2 = getMigrationUnit(
+                    const positionList2 = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[1].poolToken,
                         baseTokens[1]
                     );
 
-                    migrationUnit1.positionIds.push(migrationUnit2.positionIds[0]);
+                    positionList1.positionIds.push(positionList2.positionIds[0]);
                     await expect(
-                        liquidityProtection.connect(providers[0]).migratePositions([migrationUnit1])
-                    ).to.be.revertedWith('ERR_INVALID_MIGRATION_UNIT');
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList1])
+                    ).to.be.revertedWith('ERR_INVALID_POSITION_LIST');
                 });
 
-                it('should revert when attempting to migrate a position more than once in the same migration unit', async () => {
+                it('should revert when attempting to migrate a position more than once in the same position list', async () => {
                     const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
                         providers[0].address
                     );
@@ -3869,20 +3869,20 @@ describe('LiquidityProtection', () => {
                     const positions = protectedLiquidities.map((protectedLiquidity) =>
                         getProtection(protectedLiquidity)
                     );
-                    const migrationUnit = getMigrationUnit(
+                    const positionList = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[0].poolToken,
                         baseTokens[0]
                     );
 
-                    migrationUnit.positionIds.push(migrationUnit.positionIds[0]);
+                    positionList.positionIds.push(positionList.positionIds[0]);
                     await expect(
-                        liquidityProtection.connect(providers[0]).migratePositions([migrationUnit])
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
                     ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
 
-                it('should revert when attempting to migrate a position more than once in separate migration units', async () => {
+                it('should revert when attempting to migrate a position more than once in separate position lists', async () => {
                     const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
                         providers[0].address
                     );
@@ -3892,20 +3892,20 @@ describe('LiquidityProtection', () => {
                     const positions = protectedLiquidities.map((protectedLiquidity) =>
                         getProtection(protectedLiquidity)
                     );
-                    const migrationUnit1 = getMigrationUnit(
+                    const positionList1 = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[0].poolToken,
                         baseTokens[0]
                     );
-                    const migrationUnit2 = {
-                        poolToken: migrationUnit1.poolToken,
-                        reserveToken: migrationUnit1.reserveToken,
-                        positionIds: [migrationUnit1.positionIds[0]]
+                    const positionList2 = {
+                        poolToken: positionList1.poolToken,
+                        reserveToken: positionList1.reserveToken,
+                        positionIds: [positionList1.positionIds[0]]
                     };
 
                     await expect(
-                        liquidityProtection.connect(providers[0]).migratePositions([migrationUnit1, migrationUnit2])
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList1, positionList2])
                     ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
 
@@ -3919,16 +3919,16 @@ describe('LiquidityProtection', () => {
                     const positions = protectedLiquidities.map((protectedLiquidity) =>
                         getProtection(protectedLiquidity)
                     );
-                    const migrationUnit = getMigrationUnit(
+                    const positionList = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[0].poolToken,
                         baseTokens[0]
                     );
 
-                    await liquidityProtection.connect(providers[0]).migratePositions([migrationUnit]);
+                    await liquidityProtection.connect(providers[0]).migratePositions([positionList]);
                     await expect(
-                        liquidityProtection.connect(providers[0]).migratePositions([migrationUnit])
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
                     ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
 
@@ -3942,7 +3942,7 @@ describe('LiquidityProtection', () => {
                     const positions = protectedLiquidities.map((protectedLiquidity) =>
                         getProtection(protectedLiquidity)
                     );
-                    const migrationUnit = getMigrationUnit(
+                    const positionList = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[0].poolToken,
@@ -3950,7 +3950,7 @@ describe('LiquidityProtection', () => {
                     );
 
                     await expect(
-                        liquidityProtection.connect(providers[1]).migratePositions([migrationUnit])
+                        liquidityProtection.connect(providers[1]).migratePositions([positionList])
                     ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
 
@@ -3964,7 +3964,7 @@ describe('LiquidityProtection', () => {
                     const positions = protectedLiquidities.map((protectedLiquidity) =>
                         getProtection(protectedLiquidity)
                     );
-                    const migrationUnit = getMigrationUnit(
+                    const positionList = getPositionList(
                         protectedLiquidityIds,
                         positions,
                         baseTokens[0].poolToken,
@@ -3973,7 +3973,7 @@ describe('LiquidityProtection', () => {
 
                     await liquidityProtectionSettings.removePoolFromWhitelist(baseTokens[0].poolToken.address);
                     await expect(
-                        liquidityProtection.connect(providers[0]).migratePositions([migrationUnit])
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
                     ).to.be.revertedWith('ERR_POOL_NOT_WHITELISTED');
                 });
 

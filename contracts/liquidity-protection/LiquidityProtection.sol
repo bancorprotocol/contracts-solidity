@@ -84,7 +84,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
-    struct MigrationUnit {
+    struct PositionList {
         IDSToken poolToken; // pool token address
         IReserveToken reserveToken; // reserve token address
         uint256[] positionIds; // position ids
@@ -662,10 +662,10 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * - the caller must be the owner of all of the positions
      */
-    function migratePositions(MigrationUnit[] calldata migrationUnits) external nonReentrant {
-        uint256 length = migrationUnits.length;
+    function migratePositions(PositionList[] calldata positionLists) external nonReentrant {
+        uint256 length = positionLists.length;
         for (uint256 i = 0; i < length; ++i) {
-            _migratePositions(migrationUnits[i]);
+            _migratePositions(positionLists[i]);
         }
     }
 
@@ -676,9 +676,9 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      *
      * - the caller must be the owner of all of the positions
      */
-    function _migratePositions(MigrationUnit calldata migrationUnit) internal {
-        IDSToken poolToken = migrationUnit.poolToken;
-        IReserveToken reserveToken = migrationUnit.reserveToken;
+    function _migratePositions(PositionList calldata positionList) internal {
+        IDSToken poolToken = positionList.poolToken;
+        IReserveToken reserveToken = positionList.reserveToken;
 
         Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
 
@@ -694,12 +694,12 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 reserveAmount = 0;
         uint256 targetAmount = 0;
 
-        uint256 length = migrationUnit.positionIds.length;
+        uint256 length = positionList.positionIds.length;
         for (uint256 i = 0; i < length; ++i) {
-            Position memory removedPos = _removePosition(msg.sender, migrationUnit.positionIds[i], PPM_RESOLUTION);
+            Position memory removedPos = _removePosition(msg.sender, positionList.positionIds[i], PPM_RESOLUTION);
             require(
                 removedPos.poolToken == poolToken && removedPos.reserveToken == reserveToken,
-                "ERR_INVALID_MIGRATION_UNIT"
+                "ERR_INVALID_POSITION_LIST"
             );
 
             // get the pool token amount
