@@ -3646,12 +3646,7 @@ describe('LiquidityProtection', () => {
                             for (const baseToken of baseTokens) {
                                 positionLists.push(
                                     getPositionList(protectedLiquidityIds, positions, baseToken.poolToken, baseToken),
-                                    getPositionList(
-                                        protectedLiquidityIds,
-                                        positions,
-                                        baseToken.poolToken,
-                                        networkToken
-                                    )
+                                    getPositionList(protectedLiquidityIds, positions, baseToken.poolToken, networkToken)
                                 );
                             }
 
