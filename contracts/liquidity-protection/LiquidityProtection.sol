@@ -723,8 +723,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                     removedPos.poolAmount,
                     removedPos.reserveAmount,
                     packedRates,
-                    removedPos.timestamp,
-                    MAX_UINT256
+                    Fraction({ n: 1, d: 1 })
                 )
             );
         }
@@ -791,14 +790,16 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // get the rate between the pool token and the reserve token
         Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
 
+        // calculate the protection level
+        Fraction memory level = _protectionLevel(addTimestamp, removeTimestamp);
+
         return
             _removeLiquidityTargetAmount(
                 poolRate,
                 poolAmount,
                 reserveAmount,
                 packedRates,
-                addTimestamp,
-                removeTimestamp
+                level
             );
     }
 
@@ -810,9 +811,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmount,
         uint256 reserveAmount,
         PackedRates memory packedRates,
-        uint256 addTimestamp,
-        uint256 removeTimestamp
-    ) internal view returns (uint256) {
+        Fraction memory level
+    ) internal pure returns (uint256) {
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: packedRates.addSpotRateN, d: packedRates.addSpotRateD });
         Fraction memory removeSpotRate = Fraction({ n: packedRates.removeSpotRateN, d: packedRates.removeSpotRateD });
@@ -826,9 +826,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // calculate the impermanent loss
         Fraction memory loss = _impLoss(addSpotRate, removeAverageRate);
-
-        // calculate the protection level
-        Fraction memory level = _protectionLevel(addTimestamp, removeTimestamp);
 
         // calculate the compensation amount
         return _compensationAmount(reserveAmount, Math.max(reserveAmount, total), loss, level);
