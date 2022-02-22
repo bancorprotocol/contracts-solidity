@@ -3429,9 +3429,9 @@ describe('LiquidityProtection', () => {
 
             /**
              * the migration tests consist of 3 standard pools:
-             * - XXX/BNT
-             * - YYY/BNT
              * - ETH/BNT
+             * - TKN1/BNT
+             * - TKN2/BNT
              * the deployer of the pools adds an initial liquidity to each one of them
              * each one of 3 providers then adds 9 positions of protected liquidity to each reserve token on each pool
              * the protected liquidity amounts range between 1% - 9% of the available space on each side of each pool
@@ -3442,40 +3442,39 @@ describe('LiquidityProtection', () => {
              * +---------------+--------------------+-----------------+-----------------------------+
              * |               | Liquidity Provider | V3 Bancor Vault | Liquidity Protection Wallet |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * | Gov Token     |          I         |        I        |              I              |
+             * | Gov Token     |                    |                 |                             |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * | XXX Token     |          I         |        D        |              I              |
+             * | BNT Token     |                    |        X        |                             |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * | YYY Token     |          I         |        D        |              I              |
+             * | ETH Token     |                    |        X        |                             |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * | ETH "Token"   |          I         |        D        |              I              |
+             * | TKN1 Token    |                    |        X        |                             |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * | Network Token |          I         |        D        |              I              |
+             * | TKN2 Token    |                    |        X        |                             |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * | Pool Token    |          I         |        I        |              D              |
+             * | Pool Token    |                    |                 |              X              |
              * +---------------+--------------------+-----------------+-----------------------------+
-             * the ones marked I are expected to be identical before and after each migration request
-             * the ones marked D are expected to be different before and after each migration request
+             * the ones marked X are expected to change as a result of executing migration requests
              *
              * the state of the system also includes the following counters:
-             * - system balance in the XXX/BNT pool
-             * - system balance in the YYY/BNT pool
              * - system balance in the ETH/BNT pool
-             * - total amount of XXX/BNT pool tokens
-             * - total amount of YYY/BNT pool tokens
+             * - system balance in the TKN1/BNT pool
+             * - system balance in the TKN2/BNT pool
              * - total amount of ETH/BNT pool tokens
-             * - total amount of XXX in the XXX/BNT pool
-             * - total amount of BNT in the XXX/BNT pool
-             * - total amount of YYY in the YYY/BNT pool
-             * - total amount of BNT in the YYY/BNT pool
-             * - total amount of ETH in the ETH/BNT pool
+             * - total amount of TKN1/BNT pool tokens
+             * - total amount of TKN2/BNT pool tokens
              * - total amount of BNT in the ETH/BNT pool
-             * - per provider amount of XXX in the XXX/BNT pool
-             * - per provider amount of BNT in the XXX/BNT pool
-             * - per provider amount of YYY in the YYY/BNT pool
-             * - per provider amount of BNT in the YYY/BNT pool
-             * - per provider amount of ETH in the ETH/BNT pool
+             * - total amount of BNT in the TKN1/BNT pool
+             * - total amount of BNT in the TKN2/BNT pool
+             * - total amount of ETH in the ETH/BNT pool
+             * - total amount of TKN1 in the TKN1/BNT pool
+             * - total amount of TKN2 in the TKN2/BNT pool
              * - per provider amount of BNT in the ETH/BNT pool
+             * - per provider amount of BNT in the TKN1/BNT pool
+             * - per provider amount of BNT in the TKN2/BNT pool
+             * - per provider amount of ETH in the ETH/BNT pool
+             * - per provider amount of TKN1 in the TKN1/BNT pool
+             * - per provider amount of TKN2 in the TKN2/BNT pool
              */
             describe('migration tests', () => {
                 const NUM_OF_POOLS = 3;
