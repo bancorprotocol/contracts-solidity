@@ -329,7 +329,7 @@ describe('LiquidityProtection', () => {
                 }
             };
 
-            const initLiquidityProtection = async () => {
+            const initLiquidityProtection = async (initGlobalPool = true) => {
                 networkToken = await Contracts.DSToken.deploy('BNT', 'BNT', 18);
                 await networkToken.issue(owner.address, TOTAL_SUPPLY);
                 networkTokenGovernance = await Contracts.TestTokenGovernance.deploy(networkToken.address);
@@ -382,7 +382,9 @@ describe('LiquidityProtection', () => {
 
                 await setTime(await latest());
 
-                await initPool();
+                if (initGlobalPool) {
+                    await initPool();
+                }
             };
 
             before(async () => {
@@ -2074,384 +2076,6 @@ describe('LiquidityProtection', () => {
                     }
                 });
 
-                describe('migrate liquidity', () => {
-                    for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
-                        describe(`base token (${isETHReserve ? 'ETH' : 'ERC20'})`, () => {
-                            beforeEach(async () => {
-                                await initPool(isETHReserve);
-                                await bancorNetwork.setNetworkToken(networkToken.address);
-                                await bancorNetwork.setBancorVault(bancorVault.address);
-                                const reserveAmount = BigNumber.from(1000);
-                                await addProtectedLiquidity(
-                                    poolToken.address,
-                                    baseToken,
-                                    baseTokenAddress,
-                                    reserveAmount,
-                                    isETHReserve
-                                );
-                            });
-
-                            it('verifies that the caller can migrate positions', async () => {
-                                let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                                const protectionId = protectionIds[0];
-                                let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
-                                protection = getProtection(protection);
-
-                                const prevPoolStats = await getPoolStats(poolToken, baseToken, isETHReserve);
-                                const prevProviderStats = await getProviderStats(
-                                    owner,
-                                    poolToken,
-                                    baseToken,
-                                    isETHReserve
-                                );
-
-                                const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                    poolToken.address
-                                );
-
-                                const prevVaultBaseBalance = await getBalance(
-                                    baseToken,
-                                    baseTokenAddress,
-                                    bancorVault.address
-                                );
-                                const prevVaultNetworkBalance = await getBalance(
-                                    networkToken,
-                                    networkToken.address,
-                                    bancorVault.address
-                                );
-
-                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-
-                                const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                                const prevBalance = await getBalance(baseToken, baseTokenAddress, owner.address);
-                                const prevGovBalance = await govToken.balanceOf(owner.address);
-
-                                const res = await liquidityProtection.migratePositions([protectionId]);
-                                protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                                expect(protectionIds.length).to.equal(0);
-
-                                let transactionCost = BigNumber.from(0);
-                                if (isETHReserve) {
-                                    transactionCost = transactionCost.add(await getTransactionCost(res));
-                                }
-
-                                // verify stats
-                                const poolStats = await getPoolStats(poolToken, baseToken, isETHReserve);
-                                expect(poolStats.totalPoolAmount).to.equal(
-                                    prevPoolStats.totalPoolAmount.sub(protection.poolAmount)
-                                );
-                                expect(poolStats.totalReserveAmount).to.equal(
-                                    prevPoolStats.totalReserveAmount.sub(protection.reserveAmount)
-                                );
-
-                                const providerStats = await getProviderStats(owner, poolToken, baseToken, isETHReserve);
-                                expect(providerStats.totalProviderAmount).to.equal(
-                                    prevProviderStats.totalProviderAmount.sub(protection.reserveAmount)
-                                );
-                                expect(providerStats.providerPools).to.equalTo([poolToken.address]);
-
-                                // verify balances
-                                const systemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                    poolToken.address
-                                );
-                                expect(systemBalance).to.equal(prevSystemBalance.sub(protection.poolAmount));
-
-                                const vaultBaseBalance = await getBalance(
-                                    baseToken,
-                                    baseTokenAddress,
-                                    bancorVault.address
-                                );
-                                const vaultNetworkBalance = await getBalance(
-                                    networkToken,
-                                    networkToken.address,
-                                    bancorVault.address
-                                );
-                                expect(vaultBaseBalance).to.equal(prevVaultBaseBalance.add(protection.reserveAmount));
-                                expect(vaultNetworkBalance).to.equal(prevVaultNetworkBalance);
-
-                                const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-
-                                // double since system balance was also liquidated
-                                const delta = protection.poolAmount.mul(BigNumber.from(2));
-                                expect(walletBalance).to.equal(prevWalletBalance.sub(delta));
-
-                                const balance = await getBalance(baseToken, baseTokenAddress, owner.address);
-                                expect(balance).to.equal(prevBalance.sub(transactionCost));
-
-                                const govBalance = await govToken.balanceOf(owner.address);
-                                expect(govBalance).to.equal(prevGovBalance);
-
-                                const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                                expect(protectionPoolBalance).to.equal(BigNumber.from(0));
-
-                                const protectionBaseBalance = await getBalance(
-                                    baseToken,
-                                    baseTokenAddress,
-                                    liquidityProtection.address
-                                );
-                                expect(protectionBaseBalance).to.equal(BigNumber.from(0));
-
-                                const protectionNetworkBalance = await networkToken.balanceOf(
-                                    liquidityProtection.address
-                                );
-                                expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
-                            });
-
-                            it('verifies that migrating positions does not update the removal checkpoint', async () => {
-                                await setTime(now.add(duration.days(3)));
-
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-
-                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(BigNumber.from(0));
-
-                                await liquidityProtection.migratePositions([protectionId]);
-
-                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(BigNumber.from(0));
-                            });
-
-                            it('should revert when attempting to migrate a position that does not exist', async () => {
-                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                                await expect(liquidityProtection.migratePositions(['1234'])).to.be.revertedWith(
-                                    'ERR_ACCESS_DENIED'
-                                );
-                            });
-
-                            it('verifies that the caller cannot migrate a position more than once in the same transaction', async () => {
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-
-                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                                await expect(
-                                    liquidityProtection.migratePositions([protectionId, protectionId])
-                                ).to.be.revertedWith('ERR_ACCESS_DENIED');
-                            });
-
-                            it('verifies that the caller cannot migrate a position more than once in different transactions', async () => {
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-
-                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                                await liquidityProtection.migratePositions([protectionId]);
-                                await expect(liquidityProtection.migratePositions([protectionId])).to.be.revertedWith(
-                                    'ERR_ACCESS_DENIED'
-                                );
-                            });
-
-                            it('should revert when attempting to migrate a position that belongs to another account', async () => {
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-
-                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                                await expect(
-                                    liquidityProtection.connect(accounts[1]).migratePositions([protectionId])
-                                ).to.be.revertedWith('ERR_ACCESS_DENIED');
-                            });
-
-                            it('should revert when attempting to migrate a position from a non whitelisted pool', async () => {
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-
-                                await liquidityProtectionSettings.removePoolFromWhitelist(poolToken.address);
-
-                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                                await expect(liquidityProtection.migratePositions([protectionId])).to.be.revertedWith(
-                                    'ERR_POOL_NOT_WHITELISTED'
-                                );
-                            });
-
-                            it('verifies that the owner can migrate system pool tokens', async () => {
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-                                let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
-                                protection = getProtection(protection);
-
-                                const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                    poolToken.address
-                                );
-
-                                const prevVaultBaseBalance = await getBalance(
-                                    baseToken,
-                                    baseTokenAddress,
-                                    bancorVault.address
-                                );
-                                const prevVaultNetworkBalance = await getBalance(
-                                    networkToken,
-                                    networkToken.address,
-                                    bancorVault.address
-                                );
-
-                                await liquidityProtection.setTime(now.add(duration.seconds(1)));
-
-                                const prevGovBalance = await govToken.balanceOf(owner.address);
-
-                                await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
-
-                                // verify balances
-                                const systemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                    poolToken.address
-                                );
-                                expect(systemBalance).to.equal(prevSystemBalance.sub(protection.poolAmount));
-
-                                const vaultBaseBalance = await getBalance(
-                                    baseToken,
-                                    baseTokenAddress,
-                                    bancorVault.address
-                                );
-                                const vaultNetworkBalance = await getBalance(
-                                    networkToken,
-                                    networkToken.address,
-                                    bancorVault.address
-                                );
-                                expect(vaultBaseBalance).to.equal(
-                                    prevVaultBaseBalance.add(protection.reserveAmount.div(2))
-                                );
-                                expect(vaultNetworkBalance).to.equal(prevVaultNetworkBalance);
-
-                                const govBalance = await govToken.balanceOf(owner.address);
-                                expect(govBalance).to.equal(prevGovBalance);
-
-                                const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                                expect(protectionPoolBalance).to.equal(BigNumber.from(0));
-
-                                const protectionBaseBalance = await getBalance(
-                                    baseToken,
-                                    baseTokenAddress,
-                                    liquidityProtection.address
-                                );
-                                expect(protectionBaseBalance).to.equal(BigNumber.from(0));
-
-                                const protectionNetworkBalance = await networkToken.balanceOf(
-                                    liquidityProtection.address
-                                );
-                                expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
-                            });
-
-                            it('verifies that a non-owner cannot migrate system pool tokens', async () => {
-                                const nonOwner = accounts[8];
-                                await expect(
-                                    liquidityProtection.connect(nonOwner).migrateSystemPoolTokens([poolToken.address])
-                                ).to.be.revertedWith('ERR_ACCESS_DENIED');
-                            });
-                        });
-                    }
-
-                    describe('network token', () => {
-                        it('verifies that the caller can migrate positions', async () => {
-                            await bancorNetwork.setNetworkToken(networkToken.address);
-                            await bancorNetwork.setBancorVault(bancorVault.address);
-
-                            let reserveAmount = BigNumber.from(5000);
-                            await baseToken.transfer(accounts[1].address, 5000);
-                            await addProtectedLiquidity(
-                                poolToken.address,
-                                baseToken,
-                                baseTokenAddress,
-                                reserveAmount,
-                                false,
-                                accounts[1]
-                            );
-
-                            reserveAmount = BigNumber.from(1000);
-                            await addProtectedLiquidity(
-                                poolToken.address,
-                                networkToken,
-                                networkToken.address,
-                                reserveAmount
-                            );
-                            let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                            const protectionId = protectionIds[0];
-                            let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
-                            protection = getProtection(protection);
-
-                            const prevPoolStats = await getPoolStats(poolToken, networkToken);
-                            const prevProviderStats = await getProviderStats(owner, poolToken, networkToken);
-                            const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                poolToken.address
-                            );
-                            const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            const prevBalance = await getBalance(networkToken, networkToken.address, owner.address);
-                            const prevGovBalance = await govToken.balanceOf(owner.address);
-
-                            const prevVaultBaseBalance = await getBalance(
-                                baseToken,
-                                baseTokenAddress,
-                                bancorVault.address
-                            );
-                            const prevVaultNetworkBalance = await getBalance(
-                                networkToken,
-                                networkToken.address,
-                                bancorVault.address
-                            );
-
-                            await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                            await liquidityProtection.migratePositions([protectionId]);
-                            protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                            expect(protectionIds.length).to.equal(0);
-
-                            // verify stats
-                            const poolStats = await getPoolStats(poolToken, networkToken);
-                            expect(poolStats.totalPoolAmount).to.equal(prevSystemBalance.add(protection.poolAmount));
-                            expect(poolStats.totalReserveAmount).to.equal(
-                                prevPoolStats.totalReserveAmount.sub(protection.reserveAmount)
-                            );
-
-                            const vaultBaseBalance = await getBalance(baseToken, baseTokenAddress, bancorVault.address);
-                            const vaultNetworkBalance = await getBalance(
-                                networkToken,
-                                networkToken.address,
-                                bancorVault.address
-                            );
-                            expect(vaultBaseBalance).to.equal(prevVaultBaseBalance);
-                            expect(vaultNetworkBalance).to.equal(prevVaultNetworkBalance.add(reserveAmount));
-
-                            const providerStats = await getProviderStats(owner, poolToken, networkToken);
-                            expect(providerStats.totalProviderAmount).to.equal(
-                                prevProviderStats.totalProviderAmount.sub(protection.reserveAmount)
-                            );
-                            expect(prevProviderStats.providerPools).to.equalTo([poolToken.address]);
-
-                            // verify balances
-                            const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                            expect(systemBalance).to.equal(prevSystemBalance.add(protection.poolAmount));
-
-                            const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            expect(walletBalance).to.equal(prevWalletBalance);
-
-                            const balance = await getBalance(networkToken, networkToken.address, owner.address);
-                            expectAlmostEqual(balance, prevBalance.add(reserveAmount), '0.0000000000000000000002');
-
-                            const govBalance = await govToken.balanceOf(owner.address);
-                            expect(govBalance).to.equal(prevGovBalance);
-
-                            const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                            expect(protectionPoolBalance).to.equal(BigNumber.from(0));
-
-                            const protectionBaseBalance = await getBalance(
-                                baseToken,
-                                baseTokenAddress,
-                                liquidityProtection.address
-                            );
-                            expect(protectionBaseBalance).to.equal(BigNumber.from(0));
-
-                            const protectionNetworkBalance = await networkToken.balanceOf(liquidityProtection.address);
-                            expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
-                        });
-                    });
-                });
-
                 describe('claim balance', () => {
                     beforeEach(async () => {
                         await addProtectedLiquidity(
@@ -3800,6 +3424,559 @@ describe('LiquidityProtection', () => {
                             }
                         }
                     }
+                });
+            });
+
+            /**
+             * the migration tests consist of 3 standard pools:
+             * - ETH/BNT
+             * - TKN1/BNT
+             * - TKN2/BNT
+             * the deployer of the pools adds an initial liquidity to each one of them
+             * each one of 3 providers then adds 9 positions of protected liquidity to each reserve token on each pool
+             * the protected liquidity amounts range between 1% - 9% of the available space on each side of each pool
+             * the primary test verifies that each provider can migrate 6 positions, 27 positions and 54 positions
+             * the verification process compares the state of the system before and after each migration request
+             *
+             * the state of the system includes the following balances:
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * |               | Liquidity Provider | V3 Bancor Vault | Liquidity Protection Wallet |
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * | Gov Token     |                    |                 |                             |
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * | BNT Token     |                    |        X        |                             |
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * | ETH Token     |                    |        X        |                             |
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * | TKN1 Token    |                    |        X        |                             |
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * | TKN2 Token    |                    |        X        |                             |
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * | Pool Token    |                    |                 |              X              |
+             * +---------------+--------------------+-----------------+-----------------------------+
+             * the ones marked X are expected to change as a result of executing migration requests
+             *
+             * the state of the system also includes the following counters:
+             * - system balance in the ETH/BNT pool
+             * - system balance in the TKN1/BNT pool
+             * - system balance in the TKN2/BNT pool
+             * - total amount of ETH/BNT pool tokens
+             * - total amount of TKN1/BNT pool tokens
+             * - total amount of TKN2/BNT pool tokens
+             * - total amount of BNT in the ETH/BNT pool
+             * - total amount of BNT in the TKN1/BNT pool
+             * - total amount of BNT in the TKN2/BNT pool
+             * - total amount of ETH in the ETH/BNT pool
+             * - total amount of TKN1 in the TKN1/BNT pool
+             * - total amount of TKN2 in the TKN2/BNT pool
+             * - per provider amount of BNT in the ETH/BNT pool
+             * - per provider amount of BNT in the TKN1/BNT pool
+             * - per provider amount of BNT in the TKN2/BNT pool
+             * - per provider amount of ETH in the ETH/BNT pool
+             * - per provider amount of TKN1 in the TKN1/BNT pool
+             * - per provider amount of TKN2 in the TKN2/BNT pool
+             */
+            describe('migration tests', () => {
+                const NUM_OF_POOLS = 3;
+                const NUM_OF_PROVIDERS = 3;
+                const NUM_OF_POSITIONS = 9; // number of positions per provider per pool per reserve
+
+                let providers;
+                let baseTokens;
+
+                const filter = (position, poolToken, reserveToken) =>
+                    position.poolToken === poolToken.address && position.reserveToken === reserveToken.address;
+
+                const getPositions = (positions, poolToken, reserveToken) =>
+                    positions.filter((position) => filter(position, poolToken, reserveToken));
+
+                const getPositionList = (positionIds, positions, poolToken, reserveToken) => ({
+                    poolToken: poolToken.address,
+                    reserveToken: reserveToken.address,
+                    positionIds: positionIds.filter((_, i) => filter(positions[i], poolToken, reserveToken))
+                });
+
+                const poolAvailableSpace = async (poolToken, index, percent) =>
+                    (await liquidityProtection.poolAvailableSpace(poolToken.address))[index].mul(percent).div(100);
+
+                const readState = async (baseToken, provider) => ({
+                    providerGovBalance: await govToken.balanceOf(provider.address),
+                    providerBaseBalance: await baseToken.balanceOf(provider.address),
+                    providerNetworkBalance: await networkToken.balanceOf(provider.address),
+                    providerPoolBalance: await baseToken.poolToken.balanceOf(provider.address),
+                    vaultGovBalance: await govToken.balanceOf(bancorVault.address),
+                    vaultBaseBalance: await baseToken.balanceOf(bancorVault.address),
+                    vaultNetworkBalance: await networkToken.balanceOf(bancorVault.address),
+                    vaultPoolBalance: await baseToken.poolToken.balanceOf(bancorVault.address),
+                    protectionGovBalance: await govToken.balanceOf(liquidityProtectionWallet.address),
+                    protectionBaseBalance: await baseToken.balanceOf(liquidityProtectionWallet.address),
+                    protectionNetworkBalance: await networkToken.balanceOf(liquidityProtectionWallet.address),
+                    protectionPoolBalance: await baseToken.poolToken.balanceOf(liquidityProtectionWallet.address),
+
+                    systemBalance: await liquidityProtectionSystemStore.systemBalance(baseToken.poolToken.address),
+                    totalPoolAmount: await liquidityProtectionStats.totalPoolAmount(baseToken.poolToken.address),
+                    totalBaseAmount: await liquidityProtectionStats.totalReserveAmount(
+                        baseToken.poolToken.address,
+                        baseToken.address
+                    ),
+                    totalNetworkAmount: await liquidityProtectionStats.totalReserveAmount(
+                        baseToken.poolToken.address,
+                        networkToken.address
+                    ),
+                    totalProviderBaseAmount: await liquidityProtectionStats.totalProviderAmount(
+                        provider.address,
+                        baseToken.poolToken.address,
+                        baseToken.address
+                    ),
+                    totalProviderNetworkAmount: await liquidityProtectionStats.totalProviderAmount(
+                        provider.address,
+                        baseToken.poolToken.address,
+                        networkToken.address
+                    )
+                });
+
+                beforeEach(async () => {
+                    providers = accounts.slice(1, NUM_OF_PROVIDERS + 1);
+
+                    await initLiquidityProtection(false);
+                    await bancorNetwork.setNetworkToken(networkToken.address);
+                    await bancorNetwork.setBancorVault(bancorVault.address);
+
+                    baseTokens = [
+                        {
+                            isETH: true,
+                            address: NATIVE_TOKEN_ADDRESS,
+                            name: async () => 'ETH',
+                            symbol: async () => 'ETH',
+                            issue: async () => null,
+                            approve: async () => null,
+                            balanceOf: async (account) => ethers.provider.getBalance(account)
+                        }
+                    ];
+
+                    for (let i = 1; i < NUM_OF_POOLS; i++) {
+                        baseTokens.push(await Contracts.DSToken.deploy(`TKN${i}`, `TKN${i}`, 18));
+                    }
+
+                    for (const baseToken of baseTokens) {
+                        await baseToken.issue(owner.address, TOTAL_SUPPLY);
+                        await converterRegistry.newConverter(
+                            STANDARD_CONVERTER_TYPE,
+                            'PT-' + (await baseToken.name()),
+                            'PT-' + (await baseToken.symbol()),
+                            18,
+                            PPM_RESOLUTION,
+                            [baseToken.address, networkToken.address],
+                            STANDARD_CONVERTER_WEIGHTS
+                        );
+
+                        const anchorCount = await converterRegistry.getAnchorCount();
+                        const poolTokenAddress = await converterRegistry.getAnchor(anchorCount.sub(1));
+                        const poolToken = await Contracts.DSToken.attach(poolTokenAddress);
+                        const converterAddress = await poolToken.owner();
+                        const converter = await Contracts.TestStandardPoolConverter.attach(converterAddress);
+
+                        const baseTokenBalance = TOTAL_SUPPLY.div(15);
+                        const networkTokenBalance = TOTAL_SUPPLY.div(20);
+
+                        await converter.acceptOwnership();
+                        await baseToken.approve(converter.address, baseTokenBalance);
+                        await networkToken.approve(converter.address, networkTokenBalance);
+                        await converter.addLiquidity(
+                            [baseToken.address, networkToken.address],
+                            [baseTokenBalance, networkTokenBalance],
+                            1,
+                            { value: baseToken.isETH ? baseTokenBalance : 0 }
+                        );
+                        await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
+
+                        await liquidityProtection.setTime(now);
+
+                        for (const provider of providers) {
+                            for (let i = 1; i <= NUM_OF_POSITIONS; i++) {
+                                const baseAmount = await poolAvailableSpace(poolToken, 0, i);
+                                await baseToken.approve(liquidityProtection.address, baseAmount);
+                                await liquidityProtection.addLiquidityFor(
+                                    provider.address,
+                                    poolToken.address,
+                                    baseToken.address,
+                                    baseAmount,
+                                    { value: baseToken.isETH ? baseAmount : 0 }
+                                );
+                                const networkAmount = await poolAvailableSpace(poolToken, 1, i);
+                                await networkToken.approve(liquidityProtection.address, networkAmount);
+                                await liquidityProtection.addLiquidityFor(
+                                    provider.address,
+                                    poolToken.address,
+                                    networkToken.address,
+                                    networkAmount
+                                );
+                            }
+                        }
+
+                        await liquidityProtection.setTime(now + 1);
+
+                        baseToken.poolToken = poolToken;
+                    }
+                });
+
+                for (let i = 0; i < NUM_OF_PROVIDERS; i++) {
+                    for (const numOfPositions of [1, NUM_OF_POSITIONS / 2, NUM_OF_POSITIONS]) {
+                        it(`verifies that provider ${i + 1} can migrate ${
+                            numOfPositions * NUM_OF_POOLS * 2
+                        } positions`, async () => {
+                            const somePositions = (_, index) => index % (NUM_OF_POSITIONS * 2) < numOfPositions * 2;
+                            const protectedLiquidityIds = (
+                                await liquidityProtectionStore.protectedLiquidityIds(providers[i].address)
+                            ).filter(somePositions);
+                            const protectedLiquidities = await Promise.all(
+                                protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                            );
+                            const positions = protectedLiquidities.map((protectedLiquidity) =>
+                                getProtection(protectedLiquidity)
+                            );
+
+                            const prevStates = {};
+                            for (const baseToken of baseTokens) {
+                                prevStates[baseToken.address] = await readState(baseToken, providers[i]);
+                            }
+
+                            const positionLists = [];
+                            for (const baseToken of baseTokens) {
+                                positionLists.push(
+                                    getPositionList(protectedLiquidityIds, positions, baseToken.poolToken, baseToken),
+                                    getPositionList(protectedLiquidityIds, positions, baseToken.poolToken, networkToken)
+                                );
+                            }
+
+                            const receipt = await liquidityProtection
+                                .connect(providers[i])
+                                .migratePositions(positionLists);
+                            const gasCost = await getTransactionCost(receipt);
+                            prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
+                                prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
+
+                            for (const baseToken of baseTokens) {
+                                const basePositions = getPositions(positions, baseToken.poolToken, baseToken);
+                                const networkPositions = getPositions(positions, baseToken.poolToken, networkToken);
+                                const baseReserveAmount = basePositions.reduce(
+                                    (a, b) => a.add(b.reserveAmount),
+                                    BigNumber.from(0)
+                                );
+                                const networkReserveAmount = networkPositions.reduce(
+                                    (a, b) => a.add(b.reserveAmount),
+                                    BigNumber.from(0)
+                                );
+                                const basePoolAmount = basePositions.reduce(
+                                    (a, b) => a.add(b.poolAmount),
+                                    BigNumber.from(0)
+                                );
+                                const networkPoolAmount = networkPositions.reduce(
+                                    (a, b) => a.add(b.poolAmount),
+                                    BigNumber.from(0)
+                                );
+                                const totalPoolAmount = basePoolAmount.add(networkPoolAmount);
+                                const deltaPoolAmount = basePoolAmount.sub(networkPoolAmount);
+
+                                const prevState = prevStates[baseToken.address];
+                                const currState = await readState(baseToken, providers[i]);
+
+                                expect(currState.providerGovBalance).to.equal(prevState.providerGovBalance);
+                                expect(currState.providerBaseBalance).to.equal(prevState.providerBaseBalance);
+                                expect(currState.providerNetworkBalance).to.equal(prevState.providerNetworkBalance);
+                                expect(currState.providerPoolBalance).to.equal(prevState.providerPoolBalance);
+                                expect(currState.vaultGovBalance).to.equal(prevState.vaultGovBalance);
+                                expect(currState.vaultPoolBalance).to.equal(prevState.vaultPoolBalance);
+                                expect(currState.protectionGovBalance).to.equal(prevState.protectionGovBalance);
+                                expect(currState.protectionBaseBalance).to.equal(prevState.protectionBaseBalance);
+                                expect(currState.protectionNetworkBalance).to.equal(prevState.protectionNetworkBalance);
+
+                                expect(currState.vaultNetworkBalance).to.equal(
+                                    prevState.vaultNetworkBalance.add(networkReserveAmount.mul(NUM_OF_POOLS))
+                                );
+
+                                expectAlmostEqual(
+                                    currState.vaultBaseBalance,
+                                    prevState.vaultBaseBalance.add(baseReserveAmount),
+                                    '0.0000000000000000004427'
+                                );
+                                expectAlmostEqual(
+                                    currState.protectionPoolBalance,
+                                    prevState.protectionPoolBalance.sub(basePoolAmount.mul(2)),
+                                    '0.0000000000000000000032'
+                                );
+                                expectAlmostEqual(
+                                    currState.systemBalance,
+                                    prevState.systemBalance.sub(deltaPoolAmount),
+                                    '0.0000000000000000000218'
+                                );
+
+                                expect(currState.totalPoolAmount).to.equal(
+                                    prevState.totalPoolAmount.sub(totalPoolAmount)
+                                );
+                                expect(currState.totalBaseAmount).to.equal(
+                                    prevState.totalBaseAmount.sub(baseReserveAmount)
+                                );
+                                expect(currState.totalNetworkAmount).to.equal(
+                                    prevState.totalNetworkAmount.sub(networkReserveAmount)
+                                );
+                                expect(currState.totalProviderBaseAmount).to.equal(
+                                    prevState.totalProviderBaseAmount.sub(baseReserveAmount)
+                                );
+                                expect(currState.totalProviderNetworkAmount).to.equal(
+                                    prevState.totalProviderNetworkAmount.sub(networkReserveAmount)
+                                );
+                            }
+
+                            expect(
+                                await liquidityProtectionStore.protectedLiquidityIds(providers[i].address)
+                            ).to.have.lengthOf((NUM_OF_POSITIONS - numOfPositions) * NUM_OF_POOLS * 2);
+                        });
+                    }
+                }
+
+                it('verifies that the owner can migrate system pool tokens', async () => {
+                    const protectedLiquidityIds = await Promise.all(
+                        providers.map((provider) => liquidityProtectionStore.protectedLiquidityIds(provider.address))
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds
+                            .reduce((a, b) => [...a, ...b], [])
+                            .map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+
+                    const prevStates = {};
+                    for (const baseToken of baseTokens) {
+                        prevStates[baseToken.address] = await readState(baseToken, owner);
+                    }
+
+                    const receipt = await liquidityProtection.migrateSystemPoolTokens(
+                        baseTokens.map((baseToken) => baseToken.poolToken.address)
+                    );
+                    const gasCost = await getTransactionCost(receipt);
+                    prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
+                        prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
+
+                    for (const baseToken of baseTokens) {
+                        const basePositions = getPositions(positions, baseToken.poolToken, baseToken);
+                        const networkPositions = getPositions(positions, baseToken.poolToken, networkToken);
+                        const basePoolAmount = basePositions.reduce((a, b) => a.add(b.poolAmount), BigNumber.from(0));
+                        const networkPoolAmount = networkPositions.reduce(
+                            (a, b) => a.add(b.poolAmount),
+                            BigNumber.from(0)
+                        );
+                        const deltaPoolAmount = basePoolAmount.sub(networkPoolAmount);
+
+                        const prevState = prevStates[baseToken.address];
+                        const currState = await readState(baseToken, owner);
+
+                        expect(currState.providerGovBalance).to.equal(prevState.providerGovBalance);
+                        expect(currState.providerBaseBalance).to.equal(prevState.providerBaseBalance);
+                        expect(currState.providerNetworkBalance).to.equal(prevState.providerNetworkBalance);
+                        expect(currState.providerPoolBalance).to.equal(prevState.providerPoolBalance);
+                        expect(currState.vaultGovBalance).to.equal(prevState.vaultGovBalance);
+                        expect(currState.vaultPoolBalance).to.equal(prevState.vaultPoolBalance);
+                        expect(currState.vaultNetworkBalance).to.equal(prevState.vaultNetworkBalance);
+                        expect(currState.protectionGovBalance).to.equal(prevState.protectionGovBalance);
+                        expect(currState.protectionBaseBalance).to.equal(prevState.protectionBaseBalance);
+                        expect(currState.protectionNetworkBalance).to.equal(prevState.protectionNetworkBalance);
+
+                        expectAlmostEqual(
+                            currState.protectionPoolBalance,
+                            prevState.protectionPoolBalance.sub(deltaPoolAmount),
+                            '0.0000000000000000000032'
+                        );
+                        expect(currState.protectionPoolBalance.sub(currState.systemBalance)).to.equal(
+                            prevState.protectionPoolBalance.sub(prevState.systemBalance)
+                        );
+
+                        expect(currState.totalPoolAmount).to.equal(prevState.totalPoolAmount);
+                        expect(currState.totalBaseAmount).to.equal(prevState.totalBaseAmount);
+                        expect(currState.totalNetworkAmount).to.equal(prevState.totalNetworkAmount);
+                        expect(currState.totalProviderBaseAmount).to.equal(prevState.totalProviderBaseAmount);
+                        expect(currState.totalProviderNetworkAmount).to.equal(prevState.totalProviderNetworkAmount);
+                    }
+                });
+
+                it('should revert when attempting to migrate a position that does not exist', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const positionList = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+
+                    positionList.positionIds.push(positionList.positionIds.reduce((a, b) => a + b.toString(), ''));
+                    await expect(
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
+                });
+
+                it('should revert when attempting to migrate positions of different types in the same position list', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const positionList1 = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+                    const positionList2 = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[1].poolToken,
+                        baseTokens[1]
+                    );
+
+                    positionList1.positionIds.push(positionList2.positionIds[0]);
+                    await expect(
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList1])
+                    ).to.be.revertedWith('ERR_INVALID_POSITION_LIST');
+                });
+
+                it('should revert when attempting to migrate a position more than once in the same position list', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const positionList = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+
+                    positionList.positionIds.push(positionList.positionIds[0]);
+                    await expect(
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
+                });
+
+                it('should revert when attempting to migrate a position more than once in separate position lists', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const positionList1 = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+                    const positionList2 = {
+                        poolToken: positionList1.poolToken,
+                        reserveToken: positionList1.reserveToken,
+                        positionIds: [positionList1.positionIds[0]]
+                    };
+
+                    await expect(
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList1, positionList2])
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
+                });
+
+                it('should revert when attempting to migrate a position more than once in different transactions', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const positionList = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+
+                    await liquidityProtection.connect(providers[0]).migratePositions([positionList]);
+                    await expect(
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
+                });
+
+                it('should revert when attempting to migrate a position that belongs to another account', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const positionList = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+
+                    await expect(
+                        liquidityProtection.connect(providers[1]).migratePositions([positionList])
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
+                });
+
+                it('should revert when attempting to migrate a position from a non whitelisted pool', async () => {
+                    const protectedLiquidityIds = await liquidityProtectionStore.protectedLiquidityIds(
+                        providers[0].address
+                    );
+                    const protectedLiquidities = await Promise.all(
+                        protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
+                    );
+                    const positions = protectedLiquidities.map((protectedLiquidity) =>
+                        getProtection(protectedLiquidity)
+                    );
+                    const positionList = getPositionList(
+                        protectedLiquidityIds,
+                        positions,
+                        baseTokens[0].poolToken,
+                        baseTokens[0]
+                    );
+
+                    await liquidityProtectionSettings.removePoolFromWhitelist(baseTokens[0].poolToken.address);
+                    await expect(
+                        liquidityProtection.connect(providers[0]).migratePositions([positionList])
+                    ).to.be.revertedWith('ERR_POOL_NOT_WHITELISTED');
+                });
+
+                it('verifies that a non-owner cannot migrate system pool tokens', async () => {
+                    await expect(
+                        liquidityProtection
+                            .connect(providers[0])
+                            .migrateSystemPoolTokens([baseTokens[0].poolToken.address])
+                    ).to.be.revertedWith('ERR_ACCESS_DENIED');
                 });
             });
         });
