@@ -37,7 +37,11 @@ contract NewConverter {
     }
 }
 
-contract ConverterV27OrLowerWithoutFallback {}
+contract ConverterV27OrLowerWithoutFallback {
+    receive() external payable {
+        revert();
+    }
+}
 
 contract ConverterV27OrLowerWithFallback {
     receive() external payable {}

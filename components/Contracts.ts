@@ -1,6 +1,3 @@
-import { Signer } from '@ethersproject/abstract-signer';
-import { Contract as OldContract, ContractFactory, Overrides as OldOverrides } from '@ethersproject/contracts';
-import { ethers } from 'hardhat';
 import {
     BancorNetwork__factory,
     BancorX__factory,
@@ -11,6 +8,7 @@ import {
     ConverterRegistryData__factory,
     ConverterRegistry__factory,
     ConverterUpgrader__factory,
+    ConverterV27OrLowerWithoutFallback__factory,
     ConverterV27OrLowerWithFallback__factory,
     ConverterV28OrHigherWithFallback__factory,
     ConverterV28OrHigherWithoutFallback__factory,
@@ -50,74 +48,59 @@ import {
     TokenHolder__factory,
     VortexBurner__factory
 } from '../typechain';
+import { ContractFactory, Signer } from 'ethers';
+import { ethers } from 'hardhat';
 
-// Replace the type of the last param of a function
-type LastIndex<T extends readonly any[]> = ((...t: T) => void) extends (x: any, ...r: infer R) => void
-    ? Exclude<keyof T, keyof R>
-    : never;
-type ReplaceLastParam<TParams extends readonly any[], TReplace> = {
-    [K in keyof TParams]: K extends LastIndex<TParams> ? TReplace : TParams[K];
-};
-type ReplaceLast<F, TReplace> = F extends (...args: infer T) => infer R
-    ? (...args: ReplaceLastParam<T, TReplace>) => R
-    : never;
-
-type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer U>
+export type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer U>
     ? U
     : T extends (...args: any) => infer U
     ? U
     : any;
 
-export type Overrides = OldOverrides & { from?: Signer };
+export type Contract<F extends ContractFactory> = AsyncReturnType<F['deploy']>;
 
-export type ContractName = { __contractName__: string };
-export type Contract = OldContract & ContractName;
+export interface ContractBuilder<F extends ContractFactory> {
+    metadata: {
+        contractName: string;
+        bytecode: string;
+    };
+    deploy(...args: Parameters<F['deploy']>): Promise<Contract<F>>;
+    attach(address: string, signer?: Signer): Promise<Contract<F>>;
+}
 
-const deployOrAttach = <F extends ContractFactory>(contractName: string, passedSigner?: Signer) => {
-    type ParamsTypes = ReplaceLast<F['deploy'], Overrides>;
+export type FactoryConstructor<F extends ContractFactory> = {
+    new (signer?: Signer): F;
+    abi: unknown;
+    bytecode: string;
+};
 
+export const deployOrAttach = <F extends ContractFactory>(
+    contractName: string,
+    FactoryConstructor: FactoryConstructor<F>,
+    initialSigner?: Signer
+): ContractBuilder<F> => {
     return {
-        deploy: async (...args: Parameters<ParamsTypes>): Promise<AsyncReturnType<F['deploy']> & ContractName> => {
-            let defaultSigner = passedSigner ? passedSigner : (await ethers.getSigners())[0];
-
-            const deployParamLength = (await ethers.getContractFactory(contractName)).deploy.length;
-
-            // If similar length, override the last param
-            if (args.length != 0 && args.length === deployParamLength) {
-                const overrides = args.pop() as Overrides;
-
-                const contractFactory = await ethers.getContractFactory(
-                    contractName,
-                    overrides.from ? overrides.from : defaultSigner
-                );
-                delete overrides.from;
-
-                const contract = (await contractFactory.deploy(...args, overrides)) as AsyncReturnType<F['deploy']> &
-                    ContractName;
-                contract.__contractName__ = contractName;
-                return contract;
-            }
-            const contract = (await (
-                await ethers.getContractFactory(contractName, defaultSigner)
-            ).deploy(...args)) as AsyncReturnType<F['deploy']> & ContractName;
-            contract.__contractName__ = contractName;
-            return contract;
+        metadata: {
+            contractName,
+            bytecode: FactoryConstructor.bytecode
         },
-        attach: attachOnly<F>(contractName, passedSigner).attach
+        deploy: async (...args: Parameters<F['deploy']>): Promise<Contract<F>> => {
+            const defaultSigner = initialSigner || (await ethers.getSigners())[0];
+
+            return new FactoryConstructor(defaultSigner).deploy(...(args || [])) as Promise<Contract<F>>;
+        },
+        attach: attachOnly<F>(FactoryConstructor, initialSigner).attach
     };
 };
 
-const attachOnly = <F extends ContractFactory>(contractName: string, passedSigner?: Signer) => {
+export const attachOnly = <F extends ContractFactory>(
+    FactoryConstructor: FactoryConstructor<F>,
+    initialSigner?: Signer
+) => {
     return {
-        attach: async (address: string, signer?: Signer): Promise<AsyncReturnType<F['deploy']> & ContractName> => {
-            let defaultSigner = passedSigner ? passedSigner : (await ethers.getSigners())[0];
-            const contract = (await ethers.getContractAt(
-                contractName,
-                address,
-                signer ? signer : defaultSigner
-            )) as AsyncReturnType<F['deploy']> & ContractName;
-            contract.__contractName__ = contractName;
-            return contract;
+        attach: async (address: string, signer?: Signer): Promise<Contract<F>> => {
+            const defaultSigner = initialSigner || (await ethers.getSigners())[0];
+            return new FactoryConstructor(signer || defaultSigner).attach(address) as Contract<F>;
         }
     };
 };
@@ -127,96 +110,106 @@ const getContracts = (signer?: Signer) => {
         // Link every contract to a default signer
         connect: (signer: Signer) => getContracts(signer),
 
-        BancorNetwork: deployOrAttach<BancorNetwork__factory>('BancorNetwork', signer),
-        BancorX: deployOrAttach<BancorX__factory>('BancorX', signer),
-        CheckpointStore: deployOrAttach<CheckpointStore__factory>('CheckpointStore', signer),
-        ContractRegistry: deployOrAttach<ContractRegistry__factory>('ContractRegistry', signer),
-        ConversionPathFinder: deployOrAttach<ConversionPathFinder__factory>('ConversionPathFinder', signer),
-        ConverterFactory: deployOrAttach<ConverterFactory__factory>('ConverterFactory', signer),
-        ConverterRegistry: deployOrAttach<ConverterRegistry__factory>('ConverterRegistry', signer),
-        ConverterRegistryData: deployOrAttach<ConverterRegistryData__factory>('ConverterRegistryData', signer),
-        ConverterUpgrader: deployOrAttach<ConverterUpgrader__factory>('ConverterUpgrader', signer),
-        ConverterV27OrLowerWithFallback: deployOrAttach<ConverterV27OrLowerWithFallback__factory>(
+        BancorNetwork: deployOrAttach('BancorNetwork', BancorNetwork__factory, signer),
+        BancorX: deployOrAttach('BancorX', BancorX__factory, signer),
+        CheckpointStore: deployOrAttach('CheckpointStore', CheckpointStore__factory, signer),
+        ContractRegistry: deployOrAttach('ContractRegistry', ContractRegistry__factory, signer),
+        ConversionPathFinder: deployOrAttach('ConversionPathFinder', ConversionPathFinder__factory, signer),
+        ConverterFactory: deployOrAttach('ConverterFactory', ConverterFactory__factory, signer),
+        ConverterRegistry: deployOrAttach('ConverterRegistry', ConverterRegistry__factory, signer),
+        ConverterRegistryData: deployOrAttach('ConverterRegistryData', ConverterRegistryData__factory, signer),
+        ConverterUpgrader: deployOrAttach('ConverterUpgrader', ConverterUpgrader__factory, signer),
+        ConverterV27OrLowerWithFallback: deployOrAttach(
             'ConverterV27OrLowerWithFallback',
+            ConverterV27OrLowerWithFallback__factory,
             signer
         ),
-        ConverterV27OrLowerWithoutFallback: deployOrAttach<ContractFactory>(
+        ConverterV27OrLowerWithoutFallback: deployOrAttach(
             'ConverterV27OrLowerWithoutFallback',
+            ConverterV27OrLowerWithoutFallback__factory,
             signer
         ),
-        ConverterV28OrHigherWithFallback: deployOrAttach<ConverterV28OrHigherWithFallback__factory>(
+        ConverterV28OrHigherWithFallback: deployOrAttach(
             'ConverterV28OrHigherWithFallback',
+            ConverterV28OrHigherWithFallback__factory,
             signer
         ),
-        ConverterV28OrHigherWithoutFallback: deployOrAttach<ConverterV28OrHigherWithoutFallback__factory>(
+        ConverterV28OrHigherWithoutFallback: deployOrAttach(
             'ConverterV28OrHigherWithoutFallback',
+            ConverterV28OrHigherWithoutFallback__factory,
             signer
         ),
-        DSToken: deployOrAttach<DSToken__factory>('DSToken', signer),
-        ERC20: deployOrAttach<ERC20__factory>('ERC20', signer),
-        FixedRatePoolConverter: deployOrAttach('FixedRatePoolConverter', signer),
-        FixedRatePoolConverterFactory: deployOrAttach('FixedRatePoolConverterFactory', signer),
-        IConverterAnchor: attachOnly<ContractFactory>('IConverterAnchor', signer),
-        LiquidityProtection: deployOrAttach<LiquidityProtection__factory>('LiquidityProtection', signer),
-        LiquidityProtectionSettings: deployOrAttach<LiquidityProtectionSettings__factory>(
+        DSToken: deployOrAttach('DSToken', DSToken__factory, signer),
+        ERC20: deployOrAttach('ERC20', ERC20__factory, signer),
+        LiquidityProtection: deployOrAttach('LiquidityProtection', LiquidityProtection__factory, signer),
+        LiquidityProtectionSettings: deployOrAttach(
             'LiquidityProtectionSettings',
+            LiquidityProtectionSettings__factory,
             signer
         ),
-        LiquidityProtectionStats: deployOrAttach<LiquidityProtectionStats__factory>('LiquidityProtectionStats', signer),
-        LiquidityProtectionStore: deployOrAttach<LiquidityProtectionStore__factory>('LiquidityProtectionStore', signer),
-        LiquidityProtectionSystemStore: deployOrAttach<LiquidityProtectionSystemStore__factory>(
+        LiquidityProtectionStats: deployOrAttach('LiquidityProtectionStats', LiquidityProtectionStats__factory, signer),
+        LiquidityProtectionStore: deployOrAttach('LiquidityProtectionStore', LiquidityProtectionStore__factory, signer),
+        LiquidityProtectionSystemStore: deployOrAttach(
             'LiquidityProtectionSystemStore',
+            LiquidityProtectionSystemStore__factory,
             signer
         ),
-        NetworkSettings: deployOrAttach<NetworkSettings__factory>('NetworkSettings', signer),
-        Owned: deployOrAttach<Owned__factory>('Owned', signer),
-        StakingRewards: deployOrAttach<StakingRewards__factory>('StakingRewards', signer),
-        StakingRewardsStore: deployOrAttach<StakingRewardsStore__factory>('StakingRewardsStore', signer),
-        StandardPoolConverter: deployOrAttach<StandardPoolConverter__factory>('StandardPoolConverter', signer),
-        StandardPoolConverterFactory: deployOrAttach<StandardPoolConverterFactory__factory>(
+        NetworkSettings: deployOrAttach('NetworkSettings', NetworkSettings__factory, signer),
+        Owned: deployOrAttach('Owned', Owned__factory, signer),
+        StakingRewards: deployOrAttach('StakingRewards', StakingRewards__factory, signer),
+        StakingRewardsStore: deployOrAttach('StakingRewardsStore', StakingRewardsStore__factory, signer),
+        StandardPoolConverter: deployOrAttach('StandardPoolConverter', StandardPoolConverter__factory, signer),
+        StandardPoolConverterFactory: deployOrAttach(
             'StandardPoolConverterFactory',
+            StandardPoolConverterFactory__factory,
             signer
         ),
-        TestBancorNetwork: deployOrAttach<TestBancorNetwork__factory>('TestBancorNetwork', signer),
-        TestCheckpointStore: deployOrAttach<TestCheckpointStore__factory>('TestCheckpointStore', signer),
-        TestContractRegistryClient: deployOrAttach<TestContractRegistryClient__factory>(
+        TestBancorNetwork: deployOrAttach('TestBancorNetwork', TestBancorNetwork__factory, signer),
+        TestCheckpointStore: deployOrAttach('TestCheckpointStore', TestCheckpointStore__factory, signer),
+        TestContractRegistryClient: deployOrAttach(
             'TestContractRegistryClient',
+            TestContractRegistryClient__factory,
             signer
         ),
-        TestConverterFactory: deployOrAttach<TestConverterFactory__factory>('TestConverterFactory', signer),
-        TestConverterRegistry: deployOrAttach<TestConverterRegistry__factory>('TestConverterRegistry', signer),
-        TestLiquidityProtection: deployOrAttach<TestLiquidityProtection__factory>('TestLiquidityProtection', signer),
-        TestLiquidityProvisionEventsSubscriber: deployOrAttach<TestLiquidityProvisionEventsSubscriber__factory>(
+        TestConverterFactory: deployOrAttach('TestConverterFactory', TestConverterFactory__factory, signer),
+        TestConverterRegistry: deployOrAttach('TestConverterRegistry', TestConverterRegistry__factory, signer),
+        TestLiquidityProtection: deployOrAttach('TestLiquidityProtection', TestLiquidityProtection__factory, signer),
+        TestLiquidityProvisionEventsSubscriber: deployOrAttach(
             'TestLiquidityProvisionEventsSubscriber',
+            TestLiquidityProvisionEventsSubscriber__factory,
             signer
         ),
-        TestMathEx: deployOrAttach<TestMathEx__factory>('TestMathEx', signer),
-        TestNonStandardToken: deployOrAttach<TestNonStandardToken__factory>('TestNonStandardToken', signer),
-        TestReserveToken: deployOrAttach<TestReserveToken__factory>('TestReserveToken', signer),
-        TestSafeERC20Ex: deployOrAttach<TestSafeERC20Ex__factory>('TestSafeERC20Ex', signer),
-        TestStakingRewards: deployOrAttach<TestStakingRewards__factory>('TestStakingRewards', signer),
-        TestStakingRewardsStore: deployOrAttach<TestStakingRewardsStore__factory>('TestStakingRewardsStore', signer),
-        TestStandardPoolConverter: deployOrAttach<TestStandardPoolConverter__factory>(
+        TestMathEx: deployOrAttach('TestMathEx', TestMathEx__factory, signer),
+        TestNonStandardToken: deployOrAttach('TestNonStandardToken', TestNonStandardToken__factory, signer),
+        TestReserveToken: deployOrAttach('TestReserveToken', TestReserveToken__factory, signer),
+        TestSafeERC20Ex: deployOrAttach('TestSafeERC20Ex', TestSafeERC20Ex__factory, signer),
+        TestStakingRewards: deployOrAttach('TestStakingRewards', TestStakingRewards__factory, signer),
+        TestStakingRewardsStore: deployOrAttach('TestStakingRewardsStore', TestStakingRewardsStore__factory, signer),
+        TestStandardPoolConverter: deployOrAttach(
             'TestStandardPoolConverter',
+            TestStandardPoolConverter__factory,
             signer
         ),
-        TestStandardPoolConverterFactory: deployOrAttach<TestStandardPoolConverterFactory__factory>(
+        TestStandardPoolConverterFactory: deployOrAttach(
             'TestStandardPoolConverterFactory',
+            TestStandardPoolConverterFactory__factory,
             signer
         ),
-        TestStandardToken: deployOrAttach<TestStandardToken__factory>('TestStandardToken', signer),
-        TestTokenGovernance: deployOrAttach<TestTokenGovernance__factory>('TestTokenGovernance', signer),
-        TestTransferPositionCallback: deployOrAttach<TestTransferPositionCallback__factory>(
+        TestStandardToken: deployOrAttach('TestStandardToken', TestStandardToken__factory, signer),
+        TestTokenGovernance: deployOrAttach('TestTokenGovernance', TestTokenGovernance__factory, signer),
+        TestTransferPositionCallback: deployOrAttach(
             'TestTransferPositionCallback',
+            TestTransferPositionCallback__factory,
             signer
         ),
-        TestTypedConverterAnchorFactory: deployOrAttach<TestTypedConverterAnchorFactory__factory>(
+        TestTypedConverterAnchorFactory: deployOrAttach(
             'TestTypedConverterAnchorFactory',
+            TestTypedConverterAnchorFactory__factory,
             signer
         ),
-        TokenGovernance: deployOrAttach<TokenGovernance__factory>('TokenGovernance', signer),
-        TokenHolder: deployOrAttach<TokenHolder__factory>('TokenHolder', signer),
-        VortexBurner: deployOrAttach<VortexBurner__factory>('VortexBurner', signer)
+        TokenGovernance: deployOrAttach('TokenGovernance', TokenGovernance__factory, signer),
+        TokenHolder: deployOrAttach('TokenHolder', TokenHolder__factory, signer),
+        VortexBurner: deployOrAttach('VortexBurner', VortexBurner__factory, signer)
     };
 };
 

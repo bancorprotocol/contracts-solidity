@@ -544,9 +544,7 @@ describe('ConverterRegistry', () => {
                 await createConverters();
 
                 anchors = await converterRegistry.getAnchors();
-                const converterAnchors = await Promise.all(
-                    anchors.map((anchor) => Contracts.IConverterAnchor.attach(anchor))
-                );
+                const converterAnchors = await Promise.all(anchors.map((anchor) => Contracts.Owned.attach(anchor)));
                 const converterAddresses = await Promise.all(converterAnchors.map((anchor) => anchor.owner()));
                 converters = await Promise.all(
                     converterAddresses.map((address) => Contracts.StandardPoolConverter.attach(address))
@@ -750,9 +748,7 @@ describe('ConverterRegistry', () => {
                 await createConverters();
 
                 anchors = await converterRegistry.getAnchors();
-                const converterAnchors = await Promise.all(
-                    anchors.map((anchor) => Contracts.IConverterAnchor.attach(anchor))
-                );
+                const converterAnchors = await Promise.all(anchors.map((anchor) => Contracts.Owned.attach(anchor)));
                 const converterAddresses = await Promise.all(converterAnchors.map((anchor) => anchor.owner()));
                 converters = await Promise.all(
                     converterAddresses.map((address) => Contracts.StandardPoolConverter.attach(address))
