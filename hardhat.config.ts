@@ -3,12 +3,9 @@ import path from 'path';
 
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-ethers';
-import '@nomiclabs/hardhat-etherscan';
 
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
-import 'hardhat-abi-exporter';
-import 'hardhat-gas-reporter';
 import '@typechain/hardhat';
 
 const configPath = path.join(__dirname, '/config.json');
@@ -48,33 +45,38 @@ const config: HardhatUserConfig = {
     },
 
     solidity: {
-        version: '0.6.12',
-        settings: {
-            optimizer: {
-                enabled: true,
-                runs: 200
+        compilers: [
+            {
+                version: '0.6.12',
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200
+                    },
+                    metadata: {
+                        bytecodeHash: 'none'
+                    }
+                }
             },
-            metadata: {
-                bytecodeHash: 'none'
+            {
+                version: '0.8.13',
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200
+                    },
+                    metadata: {
+                        bytecodeHash: 'none'
+                    }
+                }
             }
-        }
+        ]
     },
 
-    etherscan: {
-        apiKey: loadAPIKey('etherscan')
-    },
     contractSizer: {
         alphaSort: true,
         runOnCompile: false,
         disambiguatePaths: false
-    },
-    abiExporter: {
-        path: './data/abi',
-        clear: true
-    },
-    gasReporter: {
-        currency: 'USD',
-        enabled: loadENVKey('PROFILE')
     },
 
     mocha: {
