@@ -6,6 +6,18 @@
                 "singleQuote": false,
                 "explicitTypes": "always"
             }
+        },
+        {
+            "files": "*.yml",
+            "options": {
+                "tabWidth": 2
+            }
+        },
+        {
+            "files": "*.json",
+            "options": {
+                "tabWidth": 2
+            }
         }
     ],
     "printWidth": 120,
@@ -16,5 +28,6 @@
     "trailingComma": "none",
     "arrowParens": "always",
     "bracketSpacing": true,
-    "function-paren-newline": "never"
+    "importOrderSortSpecifiers": true,
+    "importOrderCaseInsensitive": true
 }
