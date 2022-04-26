@@ -425,12 +425,6 @@ describe('LiquidityProtection', () => {
 
                     const stats = await liquidityProtection.stats();
                     expect(stats).to.equal(liquidityProtectionStats.address);
-
-                    const systemStore = await liquidityProtection.systemStore();
-                    expect(systemStore).to.equal(liquidityProtectionSystemStore.address);
-
-                    const wallet = await liquidityProtection.wallet();
-                    expect(wallet).to.equal(liquidityProtectionWallet.address);
                 });
 
                 it('verifies that the owner can transfer the store ownership', async () => {

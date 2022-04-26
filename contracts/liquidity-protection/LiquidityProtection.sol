@@ -202,20 +202,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev returns the LP system store
-     */
-    function systemStore() external view override returns (ILiquidityProtectionSystemStore) {
-        return _systemStore;
-    }
-
-    /**
-     * @dev returns the LP wallet
-     */
-    function wallet() external view override returns (ITokenHolder) {
-        return _wallet;
-    }
-
-    /**
      * @dev accept ETH
      */
     receive() external payable {}
