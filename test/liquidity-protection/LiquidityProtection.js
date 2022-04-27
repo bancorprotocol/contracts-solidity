@@ -3473,7 +3473,7 @@ describe('LiquidityProtection', () => {
             describe('migration tests', () => {
                 const NUM_OF_POOLS = 3;
                 const NUM_OF_PROVIDERS = 3;
-                const NUM_OF_POSITIONS = 9; // number of positions per provider per pool per reserve
+                const NUM_OF_POSITIONS = 3; // number of positions per provider per pool per reserve
 
                 let providers;
                 let baseTokens;
@@ -3692,17 +3692,17 @@ describe('LiquidityProtection', () => {
                                 expectAlmostEqual(
                                     currState.vaultBaseBalance,
                                     prevState.vaultBaseBalance.add(baseReserveAmount),
-                                    '0.0000000000000000004427'
+                                    '0.000000000000000000139'
                                 );
                                 expectAlmostEqual(
                                     currState.protectionPoolBalance,
                                     prevState.protectionPoolBalance.sub(basePoolAmount.mul(2)),
-                                    '0.0000000000000000000032'
+                                    '0.000000000000000000007'
                                 );
                                 expectAlmostEqual(
                                     currState.systemBalance,
                                     prevState.systemBalance.sub(deltaPoolAmount),
-                                    '0.0000000000000000000218'
+                                    '0.000000000000000000016'
                                 );
 
                                 expect(currState.totalPoolAmount).to.equal(
@@ -3781,7 +3781,7 @@ describe('LiquidityProtection', () => {
                         expectAlmostEqual(
                             currState.protectionPoolBalance,
                             prevState.protectionPoolBalance.sub(deltaPoolAmount),
-                            '0.0000000000000000000032'
+                            '0.000000000000000000011'
                         );
                         expect(currState.protectionPoolBalance.sub(currState.systemBalance)).to.equal(
                             prevState.protectionPoolBalance.sub(prevState.systemBalance)
