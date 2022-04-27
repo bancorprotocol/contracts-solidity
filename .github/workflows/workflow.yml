@@ -8,7 +8,9 @@ on:
   pull_request:
 
 jobs:
-  build-test:
+  test:
+    name: Test
+
     runs-on: self-hosted
     timeout-minutes: 600
 
