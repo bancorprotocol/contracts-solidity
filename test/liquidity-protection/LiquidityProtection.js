@@ -3643,6 +3643,8 @@ describe('LiquidityProtection', () => {
                                 );
                             }
 
+                            expect(await checkpointStore.checkpoint(providers[i].address)).to.equal(BigNumber.from(0));
+
                             const receipt = await liquidityProtection
                                 .connect(providers[i])
                                 .migratePositions(positionLists);
@@ -3725,6 +3727,8 @@ describe('LiquidityProtection', () => {
                             expect(
                                 await liquidityProtectionStore.protectedLiquidityIds(providers[i].address)
                             ).to.have.lengthOf((NUM_OF_POSITIONS - numOfPositions) * NUM_OF_POOLS * 2);
+
+                            expect(await checkpointStore.checkpoint(providers[i].address)).to.equal(BigNumber.from(0));
                         });
                     }
                 }
