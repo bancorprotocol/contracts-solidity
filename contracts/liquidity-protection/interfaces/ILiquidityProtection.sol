@@ -23,10 +23,6 @@ interface ILiquidityProtection {
 
     function settings() external view returns (ILiquidityProtectionSettings);
 
-    function systemStore() external view returns (ILiquidityProtectionSystemStore);
-
-    function wallet() external view returns (ITokenHolder);
-
     function addLiquidityFor(
         address owner,
         IConverterAnchor poolAnchor,
