@@ -1,15 +1,11 @@
-import fs from 'fs';
-import path from 'path';
-
-import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-ethers';
-import '@nomiclabs/hardhat-etherscan';
-
-import 'solidity-coverage';
-import 'hardhat-contract-sizer';
-import 'hardhat-abi-exporter';
-import 'hardhat-gas-reporter';
+import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
+import fs from 'fs';
+import 'hardhat-contract-sizer';
+import { HardhatUserConfig } from 'hardhat/config';
+import path from 'path';
+import 'solidity-coverage';
 
 const configPath = path.join(__dirname, '/config.json');
 const configFile = fs.existsSync(configPath) ? JSON.parse(fs.readFileSync(configPath, 'utf8')) : {};
@@ -24,8 +20,6 @@ const loadENVKey = <T>(envKeyName: string) => {
 };
 
 const configNetworks = configFile.networks || {};
-
-import { HardhatUserConfig } from 'hardhat/config';
 
 const config: HardhatUserConfig = {
     networks: {
@@ -48,33 +42,38 @@ const config: HardhatUserConfig = {
     },
 
     solidity: {
-        version: '0.6.12',
-        settings: {
-            optimizer: {
-                enabled: true,
-                runs: 200
+        compilers: [
+            {
+                version: '0.6.12',
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200
+                    },
+                    metadata: {
+                        bytecodeHash: 'none'
+                    }
+                }
             },
-            metadata: {
-                bytecodeHash: 'none'
+            {
+                version: '0.8.13',
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 200
+                    },
+                    metadata: {
+                        bytecodeHash: 'none'
+                    }
+                }
             }
-        }
+        ]
     },
 
-    etherscan: {
-        apiKey: loadAPIKey('etherscan')
-    },
     contractSizer: {
         alphaSort: true,
         runOnCompile: false,
         disambiguatePaths: false
-    },
-    abiExporter: {
-        path: './data/abi',
-        clear: true
-    },
-    gasReporter: {
-        currency: 'USD',
-        enabled: loadENVKey('PROFILE')
     },
 
     mocha: {

@@ -107,7 +107,7 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
             )
         );
 
-        const converterAnchor = await deployed('IConverterAnchor', await converterRegistry.getAnchor(index));
+        const converterAnchor = await deployed('Owned', await converterRegistry.getAnchor(index));
 
         const standardConverter = await deployed('StandardPoolConverter', await converterAnchor.owner());
         await execute(standardConverter.acceptOwnership());

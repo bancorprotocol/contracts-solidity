@@ -4,7 +4,6 @@
 
 [![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://docs.bancor.network/)
 [![NPM Package](https://img.shields.io/npm/v/@bancor/contracts-solidity.svg)](https://www.npmjs.org/package/@bancor/contracts-solidity)
-[![Build Status](https://github.com/bancorprotocol/contracts-solidity/actions/workflows/workflow.yml/badge.svg)](https://github.com/bancorprotocol/contracts-solidity/actions/workflows/workflow.yml)
 
 ## Overview
 
