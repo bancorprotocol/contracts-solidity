@@ -1,3 +1,8 @@
+### 0.7.7
+LiquidityProtection
+* Added support for migration for v3
+
+
 ### 0.7.2-6
 General
 * Fixed typechain exports
