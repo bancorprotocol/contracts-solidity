@@ -676,9 +676,9 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // verify rate deviation as early as possible in order to reduce gas-cost for failing transactions
         _verifyRateDeviation(removeSpotRate.n, removeSpotRate.d, removeAverageRate.n, removeAverageRate.d);
 
-        uint256 poolAmount = 0;
-        uint256 reserveAmount = 0;
-        uint256 targetAmount = 0;
+        uint256 poolTokenAmount = 0;
+        uint256 originalAmount = 0;
+        uint256 fullyProtectedAmount = 0;
 
         uint256 length = positionList.positionIds.length;
         for (uint256 i = 0; i < length; ++i) {
@@ -688,11 +688,11 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 "ERR_INVALID_POSITION_LIST"
             );
 
-            // get the pool token amount
-            poolAmount = poolAmount.add(removedPos.poolAmount);
+            // collect pool token amounts
+            poolTokenAmount = poolTokenAmount.add(removedPos.poolAmount);
 
-            // get the reserve token amount
-            reserveAmount = reserveAmount.add(removedPos.reserveAmount);
+            // collect originally provided amounts
+            originalAmount = originalAmount.add(removedPos.reserveAmount);
 
             // get the various rates between the reserves upon adding liquidity and now
             PackedRates memory packedRates = _packRates(
@@ -702,8 +702,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 removeAverageRate
             );
 
-            // get the target token amount
-            targetAmount = targetAmount.add(
+            // get the fully protected amount (+ fees)
+            fullyProtectedAmount = fullyProtectedAmount.add(
                 _removeLiquidityTargetAmount(
                     poolRate,
                     removedPos.poolAmount,
@@ -715,20 +715,23 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         }
 
         // add the pool tokens to the system
-        _systemStore.incSystemBalance(poolToken, poolAmount);
+        _systemStore.incSystemBalance(poolToken, poolTokenAmount);
 
         // remove network token liquidity
         if (_isNetworkToken(reserveToken)) {
-            // mint network tokens for this contract and migrate them
-            _mintNetworkTokens(address(this), poolToken, reserveAmount);
-            _networkToken.approve(address(_networkV3), reserveAmount);
+            // mint the fully protected amount (+ fees) and migrate it
+            _mintNetworkTokens(address(this), poolToken, fullyProtectedAmount);
+
+            _networkToken.approve(address(_networkV3), fullyProtectedAmount);
+
             _networkV3.migrateLiquidity(
                 IReserveToken(address(_networkToken)),
                 msg.sender,
-                targetAmount,
-                targetAmount,
-                reserveAmount
+                fullyProtectedAmount,
+                fullyProtectedAmount,
+                originalAmount
             );
+
             return;
         }
 
@@ -736,7 +739,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
-        uint256 poolLiquidationAmount = _liquidationAmount(targetAmount, poolRate, poolToken, 0);
+        uint256 poolLiquidationAmount = _liquidationAmount(fullyProtectedAmount, poolRate, poolToken, 0);
 
         // withdraw the pool tokens from the wallet
         _withdrawPoolTokens(poolToken, poolLiquidationAmount);
@@ -744,15 +747,21 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // remove liquidity
         _removeLiquidity(poolToken, poolLiquidationAmount, reserveToken, IReserveToken(address(_networkToken)));
 
-        // transfer the base tokens to the caller
-        uint256 baseBalance = reserveToken.balanceOf(address(this));
+        // migrate the received tokens
+        uint256 removedAmount = reserveToken.balanceOf(address(this));
         uint256 value;
         if (reserveToken.isNativeToken()) {
-            value = baseBalance;
+            value = removedAmount;
         } else {
-            IERC20(address(reserveToken)).safeApprove(address(_networkV3), baseBalance);
+            IERC20(address(reserveToken)).safeApprove(address(_networkV3), removedAmount);
         }
-        _networkV3.migrateLiquidity{ value: value }(reserveToken, msg.sender, targetAmount, baseBalance, reserveAmount);
+        _networkV3.migrateLiquidity{ value: value }(
+            reserveToken,
+            msg.sender,
+            fullyProtectedAmount,
+            removedAmount,
+            originalAmount
+        );
 
         // if the contract still holds network tokens, burn them
         uint256 networkBalance = _networkToken.balanceOf(address(this));
