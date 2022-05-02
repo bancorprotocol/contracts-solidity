@@ -1,4 +1,4 @@
-### 0.7.7
+### 0.7.7-8
 LiquidityProtection
 * Added support for migration for v3
 
