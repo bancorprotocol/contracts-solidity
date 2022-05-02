@@ -3623,12 +3623,12 @@ describe('LiquidityProtection', () => {
                             const protectedLiquidityIds = (
                                 await liquidityProtectionStore.protectedLiquidityIds(providers[i].address)
                             ).filter(somePositions);
-                            const protectedLiquidities = await Promise.all(
-                                protectedLiquidityIds.map((id) => liquidityProtectionStore.protectedLiquidity(id))
-                            );
-                            const positions = protectedLiquidities.map((protectedLiquidity) =>
-                                getProtection(protectedLiquidity)
-                            );
+
+                            const positions = [];
+                            for (const id of protectedLiquidityIds) {
+                                const protectedLiquidity = await liquidityProtectionStore.protectedLiquidity(id);
+                                positions.push({ id, ...getProtection(protectedLiquidity) });
+                            }
 
                             const prevStates = {};
                             for (const baseToken of baseTokens) {
@@ -3645,10 +3645,29 @@ describe('LiquidityProtection', () => {
 
                             expect(await checkpointStore.checkpoint(providers[i].address)).to.equal(BigNumber.from(0));
 
-                            const receipt = await liquidityProtection
-                                .connect(providers[i])
-                                .migratePositions(positionLists);
-                            const gasCost = await getTransactionCost(receipt);
+                            const networkFullyProtectedAmounts = {};
+                            for (const baseToken of baseTokens) {
+                                if (!networkFullyProtectedAmounts[baseToken]) {
+                                    networkFullyProtectedAmounts[baseToken] = BigNumber.from(0);
+                                }
+
+                                const networkPositions = getPositions(positions, baseToken.poolToken, networkToken);
+                                for (const p of networkPositions) {
+                                    const removeAmounts = await liquidityProtection.removeLiquidityReturn(
+                                        p.id,
+                                        PPM_RESOLUTION,
+                                        MAX_UINT256
+                                    );
+                                    const fullyProtectedAmount = removeAmounts[0];
+                                    networkFullyProtectedAmounts[baseToken] =
+                                        networkFullyProtectedAmounts[baseToken].add(fullyProtectedAmount);
+                                }
+                            }
+
+                            const res = await liquidityProtection.connect(providers[i]).migratePositions(positionLists);
+
+                            const gasCost = await getTransactionCost(res);
+
                             prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
                                 prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
 
@@ -3656,19 +3675,20 @@ describe('LiquidityProtection', () => {
                                 const basePositions = getPositions(positions, baseToken.poolToken, baseToken);
                                 const networkPositions = getPositions(positions, baseToken.poolToken, networkToken);
                                 const baseReserveAmount = basePositions.reduce(
-                                    (a, b) => a.add(b.reserveAmount),
+                                    (res, p) => res.add(p.reserveAmount),
                                     BigNumber.from(0)
                                 );
                                 const networkReserveAmount = networkPositions.reduce(
-                                    (a, b) => a.add(b.reserveAmount),
+                                    (res, p) => res.add(p.reserveAmount),
                                     BigNumber.from(0)
                                 );
+
                                 const basePoolAmount = basePositions.reduce(
-                                    (a, b) => a.add(b.poolAmount),
+                                    (res, p) => res.add(p.poolAmount),
                                     BigNumber.from(0)
                                 );
                                 const networkPoolAmount = networkPositions.reduce(
-                                    (a, b) => a.add(b.poolAmount),
+                                    (res, p) => res.add(p.poolAmount),
                                     BigNumber.from(0)
                                 );
                                 const totalPoolAmount = basePoolAmount.add(networkPoolAmount);
@@ -3688,7 +3708,7 @@ describe('LiquidityProtection', () => {
                                 expect(currState.protectionNetworkBalance).to.equal(prevState.protectionNetworkBalance);
 
                                 expect(currState.vaultNetworkBalance).to.equal(
-                                    prevState.vaultNetworkBalance.add(networkReserveAmount.mul(NUM_OF_POOLS))
+                                    prevState.vaultNetworkBalance.add(networkFullyProtectedAmounts[baseToken])
                                 );
 
                                 expectAlmostEqual(
