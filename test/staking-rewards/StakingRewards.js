@@ -166,7 +166,7 @@ describe('StakingRewards', () => {
         return poolToken;
     };
 
-    const deployLiquidityProtection = async (
+    const deployTestLiquidityProtection = async (
         liquidityProtectionSettings,
         liquidityProtectionStore,
         liquidityProtectionStats,
@@ -176,8 +176,8 @@ describe('StakingRewards', () => {
         govTokenGovernance,
         checkpointStore
     ) => {
-        const abi = fs.readFileSync(path.resolve(__dirname, '../helpers/bin/LiquidityProtection.abi'));
-        const bin = fs.readFileSync(path.resolve(__dirname, '../helpers/bin/LiquidityProtection.bin'));
+        const abi = fs.readFileSync(path.resolve(__dirname, '../helpers/bin/TestLiquidityProtection.abi'));
+        const bin = fs.readFileSync(path.resolve(__dirname, '../helpers/bin/TestLiquidityProtection.bin'));
 
         const LiquidityProtection = new ContractFactory(JSON.parse(abi), `0x${bin}`, accounts[0]);
 
@@ -260,7 +260,7 @@ describe('StakingRewards', () => {
         liquidityProtectionStats = await Contracts.LiquidityProtectionStats.deploy();
         liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
         liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
-        liquidityProtection = await deployLiquidityProtection(
+        liquidityProtection = await deployTestLiquidityProtection(
             liquidityProtectionSettings,
             liquidityProtectionStore,
             liquidityProtectionStats,
