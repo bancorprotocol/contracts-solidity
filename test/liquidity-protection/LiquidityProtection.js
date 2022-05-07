@@ -45,7 +45,6 @@ let networkToken;
 let networkTokenGovernance;
 let govToken;
 let govTokenGovernance;
-let checkpointStore;
 let poolToken;
 let converterRegistry;
 let converterRegistryData;
@@ -322,7 +321,7 @@ describe('LiquidityProtection', () => {
             const setTime = async (time) => {
                 now = time;
 
-                for (const t of [converter, checkpointStore, liquidityProtection]) {
+                for (const t of [converter, liquidityProtection]) {
                     if (t) {
                         await t.setTime(now);
                     }
@@ -344,7 +343,6 @@ describe('LiquidityProtection', () => {
                 await govTokenGovernance.acceptTokenOwnership();
 
                 // initialize liquidity protection
-                checkpointStore = await Contracts.TestCheckpointStore.deploy();
                 liquidityProtectionSettings = await Contracts.LiquidityProtectionSettings.deploy(
                     networkToken.address,
                     contractRegistry.address
@@ -365,14 +363,12 @@ describe('LiquidityProtection', () => {
                     liquidityProtectionSystemStore.address,
                     liquidityProtectionWallet.address,
                     networkTokenGovernance.address,
-                    govTokenGovernance.address,
-                    checkpointStore.address
+                    govTokenGovernance.address
                 );
 
                 await liquidityProtectionSettings.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
                 await liquidityProtectionStats.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
                 await liquidityProtectionSystemStore.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
-                await checkpointStore.connect(owner).grantRole(ROLE_OWNER, liquidityProtection.address);
                 await liquidityProtectionStore.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptStoreOwnership();
                 await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
@@ -1367,58 +1363,6 @@ describe('LiquidityProtection', () => {
                                 expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                             });
 
-                            it('verifies that removing the entire protection updates the removal checkpoint', async () => {
-                                const reserveAmount = BigNumber.from(100000);
-                                await addProtectedLiquidity(
-                                    poolToken.address,
-                                    baseToken,
-                                    baseTokenAddress,
-                                    reserveAmount,
-                                    isETHReserve
-                                );
-
-                                await setTime(now.add(duration.days(3)));
-
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-
-                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(BigNumber.from(0));
-
-                                const portion = BigNumber.from(PPM_RESOLUTION);
-                                await liquidityProtection.removeLiquidity(protectionId, portion);
-
-                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(now);
-                            });
-
-                            it('verifies that removing a portion of a protection updates the removal checkpoint', async () => {
-                                const reserveAmount = BigNumber.from(100000);
-                                await addProtectedLiquidity(
-                                    poolToken.address,
-                                    baseToken,
-                                    baseTokenAddress,
-                                    reserveAmount,
-                                    isETHReserve
-                                );
-
-                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                    owner.address
-                                );
-                                const protectionId = protectionIds[0];
-
-                                expect(await checkpointStore.checkpoint(owner.address)).to.equal(BigNumber.from(0));
-
-                                const portion = BigNumber.from(500000);
-                                for (let i = 1; i < 5; i++) {
-                                    await setTime(now.add(duration.days(3)));
-
-                                    await liquidityProtection.removeLiquidity(protectionId, portion);
-
-                                    expect(await checkpointStore.checkpoint(owner.address)).to.equal(now);
-                                }
-                            });
-
                             it('should revert when attempting to remove zero portion of the liquidity', async () => {
                                 const reserveAmount = BigNumber.from(1000);
                                 await addProtectedLiquidity(
@@ -2161,9 +2105,6 @@ describe('LiquidityProtection', () => {
                             let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
                             protection = getProtection(protection);
 
-                            expect(await checkpointStore.checkpoint(recipient.address)).to.equal(BigNumber.from(0));
-                            expect(await checkpointStore.checkpoint(newOwner.address)).to.equal(BigNumber.from(0));
-
                             const prevPoolStats = await getPoolStats(poolToken, reserveToken, isETHReserve);
                             const prevRecipientStats = await getProviderStats(
                                 recipient,
@@ -2234,10 +2175,6 @@ describe('LiquidityProtection', () => {
                                 prevNewOwnerStats.totalProviderAmount.add(protection2.reserveAmount)
                             );
                             expect(newOwnerStats.providerPools).to.equalTo([protection2.poolToken]);
-
-                            // verify removal checkpoints
-                            expect(await checkpointStore.checkpoint(recipient.address)).to.equal(now);
-                            expect(await checkpointStore.checkpoint(newOwner.address)).to.equal(BigNumber.from(0));
                         };
 
                         let protectionId;
@@ -2383,267 +2320,6 @@ describe('LiquidityProtection', () => {
 
                             describe('network token', () => {
                                 testTransfer(false, false, testAccount);
-                            });
-                        });
-                    }
-                });
-
-                describe('notifications', () => {
-                    let eventsSubscriber;
-
-                    beforeEach(async () => {
-                        eventsSubscriber = await Contracts.TestLiquidityProvisionEventsSubscriber.deploy();
-                    });
-
-                    const getEvents = async () => {
-                        const data = [];
-
-                        const count = (await eventsSubscriber.eventCount()).toNumber();
-                        for (let i = 0; i < count; ++i) {
-                            const event = await eventsSubscriber.events(i);
-                            data.push({
-                                id: event[0],
-                                provider: event[1],
-                                poolAnchor: event[2],
-                                reserveToken: event[3],
-                                poolAmount: event[4],
-                                reserveAmount: event[5],
-                                adding: event[6]
-                            });
-                        }
-
-                        return data;
-                    };
-
-                    const testNotifications = (isBaseReserveToken, isETHReserve, recipientNb) => {
-                        const reserveAmount = BigNumber.from(5000);
-                        let reserveToken;
-                        let reserveTokenAddress;
-                        let id;
-                        let protection;
-                        let recipient;
-
-                        const init = async () => {
-                            await initPool(isETHReserve);
-
-                            if (isBaseReserveToken) {
-                                reserveToken = baseToken;
-                                reserveTokenAddress = isETHReserve ? NATIVE_TOKEN_ADDRESS : reserveToken.address;
-
-                                await addProtectedLiquidity(
-                                    poolToken.address,
-                                    reserveToken,
-                                    reserveTokenAddress,
-                                    reserveAmount,
-                                    isETHReserve,
-                                    owner,
-                                    recipient
-                                );
-                            } else {
-                                reserveToken = networkToken;
-                                reserveTokenAddress = networkToken.address;
-
-                                await baseToken.transfer(accounts[1].address, reserveAmount);
-                                await addProtectedLiquidity(
-                                    poolToken.address,
-                                    baseToken,
-                                    baseTokenAddress,
-                                    reserveAmount,
-                                    false,
-                                    accounts[1],
-                                    accounts[1]
-                                );
-
-                                await eventsSubscriber.reset();
-
-                                await addProtectedLiquidity(
-                                    poolToken.address,
-                                    reserveToken,
-                                    reserveTokenAddress,
-                                    reserveAmount,
-                                    false,
-                                    owner,
-                                    recipient
-                                );
-                            }
-
-                            const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
-                                recipient.address
-                            );
-                            id = protectionIds[0];
-                            protection = await liquidityProtectionStore.protectedLiquidity(id);
-                            protection = getProtection(protection);
-                        };
-
-                        context('without an events notifier', () => {
-                            before(async () => {
-                                recipient = accounts[recipientNb];
-                            });
-                            beforeEach(async () => {
-                                await init();
-                            });
-
-                            describe('adding liquidity', () => {
-                                it('should not publish events', async () => {
-                                    const events = await getEvents();
-                                    expect(events).to.have.lengthOf(0);
-                                });
-                            });
-
-                            describe('removing liquidity', () => {
-                                beforeEach(async () => {
-                                    await setTime(now.add(BigNumber.from(1)));
-
-                                    if (!isBaseReserveToken) {
-                                        await govToken
-                                            .connect(recipient)
-                                            .approve(liquidityProtection.address, protection.reserveAmount);
-                                    }
-                                });
-
-                                it('should not publish events', async () => {
-                                    await liquidityProtection.connect(recipient).removeLiquidity(id, PPM_RESOLUTION);
-
-                                    const events = await getEvents();
-                                    expect(events).to.have.lengthOf(0);
-                                });
-                            });
-
-                            describe('transferring liquidity', () => {
-                                beforeEach(async () => {
-                                    await setTime(now.add(BigNumber.from(1)));
-                                });
-
-                                it('should not publish events', async () => {
-                                    const newOwner = accounts[8];
-                                    await liquidityProtection.connect(recipient).transferPosition(id, newOwner.address);
-
-                                    const events = await getEvents();
-                                    expect(events).to.have.lengthOf(0);
-                                });
-                            });
-                        });
-
-                        context('with an events notifier', () => {
-                            before(async () => {
-                                recipient = accounts[recipientNb];
-                            });
-
-                            beforeEach(async () => {
-                                await liquidityProtectionSettings
-                                    .connect(owner)
-                                    .addSubscriber(eventsSubscriber.address);
-
-                                await init();
-                            });
-
-                            describe('adding liquidity', () => {
-                                it('should publish events', async () => {
-                                    const totalSupply = await poolToken.totalSupply();
-                                    const reserveBalance = await converter.reserveBalance(reserveTokenAddress);
-                                    const rate = poolTokenRate(totalSupply, reserveBalance);
-
-                                    const events = await getEvents();
-                                    expect(events).to.have.lengthOf(1);
-
-                                    const event = events[0];
-                                    expect(event.adding).to.be.true;
-                                    expect(event.id).to.equal(BigNumber.from(0));
-                                    expect(event.provider).to.equal(recipient.address);
-                                    expect(event.poolAnchor).to.equal(poolToken.address);
-                                    expect(event.reserveToken).to.equal(reserveTokenAddress);
-                                    expect(event.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(event.reserveAmount).to.equal(reserveAmount);
-                                });
-                            });
-
-                            describe('removing liquidity', () => {
-                                beforeEach(async () => {
-                                    await eventsSubscriber.reset();
-
-                                    await setTime(now.add(BigNumber.from(1)));
-
-                                    if (!isBaseReserveToken) {
-                                        await govToken
-                                            .connect(recipient)
-                                            .approve(liquidityProtection.address, protection.reserveAmount);
-                                    }
-                                });
-
-                                it('should publish events', async () => {
-                                    const totalSupply = await poolToken.totalSupply();
-                                    const reserveBalance = await converter.reserveBalance(reserveTokenAddress);
-                                    const rate = poolTokenRate(totalSupply, reserveBalance);
-
-                                    await liquidityProtection.connect(recipient).removeLiquidity(id, PPM_RESOLUTION);
-
-                                    const events = await getEvents();
-                                    expect(events).to.have.lengthOf(1);
-
-                                    const event = events[0];
-                                    expect(event.adding).to.be.false;
-                                    expect(event.id).to.equal(id);
-                                    expect(event.provider).to.equal(recipient.address);
-                                    expect(event.poolAnchor).to.equal(poolToken.address);
-                                    expect(event.reserveToken).to.equal(reserveTokenAddress);
-                                    expect(event.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(event.reserveAmount).to.equal(reserveAmount);
-                                });
-                            });
-
-                            describe('transferring liquidity', () => {
-                                beforeEach(async () => {
-                                    await eventsSubscriber.reset();
-
-                                    await setTime(now.add(BigNumber.from(1)));
-                                });
-
-                                it('should publish events', async () => {
-                                    const totalSupply = await poolToken.totalSupply();
-                                    const reserveBalance = await converter.reserveBalance(reserveTokenAddress);
-                                    const rate = poolTokenRate(totalSupply, reserveBalance);
-
-                                    const newOwner = accounts[8];
-                                    await liquidityProtection.connect(recipient).transferPosition(id, newOwner.address);
-
-                                    const events = await getEvents();
-                                    expect(events).to.have.lengthOf(2);
-
-                                    const removeEvent = events[0];
-                                    expect(removeEvent.adding).to.be.false;
-                                    expect(removeEvent.id).to.equal(id);
-                                    expect(removeEvent.provider).to.equal(recipient.address);
-                                    expect(removeEvent.poolAnchor).to.equal(poolToken.address);
-                                    expect(removeEvent.reserveToken).to.equal(reserveTokenAddress);
-                                    expect(removeEvent.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(removeEvent.reserveAmount).to.equal(reserveAmount);
-
-                                    const addEvent = events[1];
-                                    expect(addEvent.adding).to.be.true;
-                                    expect(addEvent.id).to.equal(BigNumber.from(0));
-                                    expect(addEvent.provider).to.equal(newOwner.address);
-                                    expect(addEvent.poolAnchor).to.equal(poolToken.address);
-                                    expect(addEvent.reserveToken).to.equal(reserveTokenAddress);
-                                    expect(addEvent.poolAmount).to.equal(reserveAmount.mul(rate.d).div(rate.n));
-                                    expect(addEvent.reserveAmount).to.equal(reserveAmount);
-                                });
-                            });
-                        });
-                    };
-
-                    const accountsTmp = [0, 3];
-
-                    // test both addLiquidity and addLiquidityFor
-                    for (const accountTmp of accountsTmp) {
-                        context(accountTmp === 0 ? 'for self' : 'for another account', async () => {
-                            for (let isETHReserve = 0; isETHReserve < 2; isETHReserve++) {
-                                describe(`base token (${isETHReserve ? 'ETH' : 'ERC20'})`, () => {
-                                    testNotifications(true, isETHReserve, accountTmp);
-                                });
-                            }
-
-                            describe('network token', () => {
-                                testNotifications(false, false, accountTmp);
                             });
                         });
                     }
@@ -3643,8 +3319,6 @@ describe('LiquidityProtection', () => {
                                 );
                             }
 
-                            expect(await checkpointStore.checkpoint(providers[i].address)).to.equal(BigNumber.from(0));
-
                             const networkFullyProtectedAmounts = {};
                             for (const baseToken of baseTokens) {
                                 if (!networkFullyProtectedAmounts[baseToken]) {
@@ -3747,8 +3421,6 @@ describe('LiquidityProtection', () => {
                             expect(
                                 await liquidityProtectionStore.protectedLiquidityIds(providers[i].address)
                             ).to.have.lengthOf((NUM_OF_POSITIONS - numOfPositions) * NUM_OF_POOLS * 2);
-
-                            expect(await checkpointStore.checkpoint(providers[i].address)).to.equal(BigNumber.from(0));
                         });
                     }
                 }

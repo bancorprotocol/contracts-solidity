@@ -184,11 +184,8 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
         liquidityProtectionSystemStore.address,
         liquidityProtectionWallet.address,
         bntTokenGovernance.address,
-        vbntTokenGovernance.address,
-        checkpointStore.address
+        vbntTokenGovernance.address
     );
-
-    await execute(checkpointStore.grantRole(ROLE_OWNER, liquidityProtection.address));
 
     await execute(stakingRewardsStore.grantRole(ROLE_OWNER, stakingRewards.address));
     await execute(stakingRewards.grantRole(ROLE_PUBLISHER, liquidityProtection.address));

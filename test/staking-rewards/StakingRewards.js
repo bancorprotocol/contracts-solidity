@@ -1,10 +1,12 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-const { BigNumber } = require('ethers');
+const { BigNumber, ContractFactory } = require('ethers');
 
 const { Decimal } = require('../helpers/MathUtils');
 const humanizeDuration = require('humanize-duration');
 const { set } = require('lodash');
+const fs = require('fs');
+const path = require('path');
 
 const Constants = require('../helpers/Constants');
 const Contracts = require('../../components/Contracts').default;
@@ -164,6 +166,35 @@ describe('StakingRewards', () => {
         return poolToken;
     };
 
+    const deployLiquidityProtection = async (
+        liquidityProtectionSettings,
+        liquidityProtectionStore,
+        liquidityProtectionStats,
+        liquidityProtectionSystemStore,
+        liquidityProtectionWallet,
+        networkTokenGovernance,
+        govTokenGovernance,
+        checkpointStore
+    ) => {
+        const abi = fs.readFileSync(path.resolve(__dirname, '../helpers/bin/LiquidityProtection.abi'));
+        const bin = fs.readFileSync(path.resolve(__dirname, '../helpers/bin/LiquidityProtection.bin'));
+
+        const LiquidityProtection = new ContractFactory(JSON.parse(abi), `0x${bin}`, accounts[0]);
+
+        return LiquidityProtection.deploy(
+            accounts[0].address, // bancor network v3, not used in this context
+            accounts[0].address, // bancor vault v3, not used in this context
+            liquidityProtectionSettings.address,
+            liquidityProtectionStore.address,
+            liquidityProtectionStats.address,
+            liquidityProtectionSystemStore.address,
+            liquidityProtectionWallet.address,
+            networkTokenGovernance.address,
+            govTokenGovernance.address,
+            checkpointStore.address
+        );
+    };
+
     before(async () => {
         accounts = await ethers.getSigners();
 
@@ -229,17 +260,15 @@ describe('StakingRewards', () => {
         liquidityProtectionStats = await Contracts.LiquidityProtectionStats.deploy();
         liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
         liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
-        liquidityProtection = await Contracts.TestLiquidityProtection.deploy(
-            accounts[0].address, // bancor network v3, not used in this context
-            accounts[0].address, // bancor vault v3, not used in this context
-            liquidityProtectionSettings.address,
-            liquidityProtectionStore.address,
-            liquidityProtectionStats.address,
-            liquidityProtectionSystemStore.address,
-            liquidityProtectionWallet.address,
-            networkTokenGovernance.address,
-            govTokenGovernance.address,
-            checkpointStore.address
+        liquidityProtection = await deployLiquidityProtection(
+            liquidityProtectionSettings,
+            liquidityProtectionStore,
+            liquidityProtectionStats,
+            liquidityProtectionSystemStore,
+            liquidityProtectionWallet,
+            networkTokenGovernance,
+            govTokenGovernance,
+            checkpointStore
         );
 
         await contractRegistry.registerAddress(LIQUIDITY_PROTECTION, liquidityProtection.address);
