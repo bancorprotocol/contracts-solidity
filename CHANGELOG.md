@@ -1,3 +1,9 @@
+### 0.7.9
+LiquidityProtection
+* Removed checkpoint updates (gas optimization)
+* Removed subscriber notifications on add/remove liquidity (gas optimization)
+
+
 ### 0.7.7-8
 LiquidityProtection
 * Added support for migration for v3
