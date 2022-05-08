@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "@bancor/token-governance/contracts/ITokenGovernance.sol";
 
-import "../utility/interfaces/ICheckpointStore.sol";
 import "../utility/MathEx.sol";
 import "../utility/Types.sol";
 import "../utility/Time.sol";
@@ -104,7 +103,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ITokenGovernance private immutable _networkTokenGovernance;
     IERC20 private immutable _govToken;
     ITokenGovernance private immutable _govTokenGovernance;
-    ICheckpointStore private immutable _lastRemoveCheckpointStore;
 
     /**
      * @dev initializes a new LiquidityProtection contract
@@ -118,8 +116,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         ILiquidityProtectionSystemStore systemStore,
         ITokenHolder wallet,
         ITokenGovernance networkTokenGovernance,
-        ITokenGovernance govTokenGovernance,
-        ICheckpointStore lastRemoveCheckpointStore
+        ITokenGovernance govTokenGovernance
     ) public {
         _validAddress(address(networkV3));
         _validAddress(address(vaultV3));
@@ -128,7 +125,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         _validAddress(address(stats));
         _validAddress(address(systemStore));
         _validAddress(address(wallet));
-        _validAddress(address(lastRemoveCheckpointStore));
 
         _networkV3 = networkV3;
         _vaultV3 = vaultV3;
@@ -139,7 +135,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         _wallet = wallet;
         _networkTokenGovernance = networkTokenGovernance;
         _govTokenGovernance = govTokenGovernance;
-        _lastRemoveCheckpointStore = lastRemoveCheckpointStore;
 
         _networkToken = networkTokenGovernance.token();
         _govToken = govTokenGovernance.token();
@@ -550,8 +545,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 id,
         uint32 portion
     ) internal {
-        // remove the position from the store and update the stats and the last removal checkpoint
-        Position memory removedPos = _removePosition(provider, id, portion, false);
+        // remove the position from the store and update the stats
+        Position memory removedPos = _removePosition(provider, id, portion);
 
         // add the pool tokens to the system
         _systemStore.incSystemBalance(removedPos.poolToken, removedPos.poolAmount);
@@ -682,7 +677,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         uint256 length = positionList.positionIds.length;
         for (uint256 i = 0; i < length; ++i) {
-            Position memory removedPos = _removePosition(msg.sender, positionList.positionIds[i], PPM_RESOLUTION, true);
+            Position memory removedPos = _removePosition(msg.sender, positionList.positionIds[i], PPM_RESOLUTION);
             require(
                 removedPos.poolToken == poolToken && removedPos.reserveToken == reserveToken,
                 "ERR_INVALID_POSITION_LIST"
@@ -896,8 +891,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 id,
         address newProvider
     ) internal returns (uint256) {
-        // remove the position from the store and update the stats and the last removal checkpoint
-        Position memory removedPos = _removePosition(provider, id, PPM_RESOLUTION, false);
+        // remove the position from the store and update the stats
+        Position memory removedPos = _removePosition(provider, id, PPM_RESOLUTION);
 
         // add the position to the store, update the stats, and return the new id
         return
@@ -997,8 +992,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         (Fraction memory spotRate, Fraction memory averageRate) = _reserveTokenRates(poolToken, reserveToken);
         _verifyRateDeviation(spotRate.n, spotRate.d, averageRate.n, averageRate.d);
 
-        _notifyEventSubscribersOnAddingLiquidity(provider, poolToken, reserveToken, poolAmount, reserveAmount);
-
         _stats.increaseTotalAmounts(provider, poolToken, reserveToken, poolAmount, reserveAmount);
         _stats.addProviderPool(provider, poolToken);
 
@@ -1016,13 +1009,12 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev removes the position from the store and updates the stats and the last removal checkpoint
+     * @dev removes the position from the store and updates the stats
      */
     function _removePosition(
         address provider,
         uint256 id,
-        uint32 portion,
-        bool isMigrating
+        uint32 portion
     ) private returns (Position memory) {
         Position memory pos = _providerPosition(id, provider);
 
@@ -1033,15 +1025,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         require(pos.timestamp < _time(), "ERR_TOO_EARLY");
 
         if (portion == PPM_RESOLUTION) {
-            _notifyEventSubscribersOnRemovingLiquidity(
-                id,
-                pos.provider,
-                pos.poolToken,
-                pos.reserveToken,
-                pos.poolAmount,
-                pos.reserveAmount
-            );
-
             // remove the position from the provider
             _store.removeProtectedLiquidity(id);
         } else {
@@ -1049,15 +1032,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             uint256 fullPoolAmount = pos.poolAmount;
             uint256 fullReserveAmount = pos.reserveAmount;
             (pos.poolAmount, pos.reserveAmount) = _portionAmounts(pos.poolAmount, pos.reserveAmount, portion);
-
-            _notifyEventSubscribersOnRemovingLiquidity(
-                id,
-                pos.provider,
-                pos.poolToken,
-                pos.reserveToken,
-                pos.poolAmount,
-                pos.reserveAmount
-            );
 
             _store.updateProtectedLiquidityAmounts(
                 id,
@@ -1068,11 +1042,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // update the statistics
         _stats.decreaseTotalAmounts(pos.provider, pos.poolToken, pos.reserveToken, pos.poolAmount, pos.reserveAmount);
-
-        // update last liquidity removal checkpoint
-        if (!isMigrating) {
-            _lastRemoveCheckpointStore.addCheckpoint(provider);
-        }
 
         return pos;
     }
@@ -1372,54 +1341,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function _burnNetworkTokens(IConverterAnchor poolAnchor, uint256 amount) private {
         _systemStore.decNetworkTokensMinted(poolAnchor, amount);
         _networkTokenGovernance.burn(amount);
-    }
-
-    /**
-     * @dev notify event subscribers on adding liquidity
-     */
-    function _notifyEventSubscribersOnAddingLiquidity(
-        address provider,
-        IDSToken poolToken,
-        IReserveToken reserveToken,
-        uint256 poolAmount,
-        uint256 reserveAmount
-    ) private {
-        address[] memory subscribers = _settings.subscribers();
-        uint256 length = subscribers.length;
-        for (uint256 i = 0; i < length; i++) {
-            ILiquidityProvisionEventsSubscriber(subscribers[i]).onAddingLiquidity(
-                provider,
-                poolToken,
-                reserveToken,
-                poolAmount,
-                reserveAmount
-            );
-        }
-    }
-
-    /**
-     * @dev notify event subscribers on removing liquidity
-     */
-    function _notifyEventSubscribersOnRemovingLiquidity(
-        uint256 id,
-        address provider,
-        IDSToken poolToken,
-        IReserveToken reserveToken,
-        uint256 poolAmount,
-        uint256 reserveAmount
-    ) private {
-        address[] memory subscribers = _settings.subscribers();
-        uint256 length = subscribers.length;
-        for (uint256 i = 0; i < length; i++) {
-            ILiquidityProvisionEventsSubscriber(subscribers[i]).onRemovingLiquidity(
-                id,
-                provider,
-                poolToken,
-                reserveToken,
-                poolAmount,
-                reserveAmount
-            );
-        }
     }
 
     /**

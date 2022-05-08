@@ -20,8 +20,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         ILiquidityProtectionSystemStore systemStore,
         ITokenHolder wallet,
         ITokenGovernance networkTokenGovernance,
-        ITokenGovernance govTokenGovernance,
-        ICheckpointStore lastRemoveCheckpointStore
+        ITokenGovernance govTokenGovernance
     )
         public
         LiquidityProtection(
@@ -33,8 +32,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
             systemStore,
             wallet,
             networkTokenGovernance,
-            govTokenGovernance,
-            lastRemoveCheckpointStore
+            govTokenGovernance
         )
     {}
 
