@@ -67,8 +67,8 @@ const filterProvidersWithRewards = async (providers: Set<string>) => {
     const stakingRewards = StakingRewards.connect(STAKING_REWARDS_ADDRESS, provider);
 
     for (const provider of providers) {
-        const claimable = await stakingRewards.pendingRewards(provider);
-        const totalClaimed = await stakingRewards.totalClaimedRewards(provider);
+        const claimable = await stakingRewards.pendingRewards(provider, { blockTag: END_BLOCK });
+        const totalClaimed = await stakingRewards.totalClaimedRewards(provider, { blockTag: END_BLOCK });
         if (claimable.gt(0) || totalClaimed.gt(0)) {
             providersWithRewards[provider] = { claimable, totalClaimed };
         }
