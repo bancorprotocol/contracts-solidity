@@ -20,11 +20,11 @@ contract TestBancorNetworkV3 is BancorNetwork {
     }
 
     function depositFor(
-        address provider,
+        address, /* provider */
         address, /* pool */
         uint256 tokenAmount
     ) external payable returns (uint256) {
-        _networkToken.transferFrom(provider, _bancorVault, tokenAmount);
+        _networkToken.transferFrom(msg.sender, _bancorVault, tokenAmount);
     }
 
     function migrateLiquidity(
