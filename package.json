@@ -20,6 +20,7 @@
     "/artifacts",
     "/typechain",
     "/dist"
+    "/snapshot"
   ],
   "scripts": {
     "build": "hardhat compile",
