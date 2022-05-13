@@ -1,6 +1,6 @@
-## 🎉🎉 *Work on Bancor V3 is in progress and future changes will be incrementally merged into this repo. Stay tuned!* 🎉🎉 ##
+## These are the legacy (v2.1) contracts. Bancor V3 contracts are available at https://github.com/bancorprotocol/contracts-v3 ##
 
-# Bancor Protocol Contracts v0.7 (beta)
+# Bancor Protocol Contracts v0.7
 
 [![Docs](https://img.shields.io/badge/docs-%F0%9F%93%84-blue)](https://docs.bancor.network/)
 [![NPM Package](https://img.shields.io/npm/v/@bancor/contracts-solidity.svg)](https://www.npmjs.org/package/@bancor/contracts-solidity)
