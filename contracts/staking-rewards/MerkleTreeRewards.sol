@@ -136,6 +136,7 @@ contract MerkleTreeRewards {
         bytes32[] calldata proof,
         bool stake
     ) private {
+        // allow users to opt-it for receiving their rewards
         if (caller != recipient) {
             revert AccessDenied();
         }
