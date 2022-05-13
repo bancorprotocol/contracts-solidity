@@ -146,7 +146,7 @@ describe('MerkleTreeRewards', () => {
                     : merkleTreeRewards.connect(caller).claimRewards(recipient.address, amount, proof);
             };
 
-            describe.only(stake ? 'staking' : 'claiming', () => {
+            describe(stake ? 'staking' : 'claiming', () => {
                 it('should revert when calling for a different provider', async () => {
                     await expect(claim(provider1, { caller: provider2 })).to.be.revertedWith('AccessDenied');
                 });

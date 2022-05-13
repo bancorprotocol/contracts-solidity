@@ -19,7 +19,7 @@
     "!/contracts/helpers",
     "/artifacts",
     "/typechain",
-    "/dist"
+    "/dist",
     "/snapshot"
   ],
   "scripts": {
