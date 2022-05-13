@@ -9,7 +9,6 @@ const { NATIVE_TOKEN_ADDRESS, ZERO_ADDRESS, registry } = require('./helpers/Cons
 
 const Contracts = require('../components/Contracts').default;
 
-let network;
 let converter1;
 let converter2;
 let converter3;
@@ -142,8 +141,6 @@ describe('BancorNetwork', () => {
 
     describe('conversions', () => {
         beforeEach(async () => {
-            network = await Contracts.TestBancorNetwork.deploy(contractRegistry.address, 0, 0);
-
             bancorNetwork = await Contracts.BancorNetwork.deploy(contractRegistry.address);
             await contractRegistry.registerAddress(registry.BANCOR_NETWORK, bancorNetwork.address);
 
@@ -229,24 +226,32 @@ describe('BancorNetwork', () => {
             await converterRegistry.addConverter(converter4.address);
         });
 
-        it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithoutFallback', async () => {
-            const converter = await Contracts.ConverterV27OrLowerWithoutFallback.deploy();
-            expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.false;
-        });
+        describe('versioning', () => {
+            let network;
 
-        it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithFallback', async () => {
-            const converter = await Contracts.ConverterV27OrLowerWithFallback.deploy();
-            expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.false;
-        });
+            beforeEach(async () => {
+                network = await Contracts.TestBancorNetwork.deploy(contractRegistry.address);
+            });
 
-        it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithoutFallback', async () => {
-            const converter = await Contracts.ConverterV28OrHigherWithoutFallback.deploy();
-            expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.true;
-        });
+            it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithoutFallback', async () => {
+                const converter = await Contracts.ConverterV27OrLowerWithoutFallback.deploy();
+                expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.false;
+            });
 
-        it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithFallback', async () => {
-            const converter = await Contracts.ConverterV28OrHigherWithFallback.deploy();
-            expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.true;
+            it('verifies that isV28OrHigherConverter returns false for ConverterV27OrLowerWithFallback', async () => {
+                const converter = await Contracts.ConverterV27OrLowerWithFallback.deploy();
+                expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.false;
+            });
+
+            it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithoutFallback', async () => {
+                const converter = await Contracts.ConverterV28OrHigherWithoutFallback.deploy();
+                expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.true;
+            });
+
+            it('verifies that isV28OrHigherConverter returns true for ConverterV28OrHigherWithFallback', async () => {
+                const converter = await Contracts.ConverterV28OrHigherWithFallback.deploy();
+                expect(await network.isV28OrHigherConverterExternal(converter.address)).to.be.true;
+            });
         });
 
         for (const sourceSymbol in PATHS) {

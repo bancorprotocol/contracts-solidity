@@ -26,6 +26,7 @@ import {
     StandardPoolConverter__factory,
     StandardPoolConverterFactory__factory,
     TestBancorNetwork__factory,
+    TestBancorNetworkV3__factory,
     TestCheckpointStore__factory,
     TestContractRegistryClient__factory,
     TestConverterFactory__factory,
@@ -165,6 +166,7 @@ const getContracts = (signer?: Signer) => {
             signer
         ),
         TestBancorNetwork: deployOrAttach('TestBancorNetwork', TestBancorNetwork__factory, signer),
+        TestBancorNetworkV3: deployOrAttach('TestBancorNetworkV3', TestBancorNetworkV3__factory, signer),
         TestCheckpointStore: deployOrAttach('TestCheckpointStore', TestCheckpointStore__factory, signer),
         TestContractRegistryClient: deployOrAttach(
             'TestContractRegistryClient',

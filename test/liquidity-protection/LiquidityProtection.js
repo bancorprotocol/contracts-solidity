@@ -41,6 +41,7 @@ const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
 let now;
 let contractRegistry;
 let bancorNetwork;
+let bancorNetworkV3;
 let networkToken;
 let networkTokenGovernance;
 let govToken;
@@ -355,7 +356,7 @@ describe('LiquidityProtection', () => {
                 liquidityProtectionSystemStore = await Contracts.LiquidityProtectionSystemStore.deploy();
                 liquidityProtectionWallet = await Contracts.TokenHolder.deploy();
                 liquidityProtection = await Contracts.TestLiquidityProtection.deploy(
-                    bancorNetwork.address,
+                    bancorNetworkV3.address,
                     bancorVault.address,
                     liquidityProtectionSettings.address,
                     liquidityProtectionStore.address,
@@ -392,8 +393,8 @@ describe('LiquidityProtection', () => {
                 contractRegistry = await Contracts.ContractRegistry.deploy();
                 converterRegistry = await Contracts.ConverterRegistry.deploy(contractRegistry.address);
                 converterRegistryData = await Contracts.ConverterRegistryData.deploy(contractRegistry.address);
-                bancorNetwork = await Contracts.TestBancorNetwork.deploy(contractRegistry.address, 0, 0);
-
+                bancorNetwork = await Contracts.TestBancorNetwork.deploy(contractRegistry.address);
+                bancorNetworkV3 = await Contracts.TestBancorNetworkV3.deploy(contractRegistry.address);
                 const standardPoolConverterFactory = await Contracts.TestStandardPoolConverterFactory.deploy();
                 const converterFactory = await Contracts.ConverterFactory.deploy();
                 await converterFactory.registerTypedConverterFactory(standardPoolConverterFactory.address);
@@ -3209,8 +3210,8 @@ describe('LiquidityProtection', () => {
                     providers = accounts.slice(1, NUM_OF_PROVIDERS + 1);
 
                     await initLiquidityProtection(false);
-                    await bancorNetwork.setNetworkToken(networkToken.address);
-                    await bancorNetwork.setBancorVault(bancorVault.address);
+                    await bancorNetworkV3.setNetworkToken(networkToken.address);
+                    await bancorNetworkV3.setBancorVault(bancorVault.address);
 
                     baseTokens = [
                         {
