@@ -10,7 +10,7 @@ const { solidityKeccak256, keccak256 } = utils;
 
 const ETHEREUM_PROVIDER_URL = 'ws://localhost:8545';
 const START_BLOCK = 11039642;
-const END_BLOCK = 14745043;
+const END_BLOCK = 14741802;
 const BATCH_SIZE = 1000;
 
 const LIQUIDITY_PROTECTION_STORE_ADDRESS = '0xf5fab5dbd2f3bf675de4cb76517d4767013cfb55';
@@ -25,15 +25,17 @@ const init = () => {
 };
 
 const getProviders = async () => {
-    console.log(`Getting all historic providers from ${START_BLOCK} to ${END_BLOCK}...`);
+    const currentBlock = await provider.getBlockNumber();
+
+    console.log(`Getting all historic providers from ${START_BLOCK} to ${currentBlock}...`);
     console.log();
 
     const store = LiquidityProtectionStore.connect(LIQUIDITY_PROTECTION_STORE_ADDRESS, provider);
 
     const providers = new Set<string>();
 
-    for (let i = START_BLOCK; i < END_BLOCK; i += BATCH_SIZE) {
-        const endBlock = Math.min(i + BATCH_SIZE - 1, END_BLOCK);
+    for (let i = START_BLOCK; i < currentBlock; i += BATCH_SIZE) {
+        const endBlock = Math.min(i + BATCH_SIZE - 1, currentBlock);
 
         console.log(`Querying all ProtectionAdded and ProtectionUpdated events from ${i} to ${endBlock}...`);
 
@@ -67,8 +69,16 @@ const filterProvidersWithRewards = async (providers: Set<string>) => {
     const stakingRewards = StakingRewards.connect(STAKING_REWARDS_ADDRESS, provider);
 
     for (const provider of providers) {
-        const claimable = await stakingRewards.pendingRewards(provider, { blockTag: END_BLOCK });
-        const totalClaimed = await stakingRewards.totalClaimedRewards(provider, { blockTag: END_BLOCK });
+        let claimable = await stakingRewards.pendingRewards(provider, { blockTag: END_BLOCK });
+        let totalClaimed = await stakingRewards.totalClaimedRewards(provider, { blockTag: END_BLOCK });
+        const actualTotalClaimed = await stakingRewards.totalClaimedRewards(provider);
+
+        if (!actualTotalClaimed.eq(totalClaimed)) {
+            const claimDiff = actualTotalClaimed.sub(totalClaimed);
+            claimable = claimDiff.lte(claimable) ? claimable.sub(claimDiff) : BigNumber.from(0);
+            totalClaimed = actualTotalClaimed;
+        }
+
         if (claimable.gt(0) || totalClaimed.gt(0)) {
             providersWithRewards[provider] = { claimable, totalClaimed };
         }
