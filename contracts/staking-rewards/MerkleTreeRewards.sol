@@ -111,7 +111,7 @@ contract MerkleTreeRewards {
         address recipient,
         uint256 amount,
         bytes32[] calldata proof
-    ) external validAddress(recipient) greaterThanZero(amount) {
+    ) external greaterThanZero(amount) {
         _claimRewards(msg.sender, recipient, amount, proof, false);
     }
 
