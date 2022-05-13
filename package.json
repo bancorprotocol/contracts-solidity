@@ -47,7 +47,7 @@
     "@nomiclabs/hardhat-ethers": "^2.0.5",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "3.4.0",
-    "@openzeppelin/contracts4.6.0": "npm:@openzeppelin/contracts@4.6.0",
+    "@openzeppelin/contracts-4.6.0": "npm:@openzeppelin/contracts@4.6.0",
     "@snyk/protect": "^1.913.0",
     "@trivago/prettier-plugin-sort-imports": "^3.2.0",
     "@typechain/ethers-v5": "^10.0.0",
