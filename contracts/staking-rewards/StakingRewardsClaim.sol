@@ -105,7 +105,7 @@ contract StakingRewardsClaim {
     }
 
     /**
-     * @dev claims rewards
+     * @dev claims rewards by providing a merkle proof (a { provider, amount } leaf and a merkle path)
      *
      * requirements:
      *
@@ -120,7 +120,8 @@ contract StakingRewardsClaim {
     }
 
     /**
-     * @dev claims rewards and stakes them in V3
+     * @dev claims rewards by providing a merkle proof (a { provider, amount } leaf and a merkle path) and stakes them
+     * in V3
      *
      * requirements:
      *
