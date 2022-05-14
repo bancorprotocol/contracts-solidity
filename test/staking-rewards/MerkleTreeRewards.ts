@@ -130,20 +130,20 @@ describe('MerkleTreeRewards', () => {
                 proof?: string[];
             }
 
-            const claim = async (recipient: SignerWithAddress, overrides: Overrides = {}) => {
-                let { caller = recipient, amount, proof } = overrides;
+            const claim = async (provider: SignerWithAddress, overrides: Overrides = {}) => {
+                let { caller = provider, amount, proof } = overrides;
 
                 if (!amount) {
-                    amount = rewards[recipient.address];
+                    amount = rewards[provider.address];
                 }
 
                 if (!proof) {
-                    proof = merkleTree.getHexProof(generateLeaf(recipient.address, amount));
+                    proof = merkleTree.getHexProof(generateLeaf(provider.address, amount));
                 }
 
                 return stake
-                    ? merkleTreeRewards.connect(caller).stakeRewards(recipient.address, amount, proof)
-                    : merkleTreeRewards.connect(caller).claimRewards(recipient.address, amount, proof);
+                    ? merkleTreeRewards.connect(caller).stakeRewards(provider.address, amount, proof)
+                    : merkleTreeRewards.connect(caller).claimRewards(provider.address, amount, proof);
             };
 
             describe(stake ? 'staking' : 'claiming', () => {

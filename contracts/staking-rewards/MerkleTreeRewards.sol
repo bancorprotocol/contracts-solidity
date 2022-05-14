@@ -43,18 +43,18 @@ contract MerkleTreeRewards {
     // the total claimed amount
     uint256 private _totalClaimed;
 
-    // a mapping of accounts which have already claimed their rewards
+    // a mapping of providers which have already claimed their rewards
     mapping(address => bool) private _claimed;
 
     /**
      * @dev triggered when rewards are claimed
      */
-    event RewardsClaimed(address indexed recipient, uint256 amount);
+    event RewardsClaimed(address indexed provider, uint256 amount);
 
     /**
      * @dev triggered when rewards are staked
      */
-    event RewardsStaked(address indexed recipient, uint256 amount);
+    event RewardsStaked(address indexed provider, uint256 amount);
 
     modifier validAddress(address addr) {
         _validAddress(addr);
@@ -98,7 +98,7 @@ contract MerkleTreeRewards {
     }
 
     /**
-     * @dev returns whether an account has already claimed its rewards
+     * @dev returns whether providers have already claimed their rewards
      */
     function hasClaimed(address account) external view returns (bool) {
         return _claimed[account];
@@ -106,24 +106,32 @@ contract MerkleTreeRewards {
 
     /**
      * @dev claims rewards
+     *
+     * requirements:
+     *
+     * - the claim can be only made by the beneficiary of the reward
      */
     function claimRewards(
-        address recipient,
-        uint256 amount,
+        address provider,
+        uint256 fullAmount,
         bytes32[] calldata proof
-    ) external greaterThanZero(amount) {
-        _claimRewards(msg.sender, recipient, amount, proof, false);
+    ) external greaterThanZero(fullAmount) {
+        _claimRewards(msg.sender, provider, fullAmount, proof, false);
     }
 
     /**
      * @dev claims rewards and stakes them in V3
+     *
+     * requirements:
+     *
+     * - the claim can be only made by the beneficiary of the reward
      */
     function stakeRewards(
-        address recipient,
-        uint256 amount,
+        address provider,
+        uint256 fullAmount,
         bytes32[] calldata proof
-    ) external greaterThanZero(amount) {
-        _claimRewards(msg.sender, recipient, amount, proof, true);
+    ) external greaterThanZero(fullAmount) {
+        _claimRewards(msg.sender, provider, fullAmount, proof, true);
     }
 
     /**
@@ -131,43 +139,43 @@ contract MerkleTreeRewards {
      */
     function _claimRewards(
         address caller,
-        address recipient,
-        uint256 amount,
+        address provider,
+        uint256 fullAmount,
         bytes32[] calldata proof,
         bool stake
     ) private {
         // allow users to opt-it for receiving their rewards
-        if (caller != recipient) {
+        if (caller != provider) {
             revert AccessDenied();
         }
 
         // ensure that the user can't claim or stake rewards twice
-        if (_claimed[recipient]) {
+        if (_claimed[provider]) {
             revert AlreadyClaimed();
         }
 
-        // ensure that the claim is correct
-        bytes32 leaf = keccak256(abi.encodePacked(recipient, amount));
+        // ensure that the claim is valid
+        bytes32 leaf = keccak256(abi.encodePacked(provider, fullAmount));
         if (!MerkleProof.verify(proof, _merkleRoot, leaf)) {
             revert InvalidClaim();
         }
 
-        _claimed[recipient] = true;
-        _totalClaimed += amount;
+        _claimed[provider] = true;
+        _totalClaimed += fullAmount;
 
         if (stake) {
-            // mint the rewards to the contract itself and deposit them on behalf of the user
-            _bntGovernance.mint(address(this), amount);
+            // mint the full rewards to the contract itself and deposit them on behalf of the provider
+            _bntGovernance.mint(address(this), fullAmount);
 
-            _bnt.approve(address(_networkV3), amount);
-            _networkV3.depositFor(recipient, address(_bnt), amount);
+            _bnt.approve(address(_networkV3), fullAmount);
+            _networkV3.depositFor(provider, address(_bnt), fullAmount);
 
-            emit RewardsStaked(recipient, amount);
+            emit RewardsStaked(provider, fullAmount);
         } else {
-            // mint the rewards directly to the user
-            _bntGovernance.mint(recipient, amount);
+            // mint the rewards directly to the provider
+            _bntGovernance.mint(provider, fullAmount);
 
-            emit RewardsClaimed(recipient, amount);
+            emit RewardsClaimed(provider, fullAmount);
         }
     }
 
