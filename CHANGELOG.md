@@ -1,3 +1,8 @@
+### 0.7.10
+General
+* Added the StakingRewardsClaim contract & supporting scripts
+
+
 ### 0.7.9
 LiquidityProtection
 * Removed checkpoint updates (gas optimization)
