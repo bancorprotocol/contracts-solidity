@@ -160,18 +160,25 @@ describe('StakingRewardsClaim', () => {
                 it('should revert when calling with an invalid proof', async () => {
                     const proof = merkleTree.getHexProof(generateLeaf(provider1.address, rewards[provider1.address]));
 
+                    // incorrect provider
                     await expect(claim(provider2, { proof })).to.be.revertedWith('InvalidClaim');
+
+                    // incorrect proof
                     await expect(
                         claim(provider1, {
                             proof: [formatBytes32String('1234'), ...proof]
                         })
                     ).to.be.revertedWith('InvalidClaim');
-                    await expect(claim(provider1, { proof: [...proof].slice(1) })).to.be.revertedWith('InvalidClaim');
+
+                    // incorrect proof
                     await expect(
                         claim(provider1, {
-                            proof: merkleTree.getHexProof(generateLeaf(provider2.address, rewards[provider1.address]))
+                            proof: merkleTree.getHexProof(generateLeaf(provider2.address, rewards[provider2.address]))
                         })
                     ).to.be.revertedWith('InvalidClaim');
+
+                    // incorrect proof - partial path
+                    await expect(claim(provider1, { proof: [...proof].slice(1) })).to.be.revertedWith('InvalidClaim');
                 });
 
                 it('should revert when attempting to claim twice', async () => {
