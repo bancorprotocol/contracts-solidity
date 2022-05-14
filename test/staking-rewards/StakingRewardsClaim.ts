@@ -222,6 +222,10 @@ describe('StakingRewardsClaim', () => {
                         expect(await bnt.balanceOf(providerAddress)).to.equal(
                             prevProviderBalance.add(stake ? 0 : amount)
                         );
+
+                        // please note the "real" master vault balance shouldn't change when users stake, but this is
+                        // how the system should behave during these tests since we're stubbing the master vault with q
+                        // TokenHolder contract
                         expect(await bnt.balanceOf(masterVault.address)).to.equal(
                             prevVaultBalance.add(stake ? amount : 0)
                         );
