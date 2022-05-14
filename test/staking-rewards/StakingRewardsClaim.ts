@@ -174,7 +174,7 @@ describe('StakingRewardsClaim', () => {
                     ).to.be.revertedWith('InvalidClaim');
                 });
 
-                it('should not when claiming twice', async () => {
+                it('should revert when attempting to claim twice', async () => {
                     await claim(provider1);
                     await expect(claim(provider1)).to.be.revertedWith('AlreadyClaimed');
                 });
