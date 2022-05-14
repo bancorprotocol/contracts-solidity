@@ -22,10 +22,12 @@ import {
     NetworkSettings__factory,
     Owned__factory,
     StakingRewards__factory,
+    StakingRewardsClaim__factory,
     StakingRewardsStore__factory,
     StandardPoolConverter__factory,
     StandardPoolConverterFactory__factory,
     TestBancorNetwork__factory,
+    TestBancorNetworkV3__factory,
     TestCheckpointStore__factory,
     TestContractRegistryClient__factory,
     TestConverterFactory__factory,
@@ -157,6 +159,7 @@ const getContracts = (signer?: Signer) => {
         NetworkSettings: deployOrAttach('NetworkSettings', NetworkSettings__factory, signer),
         Owned: deployOrAttach('Owned', Owned__factory, signer),
         StakingRewards: deployOrAttach('StakingRewards', StakingRewards__factory, signer),
+        StakingRewardsClaim: deployOrAttach('StakingRewardsClaim', StakingRewardsClaim__factory, signer),
         StakingRewardsStore: deployOrAttach('StakingRewardsStore', StakingRewardsStore__factory, signer),
         StandardPoolConverter: deployOrAttach('StandardPoolConverter', StandardPoolConverter__factory, signer),
         StandardPoolConverterFactory: deployOrAttach(
@@ -165,6 +168,7 @@ const getContracts = (signer?: Signer) => {
             signer
         ),
         TestBancorNetwork: deployOrAttach('TestBancorNetwork', TestBancorNetwork__factory, signer),
+        TestBancorNetworkV3: deployOrAttach('TestBancorNetworkV3', TestBancorNetworkV3__factory, signer),
         TestCheckpointStore: deployOrAttach('TestCheckpointStore', TestCheckpointStore__factory, signer),
         TestContractRegistryClient: deployOrAttach(
             'TestContractRegistryClient',
