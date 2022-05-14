@@ -177,6 +177,14 @@ describe('StakingRewardsClaim', () => {
                         })
                     ).to.be.revertedWith('InvalidClaim');
 
+                    // incorrect proof
+                    await expect(
+                        claim(provider1, {
+                            amount: rewards[provider2.address],
+                            proof: merkleTree.getHexProof(generateLeaf(provider2.address, rewards[provider2.address]))
+                        })
+                    ).to.be.revertedWith('InvalidClaim');
+
                     // incorrect proof - partial path
                     await expect(claim(provider1, { proof: [...proof].slice(1) })).to.be.revertedWith('InvalidClaim');
                 });
