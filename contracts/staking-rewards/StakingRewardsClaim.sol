@@ -21,7 +21,7 @@ interface IBancorNetworkV3 {
 /**
  * @dev this contract allows claiming/staking V2.1 pending rewards
  */
-contract MerkleTreeRewards {
+contract StakingRewardsClaim {
     error AccessDenied();
     error AlreadyClaimed();
     error InvalidAddress();

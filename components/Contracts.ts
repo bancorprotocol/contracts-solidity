@@ -19,10 +19,10 @@ import {
     LiquidityProtectionStats__factory,
     LiquidityProtectionStore__factory,
     LiquidityProtectionSystemStore__factory,
-    MerkleTreeRewards__factory,
     NetworkSettings__factory,
     Owned__factory,
     StakingRewards__factory,
+    StakingRewardsClaim__factory,
     StakingRewardsStore__factory,
     StandardPoolConverter__factory,
     StandardPoolConverterFactory__factory,
@@ -156,10 +156,10 @@ const getContracts = (signer?: Signer) => {
             LiquidityProtectionSystemStore__factory,
             signer
         ),
-        MerkleTreeRewards: deployOrAttach('MerkleTreeRewards', MerkleTreeRewards__factory, signer),
         NetworkSettings: deployOrAttach('NetworkSettings', NetworkSettings__factory, signer),
         Owned: deployOrAttach('Owned', Owned__factory, signer),
         StakingRewards: deployOrAttach('StakingRewards', StakingRewards__factory, signer),
+        StakingRewardsClaim: deployOrAttach('StakingRewardsClaim', StakingRewardsClaim__factory, signer),
         StakingRewardsStore: deployOrAttach('StakingRewardsStore', StakingRewardsStore__factory, signer),
         StandardPoolConverter: deployOrAttach('StandardPoolConverter', StandardPoolConverter__factory, signer),
         StandardPoolConverterFactory: deployOrAttach(

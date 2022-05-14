@@ -2,7 +2,7 @@ import Contracts from '../../components/Contracts';
 import {
     ContractRegistry,
     DSToken,
-    MerkleTreeRewards,
+    StakingRewardsClaim,
     TestBancorNetworkV3,
     TokenGovernance,
     TokenHolder
@@ -21,7 +21,7 @@ const {
 const ROLE_GOVERNOR = id('ROLE_GOVERNOR');
 const ROLE_MINTER = id('ROLE_MINTER');
 
-describe('MerkleTreeRewards', () => {
+describe('StakingRewardsClaim', () => {
     let deployer: SignerWithAddress;
     let masterVault: TokenHolder;
 
@@ -56,29 +56,29 @@ describe('MerkleTreeRewards', () => {
 
         it('should revert when attempting to create with an invalid network contract', async () => {
             await expect(
-                Contracts.MerkleTreeRewards.deploy(ZERO_ADDRESS, bntGovernance.address, root)
+                Contracts.StakingRewardsClaim.deploy(ZERO_ADDRESS, bntGovernance.address, root)
             ).to.be.revertedWith('InvalidAddress');
         });
 
         it('should revert when attempting to create with an invalid BNT governance contract', async () => {
             await expect(
-                Contracts.MerkleTreeRewards.deploy(bancorNetworkV3.address, ZERO_ADDRESS, root)
+                Contracts.StakingRewardsClaim.deploy(bancorNetworkV3.address, ZERO_ADDRESS, root)
             ).to.be.revertedWith('InvalidAddress');
         });
 
         it('should be properly initialized', async () => {
-            const merkleTreeRewards = await Contracts.MerkleTreeRewards.deploy(
+            const stakingRewardsClaim = await Contracts.StakingRewardsClaim.deploy(
                 bancorNetworkV3.address,
                 bntGovernance.address,
                 root
             );
 
-            expect(await merkleTreeRewards.merkleRoot()).to.equal(root);
+            expect(await stakingRewardsClaim.merkleRoot()).to.equal(root);
         });
     });
 
     describe('rewards', () => {
-        let merkleTreeRewards: MerkleTreeRewards;
+        let stakingRewardsClaim: StakingRewardsClaim;
 
         let provider1: SignerWithAddress;
         let provider2: SignerWithAddress;
@@ -114,13 +114,13 @@ describe('MerkleTreeRewards', () => {
         });
 
         beforeEach(async () => {
-            merkleTreeRewards = await Contracts.MerkleTreeRewards.deploy(
+            stakingRewardsClaim = await Contracts.StakingRewardsClaim.deploy(
                 bancorNetworkV3.address,
                 bntGovernance.address,
                 merkleTree.getRoot()
             );
 
-            await bntGovernance.grantRole(ROLE_MINTER, merkleTreeRewards.address);
+            await bntGovernance.grantRole(ROLE_MINTER, stakingRewardsClaim.address);
         });
 
         const testClaimOrStake = (stake: boolean) => {
@@ -142,8 +142,8 @@ describe('MerkleTreeRewards', () => {
                 }
 
                 return stake
-                    ? merkleTreeRewards.connect(caller).stakeRewards(provider.address, amount, proof)
-                    : merkleTreeRewards.connect(caller).claimRewards(provider.address, amount, proof);
+                    ? stakingRewardsClaim.connect(caller).stakeRewards(provider.address, amount, proof)
+                    : stakingRewardsClaim.connect(caller).claimRewards(provider.address, amount, proof);
             };
 
             describe(stake ? 'staking' : 'claiming', () => {
@@ -185,8 +185,8 @@ describe('MerkleTreeRewards', () => {
                     for (const [providerAddress, amount] of Object.entries(rewards)) {
                         const provider = await ethers.getSigner(providerAddress);
 
-                        expect(await merkleTreeRewards.totalClaimed()).to.equal(totalClaimed);
-                        expect(await merkleTreeRewards.hasClaimed(providerAddress)).to.be.false;
+                        expect(await stakingRewardsClaim.totalClaimed()).to.equal(totalClaimed);
+                        expect(await stakingRewardsClaim.hasClaimed(providerAddress)).to.be.false;
 
                         const prevTotalSupply = await bnt.totalSupply();
                         const prevProviderBalance = await bnt.balanceOf(providerAddress);
@@ -195,13 +195,13 @@ describe('MerkleTreeRewards', () => {
                         const res = await claim(provider);
 
                         await expect(res)
-                            .to.emit(merkleTreeRewards, stake ? 'RewardsStaked' : 'RewardsClaimed')
+                            .to.emit(stakingRewardsClaim, stake ? 'RewardsStaked' : 'RewardsClaimed')
                             .withArgs(providerAddress, amount);
 
                         totalClaimed = totalClaimed.add(amount);
 
-                        expect(await merkleTreeRewards.totalClaimed()).to.equal(totalClaimed);
-                        expect(await merkleTreeRewards.hasClaimed(providerAddress)).to.be.true;
+                        expect(await stakingRewardsClaim.totalClaimed()).to.equal(totalClaimed);
+                        expect(await stakingRewardsClaim.hasClaimed(providerAddress)).to.be.true;
 
                         expect(await bnt.totalSupply()).to.equal(prevTotalSupply.add(amount));
                         expect(await bnt.balanceOf(providerAddress)).to.equal(
