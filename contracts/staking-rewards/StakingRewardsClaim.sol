@@ -100,8 +100,8 @@ contract StakingRewardsClaim {
     /**
      * @dev returns whether providers have already claimed their rewards
      */
-    function hasClaimed(address account) external view returns (bool) {
-        return _claimed[account];
+    function hasClaimed(address provider) external view returns (bool) {
+        return _claimed[provider];
     }
 
     /**
