@@ -1,3 +1,11 @@
+### 0.7.11
+General
+* Added support for etherscan verification
+
+LiquidityProtection
+* Added admin functions
+
+
 ### 0.7.10
 General
 * Added the StakingRewardsClaim contract & supporting scripts
