@@ -104,6 +104,9 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     IERC20 private immutable _govToken;
     ITokenGovernance private immutable _govTokenGovernance;
 
+    bool private _addingEnabled = true;
+    bool private _removingEnabled = true;
+
     /**
      * @dev initializes a new LiquidityProtection contract
      */
@@ -155,6 +158,13 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         _;
     }
 
+    // ensures that remove liquidity is enabled
+    modifier removeLiquidityEnabled() {
+        _removeLiquidityEnabled();
+
+        _;
+    }
+
     // error message binary size optimization
     function _poolSupported(IConverterAnchor poolAnchor) internal view {
         require(_settings.isPoolSupported(poolAnchor), "ERR_POOL_NOT_SUPPORTED");
@@ -167,7 +177,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     // error message binary size optimization
     function _addLiquidityEnabled(IConverterAnchor poolAnchor, IReserveToken reserveToken) internal view {
-        require(!_settings.addLiquidityDisabled(poolAnchor, reserveToken), "ERR_ADD_LIQUIDITY_DISABLED");
+        require(
+            _addingEnabled && !_settings.addLiquidityDisabled(poolAnchor, reserveToken),
+            "ERR_ADD_LIQUIDITY_DISABLED"
+        );
+    }
+
+    // error message binary size optimization
+    function _removeLiquidityEnabled() internal view {
+        require(_removingEnabled);
     }
 
     // error message binary size optimization
@@ -474,6 +492,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     )
         external
         view
+        removeLiquidityEnabled
         validPortion(portion)
         returns (
             uint256,
@@ -533,7 +552,13 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev removes protected liquidity from a pool and also burns governance tokens from the caller if the caller
      * removes network tokens
      */
-    function removeLiquidity(uint256 id, uint32 portion) external override nonReentrant validPortion(portion) {
+    function removeLiquidity(uint256 id, uint32 portion)
+        external
+        override
+        nonReentrant
+        removeLiquidityEnabled
+        validPortion(portion)
+    {
         _removeLiquidity(msg.sender, id, portion);
     }
 
@@ -1448,5 +1473,27 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 z
     ) private pure returns (uint256) {
         return x.mul(y).div(z);
+    }
+
+    /**
+     * @dev enables/disabled deposits
+     *
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     */
+    function enableDepositing(bool state) external ownerOnly {
+        _addingEnabled = state;
+    }
+
+    /**
+     * @dev enables/disabled removals
+     *
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     */
+    function enableRemoving(bool state) external ownerOnly {
+        _removingEnabled = state;
     }
 }

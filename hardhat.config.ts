@@ -1,4 +1,5 @@
 import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import fs from 'fs';
@@ -31,6 +32,10 @@ const config: HardhatUserConfig = {
                 accountsBalance: '10000000000000000000000000000'
             },
             allowUnlimitedContractSize: true
+        },
+
+        mainnet: {
+            url: ''
         },
 
         ...configNetworks
@@ -80,6 +85,10 @@ const config: HardhatUserConfig = {
         timeout: 600000,
         color: true,
         bail: loadENVKey('BAIL')
+    },
+    
+    etherscan: {
+        apiKey: ''
     }
 };
 
