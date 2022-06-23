@@ -1,6 +1,6 @@
 {
   "name": "@bancor/contracts-solidity",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "The solidity version of the Bancor smart contracts is composed of many different components that work together to create the Bancor Network deployment.",
   "repository": {
     "type": "git",
@@ -39,7 +39,7 @@
     "prepare": "yarn clean && yarn build && yarn snyk-protect && tsc && copyfiles -u 1 \"typechain/**/*.d.ts\" dist/typechain",
     "clean": "rm -rf artifacts cache coverage data typechain"
   },
-  "dependencies": {    
+  "dependencies": {
     "hardhat": "2.9.3"
   },
   "devDependencies": {
