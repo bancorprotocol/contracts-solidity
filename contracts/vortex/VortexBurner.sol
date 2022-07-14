@@ -20,6 +20,21 @@ import "../token/ReserveToken.sol";
 import "../INetworkSettings.sol";
 import "../IBancorNetwork.sol";
 
+interface IVortexBurner {
+    function totalBurnedAmount() external view returns (uint256);
+}
+
+interface IBancorNetworkV3 {
+    function tradeBySourceAmount(
+        IERC20 sourceToken,
+        IERC20 targetToken,
+        uint256 sourceAmount,
+        uint256 minReturnAmount,
+        uint256 deadline,
+        address beneficiary
+    ) external payable returns (uint256);
+}
+
 /**
  * @dev This contract provides any user to trigger a network fee burning event
  */
@@ -50,6 +65,9 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
     // the address of the governance token security module
     ITokenGovernance private immutable _govTokenGovernance;
+
+    // the address of the v3 network
+    IBancorNetworkV3 private immutable _networkV3;
 
     // the percentage of the converted network tokens to be sent to the caller of the burning event (in units of PPM)
     uint32 private _burnReward;
@@ -86,16 +104,24 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
     constructor(
         IERC20 networkToken,
         ITokenGovernance govTokenGovernance,
-        IContractRegistry registry
+        IContractRegistry registry,
+        IVortexBurner prevBurner,
+        IBancorNetworkV3 networkV3
     )
         public
         ContractRegistryClient(registry)
         validAddress(address(networkToken))
         validAddress(address(govTokenGovernance))
+        validAddress(address(networkV3))
     {
         _networkToken = networkToken;
         _govTokenGovernance = govTokenGovernance;
         _govToken = govTokenGovernance.token();
+        _networkV3 = networkV3;
+
+        if (address(prevBurner) != address(0x0)) {
+            _totalBurnedAmount = prevBurner.totalBurnedAmount();
+        }
     }
 
     /**
@@ -186,11 +212,11 @@ contract VortexBurner is Owned, Utils, ReentrancyGuard, ContractRegistryClient {
 
         // in case there are network tokens to burn, convert them to the governance token
         if (sourceAmount > 0) {
-            // approve the network to withdraw the network token amount
-            _networkToken.ensureApprove(address(network), sourceAmount);
+            // allow BancorNetwork v3 to transfer the BNT from this contract
+            _networkToken.ensureApprove(address(_networkV3), sourceAmount);
 
-            // convert the entire network token amount to the governance token
-            network.convertByPath(strategy.govPath, sourceAmount, 1, address(this), address(0), 0);
+            // trade BNT to vBNT on BancorNetwork v3
+            _networkV3.tradeBySourceAmount(_networkToken, _govToken, sourceAmount, 1, block.timestamp + 100, address(this));
         }
 
         // get the governance token balance
