@@ -1,3 +1,8 @@
+### 0.7.12
+VortexBurner
+* BNT -> vBNT trades are routed through v3
+
+
 ### 0.7.11
 General
 * Added support for etherscan verification
