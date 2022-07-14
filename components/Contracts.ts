@@ -19,6 +19,7 @@ import {
     LiquidityProtectionStats__factory,
     LiquidityProtectionStore__factory,
     LiquidityProtectionSystemStore__factory,
+    MockVortexBurner__factory,
     NetworkSettings__factory,
     Owned__factory,
     StakingRewards__factory,
@@ -156,6 +157,7 @@ const getContracts = (signer?: Signer) => {
             LiquidityProtectionSystemStore__factory,
             signer
         ),
+        MockVortexBurner: deployOrAttach('MockVortexBurner', MockVortexBurner__factory, signer),
         NetworkSettings: deployOrAttach('NetworkSettings', NetworkSettings__factory, signer),
         Owned: deployOrAttach('Owned', Owned__factory, signer),
         StakingRewards: deployOrAttach('StakingRewards', StakingRewards__factory, signer),

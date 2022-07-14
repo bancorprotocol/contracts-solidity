@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const { BigNumber } = require('ethers');
-const { ethers } = require('hardhat');
+const { ethers, network } = require('hardhat');
 
 const { NATIVE_TOKEN_ADDRESS, registry, ZERO_ADDRESS } = require('../helpers/Constants');
 const Contracts = require('../../components/Contracts').default;
@@ -14,6 +14,8 @@ const STANDARD_CONVERTER_WEIGHTS = [500_000, 500_000];
 const TOTAL_SUPPLY = BigNumber.from(1_000_000_000).mul(TKN);
 
 let contractRegistry;
+let prevBurner;
+let networkV3;
 let bancorNetwork;
 let networkToken;
 let govToken;
@@ -44,6 +46,9 @@ describe('VortexBurner', () => {
 
         networkSettings = await Contracts.NetworkSettings.deploy(owner.address, BigNumber.from(0));
         await contractRegistry.registerAddress(registry.NETWORK_SETTINGS, networkSettings.address);
+
+        prevBurner = await Contracts.MockVortexBurner.deploy();
+        networkV3 = await Contracts.TestBancorNetworkV3.deploy(contractRegistry.address);
     });
 
     beforeEach(async () => {
@@ -65,6 +70,7 @@ describe('VortexBurner', () => {
 
         govToken = await Contracts.DSToken.deploy('vBNT', 'vBNT', 18);
         await govToken.issue(owner.address, TOTAL_SUPPLY);
+        await govToken.transfer(networkV3.address, TOTAL_SUPPLY.div(10));
 
         govTokenGovernance = await Contracts.TestTokenGovernance.deploy(govToken.address);
         await govToken.transferOwnership(govTokenGovernance.address);
@@ -75,7 +81,9 @@ describe('VortexBurner', () => {
         vortex = await Contracts.VortexBurner.deploy(
             networkToken.address,
             govTokenGovernance.address,
-            contractRegistry.address
+            contractRegistry.address,
+            ZERO_ADDRESS,
+            networkV3.address
         );
 
         await networkFeeWallet.transferOwnership(vortex.address);
@@ -93,21 +101,59 @@ describe('VortexBurner', () => {
             expect(await vortex.totalBurnedAmount()).to.equal(BigNumber.from(0));
         });
 
+        it('should allow initializing with a previous burner address', async () => {
+            vortex = await Contracts.VortexBurner.deploy(
+                networkToken.address,
+                govTokenGovernance.address,
+                contractRegistry.address,
+                prevBurner.address,
+                networkV3.address
+            );
+
+            expect(await vortex.totalBurnedAmount()).to.equal(BigNumber.from(1000));
+        });
+
         it('should revert if initialized with an invalid network token address', async () => {
             await expect(
-                Contracts.VortexBurner.deploy(ZERO_ADDRESS, govTokenGovernance.address, contractRegistry.address)
+                Contracts.VortexBurner.deploy(
+                    ZERO_ADDRESS,
+                    govTokenGovernance.address,
+                    contractRegistry.address,
+                    prevBurner.address,
+                    networkV3.address)
             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
         it('should revert if initialized with an invalid governance token governance address', async () => {
             await expect(
-                Contracts.VortexBurner.deploy(networkToken.address, ZERO_ADDRESS, contractRegistry.address)
+                Contracts.VortexBurner.deploy(
+                    networkToken.address,
+                    ZERO_ADDRESS,
+                    contractRegistry.address,
+                    prevBurner.address,
+                    networkV3.address)
             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
         it('should revert if initialized with an invalid contract registry address', async () => {
             await expect(
-                Contracts.VortexBurner.deploy(networkToken.address, govTokenGovernance.address, ZERO_ADDRESS)
+                Contracts.VortexBurner.deploy(
+                    networkToken.address,
+                    govTokenGovernance.address,
+                    ZERO_ADDRESS,
+                    prevBurner.address,
+                    networkV3.address)
+            ).to.be.revertedWith('ERR_INVALID_ADDRESS');
+        });
+
+        it('should revert if initialized with an invalid contract network v3 address', async () => {
+            await expect(
+                Contracts.VortexBurner.deploy(
+                    networkToken.address,
+                    govTokenGovernance.address,
+                    contractRegistry.address,
+                    prevBurner.address,
+                    ZERO_ADDRESS)
             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
     });
@@ -139,7 +185,9 @@ describe('VortexBurner', () => {
             const newVortex = await Contracts.VortexBurner.deploy(
                 networkToken.address,
                 govTokenGovernance.address,
-                contractRegistry.address
+                contractRegistry.address,
+                ZERO_ADDRESS,
+                networkV3.address
             );
 
             await vortex.transferNetworkFeeWalletOwnership(newVortex.address);
@@ -392,19 +440,9 @@ describe('VortexBurner', () => {
                                                     netNetworkTokenConversionAmount.sub(burnRewardAmount);
                                             }
 
-                                            // take into account that if one of the source tokens is the governance token -
-                                            // we won't be able to use rateByPath explicitly, since it wouldn't take into
-                                            // account a previous conversion.
-                                            totalBurnedAmount = totalBurnedAmount.add(
-                                                await bancorNetwork.rateByPath(
-                                                    [
-                                                        networkToken.address,
-                                                        data.GOV.poolToken.address,
-                                                        govToken.address
-                                                    ],
-                                                    netNetworkTokenConversionAmount
-                                                )
-                                            );
+                                            // assuming the BNT -> vBNT trade on Bancor v3 returns double the source amount,
+                                            // since a mock network is used
+                                            totalBurnedAmount = totalBurnedAmount.add(netNetworkTokenConversionAmount.mul(2));
 
                                             return {
                                                 convertibleTokens,
