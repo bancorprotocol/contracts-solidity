@@ -1076,6 +1076,19 @@ describe('LiquidityProtection', () => {
                 });
 
                 describe('removeLiquidityReturn', () => {
+                    it('allow access when withdraws are disabled', async () => {
+                        const reserveAmount = BigNumber.from(1000);
+                        await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
+                        const protectionId = protectionIds[0];
+
+                        // disable withdraws
+                        await liquidityProtection.enableRemoving(false);
+
+                        await expect(liquidityProtection.removeLiquidityReturn(protectionId, PPM_RESOLUTION, now)).not
+                            .to.be.reverted;
+                    });
+
                     it('verifies that removeLiquidityReturn returns the correct amount for removing entire protection', async () => {
                         const reserveAmount = BigNumber.from(1000);
                         await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
@@ -1750,8 +1763,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidityReturn returns an amount that is smaller than the initial amount', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
 
                                                     const amount = (
@@ -1769,8 +1782,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidity returns an amount that is smaller than the initial amount', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
                                                     let protection = await liquidityProtectionStore.protectedLiquidity(
                                                         protectionId
@@ -1814,8 +1827,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidityReturn returns an amount that is larger than the initial amount', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
 
                                                     const amount = (
@@ -1833,8 +1846,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidity returns an amount that is larger than the initial amount', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
                                                     let protection = await liquidityProtectionStore.protectedLiquidity(
                                                         protectionId
@@ -1878,8 +1891,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidityReturn returns an amount that is almost equal to the initial amount', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
 
                                                     const amount = (
@@ -1897,8 +1910,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidity returns an amount that is almost equal to the initial amount', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
                                                     let protection = await liquidityProtectionStore.protectedLiquidity(
                                                         protectionId
@@ -1944,8 +1957,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidity locks network tokens for the caller', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
                                                     let protection = await liquidityProtectionStore.protectedLiquidity(
                                                         protectionId
@@ -1966,8 +1979,8 @@ describe('LiquidityProtection', () => {
 
                                                     const lockedBalanceCount =
                                                         await liquidityProtectionStore.lockedBalanceCount(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     expect(lockedBalanceCount).to.equal(BigNumber.from(1));
 
                                                     const lockedBalance = await getLockedBalance(owner.address);
@@ -1977,8 +1990,8 @@ describe('LiquidityProtection', () => {
                                                 it('verifies that removeLiquidity does not lock network tokens for the caller', async () => {
                                                     const protectionIds =
                                                         await liquidityProtectionStore.protectedLiquidityIds(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     const protectionId = protectionIds[protectionIds.length - 1];
                                                     let protection = await liquidityProtectionStore.protectedLiquidity(
                                                         protectionId
@@ -1999,8 +2012,8 @@ describe('LiquidityProtection', () => {
 
                                                     const lockedBalanceCount =
                                                         await liquidityProtectionStore.lockedBalanceCount(
-                                                            owner.address
-                                                        );
+                                                        owner.address
+                                                    );
                                                     expect(lockedBalanceCount).to.equal(BigNumber.from(0));
 
                                                     const lockedBalance = await getLockedBalance(owner.address);
@@ -2467,19 +2480,19 @@ describe('LiquidityProtection', () => {
                                                                         // eslint-disable-next-line max-len
                                                                         const actual =
                                                                             await liquidityProtection.callStatic.removeLiquidityTargetAmountTest(
-                                                                                poolTokenRateN,
-                                                                                poolTokenRateD,
-                                                                                poolAmount,
-                                                                                reserveAmount,
-                                                                                addSpotRateN,
-                                                                                addSpotRateD,
-                                                                                removeSpotRateN,
-                                                                                removeSpotRateD,
-                                                                                removeAverageRateN,
-                                                                                removeAverageRateD,
-                                                                                0,
-                                                                                timeElapsed
-                                                                            );
+                                                                            poolTokenRateN,
+                                                                            poolTokenRateD,
+                                                                            poolAmount,
+                                                                            reserveAmount,
+                                                                            addSpotRateN,
+                                                                            addSpotRateD,
+                                                                            removeSpotRateN,
+                                                                            removeSpotRateD,
+                                                                            removeAverageRateN,
+                                                                            removeAverageRateD,
+                                                                            0,
+                                                                            timeElapsed
+                                                                        );
                                                                         const expected = removeLiquidityTargetAmount(
                                                                             poolTokenRateN,
                                                                             poolTokenRateD,
@@ -2554,14 +2567,14 @@ describe('LiquidityProtection', () => {
                                                         );
                                                         const actual =
                                                             await liquidityProtection.protectedAmountPlusFeeTest(
-                                                                poolAmount,
-                                                                poolRateN,
-                                                                poolRateD,
-                                                                addRateN,
-                                                                addRateD,
-                                                                removeRateN,
-                                                                removeRateD
-                                                            );
+                                                            poolAmount,
+                                                            poolRateN,
+                                                            poolRateD,
+                                                            addRateN,
+                                                            addRateD,
+                                                            removeRateN,
+                                                            removeRateD
+                                                        );
                                                         expectAlmostEqual(Decimal(actual.toString()), expected, range);
                                                     });
                                                 }
