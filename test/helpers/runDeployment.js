@@ -2,6 +2,7 @@ const {
     BigNumber,
     utils: { id, formatBytes32String }
 } = require('ethers');
+const { ZERO_ADDRESS } = require('./Constants');
 
 const MAX_CONVERSION_FEE = 1_000_000;
 const STANDARD_POOL_CONVERTER_WEIGHTS = [500_000, 500_000];
@@ -233,7 +234,9 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
         'VortexBurner',
         reserves.BNT.address,
         vbntTokenGovernance.address,
-        contractRegistry.address
+        contractRegistry.address,
+        ZERO_ADDRESS,
+        bancorNetwork.address
     );
 
     await execute(networkFeeWallet.transferOwnership(vortexBurner.address));
