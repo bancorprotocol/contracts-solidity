@@ -492,7 +492,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     )
         external
         view
-        removeLiquidityEnabled
         validPortion(portion)
         returns (
             uint256,
