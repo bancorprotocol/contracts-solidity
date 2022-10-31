@@ -104,6 +104,14 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     IERC20 private immutable _govToken;
     ITokenGovernance private immutable _govTokenGovernance;
 
+    /**
+     * @dev Maps a pool anchor to its total user value (wei)
+     * Total value of base tokens in the pool, in wei. If this value is greater
+     * than the actual pool liquidity - the pool is in deficit, and withdrawing
+     * from this pool will be decreased by an amount proportional to the deficit
+     */
+    mapping(IConverterAnchor => uint256) private _totalUserValue;
+
     bool private _addingEnabled = true;
     bool private _removingEnabled = true;
 
@@ -1455,5 +1463,32 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      */
     function enableRemoving(bool state) external ownerOnly {
         _removingEnabled = state;
+    }
+
+    /**
+     * Sets the total user value of the pool to the given amount
+     * @param poolAnchor pool anchor
+     * @param amount total user value amount in wei
+     *
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     * - the pool must exist and be whitelisted
+     */
+    function setTotalUserValue(IConverterAnchor poolAnchor, uint256 amount)
+        external
+        ownerOnly
+        poolSupportedAndWhitelisted(poolAnchor)
+    {
+        _totalUserValue[poolAnchor] = amount;
+    }
+
+    /**
+     * Returns the total user value of the pool, in wei
+     * @return amount total user value of the pool, in wei
+     * @param poolAnchor pool anchor
+     */
+    function getTotalUserValue(IConverterAnchor poolAnchor) public view returns (uint256 amount) {
+        return _totalUserValue[poolAnchor];
     }
 }
