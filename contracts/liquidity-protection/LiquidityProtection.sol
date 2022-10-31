@@ -108,7 +108,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev Maps a pool anchor to its total user value (wei)
      * Total value of base tokens in the pool, in wei. If this value is greater
      * than the actual pool liquidity - the pool is in deficit, and withdrawing
-     * from this pool will be decreased by an amount proportional to the dificit
+     * from this pool will be decreased by an amount proportional to the deficit
      */
     mapping(IConverterAnchor => uint256) private _totalUserValue;
 
