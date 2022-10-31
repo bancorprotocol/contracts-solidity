@@ -960,42 +960,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev returns the ROI for removing liquidity in the current state after providing liquidity with the given args
-     *
-     * note that the function assumes full protection is in effect and that the return value is in PPM and can be
-     * larger than PPM_RESOLUTION for positive ROI, 1M = 0% ROI
-     */
-    function poolROI(
-        IDSToken poolToken,
-        IReserveToken reserveToken,
-        uint256 reserveAmount,
-        uint256 poolRateN,
-        uint256 poolRateD,
-        uint256 reserveRateN,
-        uint256 reserveRateD
-    ) external view returns (uint256) {
-        // calculate the amount of pool tokens based on the amount of reserve tokens
-        uint256 poolAmount = _mulDivF(reserveAmount, poolRateD, poolRateN);
-
-        // get the various rates between the reserves upon adding liquidity and now
-        PackedRates memory packedRates = _packRates(poolToken, reserveToken, reserveRateN, reserveRateD);
-
-        // get the current return
-        uint256 protectedReturn = _removeLiquidityTargetAmount(
-            poolToken,
-            reserveToken,
-            poolAmount,
-            reserveAmount,
-            packedRates,
-            _time().sub(_settings.maxProtectionDelay()),
-            _time()
-        );
-
-        // calculate the ROI as the ratio between the current fully protected return and the initial amount
-        return _mulDivF(protectedReturn, PPM_RESOLUTION, reserveAmount);
-    }
-
-    /**
      * @dev adds the position to the store and updates the stats
      */
     function _addPosition(
