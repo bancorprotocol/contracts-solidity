@@ -542,7 +542,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
         uint256 baseAmount = _mulDivF(poolAmount, poolRate.n, poolRate.d.mul(2));
-        uint256 networkAmount = _networkCompensation(targetAmount, baseAmount, packedRates);
+        uint256 networkAmount = 0;
 
         return (targetAmount, baseAmount, networkAmount);
     }
@@ -638,20 +638,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // transfer the base tokens to the caller
         uint256 baseBalance = removedPos.reserveToken.balanceOf(address(this));
         removedPos.reserveToken.safeTransfer(provider, baseBalance);
-
-        // compensate the caller with network tokens if still needed
-        uint256 delta = _networkCompensation(targetAmount, baseBalance, packedRates);
-        if (delta > 0) {
-            // check if there's enough network token balance, otherwise mint more
-            uint256 networkBalance = _networkToken.balanceOf(address(this));
-            if (networkBalance < delta) {
-                _networkTokenGovernance.mint(address(this), delta - networkBalance);
-            }
-
-            // lock network tokens for the caller
-            _networkToken.safeTransfer(address(_wallet), delta);
-            _lockTokens(provider, delta);
-        }
 
         // if the contract still holds network tokens, burn them
         uint256 networkBalance = _networkToken.balanceOf(address(this));
@@ -1320,31 +1306,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 maxVal = Math.max(Math.max(levelN, levelD), total);
         (uint256 lossN, uint256 lossD) = MathEx.reducedRatio(loss.n, loss.d, MAX_UINT256 / maxVal);
         return total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).div(lossD.mul(levelD)));
-    }
-
-    function _networkCompensation(
-        uint256 targetAmount,
-        uint256 baseAmount,
-        PackedRates memory packedRates
-    ) internal view returns (uint256) {
-        if (targetAmount <= baseAmount) {
-            return 0;
-        }
-
-        // calculate the delta in network tokens
-        uint256 delta = _mulDivF(
-            targetAmount - baseAmount,
-            packedRates.removeAverageRateN,
-            packedRates.removeAverageRateD
-        );
-
-        // the delta might be very small due to precision loss
-        // in which case no compensation will take place (gas optimization)
-        if (delta >= _settings.minNetworkCompensation()) {
-            return delta;
-        }
-
-        return 0;
     }
 
     /**

@@ -19,11 +19,6 @@ const RESERVE1_AMOUNT = BigNumber.from(1000000);
 const RESERVE2_AMOUNT = BigNumber.from(2500000);
 const TOTAL_SUPPLY = BigNumber.from(10).pow(BigNumber.from(25));
 
-const PROTECTION_NO_PROTECTION = 0;
-const PROTECTION_PARTIAL_PROTECTION = 1;
-const PROTECTION_FULL_PROTECTION = 2;
-const PROTECTION_EXCESSIVE_PROTECTION = 3;
-
 const POOL_AVAILABLE_SPACE_TEST_ADDITIONAL_BALANCES = [
     { baseBalance: 1000000, networkBalance: 1000000 },
     { baseBalance: 1234567, networkBalance: 2000000 },
@@ -178,17 +173,8 @@ describe('LiquidityProtection', () => {
                 };
             };
 
-            const getTimestamp = async (protectionLevel) => {
-                switch (protectionLevel) {
-                    case PROTECTION_NO_PROTECTION:
-                        return now.add(duration.days(15));
-                    case PROTECTION_PARTIAL_PROTECTION:
-                        return now.add(duration.days(40));
-                    case PROTECTION_FULL_PROTECTION:
-                        return now.add(duration.days(100));
-                    case PROTECTION_EXCESSIVE_PROTECTION:
-                        return now.add(duration.days(300));
-                }
+            const getFutureTimestamp = async () => {
+                return now.add(duration.days(15));
             };
 
             const poolTokenRate = (poolSupply, reserveBalance) => {
@@ -1677,13 +1663,6 @@ describe('LiquidityProtection', () => {
                         });
                     });
 
-                    const protectionText = {
-                        [PROTECTION_NO_PROTECTION]: 'no protection',
-                        [PROTECTION_PARTIAL_PROTECTION]: 'partial protection',
-                        [PROTECTION_FULL_PROTECTION]: 'full protection',
-                        [PROTECTION_EXCESSIVE_PROTECTION]: 'excessive protection'
-                    };
-
                     const rateChangeText = {
                         0: 'no rate change',
                         1: 'price increase',
@@ -1693,336 +1672,292 @@ describe('LiquidityProtection', () => {
                     for (let reserve = 0; reserve < 2; reserve++) {
                         for (let rateChange = 0; rateChange < 3; rateChange++) {
                             for (const withFee of [true, false]) {
-                                for (
-                                    let protection = PROTECTION_NO_PROTECTION;
-                                    protection <= PROTECTION_EXCESSIVE_PROTECTION;
-                                    protection++
-                                ) {
-                                    context(
-                                        `(${reserve === 0 ? 'base token' : 'network token'}) with ${
-                                            protectionText[protection]
-                                        } and ${rateChangeText[rateChange]} ${withFee ? 'with fee' : 'without fee'}`,
-                                        () => {
-                                            const reserveAmount = BigNumber.from(5000);
-                                            let reserveToken1;
-                                            let reserveToken2;
-                                            let timestamp;
+                                context(
+                                    `(${reserve === 0 ? 'base token' : 'network token'}) and ${
+                                        rateChangeText[rateChange]
+                                    } ${withFee ? 'with fee' : 'without fee'}`,
+                                    () => {
+                                        const reserveAmount = BigNumber.from(5000);
+                                        let reserveToken1;
+                                        let reserveToken2;
+                                        let timestamp;
 
-                                            beforeEach(async () => {
+                                        beforeEach(async () => {
+                                            await addProtectedLiquidity(
+                                                poolToken.address,
+                                                baseToken,
+                                                baseTokenAddress,
+                                                reserveAmount
+                                            );
+
+                                            if (reserve === 0) {
+                                                reserveToken1 = baseToken;
+                                                reserveToken2 = networkToken;
+                                            } else {
+                                                reserveToken1 = networkToken;
+                                                reserveToken2 = baseToken;
+
+                                                // adding more liquidity so that the system has enough pool tokens
                                                 await addProtectedLiquidity(
                                                     poolToken.address,
                                                     baseToken,
                                                     baseTokenAddress,
+                                                    BigNumber.from(20000)
+                                                );
+                                                await addProtectedLiquidity(
+                                                    poolToken.address,
+                                                    networkToken,
+                                                    networkToken.address,
                                                     reserveAmount
                                                 );
+                                            }
 
-                                                if (reserve === 0) {
-                                                    reserveToken1 = baseToken;
-                                                    reserveToken2 = networkToken;
-                                                } else {
-                                                    reserveToken1 = networkToken;
-                                                    reserveToken2 = baseToken;
+                                            if (withFee) {
+                                                await generateFee(reserveToken1, reserveToken2);
+                                            }
 
-                                                    // adding more liquidity so that the system has enough pool tokens
-                                                    await addProtectedLiquidity(
-                                                        poolToken.address,
-                                                        baseToken,
-                                                        baseTokenAddress,
-                                                        BigNumber.from(20000)
-                                                    );
-                                                    await addProtectedLiquidity(
-                                                        poolToken.address,
-                                                        networkToken,
-                                                        networkToken.address,
-                                                        reserveAmount
-                                                    );
-                                                }
+                                            if (rateChange === 1) {
+                                                await increaseRate(reserveToken1.address);
+                                            } else if (rateChange === 2) {
+                                                await increaseRate(reserveToken2.address);
+                                            }
 
-                                                if (withFee) {
-                                                    await generateFee(reserveToken1, reserveToken2);
-                                                }
+                                            timestamp = await getFutureTimestamp();
+                                            await setTime(timestamp);
+                                        });
 
-                                                if (rateChange === 1) {
-                                                    await increaseRate(reserveToken1.address);
-                                                } else if (rateChange === 2) {
-                                                    await increaseRate(reserveToken2.address);
-                                                }
+                                        const isLoss = rateChange !== 0;
+                                        const shouldLock = reserve === 1; // reserveToken1 == networkToken
 
-                                                timestamp = await getTimestamp(protection);
-                                                await setTime(timestamp);
+                                        if (isLoss) {
+                                            // eslint-disable-next-line max-len
+                                            it('verifies that removeLiquidityReturn returns an amount that is smaller than the initial amount', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
+
+                                                const amount = (
+                                                    await liquidityProtection.removeLiquidityReturn(
+                                                        protectionId,
+                                                        PPM_RESOLUTION,
+                                                        timestamp
+                                                    )
+                                                )[0];
+
+                                                expect(amount).to.be.lt(reserveAmount);
                                             });
 
-                                            const isLoss =
-                                                (protection === PROTECTION_NO_PROTECTION ||
-                                                    protection === PROTECTION_PARTIAL_PROTECTION) &&
-                                                rateChange !== 0;
-                                            const shouldLock = reserve === 1 || rateChange === 1; // || (rateChange == 0 && withFee);
+                                            // eslint-disable-next-line max-len
+                                            it('verifies that removeLiquidity returns an amount that is smaller than the initial amount', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
+                                                let protection = await liquidityProtectionStore.protectedLiquidity(
+                                                    protectionId
+                                                );
+                                                protection = getProtection(protection);
 
-                                            if (isLoss) {
-                                                // eslint-disable-next-line max-len
-                                                it('verifies that removeLiquidityReturn returns an amount that is smaller than the initial amount', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
+                                                const prevBalance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner.address
+                                                );
+                                                await govToken.approve(
+                                                    liquidityProtection.address,
+                                                    protection.reserveAmount
+                                                );
+                                                await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
+                                                await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
+                                                const balance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner.address
+                                                );
 
-                                                    const amount = (
-                                                        await liquidityProtection.removeLiquidityReturn(
-                                                            protectionId,
-                                                            PPM_RESOLUTION,
-                                                            timestamp
-                                                        )
-                                                    )[0];
+                                                let lockedBalance = await getLockedBalance(owner.address);
+                                                if (reserveToken1.address === baseTokenAddress) {
+                                                    const rate = await getRate(networkToken.address);
+                                                    lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
+                                                }
 
-                                                    expect(amount).to.be.lt(reserveAmount);
-                                                });
+                                                expect(balance.sub(prevBalance).add(lockedBalance)).to.be.lt(
+                                                    reserveAmount
+                                                );
+                                            });
+                                        } else if (withFee) {
+                                            // eslint-disable-next-line max-len
+                                            it('verifies that removeLiquidityReturn returns an amount that is larger than the initial amount', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
 
-                                                // eslint-disable-next-line max-len
-                                                it('verifies that removeLiquidity returns an amount that is smaller than the initial amount', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
-                                                    let protection = await liquidityProtectionStore.protectedLiquidity(
-                                                        protectionId
-                                                    );
-                                                    protection = getProtection(protection);
-
-                                                    const prevBalance = await getBalance(
-                                                        reserveToken1,
-                                                        reserveToken1.address,
-                                                        owner.address
-                                                    );
-                                                    await govToken.approve(
-                                                        liquidityProtection.address,
-                                                        protection.reserveAmount
-                                                    );
-                                                    await liquidityProtection.setTime(
-                                                        timestamp.add(duration.seconds(1))
-                                                    );
-                                                    await liquidityProtection.removeLiquidity(
+                                                const amount = (
+                                                    await liquidityProtection.removeLiquidityReturn(
                                                         protectionId,
-                                                        PPM_RESOLUTION
-                                                    );
-                                                    const balance = await getBalance(
-                                                        reserveToken1,
-                                                        reserveToken1.address,
-                                                        owner.address
-                                                    );
+                                                        PPM_RESOLUTION,
+                                                        timestamp
+                                                    )
+                                                )[0];
 
-                                                    let lockedBalance = await getLockedBalance(owner.address);
-                                                    if (reserveToken1.address === baseTokenAddress) {
-                                                        const rate = await getRate(networkToken.address);
-                                                        lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
-                                                    }
+                                                expect(amount).to.be.gt(reserveAmount);
+                                            });
 
-                                                    expect(balance.sub(prevBalance).add(lockedBalance)).to.be.lt(
-                                                        reserveAmount
-                                                    );
-                                                });
-                                            } else if (withFee) {
-                                                // eslint-disable-next-line max-len
-                                                it('verifies that removeLiquidityReturn returns an amount that is larger than the initial amount', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
+                                            // eslint-disable-next-line max-len
+                                            it('verifies that removeLiquidity returns an amount that is larger than the initial amount', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
+                                                let protection = await liquidityProtectionStore.protectedLiquidity(
+                                                    protectionId
+                                                );
+                                                protection = getProtection(protection);
 
-                                                    const amount = (
-                                                        await liquidityProtection.removeLiquidityReturn(
-                                                            protectionId,
-                                                            PPM_RESOLUTION,
-                                                            timestamp
-                                                        )
-                                                    )[0];
+                                                const prevBalance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner.address
+                                                );
+                                                await govToken.approve(
+                                                    liquidityProtection.address,
+                                                    protection.reserveAmount
+                                                );
+                                                await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
+                                                await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
+                                                const balance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner.address
+                                                );
 
-                                                    expect(amount).to.be.gt(reserveAmount);
-                                                });
+                                                let lockedBalance = await getLockedBalance(owner.address);
+                                                if (reserveToken1.address === baseTokenAddress) {
+                                                    const rate = await getRate(networkToken.address);
+                                                    lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
+                                                }
 
-                                                // eslint-disable-next-line max-len
-                                                it('verifies that removeLiquidity returns an amount that is larger than the initial amount', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
-                                                    let protection = await liquidityProtectionStore.protectedLiquidity(
-                                                        protectionId
-                                                    );
-                                                    protection = getProtection(protection);
+                                                expect(balance.sub(prevBalance).add(lockedBalance)).to.be.gt(
+                                                    reserveAmount
+                                                );
+                                            });
+                                        } else {
+                                            // eslint-disable-next-line max-len
+                                            it('verifies that removeLiquidityReturn returns an amount that is almost equal to the initial amount', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
 
-                                                    const prevBalance = await getBalance(
-                                                        reserveToken1,
-                                                        reserveToken1.address,
-                                                        owner.address
-                                                    );
-                                                    await govToken.approve(
-                                                        liquidityProtection.address,
-                                                        protection.reserveAmount
-                                                    );
-                                                    await liquidityProtection.setTime(
-                                                        timestamp.add(duration.seconds(1))
-                                                    );
-                                                    await liquidityProtection.removeLiquidity(
+                                                const amount = (
+                                                    await liquidityProtection.removeLiquidityReturn(
                                                         protectionId,
-                                                        PPM_RESOLUTION
-                                                    );
-                                                    const balance = await getBalance(
-                                                        reserveToken1,
-                                                        reserveToken1.address,
-                                                        owner.address
-                                                    );
+                                                        PPM_RESOLUTION,
+                                                        timestamp
+                                                    )
+                                                )[0];
 
-                                                    let lockedBalance = await getLockedBalance(owner.address);
-                                                    if (reserveToken1.address === baseTokenAddress) {
-                                                        const rate = await getRate(networkToken.address);
-                                                        lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
-                                                    }
+                                                expectAlmostEqual(amount, reserveAmount);
+                                            });
 
-                                                    expect(balance.sub(prevBalance).add(lockedBalance)).to.be.gt(
-                                                        reserveAmount
-                                                    );
-                                                });
-                                            } else {
-                                                // eslint-disable-next-line max-len
-                                                it('verifies that removeLiquidityReturn returns an amount that is almost equal to the initial amount', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
+                                            // eslint-disable-next-line max-len
+                                            it('verifies that removeLiquidity returns an amount that is almost equal to the initial amount', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
+                                                let protection = await liquidityProtectionStore.protectedLiquidity(
+                                                    protectionId
+                                                );
+                                                protection = getProtection(protection);
 
-                                                    const amount = (
-                                                        await liquidityProtection.removeLiquidityReturn(
-                                                            protectionId,
-                                                            PPM_RESOLUTION,
-                                                            timestamp
-                                                        )
-                                                    )[0];
+                                                const prevBalance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner.address
+                                                );
+                                                await govToken.approve(
+                                                    liquidityProtection.address,
+                                                    protection.reserveAmount
+                                                );
+                                                await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
+                                                await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
+                                                const balance = await getBalance(
+                                                    reserveToken1,
+                                                    reserveToken1.address,
+                                                    owner.address
+                                                );
 
-                                                    expectAlmostEqual(amount, reserveAmount);
-                                                });
+                                                let lockedBalance = await getLockedBalance(owner.address);
+                                                if (reserveToken1.address === baseTokenAddress) {
+                                                    const rate = await getRate(networkToken.address);
+                                                    lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
+                                                }
 
-                                                // eslint-disable-next-line max-len
-                                                it('verifies that removeLiquidity returns an amount that is almost equal to the initial amount', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
-                                                    let protection = await liquidityProtectionStore.protectedLiquidity(
-                                                        protectionId
-                                                    );
-                                                    protection = getProtection(protection);
-
-                                                    const prevBalance = await getBalance(
-                                                        reserveToken1,
-                                                        reserveToken1.address,
-                                                        owner.address
-                                                    );
-                                                    await govToken.approve(
-                                                        liquidityProtection.address,
-                                                        protection.reserveAmount
-                                                    );
-                                                    await liquidityProtection.setTime(
-                                                        timestamp.add(duration.seconds(1))
-                                                    );
-                                                    await liquidityProtection.removeLiquidity(
-                                                        protectionId,
-                                                        PPM_RESOLUTION
-                                                    );
-                                                    const balance = await getBalance(
-                                                        reserveToken1,
-                                                        reserveToken1.address,
-                                                        owner.address
-                                                    );
-
-                                                    let lockedBalance = await getLockedBalance(owner.address);
-                                                    if (reserveToken1.address === baseTokenAddress) {
-                                                        const rate = await getRate(networkToken.address);
-                                                        lockedBalance = lockedBalance.mul(rate.n).div(rate.d);
-                                                    }
-
-                                                    expectAlmostEqual(
-                                                        balance.sub(prevBalance).add(lockedBalance),
-                                                        reserveAmount
-                                                    );
-                                                });
-                                            }
-
-                                            if (shouldLock) {
-                                                it('verifies that removeLiquidity locks network tokens for the caller', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
-                                                    let protection = await liquidityProtectionStore.protectedLiquidity(
-                                                        protectionId
-                                                    );
-                                                    protection = getProtection(protection);
-
-                                                    await govToken.approve(
-                                                        liquidityProtection.address,
-                                                        protection.reserveAmount
-                                                    );
-                                                    await liquidityProtection.setTime(
-                                                        timestamp.add(duration.seconds(1))
-                                                    );
-                                                    await liquidityProtection.removeLiquidity(
-                                                        protectionId,
-                                                        PPM_RESOLUTION
-                                                    );
-
-                                                    const lockedBalanceCount =
-                                                        await liquidityProtectionStore.lockedBalanceCount(
-                                                        owner.address
-                                                    );
-                                                    expect(lockedBalanceCount).to.equal(BigNumber.from(1));
-
-                                                    const lockedBalance = await getLockedBalance(owner.address);
-                                                    expect(lockedBalance).to.be.gt(BigNumber.from(0));
-                                                });
-                                            } else {
-                                                it('verifies that removeLiquidity does not lock network tokens for the caller', async () => {
-                                                    const protectionIds =
-                                                        await liquidityProtectionStore.protectedLiquidityIds(
-                                                        owner.address
-                                                    );
-                                                    const protectionId = protectionIds[protectionIds.length - 1];
-                                                    let protection = await liquidityProtectionStore.protectedLiquidity(
-                                                        protectionId
-                                                    );
-                                                    protection = getProtection(protection);
-
-                                                    await govToken.approve(
-                                                        liquidityProtection.address,
-                                                        protection.reserveAmount
-                                                    );
-                                                    await liquidityProtection.setTime(
-                                                        timestamp.add(duration.seconds(1))
-                                                    );
-                                                    await liquidityProtection.removeLiquidity(
-                                                        protectionId,
-                                                        PPM_RESOLUTION
-                                                    );
-
-                                                    const lockedBalanceCount =
-                                                        await liquidityProtectionStore.lockedBalanceCount(
-                                                        owner.address
-                                                    );
-                                                    expect(lockedBalanceCount).to.equal(BigNumber.from(0));
-
-                                                    const lockedBalance = await getLockedBalance(owner.address);
-                                                    expect(lockedBalance).to.equal(BigNumber.from(0));
-                                                });
-                                            }
+                                                expectAlmostEqual(
+                                                    balance.sub(prevBalance).add(lockedBalance),
+                                                    reserveAmount
+                                                );
+                                            });
                                         }
-                                    );
-                                }
+
+                                        if (shouldLock) {
+                                            it('verifies that removeLiquidity locks network tokens for the caller', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
+                                                let protection = await liquidityProtectionStore.protectedLiquidity(
+                                                    protectionId
+                                                );
+                                                protection = getProtection(protection);
+
+                                                await govToken.approve(
+                                                    liquidityProtection.address,
+                                                    protection.reserveAmount
+                                                );
+                                                await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
+                                                await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
+
+                                                const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
+                                                    owner.address
+                                                );
+                                                expect(lockedBalanceCount).to.equal(BigNumber.from(1));
+
+                                                const lockedBalance = await getLockedBalance(owner.address);
+                                                expect(lockedBalance).to.be.gt(BigNumber.from(0));
+                                            });
+                                        } else {
+                                            it('verifies that removeLiquidity does not lock network tokens for the caller', async () => {
+                                                const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(
+                                                    owner.address
+                                                );
+                                                const protectionId = protectionIds[protectionIds.length - 1];
+                                                let protection = await liquidityProtectionStore.protectedLiquidity(
+                                                    protectionId
+                                                );
+                                                protection = getProtection(protection);
+
+                                                await govToken.approve(
+                                                    liquidityProtection.address,
+                                                    protection.reserveAmount
+                                                );
+                                                await liquidityProtection.setTime(timestamp.add(duration.seconds(1)));
+                                                await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
+
+                                                const lockedBalanceCount = await liquidityProtectionStore.lockedBalanceCount(
+                                                    owner.address
+                                                );
+                                                expect(lockedBalanceCount).to.equal(BigNumber.from(0));
+
+                                                const lockedBalance = await getLockedBalance(owner.address);
+                                                expect(lockedBalance).to.equal(BigNumber.from(0));
+                                            });
+                                        }
+                                    }
+                                );
                             }
                         }
                     }
@@ -2055,7 +1990,7 @@ describe('LiquidityProtection', () => {
                     });
 
                     it('verifies that locked balance owner can claim locked tokens if sufficient time has passed', async () => {
-                        const timestamp = await getTimestamp(PROTECTION_FULL_PROTECTION);
+                        const timestamp = await getFutureTimestamp();
                         await setTime(timestamp);
 
                         const prevBalance = await networkToken.balanceOf(owner.address);
@@ -2072,7 +2007,7 @@ describe('LiquidityProtection', () => {
                     });
 
                     it('verifies that locked balance owner can claim multiple locked tokens if sufficient time has passed', async () => {
-                        const timestamp = await getTimestamp(PROTECTION_FULL_PROTECTION);
+                        const timestamp = await getFutureTimestamp();
                         await setTime(timestamp);
 
                         const prevBalance = await networkToken.balanceOf(owner.address);
@@ -2467,10 +2402,8 @@ describe('LiquidityProtection', () => {
                                                                         addSpotRateD: addSpotRateD.toString(),
                                                                         removeSpotRateN: removeSpotRateN.toString(),
                                                                         removeSpotRateD: removeSpotRateD.toString(),
-                                                                        removeAverageRateN:
-                                                                            removeAverageRateN.toString(),
-                                                                        removeAverageRateD:
-                                                                            removeAverageRateD.toString(),
+                                                                        removeAverageRateN: removeAverageRateN.toString(),
+                                                                        removeAverageRateD: removeAverageRateD.toString(),
                                                                         timeElapsed
                                                                     })
                                                                         .split('"')
@@ -2478,8 +2411,7 @@ describe('LiquidityProtection', () => {
                                                                         .slice(1, -1);
                                                                     it(`test ${++testNum} out of ${numOfTest}: ${testDesc}`, async () => {
                                                                         // eslint-disable-next-line max-len
-                                                                        const actual =
-                                                                            await liquidityProtection.callStatic.removeLiquidityTargetAmountTest(
+                                                                        const actual = await liquidityProtection.callStatic.removeLiquidityTargetAmountTest(
                                                                             poolTokenRateN,
                                                                             poolTokenRateD,
                                                                             poolAmount,
@@ -2565,8 +2497,7 @@ describe('LiquidityProtection', () => {
                                                             removeRateN,
                                                             removeRateD
                                                         );
-                                                        const actual =
-                                                            await liquidityProtection.protectedAmountPlusFeeTest(
+                                                        const actual = await liquidityProtection.protectedAmountPlusFeeTest(
                                                             poolAmount,
                                                             poolRateN,
                                                             poolRateD,
@@ -2708,8 +2639,15 @@ describe('LiquidityProtection', () => {
                     };
 
                     const protectedAmountPlusFee = (...args) => {
-                        const [poolAmount, poolRateN, poolRateD, addRateN, addRateD, removeRateN, removeRateD] =
-                            args.map((x) => Decimal(x.toString()));
+                        const [
+                            poolAmount,
+                            poolRateN,
+                            poolRateD,
+                            addRateN,
+                            addRateD,
+                            removeRateN,
+                            removeRateD
+                        ] = args.map((x) => Decimal(x.toString()));
 
                         return removeRateN
                             .div(removeRateD)
@@ -3347,8 +3285,9 @@ describe('LiquidityProtection', () => {
                                         MAX_UINT256
                                     );
                                     const fullyProtectedAmount = removeAmounts[0];
-                                    networkFullyProtectedAmounts[baseToken] =
-                                        networkFullyProtectedAmounts[baseToken].add(fullyProtectedAmount);
+                                    networkFullyProtectedAmounts[baseToken] = networkFullyProtectedAmounts[
+                                        baseToken
+                                    ].add(fullyProtectedAmount);
                                 }
                             }
 
@@ -3356,8 +3295,9 @@ describe('LiquidityProtection', () => {
 
                             const gasCost = await getTransactionCost(res);
 
-                            prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
-                                prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
+                            prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance = prevStates[
+                                NATIVE_TOKEN_ADDRESS
+                            ].providerBaseBalance.sub(gasCost);
 
                             for (const baseToken of baseTokens) {
                                 const basePositions = getPositions(positions, baseToken.poolToken, baseToken);
@@ -3461,8 +3401,9 @@ describe('LiquidityProtection', () => {
                         baseTokens.map((baseToken) => baseToken.poolToken.address)
                     );
                     const gasCost = await getTransactionCost(receipt);
-                    prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance =
-                        prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance.sub(gasCost);
+                    prevStates[NATIVE_TOKEN_ADDRESS].providerBaseBalance = prevStates[
+                        NATIVE_TOKEN_ADDRESS
+                    ].providerBaseBalance.sub(gasCost);
 
                     for (const baseToken of baseTokens) {
                         const basePositions = getPositions(positions, baseToken.poolToken, baseToken);
