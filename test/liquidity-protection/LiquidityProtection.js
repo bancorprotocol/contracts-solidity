@@ -2273,6 +2273,26 @@ describe('LiquidityProtection', () => {
                         });
                     }
                 });
+
+                describe('total user value', () => {
+                    const TOTAL_USER_VALUE = 100;
+                    let poolAnchor;
+
+                    beforeEach(() => {
+                        poolAnchor = poolToken.address;
+                    });
+
+                    it('verify set total user value', async () => {
+                        await liquidityProtection.setTotalUserValue(poolAnchor, TOTAL_USER_VALUE);
+                        expect(await liquidityProtection.getTotalUserValue(poolAnchor)).to.equal(TOTAL_USER_VALUE);
+                    });
+
+                    it('cannot set total user value if not owner', async () => {
+                        await expect(
+                            liquidityProtection.connect(governor).setTotalUserValue(poolAnchor, TOTAL_USER_VALUE)
+                        ).to.be.reverted;
+                    });
+                });
             });
 
             describe('stress tests', () => {
