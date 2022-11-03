@@ -879,20 +879,31 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function migrateSystemPoolTokens(IConverterAnchor[] calldata poolAnchors) external nonReentrant ownerOnly {
         uint256 length = poolAnchors.length;
         for (uint256 i = 0; i < length; i++) {
-            IDSToken poolToken = IDSToken(address(poolAnchors[i]));
-            uint256 poolAmount = _systemStore.systemBalance(poolToken);
+            IConverterAnchor poolAnchor = poolAnchors[i];
+            IDSToken poolToken = IDSToken(address(poolAnchor));
+            ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(_ownedBy(poolToken)));
+            IReserveToken reserveToken1 = IReserveToken(address(_networkToken));
+            IReserveToken reserveToken2 = _converterOtherReserve(converter, IReserveToken(address(_networkToken)));
+
+            uint256 totalLiquidity = converter.reserveBalance(reserveToken2);
+            uint256 totalUserValue = totalUserValue(poolAnchor);
+            Fraction memory rate = _poolTokenRate(poolToken, reserveToken2);
+            // @dev pool amount = (total liquidity - total user value) / rate)
+            uint256 poolAmount = totalLiquidity.sub(totalUserValue).mul(rate.d).div(rate.n);
+            uint256 protocolPoolAmount = _systemStore.systemBalance(poolToken);
+            if (poolAmount > protocolPoolAmount) {
+                poolAmount = protocolPoolAmount;
+            }
 
             _withdrawPoolTokens(poolToken, poolAmount);
 
-            ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(_ownedBy(poolToken)));
             (IReserveToken[] memory reserveTokens, uint256[] memory minReturns) = _removeLiquidityInput(
-                IReserveToken(address(_networkToken)),
-                _converterOtherReserve(converter, IReserveToken(address(_networkToken)))
+                reserveToken1,
+                reserveToken2
             );
-
             uint256[] memory reserveAmounts = converter.removeLiquidity(poolAmount, reserveTokens, minReturns);
 
-            _burnNetworkTokens(poolAnchors[i], reserveAmounts[0]);
+            _burnNetworkTokens(poolAnchor, reserveAmounts[0]);
             if (reserveTokens[1].isNativeToken()) {
                 _vaultV3.sendValue(reserveAmounts[1]);
             } else {
@@ -1452,7 +1463,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @return amount total user value of the pool, in wei
      * @param poolAnchor pool anchor
      */
-    function getTotalUserValue(IConverterAnchor poolAnchor) public view returns (uint256 amount) {
+    function totalUserValue(IConverterAnchor poolAnchor) public view returns (uint256 amount) {
         return _totalUserValue[poolAnchor];
     }
 }

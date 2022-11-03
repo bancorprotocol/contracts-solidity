@@ -2284,7 +2284,7 @@ describe('LiquidityProtection', () => {
 
                     it('verify set total user value', async () => {
                         await liquidityProtection.setTotalUserValue(poolAnchor, TOTAL_USER_VALUE);
-                        expect(await liquidityProtection.getTotalUserValue(poolAnchor)).to.equal(TOTAL_USER_VALUE);
+                        expect(await liquidityProtection.totalUserValue(poolAnchor)).to.equal(TOTAL_USER_VALUE);
                     });
 
                     it('cannot set total user value if not owner', async () => {
