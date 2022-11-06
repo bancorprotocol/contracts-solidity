@@ -870,6 +870,38 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
+     * @dev amount of pool tokens to migrate to v3
+     * @param poolAnchor pool anchor
+     * @param poolToken pool token
+     * @param converter pool converter
+     * @param reserveToken the reserve tokens whose pool tokens we'll migrate
+     * @return poolAmount number of pool tokens to migrate to v3
+     * If the pool is in deficit don't migrate it (return 0)
+     *
+     */
+    function _poolTokensToMigrate(
+        IConverterAnchor poolAnchor,
+        IDSToken poolToken,
+        ILiquidityPoolConverter converter,
+        IReserveToken reserveToken
+    ) private view returns (uint256) {
+        uint256 totalLiquidity = converter.reserveBalance(reserveToken);
+        uint256 totalUserValue = totalUserValue(poolAnchor);
+        if (totalUserValue >= totalLiquidity) {
+            // the pool is in deficit
+            return 0;
+        }
+        Fraction memory rate = _poolTokenRate(poolToken, reserveToken);
+        // pool amount = (total liquidity - total user value) / rate
+        uint256 poolAmount = totalLiquidity.sub(totalUserValue).mul(rate.d).div(rate.n);
+        uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
+        if (poolAmount > systemPoolAmount) {
+            poolAmount = systemPoolAmount;
+        }
+        return poolAmount;
+    }
+
+    /**
      * @dev migrates system pool tokens to v3
      *
      * Requirements:
@@ -885,19 +917,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             IReserveToken reserveToken1 = IReserveToken(address(_networkToken));
             IReserveToken reserveToken2 = _converterOtherReserve(converter, IReserveToken(address(_networkToken)));
 
-            uint256 totalLiquidity = converter.reserveBalance(reserveToken2);
-            uint256 totalUserValue = totalUserValue(poolAnchor);
-            if (totalUserValue >= totalLiquidity) {
-                // the pool is in deficit
-                continue;
-            }
-            Fraction memory rate = _poolTokenRate(poolToken, reserveToken2);
-            // @dev pool amount = (total liquidity - total user value) / rate)
-            uint256 poolAmount = totalLiquidity.sub(totalUserValue).mul(rate.d).div(rate.n);
-            uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
-            if (poolAmount > systemPoolAmount) {
-                poolAmount = systemPoolAmount;
-            }
+            uint256 poolAmount = _poolTokensToMigrate(poolAnchor, poolToken, converter, reserveToken2);
             if (poolAmount == 0) {
                 continue;
             }
