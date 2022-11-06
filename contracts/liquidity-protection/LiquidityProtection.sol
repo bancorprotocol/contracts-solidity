@@ -888,15 +888,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             uint256 totalLiquidity = converter.reserveBalance(reserveToken2);
             uint256 totalUserValue = totalUserValue(poolAnchor);
             if (totalUserValue >= totalLiquidity) {
-                // @dev the pool has a deficit
+                // the pool is in deficit
                 continue;
             }
             Fraction memory rate = _poolTokenRate(poolToken, reserveToken2);
             // @dev pool amount = (total liquidity - total user value) / rate)
             uint256 poolAmount = totalLiquidity.sub(totalUserValue).mul(rate.d).div(rate.n);
-            uint256 protocolPoolAmount = _systemStore.systemBalance(poolToken);
-            if (poolAmount > protocolPoolAmount) {
-                poolAmount = protocolPoolAmount;
+            uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
+            if (poolAmount > systemPoolAmount) {
+                poolAmount = systemPoolAmount;
             }
             if (poolAmount == 0) {
                 continue;
