@@ -72,7 +72,7 @@ describe('LiquidityProtection', () => {
 
     for (const converterType of [STANDARD_CONVERTER_TYPE]) {
         context(getConverterName(converterType), () => {
-            const initPool = async (isETH = false, whitelist = true, standard = true) => {
+            const initPool = async (isETH = false, whitelist = true) => {
                 if (isETH) {
                     baseTokenAddress = NATIVE_TOKEN_ADDRESS;
                 } else {
@@ -2292,6 +2292,108 @@ describe('LiquidityProtection', () => {
                             liquidityProtection.connect(governor).setTotalUserValue(poolAnchor, TOTAL_USER_VALUE)
                         ).to.be.reverted;
                     });
+                });
+            });
+
+            describe.only('migrate system pool tokens', () => {
+                beforeEach(async () => {
+                    await initLiquidityProtection(false /* don't init a default pool */);
+                });
+
+                const ETH_AMOUNT = BigNumber.from(1000);
+
+                async function addEthLiquidity(provider, amount) {
+                    const reserveAmount = amount;
+                    const isETHReserve = true;
+                    await addProtectedLiquidity(
+                        poolToken.address,
+                        baseToken,
+                        baseTokenAddress,
+                        reserveAmount,
+                        isETHReserve,
+                        provider
+                    );
+                }
+
+                async function migratePoolToV2() {
+                    await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
+                }
+
+                async function initV1EthPool() {
+                    await initPool(true /* isEth */, false /* whitelist */);
+                }
+
+                async function initV2EthPool(provider, amount) {
+                    await initV1EthPool();
+                    await migratePoolToV2();
+                }
+
+                async function getProtectedLiquidityIds(provider) {
+                    return await liquidityProtectionStore.protectedLiquidityIds(provider.address);
+                }
+
+                async function getProtectedLiquidity(id) {
+                    const protectedLiquidity = await liquidityProtectionStore.protectedLiquidity(id);
+                    return getProtection(protectedLiquidity);
+                }
+
+                async function systemPoolTokensBalance() {
+                    if (!poolToken) {
+                        return 0;
+                    }
+                    return await liquidityProtectionSystemStore.systemBalance(poolToken.address);
+                }
+
+                async function totalLiquidity() {
+                    return await converter.reserveBalance(baseTokenAddress);
+                }
+
+                async function providerPoolTokensBalance(provider) {
+                    const liquidityProtectionIds = await getProtectedLiquidityIds(provider);
+                    let balance = BigNumber.from(0);
+                    for (id of liquidityProtectionIds) {
+                        const protectedLiquidity = await getProtectedLiquidity(id);
+                        balance = balance.add(protectedLiquidity.poolAmount);
+                    }
+                    return balance;
+                }
+
+                it('should create an eth pool and mint pool tokens for provider and system', async () => {
+                    const PROVIDER = owner;
+
+                    expect(await systemPoolTokensBalance()).equals(0);
+                    expect(await providerPoolTokensBalance(PROVIDER)).equals(0);
+
+                    await initV1EthPool();
+                    expect(await converter.reserveBalance(baseTokenAddress)).equals(RESERVE1_AMOUNT);
+                    await migratePoolToV2();
+                    await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+                    expect(await converter.reserveBalance(baseTokenAddress)).equal(RESERVE1_AMOUNT.add(ETH_AMOUNT));
+
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
+                    expect(await providerPoolTokensBalance(PROVIDER)).equals(ETH_AMOUNT / 2);
+                });
+
+                it('should migrate all of the system pool tokens', async () => {
+                    const PROVIDER = owner;
+                    await initV2EthPool();
+                    await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+
+                    expect(await liquidityProtection.totalUserValue(poolToken.address)).equals(0);
+                    await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
+
+                    expect(await systemPoolTokensBalance()).equals(0);
+                });
+
+                it('should not migrate any system pool token', async () => {
+                    const PROVIDER = owner;
+                    await initV2EthPool();
+                    await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+
+                    await liquidityProtection.setTotalUserValue(poolToken.address, await totalLiquidity());
+                    await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
+
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
                 });
             });
 
