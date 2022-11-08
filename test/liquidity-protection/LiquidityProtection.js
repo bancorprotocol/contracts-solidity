@@ -2323,7 +2323,7 @@ describe('LiquidityProtection', () => {
                     await initPool(true /* isEth */, false /* whitelist */);
                 }
 
-                async function initV2EthPool(provider, amount) {
+                async function initV2EthPool() {
                     await initV1EthPool();
                     await migratePoolToV2();
                 }
