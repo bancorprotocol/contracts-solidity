@@ -2320,6 +2320,9 @@ describe('LiquidityProtection', () => {
                 }
 
                 async function initV1EthPool() {
+                    // initializes a v1 pool with reserve tokens on behalf of the PROVIDER account
+                    // RESERVE1_AMOUNT of ETH (baseToken)
+                    // RESERVE2_AMOUNT of BNT (networkToken)
                     await initPool(true /* isEth */, false /* whitelist */);
                 }
 
@@ -2344,7 +2347,7 @@ describe('LiquidityProtection', () => {
                     return await liquidityProtectionSystemStore.systemBalance(poolToken.address);
                 }
 
-                async function totalLiquidity() {
+                async function ethPoolBalance() {
                     return await converter.reserveBalance(baseTokenAddress);
                 }
 
@@ -2358,42 +2361,88 @@ describe('LiquidityProtection', () => {
                     return balance;
                 }
 
+                async function poolTokensSupply() {
+                    return await poolToken.totalSupply();
+                }
+
                 it('should create an eth pool and mint pool tokens for provider and system', async () => {
                     const PROVIDER = owner;
-
-                    expect(await systemPoolTokensBalance()).equals(0);
-                    expect(await providerPoolTokensBalance(PROVIDER)).equals(0);
-
+                    // v1 pool: adds unprotected liquidity, pool tokens are minted and ALL of them are sent
+                    // to the provider's wallet
                     await initV1EthPool();
-                    expect(await converter.reserveBalance(baseTokenAddress)).equals(RESERVE1_AMOUNT);
-                    await migratePoolToV2();
-                    await addEthLiquidity(PROVIDER, ETH_AMOUNT);
-                    expect(await converter.reserveBalance(baseTokenAddress)).equal(RESERVE1_AMOUNT.add(ETH_AMOUNT));
+                    expect(await ethPoolBalance()).equals(RESERVE1_AMOUNT);
+                    expect(await poolTokensSupply()).equals(RESERVE1_AMOUNT);
+                    expect(await poolToken.balanceOf(PROVIDER.address)).equals(RESERVE1_AMOUNT);
+                    expect(await systemPoolTokensBalance()).equals(0); // system balance of the PROTECTED liquidity
+                    expect(await providerPoolTokensBalance(PROVIDER)).equals(0); // provider balance of the PROTECTED liquidity
 
+                    await migratePoolToV2();
+                    // v2 pool: adds protected liquidity, pool tokens are minted and managed by the contract on
+                    // behalf of the provider. HALF of the pool tokens are allocated to the provider, and HALF to
+                    // the system
+                    await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+
+                    expect(await ethPoolBalance()).equal(RESERVE1_AMOUNT.add(ETH_AMOUNT));
+                    expect(await poolTokensSupply()).equals(RESERVE1_AMOUNT.add(ETH_AMOUNT));
+                    expect(await poolToken.balanceOf(PROVIDER.address)).equals(RESERVE1_AMOUNT);
                     expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
                     expect(await providerPoolTokensBalance(PROVIDER)).equals(ETH_AMOUNT / 2);
                 });
 
-                it('should migrate all of the system pool tokens', async () => {
+                it('should migrate all of the system pool tokens when total user value is 0', async () => {
                     const PROVIDER = owner;
                     await initV2EthPool();
                     await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+                    expect(await providerPoolTokensBalance(PROVIDER)).equals(ETH_AMOUNT / 2);
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
 
                     expect(await liquidityProtection.totalUserValue(poolToken.address)).equals(0);
                     await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
 
+                    expect(await providerPoolTokensBalance(PROVIDER)).equals(ETH_AMOUNT / 2);
                     expect(await systemPoolTokensBalance()).equals(0);
                 });
 
-                it('should not migrate any system pool token', async () => {
+                it('should not migrate any system pool token when total user value equals total liquidity', async () => {
                     const PROVIDER = owner;
                     await initV2EthPool();
                     await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
 
-                    await liquidityProtection.setTotalUserValue(poolToken.address, await totalLiquidity());
+                    const totalLiquidity = await ethPoolBalance();
+                    await liquidityProtection.setTotalUserValue(poolToken.address, totalLiquidity);
                     await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
 
                     expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
+                });
+
+                it('should not migrate any system pool token when total user value is greater than total liquidity', async () => {
+                    const PROVIDER = owner;
+                    await initV2EthPool();
+                    await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
+
+                    const totalLiquidity = await ethPoolBalance();
+                    await liquidityProtection.setTotalUserValue(poolToken.address, totalLiquidity.mul(2));
+                    await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
+
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
+                });
+
+                it('should migrate half of the system pool token', async () => {
+                    const PROVIDER = owner;
+                    await initV2EthPool();
+                    await addEthLiquidity(PROVIDER, ETH_AMOUNT);
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 2);
+
+                    const totalLiquidity = await ethPoolBalance();
+                    const rate = totalLiquidity.mul(2).div(await poolTokensSupply());
+                    const totalUserValue = totalLiquidity.sub(ETH_AMOUNT.div(4).mul(rate));
+
+                    await liquidityProtection.setTotalUserValue(poolToken.address, totalUserValue);
+                    await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
+
+                    expect(await systemPoolTokensBalance()).equals(ETH_AMOUNT / 4);
                 });
             });
 
