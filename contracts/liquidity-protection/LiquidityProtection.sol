@@ -504,11 +504,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(_ownedBy(poolAnchor)));
         uint256 totalLiquidity = converter.reserveBalance(reserveToken);
         uint256 totalUserValue = _totalUserValue[poolAnchor];
-        if (totalLiquidity > totalUserValue) {
-            // no deficit
-            return Fraction({ n: 1, d: 1 });
-        }
-        return Fraction({ n: totalLiquidity, d: totalUserValue });
+        // the pool is in deficit if totalLiquidity < totalUserValue
+        return Fraction({ n: Math.min(totalLiquidity, totalUserValue), d: totalUserValue });
     }
 
     /**
