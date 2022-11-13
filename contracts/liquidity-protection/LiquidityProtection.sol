@@ -487,6 +487,31 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
+     * @dev returns the deficit factor of the pool
+     * @param poolAnchor pool anchor
+     * @param reserveToken the reserve token we plan to withdraw
+     * @return a fraction between 0 and 1
+     * if the pool is in deficit the provider can't withdraw the full deposited liquidity.
+     * instead, we deduct the deficit factor from the withdraw amount.
+     * e.g. if the deficit is 30% the deficit factor will be 0.7 and the withdraw amount
+     * will be 70% of the expected amount
+     */
+    function _poolDeficitFactor(IConverterAnchor poolAnchor, IReserveToken reserveToken)
+        private
+        view
+        returns (Fraction memory)
+    {
+        ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(_ownedBy(poolAnchor)));
+        uint256 totalLiquidity = converter.reserveBalance(reserveToken);
+        uint256 totalUserValue = _totalUserValue[poolAnchor];
+        if (totalLiquidity > totalUserValue) {
+            // no deficit
+            return Fraction({ n: 1, d: 1 });
+        }
+        return Fraction({ n: totalLiquidity, d: totalUserValue });
+    }
+
+    /**
      * @dev returns the expected, actual, and network token compensation amounts the provider will receive for removing
      * liquidity
      *
@@ -530,9 +555,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             pos.reserveToken,
             pos.poolAmount,
             pos.reserveAmount,
-            packedRates,
-            pos.timestamp,
-            removeTimestamp
+            packedRates
         );
 
         // for network token, the return amount is identical to the target amount
@@ -550,6 +573,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
         uint256 baseAmount = _mulDivF(poolAmount, poolRate.n, poolRate.d.mul(2));
+        Fraction memory poolDeficitFactor = _poolDeficitFactor(pos.poolToken, pos.reserveToken);
+        baseAmount = _mulDivF(baseAmount, poolDeficitFactor.n, poolDeficitFactor.d);
         uint256 networkAmount = 0;
 
         return (targetAmount, baseAmount, networkAmount);
@@ -612,9 +637,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             removedPos.reserveToken,
             removedPos.poolAmount,
             removedPos.reserveAmount,
-            packedRates,
-            removedPos.timestamp,
-            _time()
+            packedRates
         );
 
         // remove network token liquidity
@@ -717,13 +740,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
             // get the fully protected amount (+ fees)
             fullyProtectedAmount = fullyProtectedAmount.add(
-                _removeLiquidityTargetAmount(
-                    poolRate,
-                    removedPos.poolAmount,
-                    removedPos.reserveAmount,
-                    packedRates,
-                    Fraction({ n: 1, d: 1 })
-                )
+                _removeLiquidityTargetAmount(poolRate, removedPos.poolAmount, removedPos.reserveAmount, packedRates)
             );
         }
 
@@ -791,17 +808,11 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount,
-        PackedRates memory packedRates,
-        uint256 addTimestamp,
-        uint256 removeTimestamp
+        PackedRates memory packedRates
     ) internal view returns (uint256) {
         // get the rate between the pool token and the reserve token
         Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
-
-        // calculate the protection level
-        Fraction memory level = _protectionLevel(addTimestamp, removeTimestamp);
-
-        return _removeLiquidityTargetAmount(poolRate, poolAmount, reserveAmount, packedRates, level);
+        return _removeLiquidityTargetAmount(poolRate, poolAmount, reserveAmount, packedRates);
     }
 
     /**
@@ -811,8 +822,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         Fraction memory poolRate,
         uint256 poolAmount,
         uint256 reserveAmount,
-        PackedRates memory packedRates,
-        Fraction memory level
+        PackedRates memory packedRates
     ) internal pure returns (uint256) {
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: packedRates.addSpotRateN, d: packedRates.addSpotRateD });
@@ -829,7 +839,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         Fraction memory loss = _impLoss(addSpotRate, removeAverageRate);
 
         // calculate the compensation amount
-        return _compensationAmount(reserveAmount, Math.max(reserveAmount, total), loss, level);
+        return _compensationAmount(Math.max(reserveAmount, total), loss);
     }
 
     /**
@@ -1247,37 +1257,12 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev returns the protection level based on the timestamp and protection delays
-     */
-    function _protectionLevel(uint256 addTimestamp, uint256 removeTimestamp) internal view returns (Fraction memory) {
-        uint256 timeElapsed = removeTimestamp.sub(addTimestamp);
-        uint256 minProtectionDelay = _settings.minProtectionDelay();
-        uint256 maxProtectionDelay = _settings.maxProtectionDelay();
-        if (timeElapsed < minProtectionDelay) {
-            return Fraction({ n: 0, d: 1 });
-        }
-
-        if (timeElapsed >= maxProtectionDelay) {
-            return Fraction({ n: 1, d: 1 });
-        }
-
-        return Fraction({ n: timeElapsed, d: maxProtectionDelay });
-    }
-
-    /**
      * @dev returns the compensation amount based on the impermanent loss and the protection level
      */
-    function _compensationAmount(
-        uint256 amount,
-        uint256 total,
-        Fraction memory loss,
-        Fraction memory level
-    ) internal pure returns (uint256) {
-        uint256 levelN = level.n.mul(amount);
-        uint256 levelD = level.d;
-        uint256 maxVal = Math.max(Math.max(levelN, levelD), total);
+    function _compensationAmount(uint256 total, Fraction memory loss) internal pure returns (uint256) {
+        uint256 maxVal = Math.max(1, total);
         (uint256 lossN, uint256 lossD) = MathEx.reducedRatio(loss.n, loss.d, MAX_UINT256 / maxVal);
-        return total.mul(lossD.sub(lossN)).div(lossD).add(lossN.mul(levelN).div(lossD.mul(levelD)));
+        return total.mul(lossD.sub(lossN)).div(lossD);
     }
 
     /**
