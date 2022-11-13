@@ -72,6 +72,14 @@ describe('LiquidityProtection', () => {
 
     for (const converterType of [STANDARD_CONVERTER_TYPE]) {
         context(getConverterName(converterType), () => {
+            /*
+             * initializes a v1 pool on behalf of the owner account with
+             * 1. RESERVE1_AMOUNT of ETH/non-ETH (baseToken)
+             * 2. RESERVE2_AMOUNT of BNT (networkToken)
+             *
+             * @param isETH true iff we want to set the base token as ETH (default: false)
+             * @param whitelist true iff we want to whitelist the pool (default: true)
+             */
             const initPool = async (isETH = false, whitelist = true) => {
                 if (isETH) {
                     baseTokenAddress = NATIVE_TOKEN_ADDRESS;
@@ -2300,7 +2308,7 @@ describe('LiquidityProtection', () => {
                     await initLiquidityProtection(false /* don't init a default pool */);
                 });
 
-                const DEPOSIT_AMOUNT = BigNumber.from(1000);
+                const depositAmount = BigNumber.from(1000);
 
                 async function addV2Liquidity(provider, amount, isEthReserve) {
                     await addProtectedLiquidity(
@@ -2311,22 +2319,6 @@ describe('LiquidityProtection', () => {
                         isEthReserve,
                         provider
                     );
-                }
-
-                async function migratePoolToV2() {
-                    await liquidityProtectionSettings.addPoolToWhitelist(poolToken.address);
-                }
-
-                async function initV1Pool(isEthReserve) {
-                    // initializes a v1 pool with reserve tokens on behalf of the PROVIDER account
-                    // RESERVE1_AMOUNT of ETH/non-ETH (baseToken)
-                    // RESERVE2_AMOUNT of BNT (networkToken)
-                    await initPool(isEthReserve /* isEth */, false /* whitelist */);
-                }
-
-                async function initV2Pool(isEthReserve) {
-                    await initV1Pool(isEthReserve);
-                    await migratePoolToV2();
                 }
 
                 async function getProtectedLiquidityIds(provider) {
@@ -2359,91 +2351,85 @@ describe('LiquidityProtection', () => {
                     return balance;
                 }
 
-                async function poolTokensSupply() {
-                    return await poolToken.totalSupply();
-                }
-
                 [false, true].forEach((isEthReserve) => {
                     const tokenName = isEthReserve ? 'ETH' : 'non-ETH';
                     describe(tokenName, () => {
                         it('should create a v2 pool and mint pool tokens for provider and system', async () => {
-                            const PROVIDER = owner;
+                            const provider = owner;
                             // v1 pool: adds unprotected liquidity, pool tokens are minted and ALL of them are sent
                             // to the provider's wallet
-                            await initV1Pool(isEthReserve);
+                            await initPool(isEthReserve);
                             expect(await reserveTokenBalance()).equals(RESERVE1_AMOUNT);
-                            expect(await poolTokensSupply()).equals(RESERVE1_AMOUNT);
-                            expect(await poolToken.balanceOf(PROVIDER.address)).equals(RESERVE1_AMOUNT);
+                            expect(await poolToken.totalSupply()).equals(RESERVE1_AMOUNT);
+                            expect(await poolToken.balanceOf(provider.address)).equals(RESERVE1_AMOUNT);
                             expect(await systemPoolTokensBalance()).equals(0); // system balance of the PROTECTED liquidity
-                            expect(await providerPoolTokensBalance(PROVIDER)).equals(0); // provider balance of the PROTECTED liquidity
+                            expect(await providerPoolTokensBalance(provider)).equals(0); // provider balance of the PROTECTED liquidity
 
-                            await migratePoolToV2();
                             // v2 pool: adds protected liquidity, pool tokens are minted and managed by the contract on
                             // behalf of the provider. HALF of the pool tokens are allocated to the provider, and HALF to
                             // the system
-                            await addV2Liquidity(PROVIDER, DEPOSIT_AMOUNT, isEthReserve);
-
-                            expect(await reserveTokenBalance()).equal(RESERVE1_AMOUNT.add(DEPOSIT_AMOUNT));
-                            expect(await poolTokensSupply()).equals(RESERVE1_AMOUNT.add(DEPOSIT_AMOUNT));
-                            expect(await poolToken.balanceOf(PROVIDER.address)).equals(RESERVE1_AMOUNT);
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 2);
-                            expect(await providerPoolTokensBalance(PROVIDER)).equals(DEPOSIT_AMOUNT / 2);
+                            await addV2Liquidity(provider, depositAmount, isEthReserve);
+                            expect(await reserveTokenBalance()).equal(RESERVE1_AMOUNT.add(depositAmount));
+                            expect(await poolToken.totalSupply()).equals(RESERVE1_AMOUNT.add(depositAmount));
+                            expect(await poolToken.balanceOf(provider.address)).equals(RESERVE1_AMOUNT);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 2);
+                            expect(await providerPoolTokensBalance(provider)).equals(depositAmount / 2);
                         });
 
                         it('should migrate all of the system pool tokens when total user value is 0', async () => {
-                            const PROVIDER = owner;
-                            await initV2Pool(isEthReserve);
-                            await addV2Liquidity(PROVIDER, DEPOSIT_AMOUNT, isEthReserve);
-                            expect(await providerPoolTokensBalance(PROVIDER)).equals(DEPOSIT_AMOUNT / 2);
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 2);
+                            const provider = owner;
+                            await initPool(isEthReserve);
+                            await addV2Liquidity(provider, depositAmount, isEthReserve);
+                            expect(await providerPoolTokensBalance(provider)).equals(depositAmount / 2);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 2);
 
                             expect(await liquidityProtection.totalUserValue(poolToken.address)).equals(0);
                             await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
 
-                            expect(await providerPoolTokensBalance(PROVIDER)).equals(DEPOSIT_AMOUNT / 2);
+                            expect(await providerPoolTokensBalance(provider)).equals(depositAmount / 2);
                             expect(await systemPoolTokensBalance()).equals(0);
                         });
 
                         it('should not migrate any system pool token when total user value equals total liquidity', async () => {
-                            const PROVIDER = owner;
-                            await initV2Pool(isEthReserve);
-                            await addV2Liquidity(PROVIDER, DEPOSIT_AMOUNT, isEthReserve);
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 2);
+                            const provider = owner;
+                            await initPool(isEthReserve);
+                            await addV2Liquidity(provider, depositAmount, isEthReserve);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 2);
 
                             const totalLiquidity = await reserveTokenBalance();
                             await liquidityProtection.setTotalUserValue(poolToken.address, totalLiquidity);
                             await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
 
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 2);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 2);
                         });
 
                         it('should not migrate any system pool token when total user value is greater than total liquidity', async () => {
-                            const PROVIDER = owner;
-                            await initV2Pool(isEthReserve);
-                            await addV2Liquidity(PROVIDER, DEPOSIT_AMOUNT, isEthReserve);
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 2);
+                            const provider = owner;
+                            await initPool(isEthReserve);
+                            await addV2Liquidity(provider, depositAmount, isEthReserve);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 2);
 
                             const totalLiquidity = await reserveTokenBalance();
                             await liquidityProtection.setTotalUserValue(poolToken.address, totalLiquidity.mul(2));
                             await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
 
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 2);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 2);
                         });
 
                         it('should migrate half of the system pool token', async () => {
-                            const PROVIDER = owner;
-                            await initV2Pool(isEthReserve);
-                            await addV2Liquidity(PROVIDER, DEPOSIT_AMOUNT, isEthReserve);
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 2);
+                            const provider = owner;
+                            await initPool(isEthReserve);
+                            await addV2Liquidity(provider, depositAmount, isEthReserve);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 2);
 
                             const totalLiquidity = await reserveTokenBalance();
-                            const rate = totalLiquidity.mul(2).div(await poolTokensSupply());
-                            const totalUserValue = totalLiquidity.sub(DEPOSIT_AMOUNT.div(4).mul(rate));
+                            const rate = totalLiquidity.mul(2).div(await poolToken.totalSupply());
+                            const totalUserValue = totalLiquidity.sub(depositAmount.div(4).mul(rate));
 
                             await liquidityProtection.setTotalUserValue(poolToken.address, totalUserValue);
                             await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
 
-                            expect(await systemPoolTokensBalance()).equals(DEPOSIT_AMOUNT / 4);
+                            expect(await systemPoolTokensBalance()).equals(depositAmount / 4);
                         });
                     });
                 });
