@@ -883,20 +883,28 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         ILiquidityPoolConverter converter,
         IReserveToken reserveToken
     ) private view returns (uint256) {
-        uint256 totalLiquidity = converter.reserveBalance(reserveToken);
+        // calcualte the total user pool token amount
         uint256 totalUserValue = totalUserValue(poolToken);
-        if (totalUserValue >= totalLiquidity) {
-            // if greater than - the pool is in deficit
+        uint256 reserveBalance = converter.reserveBalance(reserveToken);
+        uint256 poolTokenSupply = poolToken.totalSupply();
+        uint256 userPoolTokenAmount = _mulDivF(poolTokenSupply, totalUserValue, reserveBalance);
+
+        // get the total protected pool tokens amount
+        uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
+        // if the user pool token amount is greater or equal to the total
+        // protected pool token amount, there's nothing to migrate
+        if (userPoolTokenAmount >= protectedPoolTokenAmount) {
             return 0;
         }
-        Fraction memory rate = _poolTokenRate(poolToken, reserveToken);
-        // pool amount = (total liquidity - total user value) / rate
-        uint256 poolAmount = totalLiquidity.sub(totalUserValue).mul(rate.d).div(rate.n);
+
+        // deduct the user pool toke amount from the total protected pool tokens amount
+        // and limit it by the system balance
+        uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(userPoolTokenAmount);
         uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
-        if (poolAmount > systemPoolAmount) {
-            poolAmount = systemPoolAmount;
+        if (poolAmountToMigrate > systemPoolAmount) {
+            poolAmountToMigrate = systemPoolAmount;
         }
-        return poolAmount;
+        return poolAmountToMigrate;
     }
 
     /**
