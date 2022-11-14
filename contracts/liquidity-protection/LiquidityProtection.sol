@@ -740,6 +740,44 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
+     * @dev amount of pool tokens to migrate to v3
+     * @param poolToken pool token
+     * @param converter pool converter
+     * @param reserveToken the reserve tokens whose pool tokens we'll migrate
+     * @return poolAmount number of pool tokens to migrate to v3
+     * if the pool is in deficit don't migrate it (return 0)
+     *
+     */
+    function _poolTokensToMigrate(
+        IDSToken poolToken,
+        ILiquidityPoolConverter converter,
+        IReserveToken reserveToken
+    ) private view returns (uint256) {
+        // calcualte the total user pool token amount
+        uint256 totalUserValue = totalUserValue(poolToken);
+        uint256 reserveBalance = converter.reserveBalance(reserveToken);
+        uint256 poolTokenSupply = poolToken.totalSupply();
+        uint256 userPoolTokenAmount = _mulDivF(poolTokenSupply, totalUserValue, reserveBalance);
+
+        // get the total protected pool tokens amount
+        uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
+        // if the user pool token amount is greater or equal to the total
+        // protected pool token amount, there's nothing to migrate
+        if (userPoolTokenAmount >= protectedPoolTokenAmount) {
+            return 0;
+        }
+
+        // deduct the user pool toke amount from the total protected pool tokens amount
+        // and limit it by the system balance
+        uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(userPoolTokenAmount);
+        uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
+        if (poolAmountToMigrate > systemPoolAmount) {
+            poolAmountToMigrate = systemPoolAmount;
+        }
+        return poolAmountToMigrate;
+    }
+
+    /**
      * @dev migrates system pool tokens to v3
      *
      * Requirements:
@@ -749,20 +787,26 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function migrateSystemPoolTokens(IConverterAnchor[] calldata poolAnchors) external nonReentrant ownerOnly {
         uint256 length = poolAnchors.length;
         for (uint256 i = 0; i < length; i++) {
-            IDSToken poolToken = IDSToken(address(poolAnchors[i]));
-            uint256 poolAmount = _systemStore.systemBalance(poolToken);
+            IConverterAnchor poolAnchor = poolAnchors[i];
+            IDSToken poolToken = IDSToken(address(poolAnchor));
+            ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(_ownedBy(poolToken)));
+            IReserveToken reserveToken1 = IReserveToken(address(_networkToken));
+            IReserveToken reserveToken2 = _converterOtherReserve(converter, IReserveToken(address(_networkToken)));
+
+            uint256 poolAmount = _poolTokensToMigrate(poolToken, converter, reserveToken2);
+            if (poolAmount == 0) {
+                continue;
+            }
 
             _withdrawPoolTokens(poolToken, poolAmount);
 
-            ILiquidityPoolConverter converter = ILiquidityPoolConverter(payable(_ownedBy(poolToken)));
             (IReserveToken[] memory reserveTokens, uint256[] memory minReturns) = _removeLiquidityInput(
-                IReserveToken(address(_networkToken)),
-                _converterOtherReserve(converter, IReserveToken(address(_networkToken)))
+                reserveToken1,
+                reserveToken2
             );
-
             uint256[] memory reserveAmounts = converter.removeLiquidity(poolAmount, reserveTokens, minReturns);
 
-            _burnNetworkTokens(poolAnchors[i], reserveAmounts[0]);
+            _burnNetworkTokens(poolAnchor, reserveAmounts[0]);
             if (reserveTokens[1].isNativeToken()) {
                 _vaultV3.sendValue(reserveAmounts[1]);
             } else {
@@ -1297,7 +1341,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @return amount total user value of the pool, in wei
      * @param poolAnchor pool anchor
      */
-    function getTotalUserValue(IConverterAnchor poolAnchor) public view returns (uint256 amount) {
+    function totalUserValue(IConverterAnchor poolAnchor) public view returns (uint256 amount) {
         return _totalUserValue[poolAnchor];
     }
 }
