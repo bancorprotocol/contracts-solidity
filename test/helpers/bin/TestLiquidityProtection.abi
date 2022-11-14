@@ -327,39 +327,6 @@
         "inputs":
         [
             {
-                "components":
-                [
-                    {
-                        "internalType": "contract IDSToken",
-                        "name": "poolToken",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "contract IReserveToken",
-                        "name": "reserveToken",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256[]",
-                        "name": "positionIds",
-                        "type": "uint256[]"
-                    }
-                ],
-                "internalType": "struct LiquidityProtection.PositionList[]",
-                "name": "positionLists",
-                "type": "tuple[]"
-            }
-        ],
-        "name": "migratePositions",
-        "outputs":
-        [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs":
-        [
-            {
                 "internalType": "contract IConverterAnchor[]",
                 "name": "poolAnchors",
                 "type": "address[]"
