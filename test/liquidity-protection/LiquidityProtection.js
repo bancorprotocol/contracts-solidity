@@ -1731,7 +1731,7 @@ describe('LiquidityProtection', () => {
                                             await setTime(timestamp);
                                         });
 
-                                        const isLoss = rateChange !== 0;
+                                        const isLoss = rateChange !== 0 && reserve === 0;
                                         const shouldLock = reserve === 1; // reserveToken1 == networkToken
 
                                         if (isLoss) {
