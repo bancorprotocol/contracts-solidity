@@ -27,22 +27,6 @@ contract TestBancorNetworkV3 is BancorNetwork {
         _networkToken.transferFrom(msg.sender, _bancorVault, tokenAmount);
     }
 
-    function migrateLiquidity(
-        IReserveToken reserveToken,
-        address, /* provider */
-        uint256, /* amount */
-        uint256 availableAmount,
-        uint256 /* originalAmount */
-    ) external payable {
-        if (reserveToken.isNativeToken()) {
-            assert(msg.value == availableAmount);
-            reserveToken.safeTransfer(_bancorVault, availableAmount);
-        } else {
-            require(msg.value == 0);
-            reserveToken.safeTransferFrom(msg.sender, _bancorVault, availableAmount);
-        }
-    }
-
     function tradeBySourceAmount(
         IERC20 sourceToken,
         IERC20 targetToken,
