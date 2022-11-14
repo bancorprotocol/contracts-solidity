@@ -67,7 +67,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         uint256 lossD
     ) external pure returns (uint256) {
         Fraction memory loss = Fraction({ n: lossN, d: lossD });
-        return _compensationAmount(total, loss);
+        return _deductIL(total, loss);
     }
 
     function averageRateTest(IDSToken poolToken, IReserveToken reserveToken) external view returns (uint256, uint256) {
