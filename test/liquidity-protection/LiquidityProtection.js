@@ -3076,103 +3076,15 @@ describe('LiquidityProtection', () => {
                                             actual.gt(expected),
                                             actual,
                                             expected,
-                                            { 1: '0.0', 3: '0.0' }[converterType]
-                                        );
-                                } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
-                                    test = (actual, expected) =>
-                                        condOrAlmostEqual(
-                                            actual.lt(expected),
-                                            actual,
-                                            expected,
-                                            { 1: '0.0', 3: '0.0' }[converterType]
-                                        );
-                                } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
-                                    test = (actual, expected) =>
-                                        condOrAlmostEqual(
-                                            actual.eq(expected),
-                                            actual,
-                                            expected,
-                                            { 1: '0.000000000000001', 3: '0.00000005' }[converterType]
-                                        );
-                                } else {
-                                    throw new Error('invalid configuration');
-                                }
-
-                                // eslint-disable-next-line max-len
-                                it(`base token, increaseRate = ${config.increaseRate}, generateFee = ${config.generateFee}, numOfDays = ${numOfDays}, decimals = ${decimals}`, async () => {
-                                    await baseToken.approve(converter.address, amounts[0]);
-                                    await networkToken.approve(converter.address, amounts[1]);
-                                    await converter.addLiquidity(
-                                        [baseToken.address, networkToken.address],
-                                        [amounts[0], amounts[1]],
-                                        1
-                                    );
-
-                                    await addProtectedLiquidity(
-                                        poolToken.address,
-                                        baseToken,
-                                        baseTokenAddress,
-                                        amounts[2]
-                                    );
-                                    const amount = min(amounts[3], await getNetworkTokenMaxAmount());
-                                    await addProtectedLiquidity(
-                                        poolToken.address,
-                                        networkToken,
-                                        networkToken.address,
-                                        amount
-                                    );
-
-                                    if (config.increaseRate) {
-                                        await increaseRate(networkToken.address);
-                                    }
-
-                                    if (config.generateFee) {
-                                        await generateFee(baseToken, networkToken);
-                                    }
-
-                                    await setTime(timestamp);
-                                    const actual = await liquidityProtection.removeLiquidityReturn(
-                                        0,
-                                        PPM_RESOLUTION,
-                                        timestamp
-                                    );
-                                    const error = test(actual[0], amounts[2]);
-                                    expect(error).to.be.empty;
-                                });
-                            }
-                        }
-                    }
-
-                    for (const config of CONFIGURATIONS) {
-                        for (const numOfDays of NUM_OF_DAYS) {
-                            const timestamp = numOfDays * 24 * 60 * 60 + 1;
-                            for (const decimals of DECIMAL_COMBINATIONS) {
-                                const amounts = decimals.map((n) => BigNumber.from(10).pow(BigNumber.from(n)));
-
-                                let test;
-                                if (!config.increaseRate && !config.generateFee) {
-                                    test = (actual, expected) =>
-                                        condOrAlmostEqual(
-                                            actual.eq(expected),
-                                            actual,
-                                            expected,
-                                            { 1: '0.000000000000001', 3: '0.00000004' }[converterType]
-                                        );
-                                } else if (!config.increaseRate && config.generateFee) {
-                                    test = (actual, expected) =>
-                                        condOrAlmostEqual(
-                                            actual.gt(expected),
-                                            actual,
-                                            expected,
                                             { 1: '0.002', 3: '0.002' }[converterType]
                                         );
                                 } else if (config.increaseRate && !config.generateFee && numOfDays < 100) {
                                     test = (actual, expected) =>
                                         condOrAlmostEqual(
-                                            actual.lt(expected),
+                                            actual.eq(expected.add(1)), // either 1 wei more than expected
                                             actual,
                                             expected,
-                                            { 1: '0.0', 3: '0.0' }[converterType]
+                                            { 1: '0.0', 3: '0.0' }[converterType] // or exactly as expected
                                         );
                                 } else if (config.increaseRate && !config.generateFee && numOfDays >= 100) {
                                     test = (actual, expected) =>
