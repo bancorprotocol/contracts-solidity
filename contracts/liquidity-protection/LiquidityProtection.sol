@@ -660,59 +660,43 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 targetAmount;
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: packedRates.addSpotRateN, d: packedRates.addSpotRateD });
+        Fraction memory removeSpotRate = Fraction({ n: packedRates.removeSpotRateN, d: packedRates.removeSpotRateD });
 
-        { // scope to prevent "stack too deep" compiler error
-            // get the rate between the pool token and the reserve token
-            Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
+        // get the rate between the pool token and the reserve token
+        Fraction memory poolRate = _poolTokenRate(poolToken, reserveToken);
 
-            Fraction memory removeSpotRate = Fraction({ n: packedRates.removeSpotRateN, d: packedRates.removeSpotRateD });
-
-            // calculate the protected amount of reserve tokens plus accumulated fee
-            targetAmount = _protectedAmountPlusFee(poolAmount, poolRate, addSpotRate, removeSpotRate);
-        }
+        // calculate the protected amount of reserve tokens plus accumulated fee
+        targetAmount = _protectedAmountPlusFee(poolAmount, poolRate, addSpotRate, removeSpotRate);
 
         // for the network token, return the target amount
         if (_isNetworkToken(reserveToken)) {
             return (targetAmount, targetAmount);
         }
 
-        { // scope to prevent "stack too deep" compiler error
-            Fraction memory removeAverageRate = Fraction({
-                n: packedRates.removeAverageRateN,
-                d: packedRates.removeAverageRateD
-            });
+        Fraction memory removeAverageRate = Fraction({
+            n: packedRates.removeAverageRateN,
+            d: packedRates.removeAverageRateD
+        });
 
-            // calculate the position impermanent loss
-            Fraction memory loss = _impLoss(addSpotRate, removeAverageRate);
+        // calculate the position impermanent loss
+        Fraction memory loss = _impLoss(addSpotRate, removeAverageRate);
 
-            // deduct the position IL from the target amount
-            targetAmount = _deductIL(Math.max(reserveAmount, targetAmount), loss);
-        }
+        // deduct the position IL from the target amount
+        targetAmount = _deductIL(Math.max(reserveAmount, targetAmount), loss);
 
         // check if the pool can accomodate all withdrawals
 
-        // get the converter balance
-        IConverter converter = IConverter(payable(_ownedBy(poolToken)));
-        uint256 reserveBalance = converter.reserveBalance(reserveToken);
+        // get the pool deficit PPM
+        uint256 deficitPPM = poolDeficitPPM(poolToken);
 
-        // calculate the protected liquidity amount
-        uint256 poolTokenSupply = poolToken.totalSupply();
-        uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
-        uint256 protectedLiquidity = _mulDivF(reserveBalance, protectedPoolTokenAmount, poolTokenSupply);
-
-        // get the total positions value
-        uint256 totalValue = totalPositionsValue(poolToken);
-
-        // if the protected liquidity is higher or equal to the total positions value,
-        // the pool can support withdrawing the target amount
-        if (protectedLiquidity >= totalValue) {
+        // if the pool is not in deficit, it can support withdrawing the target amount
+        if (deficitPPM == 0) {
             return (targetAmount, targetAmount);
         }
 
         // the pool is in deficit, reduce the target amount
-        return (_mulDivF(targetAmount, protectedLiquidity, totalValue), targetAmount);
+        return (_mulDivF(targetAmount, uint256(PPM_RESOLUTION).sub(deficitPPM), PPM_RESOLUTION), targetAmount);
     }
-
 
     /**
      * @dev returns the amount the provider will receive for removing liquidity
@@ -726,6 +710,38 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ) internal view returns (uint256) {
         (uint256 targetAmount,) = _removeLiquidityAmounts(poolToken, reserveToken, poolAmount, reserveAmount, packedRates);
         return targetAmount;
+    }
+
+    /**
+     * @dev returns the pool deficit based on the total protected amount vs. total
+     * positions value, in PPM
+     */
+    function poolDeficitPPM(IDSToken poolToken)
+        public
+        view
+        returns (uint256)
+    {
+        // get the converter balance
+        IConverter converter = IConverter(payable(_ownedBy(poolToken)));
+        IReserveToken reserveToken = _converterOtherReserve(converter, IReserveToken(address(_networkToken)));
+        uint256 reserveBalance = converter.reserveBalance(reserveToken);
+
+        // calculate the protected liquidity amount
+        uint256 poolTokenSupply = poolToken.totalSupply();
+        uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
+        uint256 protectedLiquidity = _mulDivF(reserveBalance, protectedPoolTokenAmount, poolTokenSupply);
+
+        // get the total positions value
+        uint256 totalValue = totalPositionsValue(poolToken);
+
+        // if the protected liquidity is higher or equal to the total positions value,
+        // the pool is not in deficit
+        if (protectedLiquidity >= totalValue) {
+            return 0;
+        }
+
+        // the pool is in deficit
+        return uint256(PPM_RESOLUTION).mul(totalValue.sub(protectedLiquidity)).div(totalValue);
     }
 
     /**
