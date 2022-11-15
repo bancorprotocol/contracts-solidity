@@ -61,7 +61,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         return (impLossRate.n, impLossRate.d);
     }
 
-    function compensationAmountTest(
+    function deductILTest(
         uint256 total,
         uint256 lossN,
         uint256 lossD
@@ -77,6 +77,8 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
     }
 
     function removeLiquidityTargetAmountTest(
+        IDSToken poolToken,
+        IReserveToken reserveToken,
         uint256 poolTokenRateN,
         uint256 poolTokenRateD,
         uint256 poolAmount,
@@ -102,8 +104,8 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         });
 
         uint256 targetAmount = _removeLiquidityTargetAmount(
-            IDSToken(0),
-            IReserveToken(0),
+            poolToken,
+            reserveToken,
             poolAmount,
             reserveAmount,
             packedRates
