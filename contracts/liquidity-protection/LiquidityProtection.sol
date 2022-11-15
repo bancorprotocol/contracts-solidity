@@ -101,8 +101,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      */
     mapping(IConverterAnchor => uint256) private _totalUserValue;
 
-    bool private _addingEnabled = true;
-    bool private _removingEnabled = true;
+    bool private _addingEnabled = false;
+    bool private _removingEnabled = false;
 
     /**
      * @dev initializes a new LiquidityProtection contract

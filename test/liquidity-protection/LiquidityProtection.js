@@ -366,6 +366,8 @@ describe('LiquidityProtection', () => {
                 await liquidityProtection.acceptStoreOwnership();
                 await liquidityProtectionWallet.transferOwnership(liquidityProtection.address);
                 await liquidityProtection.acceptWalletOwnership();
+                await liquidityProtection.enableDepositing(true);
+                await liquidityProtection.enableRemoving(true);
                 await networkTokenGovernance.connect(governor).grantRole(ROLE_MINTER, liquidityProtection.address);
                 await govTokenGovernance.connect(governor).grantRole(ROLE_MINTER, liquidityProtection.address);
 
