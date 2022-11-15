@@ -94,12 +94,13 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     ITokenGovernance private immutable _govTokenGovernance;
 
     /**
-     * @dev Maps a pool anchor to its total user value (wei)
-     * Total value of base tokens in the pool, in wei. If this value is greater
-     * than the actual pool liquidity - the pool is in deficit, and withdrawing
-     * from this pool will be decreased by an amount proportional to the deficit
+     * @dev maps a pool anchor to the total value of its positions
+     * if this value is greater than the total protected liquidity,
+     * the pool is in deficit, and withdrawing from this pool will
+     * be decreased by an amount proportional to the deficit
+     * the value is expected to be set manually
      */
-    mapping(IConverterAnchor => uint256) private _totalUserValue;
+    mapping(IConverterAnchor => uint256) private _totalPositionsValue;
 
     bool private _addingEnabled = false;
     bool private _removingEnabled = false;
@@ -591,7 +592,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         );
 
         // get the target token amount
-        uint256 targetAmount = _removeLiquidityTargetAmount(
+        (uint256 targetAmount, uint256 positionValue) = _removeLiquidityAmounts(
             removedPos.poolToken,
             removedPos.reserveToken,
             removedPos.poolAmount,
@@ -625,6 +626,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             IReserveToken(address(_networkToken))
         );
 
+        // reduce the total positions value
+        uint256 totalValue = _totalPositionsValue[removedPos.poolToken];
+        if (totalValue < positionValue) {
+            _totalPositionsValue[removedPos.poolToken] = 0;
+        }
+        else {
+            _totalPositionsValue[removedPos.poolToken] = totalValue.sub(positionValue);
+        }
+
         // transfer the base tokens to the caller
         uint256 baseBalance = removedPos.reserveToken.balanceOf(address(this));
         removedPos.reserveToken.safeTransfer(provider, baseBalance);
@@ -638,14 +648,16 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
     /**
      * @dev returns the amount the provider will receive for removing liquidity
+     * as well as the specific position value (before deficit reduction)
      */
-    function _removeLiquidityTargetAmount(
+    function _removeLiquidityAmounts(
         IDSToken poolToken,
         IReserveToken reserveToken,
         uint256 poolAmount,
         uint256 reserveAmount,
         PackedRates memory packedRates
-    ) internal view returns (uint256 targetAmount) {
+    ) internal view returns (uint256, uint256) {
+        uint256 targetAmount;
         // get the rate between the reserves upon adding liquidity and now
         Fraction memory addSpotRate = Fraction({ n: packedRates.addSpotRateN, d: packedRates.addSpotRateD });
 
@@ -661,7 +673,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // for the network token, return the target amount
         if (_isNetworkToken(reserveToken)) {
-            return targetAmount;
+            return (targetAmount, targetAmount);
         }
 
         { // scope to prevent "stack too deep" compiler error
@@ -688,17 +700,32 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
         uint256 protectedLiquidity = _mulDivF(reserveBalance, protectedPoolTokenAmount, poolTokenSupply);
 
-        // get the total user value
-        uint256 totalUserValue = totalUserValue(poolToken);
+        // get the total positions value
+        uint256 totalValue = totalPositionsValue(poolToken);
 
-        // if the protected liquidity is higher or equal to the total user value,
+        // if the protected liquidity is higher or equal to the total positions value,
         // the pool can support withdrawing the target amount
-        if (protectedLiquidity >= totalUserValue) {
-            return targetAmount;
+        if (protectedLiquidity >= totalValue) {
+            return (targetAmount, targetAmount);
         }
 
         // the pool is in deficit, reduce the target amount
-        return _mulDivF(targetAmount, protectedLiquidity, totalUserValue);
+        return (_mulDivF(targetAmount, protectedLiquidity, totalValue), targetAmount);
+    }
+
+
+    /**
+     * @dev returns the amount the provider will receive for removing liquidity
+     */
+    function _removeLiquidityTargetAmount(
+        IDSToken poolToken,
+        IReserveToken reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        PackedRates memory packedRates
+    ) internal view returns (uint256) {
+        (uint256 targetAmount,) = _removeLiquidityAmounts(poolToken, reserveToken, poolAmount, reserveAmount, packedRates);
+        return targetAmount;
     }
 
     /**
@@ -752,23 +779,23 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         ILiquidityPoolConverter converter,
         IReserveToken reserveToken
     ) private view returns (uint256) {
-        // calcualte the total user pool token amount
-        uint256 totalUserValue = totalUserValue(poolToken);
+        // calcualte the total positions pool token amount
+        uint256 totalPositionsValue = totalPositionsValue(poolToken);
         uint256 reserveBalance = converter.reserveBalance(reserveToken);
         uint256 poolTokenSupply = poolToken.totalSupply();
-        uint256 userPoolTokenAmount = _mulDivF(poolTokenSupply, totalUserValue, reserveBalance);
+        uint256 positionsPoolTokenAmount = _mulDivF(poolTokenSupply, totalPositionsValue, reserveBalance);
 
         // get the total protected pool tokens amount
         uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
-        // if the user pool token amount is greater or equal to the total
+        // if the positions pool token amount is greater or equal to the total
         // protected pool token amount, there's nothing to migrate
-        if (userPoolTokenAmount >= protectedPoolTokenAmount) {
+        if (positionsPoolTokenAmount >= protectedPoolTokenAmount) {
             return 0;
         }
 
-        // deduct the user pool toke amount from the total protected pool tokens amount
+        // deduct the positions pool toke amount from the total protected pool tokens amount
         // and limit it by the system balance
-        uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(userPoolTokenAmount);
+        uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(positionsPoolTokenAmount);
         uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
         if (poolAmountToMigrate > systemPoolAmount) {
             poolAmountToMigrate = systemPoolAmount;
@@ -1318,29 +1345,49 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * Sets the total user value of the pool to the given amount
+     * Sets the total positions value of the pool to the given amount
      * @param poolAnchor pool anchor
-     * @param amount total user value amount in wei
+     * @param amount total positions value amount in wei
      *
      * Requirements:
      *
      * - the caller must be the owner of the contract
      * - the pool must exist and be whitelisted
      */
-    function setTotalUserValue(IConverterAnchor poolAnchor, uint256 amount)
-        external
+    function setTotalPositionsValue(IConverterAnchor poolAnchor, uint256 amount)
+        public
         ownerOnly
         poolSupportedAndWhitelisted(poolAnchor)
     {
-        _totalUserValue[poolAnchor] = amount;
+        _totalPositionsValue[poolAnchor] = amount;
     }
 
     /**
-     * Returns the total user value of the pool, in wei
-     * @return amount total user value of the pool, in wei
+     * Sets the total positions value of multiple pools in a single call
+     * @param poolAnchors list of pool anchor
+     * @param amounts list of total positions value amount in wei
+     *
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     * - the pools must exist and be whitelisted
+     */
+    function setTotalPositionsValueMultiple(IConverterAnchor[] calldata poolAnchors, uint256[] calldata amounts)
+        public
+        ownerOnly
+    {
+        require(poolAnchors.length == amounts.length, "ERR_LENGTH_MISMATCH");
+        for (uint256 i = 0; i < poolAnchors.length; i++) {
+            setTotalPositionsValue(poolAnchors[i], amounts[i]);
+        }
+    }
+
+    /**
+     * Returns the total positions value of the pool, in wei
+     * @return amount total positions value of the pool, in wei
      * @param poolAnchor pool anchor
      */
-    function totalUserValue(IConverterAnchor poolAnchor) public view returns (uint256 amount) {
-        return _totalUserValue[poolAnchor];
+    function totalPositionsValue(IConverterAnchor poolAnchor) public view returns (uint256 amount) {
+        return _totalPositionsValue[poolAnchor];
     }
 }

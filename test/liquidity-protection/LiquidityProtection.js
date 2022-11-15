@@ -57,7 +57,7 @@ let governor;
 let bancorVault;
 let accounts;
 
-describe('LiquidityProtection', () => {
+describe.only('LiquidityProtection', () => {
     const getConverterName = (type) => {
         switch (type) {
             case STANDARD_CONVERTER_TYPE:
@@ -1171,6 +1171,7 @@ describe('LiquidityProtection', () => {
                                     reserveAmount,
                                     isETHReserve
                                 );
+                                await liquidityProtection.setTotalPositionsValue(poolToken.address, reserveAmount);
                                 let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
                                 const protectionId = protectionIds[0];
                                 let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
@@ -1195,6 +1196,7 @@ describe('LiquidityProtection', () => {
                                 const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
                                 const prevBalance = await getBalance(baseToken, baseTokenAddress, owner.address);
                                 const prevGovBalance = await govToken.balanceOf(owner.address);
+                                const prevTotalPositionsValue = await liquidityProtection.totalPositionsValue(poolToken.address);
 
                                 const res = await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                                 protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
@@ -1252,6 +1254,9 @@ describe('LiquidityProtection', () => {
                                     liquidityProtection.address
                                 );
                                 expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
+
+                                const totalPositionsValue = await liquidityProtection.totalPositionsValue(poolToken.address);
+                                expect(totalPositionsValue).to.be.lt(prevTotalPositionsValue);
                             });
 
                             it('verifies that the caller can remove a portion of a protection', async () => {
@@ -1679,11 +1684,11 @@ describe('LiquidityProtection', () => {
                     for (let reserve = 0; reserve < 2; reserve++) {
                         for (let rateChange = 0; rateChange < 3; rateChange++) {
                             for (const withFee of [true, false]) {
-                                for (const userValue of [80, 100, 120]) {
+                                for (const positionsValue of [80, 100, 120]) {
                                     context(
                                         `(${reserve === 0 ? 'base token' : 'network token'}) and ${
                                             rateChangeText[rateChange]
-                                        } ${withFee ? 'with fee' : 'without fee'} and total user value ${userValue}% of total protected liquidity`,
+                                        } ${withFee ? 'with fee' : 'without fee'} and total positions value ${positionsValue}% of total protected liquidity`,
                                         () => {
                                             const reserveAmount = BigNumber.from(5000);
                                             let reserveToken1;
@@ -1734,13 +1739,13 @@ describe('LiquidityProtection', () => {
                                                 const protectedPoolTokenAmount = await poolToken.balanceOf(liquidityProtectionWallet.address);
                                                 const reserveBalance = await converter.reserveBalance(baseTokenAddress);
                                                 const protectedLiquidity = reserveBalance.mul(protectedPoolTokenAmount).div(poolTokenSupply);
-                                                await liquidityProtection.setTotalUserValue(poolToken.address, protectedLiquidity.mul(userValue).div(100));
+                                                await liquidityProtection.setTotalPositionsValue(poolToken.address, protectedLiquidity.mul(positionsValue).div(100));
 
                                                 timestamp = await getFutureTimestamp();
                                                 await setTime(timestamp);
                                             });
 
-                                            const isLoss = (rateChange !== 0 || userValue > 100) && reserve === 0;
+                                            const isLoss = (rateChange !== 0 || positionsValue > 100) && reserve === 0;
                                             const shouldLock = reserve === 1; // reserveToken1 == networkToken
 
                                             if (isLoss) {
@@ -2289,22 +2294,39 @@ describe('LiquidityProtection', () => {
                     }
                 });
 
-                describe('total user value', () => {
-                    const TOTAL_USER_VALUE = 100;
-                    let poolAnchor;
+                describe('total positions value', () => {
+                    const TOTAL_POSITIONS_VALUE = 100;
 
-                    beforeEach(() => {
-                        poolAnchor = poolToken.address;
+                    it('should set total positions value', async () => {
+                        await liquidityProtection.setTotalPositionsValue(poolToken.address, TOTAL_POSITIONS_VALUE);
+                        expect(await liquidityProtection.totalPositionsValue(poolToken.address)).to.equal(TOTAL_POSITIONS_VALUE);
                     });
 
-                    it('verify set total user value', async () => {
-                        await liquidityProtection.setTotalUserValue(poolAnchor, TOTAL_USER_VALUE);
-                        expect(await liquidityProtection.totalUserValue(poolAnchor)).to.equal(TOTAL_USER_VALUE);
-                    });
-
-                    it('cannot set total user value if not owner', async () => {
+                    it('should revert if a non owner attmpts to set the total positions value', async () => {
                         await expect(
-                            liquidityProtection.connect(governor).setTotalUserValue(poolAnchor, TOTAL_USER_VALUE)
+                            liquidityProtection.connect(governor).setTotalPositionsValue(poolToken.address, TOTAL_POSITIONS_VALUE)
+                        ).to.be.reverted;
+                    });
+
+                    it('should set total positions value for multiple pools', async () => {
+                        const poolToken1Address = poolToken.address;
+
+                        await initPool(false, true);
+                        const poolToken2Address = poolToken.address;
+
+                        expect(poolToken1Address).to.not.equal(poolToken2Address);
+
+                        await liquidityProtection.setTotalPositionsValueMultiple(
+                                [poolToken1Address, poolToken2Address],
+                                [TOTAL_POSITIONS_VALUE, TOTAL_POSITIONS_VALUE * 2]
+                            );
+                        expect(await liquidityProtection.totalPositionsValue(poolToken1Address)).to.equal(TOTAL_POSITIONS_VALUE);
+                        expect(await liquidityProtection.totalPositionsValue(poolToken2Address)).to.equal(TOTAL_POSITIONS_VALUE * 2);
+                    });
+
+                    it('should revert if a non owner attmpts to set the total positions value', async () => {
+                        await expect(
+                            liquidityProtection.connect(governor).setTotalPositionsValueMultiple([poolToken.address], [TOTAL_POSITIONS_VALUE])
                         ).to.be.reverted;
                     });
                 });
@@ -2382,7 +2404,7 @@ describe('LiquidityProtection', () => {
                             expect(await providerPoolTokensBalance(provider)).equals(poolTokenSupplyDelta.div(2));
                         });
 
-                        it('should migrate all of the system pool tokens when total user value is 0', async () => {
+                        it('should migrate all of the system pool tokens when total positions value is 0', async () => {
                             const provider = owner;
                             await initPool(isEthReserve);
 
@@ -2393,12 +2415,12 @@ describe('LiquidityProtection', () => {
                             expect(await reserveTokenBalance()).equal(RESERVE1_AMOUNT.add(depositAmount));
                             expect(await systemPoolTokensBalance()).equals(poolTokenSupplyDelta.div(2));
 
-                            await liquidityProtection.setTotalUserValue(poolToken.address, 0);
+                            await liquidityProtection.setTotalPositionsValue(poolToken.address, 0);
                             await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
                             expect(await systemPoolTokensBalance()).equals(0);
                         });
 
-                        it('should not migrate any system pool token when total user value equals total liquidity', async () => {
+                        it('should not migrate any system pool token when total positions value equals total liquidity', async () => {
                             const provider = owner;
                             await initPool(isEthReserve);
 
@@ -2410,12 +2432,12 @@ describe('LiquidityProtection', () => {
                             expect(totalLiquidity).equal(RESERVE1_AMOUNT.add(depositAmount));
                             expect(await systemPoolTokensBalance()).equals(poolTokenSupplyDelta.div(2));
                             
-                            await liquidityProtection.setTotalUserValue(poolToken.address, totalLiquidity);
+                            await liquidityProtection.setTotalPositionsValue(poolToken.address, totalLiquidity);
                             await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
                             expect(await systemPoolTokensBalance()).equals(poolTokenSupplyDelta.div(2));
                         });
 
-                        it('should not migrate any system pool token when total user value is greater than total liquidity', async () => {
+                        it('should not migrate any system pool token when total positions value is greater than total liquidity', async () => {
                             const provider = owner;
                             await initPool(isEthReserve);
                             
@@ -2427,12 +2449,12 @@ describe('LiquidityProtection', () => {
                             expect(totalLiquidity).equal(RESERVE1_AMOUNT.add(depositAmount));
                             expect(await systemPoolTokensBalance()).equals(poolTokenSupplyDelta.div(2));
 
-                            await liquidityProtection.setTotalUserValue(poolToken.address, totalLiquidity.mul(2));
+                            await liquidityProtection.setTotalPositionsValue(poolToken.address, totalLiquidity.mul(2));
                             await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
                             expect(await systemPoolTokensBalance()).equals(poolTokenSupplyDelta.div(2));
                         });
 
-                        context('when the total user value equals 80% of the total protected liquidity', async () => {
+                        context('when the total positions value equals 80% of the total protected liquidity', async () => {
                             it('should migrate 20% of the protected pool tokens', async () => {
                                 const provider = owner;
                                 await initPool(isEthReserve);
@@ -2446,7 +2468,7 @@ describe('LiquidityProtection', () => {
                                 expect(systemBalance).equals(poolTokenSupplyDelta.div(2));
 
                                 const protectedPoolTokens = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                                await liquidityProtection.setTotalUserValue(poolToken.address, depositAmount.mul(80).div(100));
+                                await liquidityProtection.setTotalPositionsValue(poolToken.address, depositAmount.mul(80).div(100));
                                 await liquidityProtection.migrateSystemPoolTokens([poolToken.address]);
 
                                 const newProtectedPoolTokens = await poolToken.balanceOf(liquidityProtectionWallet.address);
