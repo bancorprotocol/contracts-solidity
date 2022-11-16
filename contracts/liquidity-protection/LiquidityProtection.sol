@@ -73,12 +73,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint128 removeAverageRateD; // average rate of 1 A in units of B when liquidity is removed (denominator)
     }
 
-    struct PositionList {
-        IDSToken poolToken; // pool token address
-        IReserveToken reserveToken; // reserve token address
-        uint256[] positionIds; // position ids
-    }
-
     uint256 internal constant MAX_UINT128 = 2**128 - 1;
     uint256 internal constant MAX_UINT256 = uint256(-1);
 
