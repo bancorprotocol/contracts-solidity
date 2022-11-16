@@ -718,12 +718,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // deduct the position IL from the target amount
         targetAmount = _deductIL(Math.max(reserveAmount, targetAmount), loss);
 
-        // get the pool deficit state
-        (uint256 protectedLiquidity, uint256 totalValue) = _poolDeficitState(poolToken);
+        // get the pool deficit
+        Fraction memory poolDeficit = _poolDeficit(poolToken);
+
+        // calculate the missing portion
+        Fraction memory missingPortion = Fraction({ n: poolDeficit.n - poolDeficit.d, d: poolDeficit.d});
 
         // return the amount the provider will receive for removing liquidity
         // as well as the specific position value (before deficit reduction
-        return (_mulDivF(targetAmount, protectedLiquidity, totalValue), targetAmount);
+        return (_mulDivF(targetAmount, missingPortion.n, missingPortion.d), targetAmount);
     }
 
     /**
@@ -735,17 +738,17 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         view
         returns (uint256)
     {
-        (uint256 protectedLiquidity, uint256 totalValue) = _poolDeficitState(poolToken);
-        return _mulDivF(PPM_RESOLUTION, totalValue - protectedLiquidity, totalValue);
+        Fraction memory poolDeficit = _poolDeficit(poolToken);
+        return _mulDivF(PPM_RESOLUTION, poolDeficit.n, poolDeficit.d);
     }
 
     /**
      * @dev returns the protected liquidity amount and the total positions value
      */
-    function _poolDeficitState(IDSToken poolToken)
+    function _poolDeficit(IDSToken poolToken)
         private
         view
-        returns (uint256, uint256)
+        returns (Fraction memory)
     {
         // get the converter balance
         IConverter converter = IConverter(payable(_ownedBy(poolToken)));
@@ -762,7 +765,10 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // the pool is in deficit if and only if
         // the protected liquidity amount is lower than the total positions value
-        return (Math.min(protectedLiquidity, totalValue), totalValue);
+        return Fraction({
+            n: totalValue - Math.min(protectedLiquidity, totalValue),
+            d: totalValue
+        });
     }
 
     /**
