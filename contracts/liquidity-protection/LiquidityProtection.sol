@@ -871,10 +871,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // and limit it by the system balance
         uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(positionsPoolTokenAmount);
         uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
-        if (poolAmountToMigrate > systemPoolAmount) {
-            poolAmountToMigrate = systemPoolAmount;
-        }
-        return poolAmountToMigrate;
+        return Math.min(poolAmountToMigrate, systemPoolAmount);
     }
 
     /**
