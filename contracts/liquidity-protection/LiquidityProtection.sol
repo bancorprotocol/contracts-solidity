@@ -676,7 +676,13 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 reserveAmount,
         PackedRates memory packedRates
     ) internal view returns (uint256) {
-        (uint256 targetAmount,) = _removeLiquidityAmounts(poolToken, reserveToken, poolAmount, reserveAmount, packedRates);
+        (uint256 targetAmount,) = _removeLiquidityAmounts(
+            poolToken,
+            reserveToken,
+            poolAmount,
+            reserveAmount,
+            packedRates
+        );
         return targetAmount;
     }
 
