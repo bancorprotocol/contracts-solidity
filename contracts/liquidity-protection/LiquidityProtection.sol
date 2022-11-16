@@ -628,12 +628,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // reduce the total positions value
         uint256 totalValue = _totalPositionsValue[removedPos.poolToken];
-        if (totalValue < positionValue) {
-            _totalPositionsValue[removedPos.poolToken] = 0;
-        }
-        else {
-            _totalPositionsValue[removedPos.poolToken] = totalValue.sub(positionValue);
-        }
+        _totalPositionsValue[removedPos.poolToken] = Math.max(totalValue, positionValue).sub(positionValue);
 
         // transfer the base tokens to the caller
         uint256 baseBalance = removedPos.reserveToken.balanceOf(address(this));
