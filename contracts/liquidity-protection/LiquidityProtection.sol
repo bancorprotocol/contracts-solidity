@@ -592,7 +592,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         );
 
         // get the target token amount
-        (uint256 targetAmount, uint256 positionValue) = _removeLiquidityAmounts(
+        (uint256 targetAmount, uint256 posValue) = _removeLiquidityAmounts(
             removedPos.poolToken,
             removedPos.reserveToken,
             removedPos.poolAmount,
@@ -628,7 +628,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // reduce the total positions value
         uint256 totalValue = _totalPositionsValue[removedPos.poolToken];
-        _totalPositionsValue[removedPos.poolToken] = Math.max(totalValue, positionValue).sub(positionValue);
+        _totalPositionsValue[removedPos.poolToken] = Math.max(totalValue, posValue).sub(posValue);
 
         // transfer the base tokens to the caller
         uint256 baseBalance = removedPos.reserveToken.balanceOf(address(this));
@@ -639,6 +639,45 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         if (networkBalance > 0) {
             _burnNetworkTokens(removedPos.poolToken, networkBalance);
         }
+    }
+
+    /**
+     * @dev returns the value of the specific position, based on the initial stake, fees
+     * and positional IL
+     */
+    function positionValue(uint256 id) external view returns (uint256) {
+        Position memory pos = _position(id);
+
+        // get the various rates between the reserves upon adding liquidity and now
+        PackedRates memory packedRates = _packRates(
+            pos.poolToken,
+            pos.reserveToken,
+            pos.reserveRateN,
+            pos.reserveRateD
+        );
+
+        (, uint256 posValue) = _removeLiquidityAmounts(
+            pos.poolToken,
+            pos.reserveToken,
+            pos.poolAmount,
+            pos.reserveAmount, 
+            packedRates
+        );
+        return posValue;
+    }
+
+    /**
+     * @dev returns the amount the provider will receive for removing liquidity
+     */
+    function _removeLiquidityTargetAmount(
+        IDSToken poolToken,
+        IReserveToken reserveToken,
+        uint256 poolAmount,
+        uint256 reserveAmount,
+        PackedRates memory packedRates
+    ) internal view returns (uint256) {
+        (uint256 targetAmount,) = _removeLiquidityAmounts(poolToken, reserveToken, poolAmount, reserveAmount, packedRates);
+        return targetAmount;
     }
 
     /**
@@ -691,20 +730,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
 
         // the pool is in deficit, reduce the target amount
         return (_mulDivF(targetAmount, uint256(PPM_RESOLUTION).sub(deficitPPM), PPM_RESOLUTION), targetAmount);
-    }
-
-    /**
-     * @dev returns the amount the provider will receive for removing liquidity
-     */
-    function _removeLiquidityTargetAmount(
-        IDSToken poolToken,
-        IReserveToken reserveToken,
-        uint256 poolAmount,
-        uint256 reserveAmount,
-        PackedRates memory packedRates
-    ) internal view returns (uint256) {
-        (uint256 targetAmount,) = _removeLiquidityAmounts(poolToken, reserveToken, poolAmount, reserveAmount, packedRates);
-        return targetAmount;
     }
 
     /**
@@ -777,44 +802,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     }
 
     /**
-     * @dev amount of pool tokens to migrate to v3
-     * @param poolToken pool token
-     * @param converter pool converter
-     * @param reserveToken the reserve tokens whose pool tokens we'll migrate
-     * @return poolAmount number of pool tokens to migrate to v3
-     * if the pool is in deficit don't migrate it (return 0)
-     *
-     */
-    function _poolTokensToMigrate(
-        IDSToken poolToken,
-        ILiquidityPoolConverter converter,
-        IReserveToken reserveToken
-    ) private view returns (uint256) {
-        // calcualte the total positions pool token amount
-        uint256 totalPositionsValue = totalPositionsValue(poolToken);
-        uint256 reserveBalance = converter.reserveBalance(reserveToken);
-        uint256 poolTokenSupply = poolToken.totalSupply();
-        uint256 positionsPoolTokenAmount = _mulDivF(poolTokenSupply, totalPositionsValue, reserveBalance);
-
-        // get the total protected pool tokens amount
-        uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
-        // if the positions pool token amount is greater or equal to the total
-        // protected pool token amount, there's nothing to migrate
-        if (positionsPoolTokenAmount >= protectedPoolTokenAmount) {
-            return 0;
-        }
-
-        // deduct the positions pool toke amount from the total protected pool tokens amount
-        // and limit it by the system balance
-        uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(positionsPoolTokenAmount);
-        uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
-        if (poolAmountToMigrate > systemPoolAmount) {
-            poolAmountToMigrate = systemPoolAmount;
-        }
-        return poolAmountToMigrate;
-    }
-
-    /**
      * @dev migrates system pool tokens to v3
      *
      * Requirements:
@@ -850,6 +837,44 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
                 reserveTokens[1].safeTransfer(_vaultV3, reserveAmounts[1]);
             }
         }
+    }
+
+    /**
+     * @dev amount of pool tokens to migrate to v3
+     * @param poolToken pool token
+     * @param converter pool converter
+     * @param reserveToken the reserve tokens whose pool tokens we'll migrate
+     * @return poolAmount number of pool tokens to migrate to v3
+     * if the pool is in deficit don't migrate it (return 0)
+     *
+     */
+    function _poolTokensToMigrate(
+        IDSToken poolToken,
+        ILiquidityPoolConverter converter,
+        IReserveToken reserveToken
+    ) private view returns (uint256) {
+        // calcualte the total positions pool token amount
+        uint256 totalPositionsValue = totalPositionsValue(poolToken);
+        uint256 reserveBalance = converter.reserveBalance(reserveToken);
+        uint256 poolTokenSupply = poolToken.totalSupply();
+        uint256 positionsPoolTokenAmount = _mulDivF(poolTokenSupply, totalPositionsValue, reserveBalance);
+
+        // get the total protected pool tokens amount
+        uint256 protectedPoolTokenAmount = poolToken.balanceOf(address(_wallet));
+        // if the positions pool token amount is greater or equal to the total
+        // protected pool token amount, there's nothing to migrate
+        if (positionsPoolTokenAmount >= protectedPoolTokenAmount) {
+            return 0;
+        }
+
+        // deduct the positions pool toke amount from the total protected pool tokens amount
+        // and limit it by the system balance
+        uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(positionsPoolTokenAmount);
+        uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
+        if (poolAmountToMigrate > systemPoolAmount) {
+            poolAmountToMigrate = systemPoolAmount;
+        }
+        return poolAmountToMigrate;
     }
 
     /**
