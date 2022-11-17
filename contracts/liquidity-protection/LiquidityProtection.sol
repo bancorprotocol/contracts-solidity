@@ -524,7 +524,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
         Fraction memory poolRate = _poolTokenRate(pos.poolToken, pos.reserveToken);
-        uint256 poolAmount = _liquidationAmount(targetAmount, poolRate, pos.poolToken, pos.poolAmount);
+        uint256 poolAmount = _liquidationAmount(targetAmount, poolRate, pos.poolToken);
 
         // calculate the base token amount received by liquidating the pool tokens
         // note that the amount is divided by 2 since the pool amount represents both reserves
@@ -607,7 +607,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // calculate the amount of pool tokens required for liquidation
         // note that the amount is doubled since it's not possible to liquidate one reserve only
         Fraction memory poolRate = _poolTokenRate(removedPos.poolToken, removedPos.reserveToken);
-        uint256 poolAmount = _liquidationAmount(targetAmount, poolRate, removedPos.poolToken, 0);
+        uint256 poolAmount = _liquidationAmount(targetAmount, poolRate, removedPos.poolToken);
 
         // withdraw the pool tokens from the wallet
         _withdrawPoolTokens(removedPos.poolToken, poolAmount);
@@ -1327,20 +1327,20 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     function _liquidationAmount(
         uint256 targetAmount,
         Fraction memory poolRate,
-        IDSToken poolToken,
-        uint256 additionalAmount
+        IDSToken poolToken
     ) private view returns (uint256) {
         // note that the amount is doubled since it's not possible to liquidate one reserve only
         uint256 poolAmount = _mulDivF(targetAmount, poolRate.d.mul(2), poolRate.n);
         // limit the amount of pool tokens by the amount the system/caller holds
-        return Math.min(poolAmount, _systemStore.systemBalance(poolToken).add(additionalAmount));
+        return Math.min(poolAmount, poolToken.balanceOf(address(_wallet)));
     }
 
     /**
      * @dev withdraw pool tokens from the wallet
      */
     function _withdrawPoolTokens(IDSToken poolToken, uint256 poolAmount) private {
-        _systemStore.decSystemBalance(poolToken, poolAmount);
+        uint256 systemBalance = _systemStore.systemBalance(poolToken);
+        _systemStore.decSystemBalance(poolToken, Math.min(poolAmount, systemBalance));
         _wallet.withdrawTokens(IReserveToken(address(poolToken)), address(this), poolAmount);
     }
 
