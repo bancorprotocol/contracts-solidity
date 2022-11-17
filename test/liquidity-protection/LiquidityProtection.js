@@ -1095,6 +1095,36 @@ describe('LiquidityProtection', () => {
                         expect(amount).to.equal(reserveAmount);
                     });
 
+                    it('verifies that removeLiquidityReturn returns the correct amount when the pool is not in deficit', async () => {
+                        const reserveAmount = BigNumber.from(1000);
+                        await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
+                        const protectionId = protectionIds[0];
+
+                        await liquidityProtection.setTotalPositionsValue(poolToken.address, reserveAmount);
+
+                        const amount = (
+                            await liquidityProtection.removeLiquidityReturn(protectionId, PPM_RESOLUTION, now)
+                        )[0];
+
+                        expect(amount).to.equal(reserveAmount);
+                    });
+
+                    it('verifies that removeLiquidityReturn returns the correct amount when the pool is in surplus', async () => {
+                        const reserveAmount = BigNumber.from(1000);
+                        await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
+                        const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
+                        const protectionId = protectionIds[0];
+
+                        await liquidityProtection.setTotalPositionsValue(poolToken.address, reserveAmount.mul(80).div(100));
+
+                        const amount = (
+                            await liquidityProtection.removeLiquidityReturn(protectionId, PPM_RESOLUTION, now)
+                        )[0];
+
+                        expect(amount).to.equal(reserveAmount);
+                    });
+
                     it('verifies that removeLiquidityReturn returns the correct amount when the pool is in deficit', async () => {
                         const reserveAmount = BigNumber.from(1000);
                         await addProtectedLiquidity(poolToken.address, baseToken, baseTokenAddress, reserveAmount);
