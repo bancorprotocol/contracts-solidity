@@ -514,24 +514,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             packedRates
         );
 
-        // for network token, the return amount is identical to the target amount
-        if (_isNetworkToken(pos.reserveToken)) {
-            return (targetAmount, targetAmount, 0);
-        }
-
-        // handle base token return
-
-        // calculate the amount of pool tokens required for liquidation
-        // note that the amount is doubled since it's not possible to liquidate one reserve only
-        Fraction memory poolRate = _poolTokenRate(pos.poolToken, pos.reserveToken);
-        uint256 poolAmount = _liquidationAmount(targetAmount, poolRate, pos.poolToken);
-
-        // calculate the base token amount received by liquidating the pool tokens
-        // note that the amount is divided by 2 since the pool amount represents both reserves
-        uint256 baseAmount = _mulDivF(poolAmount, poolRate.n, poolRate.d.mul(2));
-        uint256 networkAmount = 0;
-
-        return (targetAmount, baseAmount, networkAmount);
+        return (targetAmount, targetAmount, 0);
     }
 
     /**
