@@ -684,11 +684,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // get the pool deficit
         Fraction memory poolDeficit = _poolDeficit(poolToken);
 
-        // no deficit
-        if (poolDeficit.n == 0) {
-            return (targetAmount, targetAmount);
-        }
-
         // calculate the available liquidity portion
         Fraction memory availablePortion = Fraction({ n: poolDeficit.d - poolDeficit.n, d: poolDeficit.d});
 
@@ -707,12 +702,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         returns (uint256)
     {
         Fraction memory poolDeficit = _poolDeficit(poolToken);
-
-        // no deficit
-        if (poolDeficit.n == 0) {
-            return 0;
-        }
-
         return _mulDivF(PPM_RESOLUTION, poolDeficit.n, poolDeficit.d);
     }
 
