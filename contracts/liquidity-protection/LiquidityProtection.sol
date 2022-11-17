@@ -685,7 +685,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         Fraction memory poolDeficit = _poolDeficit(poolToken);
 
         // no deficit
-        if (poolDeficit.d == 0) {
+        if (poolDeficit.n == 0) {
             return (targetAmount, targetAmount);
         }
 
@@ -709,7 +709,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         Fraction memory poolDeficit = _poolDeficit(poolToken);
 
         // no deficit
-        if (poolDeficit.d == 0) {
+        if (poolDeficit.n == 0) {
             return 0;
         }
 
@@ -719,7 +719,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
     /**
      * @dev returns the pool deficit based on the total protected amount vs. total
      * positions value, as a fraction.
-     * note that 0/0 is returned if the pool is not in deficit
+     * note that 0/1 is returned if the pool is not in deficit
      */
     function _poolDeficit(IDSToken poolToken)
         private
@@ -742,7 +742,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // if the protected liquidity is equal or greater than the total value,
         // the pool is not in deficit
         if (protectedLiquidity >= totalValue) {
-            return Fraction({ n: 0, d: 0 });
+            return Fraction({ n: 0, d: 1 });
         }
 
         // the pool is in deficit
