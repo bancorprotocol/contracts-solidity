@@ -681,18 +681,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // deduct the position IL from the target amount
         targetAmount = _deductIL(Math.max(reserveAmount, targetAmount), loss);
 
-        // check if the pool can accomodate all withdrawals
+        // get the pool deficit
+        Fraction memory poolDeficit = _poolDeficit(poolToken);
 
-        // get the pool deficit PPM
-        uint256 deficitPPM = poolDeficitPPM(poolToken);
+        // calculate the missing portion
+        Fraction memory missingPortion = Fraction({ n: poolDeficit.n - poolDeficit.d, d: poolDeficit.d});
 
-        // if the pool is not in deficit, it can support withdrawing the target amount
-        if (deficitPPM == 0) {
-            return (targetAmount, targetAmount);
-        }
-
-        // the pool is in deficit, reduce the target amount
-        return (_mulDivF(targetAmount, uint256(PPM_RESOLUTION).sub(deficitPPM), PPM_RESOLUTION), targetAmount);
+        // return the amount the provider will receive for removing liquidity
+        // as well as the specific position value (before deficit reduction
+        return (_mulDivF(targetAmount, missingPortion.n, missingPortion.d), targetAmount);
     }
 
     /**
@@ -700,9 +697,21 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * positions value, in PPM
      */
     function poolDeficitPPM(IDSToken poolToken)
-        public
+        external
         view
         returns (uint256)
+    {
+        Fraction memory poolDeficit = _poolDeficit(poolToken);
+        return _mulDivF(PPM_RESOLUTION, poolDeficit.n, poolDeficit.d);
+    }
+
+    /**
+     * @dev returns the protected liquidity amount and the total positions value
+     */
+    function _poolDeficit(IDSToken poolToken)
+        private
+        view
+        returns (Fraction memory)
     {
         // get the converter balance
         IConverter converter = IConverter(payable(_ownedBy(poolToken)));
@@ -717,14 +726,12 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // get the total positions value
         uint256 totalValue = totalPositionsValue(poolToken);
 
-        // if the protected liquidity is higher or equal to the total positions value,
-        // the pool is not in deficit
-        if (protectedLiquidity >= totalValue) {
-            return 0;
-        }
-
-        // the pool is in deficit
-        return uint256(PPM_RESOLUTION).mul(totalValue.sub(protectedLiquidity)).div(totalValue);
+        // the pool is in deficit if and only if
+        // the protected liquidity amount is lower than the total positions value
+        return Fraction({
+            n: totalValue - Math.min(protectedLiquidity, totalValue),
+            d: totalValue
+        });
     }
 
     /**
