@@ -684,12 +684,17 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // get the pool deficit
         Fraction memory poolDeficit = _poolDeficit(poolToken);
 
-        // calculate the missing portion
-        Fraction memory missingPortion = Fraction({ n: poolDeficit.n - poolDeficit.d, d: poolDeficit.d});
+        // no deficit
+        if (poolDeficit.d == 0) {
+            return (targetAmount, targetAmount);
+        }
+
+        // calculate the available liquidity portion
+        Fraction memory availablePortion = Fraction({ n: poolDeficit.d - poolDeficit.n, d: poolDeficit.d});
 
         // return the amount the provider will receive for removing liquidity
-        // as well as the specific position value (before deficit reduction
-        return (_mulDivF(targetAmount, missingPortion.n, missingPortion.d), targetAmount);
+        // as well as the specific position value (before deficit reduction)
+        return (_mulDivF(targetAmount, availablePortion.n, availablePortion.d), targetAmount);
     }
 
     /**
@@ -702,11 +707,19 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         returns (uint256)
     {
         Fraction memory poolDeficit = _poolDeficit(poolToken);
+
+        // no deficit
+        if (poolDeficit.d == 0) {
+            return 0;
+        }
+
         return _mulDivF(PPM_RESOLUTION, poolDeficit.n, poolDeficit.d);
     }
 
     /**
-     * @dev returns the protected liquidity amount and the total positions value
+     * @dev returns the pool deficit based on the total protected amount vs. total
+     * positions value, as a fraction.
+     * note that 0/0 is returned if the pool is not in deficit
      */
     function _poolDeficit(IDSToken poolToken)
         private
@@ -726,10 +739,15 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         // get the total positions value
         uint256 totalValue = totalPositionsValue(poolToken);
 
-        // the pool is in deficit if and only if
-        // the protected liquidity amount is lower than the total positions value
+        // if the protected liquidity is equal or greater than the total value,
+        // the pool is not in deficit
+        if (protectedLiquidity >= totalValue) {
+            return Fraction({ n: 0, d: 0 });
+        }
+
+        // the pool is in deficit
         return Fraction({
-            n: totalValue - Math.min(protectedLiquidity, totalValue),
+            n: totalValue.sub(protectedLiquidity),
             d: totalValue
         });
     }
