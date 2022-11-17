@@ -506,7 +506,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             pos.reserveRateD
         );
 
-        uint256 targetAmount = _removeLiquidityTargetAmount(
+        (uint256 targetAmount,) = _removeLiquidityAmounts(
             pos.poolToken,
             pos.reserveToken,
             pos.poolAmount,
@@ -641,26 +641,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             packedRates
         );
         return posValue;
-    }
-
-    /**
-     * @dev returns the amount the provider will receive for removing liquidity
-     */
-    function _removeLiquidityTargetAmount(
-        IDSToken poolToken,
-        IReserveToken reserveToken,
-        uint256 poolAmount,
-        uint256 reserveAmount,
-        PackedRates memory packedRates
-    ) internal view returns (uint256) {
-        (uint256 targetAmount,) = _removeLiquidityAmounts(
-            poolToken,
-            reserveToken,
-            poolAmount,
-            reserveAmount,
-            packedRates
-        );
-        return targetAmount;
     }
 
     /**

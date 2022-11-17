@@ -103,7 +103,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
             removeAverageRateD: removeAverageRateD
         });
 
-        uint256 targetAmount = _removeLiquidityTargetAmount(
+        (uint256 targetAmount,) = _removeLiquidityAmounts(
             poolToken,
             reserveToken,
             poolAmount,
