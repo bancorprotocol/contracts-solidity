@@ -539,6 +539,8 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 id,
         uint32 portion
     ) internal {
+        require(portion == PPM_RESOLUTION, "ERR_PORTION_NOT_SUPPORTED");
+
         // remove the position from the store and update the stats
         Position memory removedPos = _removePosition(provider, id, portion);
 

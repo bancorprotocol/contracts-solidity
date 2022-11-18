@@ -1304,7 +1304,7 @@ describe('LiquidityProtection', () => {
                                 expect(totalPositionsValue).to.be.lt(prevTotalPositionsValue);
                             });
 
-                            it('verifies that the caller can remove a portion of a protection', async () => {
+                            it('should revert when attempting to remove a portion of the liquidity', async () => {
                                 const reserveAmount = BigNumber.from(1000);
                                 await addProtectedLiquidity(
                                     poolToken.address,
@@ -1318,106 +1318,12 @@ describe('LiquidityProtection', () => {
                                 let prevProtection = await liquidityProtectionStore.protectedLiquidity(protectionId);
                                 prevProtection = getProtection(prevProtection);
 
-                                const prevPoolStats = await getPoolStats(poolToken, baseToken, isETHReserve);
-                                const prevProviderStats = await getProviderStats(
-                                    owner,
-                                    poolToken,
-                                    baseToken,
-                                    isETHReserve
-                                );
-                                const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                    poolToken.address
-                                );
-
                                 const portion = BigNumber.from(800000);
-
-                                await govToken.approve(
-                                    liquidityProtection.address,
-                                    prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
-                                );
-
                                 await liquidityProtection.setTime(now.add(duration.seconds(1)));
 
-                                const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                                const prevBalance = await getBalance(baseToken, baseTokenAddress, owner.address);
-                                const prevGovBalance = await govToken.balanceOf(owner.address);
-
-                                const res = await liquidityProtection.removeLiquidity(protectionId, portion);
-                                let transactionCost = BigNumber.from(0);
-                                if (isETHReserve) {
-                                    transactionCost = transactionCost.add(await getTransactionCost(res));
-                                }
-
-                                protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                                expect(protectionIds.length).to.equal(1);
-
-                                let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
-                                protection = getProtection(protection);
-
-                                expect(protection.poolAmount).to.equal(
-                                    prevProtection.poolAmount.div(BigNumber.from(5))
+                                await expect(liquidityProtection.removeLiquidity(protectionId, portion)).to.be.revertedWith(
+                                    'ERR_PORTION_NOT_SUPPORTED'
                                 );
-                                expect(protection.reserveAmount).to.equal(
-                                    prevProtection.reserveAmount.div(BigNumber.from(5))
-                                );
-
-                                // verify stats
-                                const poolStats = await getPoolStats(poolToken, baseToken, isETHReserve);
-                                expect(poolStats.totalPoolAmount).to.equal(
-                                    prevPoolStats.totalPoolAmount.sub(
-                                        prevProtection.poolAmount.sub(protection.poolAmount)
-                                    )
-                                );
-                                expect(poolStats.totalReserveAmount).to.equal(
-                                    prevPoolStats.totalReserveAmount.sub(
-                                        prevProtection.reserveAmount.sub(protection.reserveAmount)
-                                    )
-                                );
-
-                                const providerStats = await getProviderStats(owner, poolToken, baseToken, isETHReserve);
-                                expect(providerStats.totalProviderAmount).to.equal(
-                                    prevProviderStats.totalProviderAmount.sub(
-                                        prevProtection.reserveAmount.sub(protection.reserveAmount)
-                                    )
-                                );
-                                expect(providerStats.providerPools).to.equalTo([poolToken.address]);
-
-                                // verify balances
-                                const systemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                    poolToken.address
-                                );
-                                expect(systemBalance).to.equal(
-                                    prevSystemBalance.sub(prevProtection.poolAmount.sub(protection.poolAmount))
-                                );
-
-                                const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-
-                                // double since system balance was also liquidated
-                                const delta = prevProtection.poolAmount
-                                    .sub(protection.poolAmount)
-                                    .mul(BigNumber.from(2));
-                                expect(walletBalance).to.equal(prevWalletBalance.sub(delta));
-
-                                const balance = await getBalance(baseToken, baseTokenAddress, owner.address);
-                                expect(balance).to.equal(prevBalance.add(BigNumber.from(800)).sub(transactionCost));
-
-                                const govBalance = await govToken.balanceOf(owner.address);
-                                expect(govBalance).to.equal(prevGovBalance);
-
-                                const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                                expect(protectionPoolBalance).to.equal(BigNumber.from(0));
-
-                                const protectionBaseBalance = await getBalance(
-                                    baseToken,
-                                    baseTokenAddress,
-                                    liquidityProtection.address
-                                );
-                                expect(protectionBaseBalance).to.equal(BigNumber.from(0));
-
-                                const protectionNetworkBalance = await networkToken.balanceOf(
-                                    liquidityProtection.address
-                                );
-                                expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                             });
 
                             it('should revert when attempting to remove zero portion of the liquidity', async () => {
@@ -1620,7 +1526,7 @@ describe('LiquidityProtection', () => {
                             expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                         });
 
-                        it('verifies that the caller can remove a portion of a protection', async () => {
+                        it('should revert when attempting to remove a portion of the liquidity', async () => {
                             let reserveAmount = BigNumber.from(5000);
                             await baseToken.transfer(accounts[1].address, 5000);
                             await addProtectedLiquidity(
@@ -1643,80 +1549,13 @@ describe('LiquidityProtection', () => {
                             const protectionId = protectionIds[0];
                             let prevProtection = await liquidityProtectionStore.protectedLiquidity(protectionId);
                             prevProtection = getProtection(prevProtection);
-
-                            const prevPoolStats = await getPoolStats(poolToken, networkToken);
-                            const prevProviderStats = await getProviderStats(owner, poolToken, networkToken);
-                            const prevSystemBalance = await liquidityProtectionSystemStore.systemBalance(
-                                poolToken.address
-                            );
-                            const prevWalletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            const prevBalance = await getBalance(networkToken, networkToken.address, owner.address);
-                            const prevGovBalance = await govToken.balanceOf(owner.address);
-
                             const portion = BigNumber.from(800000);
-                            await govToken.approve(
-                                liquidityProtection.address,
-                                prevProtection.reserveAmount.mul(portion).div(PPM_RESOLUTION)
-                            );
+
                             await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                            await liquidityProtection.removeLiquidity(protectionId, portion);
-                            protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                            expect(protectionIds.length).to.equal(1);
 
-                            let protection = await liquidityProtectionStore.protectedLiquidity(protectionId);
-                            protection = getProtection(protection);
-
-                            expect(protection.poolAmount).to.equal(prevProtection.poolAmount.div(BigNumber.from(5)));
-                            expect(protection.reserveAmount).to.equal(
-                                prevProtection.reserveAmount.div(BigNumber.from(5))
+                            await expect(liquidityProtection.removeLiquidity(protectionId, portion)).to.be.revertedWith(
+                                'ERR_PORTION_NOT_SUPPORTED'
                             );
-
-                            // verify stats
-                            const poolStats = await getPoolStats(poolToken, networkToken);
-                            expect(poolStats.totalPoolAmount).to.equal(
-                                prevPoolStats.totalPoolAmount.sub(prevProtection.poolAmount.sub(protection.poolAmount))
-                            );
-                            expect(poolStats.totalReserveAmount).to.equal(
-                                prevPoolStats.totalReserveAmount.sub(
-                                    prevProtection.reserveAmount.sub(protection.reserveAmount)
-                                )
-                            );
-
-                            const providerStats = await getProviderStats(owner, poolToken, networkToken);
-                            expect(providerStats.totalProviderAmount).to.equal(
-                                prevProviderStats.totalProviderAmount.sub(
-                                    prevProtection.reserveAmount.sub(protection.reserveAmount)
-                                )
-                            );
-                            expect(providerStats.providerPools).to.equalTo([poolToken.address]);
-
-                            // verify balances
-                            const systemBalance = await liquidityProtectionSystemStore.systemBalance(poolToken.address);
-                            expect(systemBalance).to.equal(
-                                prevSystemBalance.add(prevProtection.poolAmount.sub(protection.poolAmount))
-                            );
-
-                            const walletBalance = await poolToken.balanceOf(liquidityProtectionWallet.address);
-                            expect(walletBalance).to.equal(prevWalletBalance);
-
-                            const balance = await getBalance(networkToken, networkToken.address, owner.address);
-                            expectAlmostEqual(balance, prevBalance.add(BigNumber.from(800)));
-
-                            const govBalance = await govToken.balanceOf(owner.address);
-                            expect(govBalance).to.equal(prevGovBalance.sub(BigNumber.from(800)));
-
-                            const protectionPoolBalance = await poolToken.balanceOf(liquidityProtection.address);
-                            expect(protectionPoolBalance).to.equal(BigNumber.from(0));
-
-                            const protectionBaseBalance = await getBalance(
-                                baseToken,
-                                baseTokenAddress,
-                                liquidityProtection.address
-                            );
-                            expect(protectionBaseBalance).to.equal(BigNumber.from(0));
-
-                            const protectionNetworkBalance = await networkToken.balanceOf(liquidityProtection.address);
-                            expect(protectionNetworkBalance).to.equal(BigNumber.from(0));
                         });
                     });
 
@@ -2045,13 +1884,12 @@ describe('LiquidityProtection', () => {
                         const protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
                         const protectionId = protectionIds[protectionIds.length - 1];
 
-                        const portion = PPM_RESOLUTION.div(BigNumber.from(2));
-                        const amount = BigNumber.from(2000).mul(portion).div(PPM_RESOLUTION);
+                        const amount = BigNumber.from(2000);
                         await govToken.approve(liquidityProtection.address, amount);
                         await liquidityProtection.setTime(now.add(duration.seconds(1)));
-                        await liquidityProtection.removeLiquidity(protectionId, portion);
+                        await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                         await govToken.approve(liquidityProtection.address, amount);
-                        await liquidityProtection.removeLiquidity(protectionId, portion);
+                        await liquidityProtection.removeLiquidity(protectionId, PPM_RESOLUTION);
                     });
 
                     it('verifies that locked balance owner can claim locked tokens if sufficient time has passed', async () => {
