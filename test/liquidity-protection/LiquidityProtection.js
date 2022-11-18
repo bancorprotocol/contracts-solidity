@@ -2410,6 +2410,24 @@ describe('LiquidityProtection', () => {
                             expect(poolDeficit).equal(0);
                         });
 
+                        it('should return 0 deficit PPM if the total positions value is 0', async () => {
+                            const provider = owner;
+                            // v1 pool: adds unprotected liquidity, pool tokens are minted and ALL of them are sent
+                            // to the provider's wallet
+                            await initPool(isEthReserve);
+
+                            // v2 pool: adds protected liquidity, pool tokens are minted and managed by the contract on
+                            // behalf of the provider. HALF of the pool tokens are allocated to the provider, and HALF to
+                            // the system
+                            const poolTokenSupply = await poolToken.totalSupply();
+                            await addV2Liquidity(provider, depositAmount, isEthReserve);
+
+                            await liquidityProtection.setTotalPositionsValue(poolToken.address, 0);
+
+                            const poolDeficit = await liquidityProtection.poolDeficitPPM(poolToken.address);
+                            expect(poolDeficit).equal(0);
+                        });
+
                         it('should return 0 deficit PPM if the total positions value is equal to the total protected liquidity', async () => {
                             const provider = owner;
                             // v1 pool: adds unprotected liquidity, pool tokens are minted and ALL of them are sent
