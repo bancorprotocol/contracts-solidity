@@ -57,7 +57,7 @@ let governor;
 let bancorVault;
 let accounts;
 
-describe('LiquidityProtection', () => {
+describe.only('LiquidityProtection', () => {
     const getConverterName = (type) => {
         switch (type) {
             case STANDARD_CONVERTER_TYPE:
@@ -452,27 +452,6 @@ describe('LiquidityProtection', () => {
                     await govToken.approve(liquidityProtection.address, protection1.reserveAmount);
                     await expect(
                         liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION)
-                    ).to.be.revertedWith('ERR_TOO_EARLY');
-                    protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                    expect(protectionIds.length).to.equal(1);
-
-                    const newBalance = await baseToken.balanceOf(owner.address);
-                    expect(newBalance).to.equal(balance.sub(amount));
-                });
-
-                it('should revert when the caller attempts to add and partially remove base tokens on the same block', async () => {
-                    const balance = await baseToken.balanceOf(owner.address);
-                    const amount = (await liquidityProtection.poolAvailableSpace(poolToken.address))[0];
-                    await baseToken.approve(liquidityProtection.address, amount);
-
-                    await liquidityProtection.addLiquidity(poolToken.address, baseToken.address, amount);
-                    let protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
-                    let protection1 = await liquidityProtectionStore.protectedLiquidity(protectionIds[0]);
-                    protection1 = getProtection(protection1);
-
-                    await govToken.approve(liquidityProtection.address, protection1.reserveAmount);
-                    await expect(
-                        liquidityProtection.removeLiquidity(protectionIds[0], PPM_RESOLUTION.div(BigNumber.from(2)))
                     ).to.be.revertedWith('ERR_TOO_EARLY');
                     protectionIds = await liquidityProtectionStore.protectedLiquidityIds(owner.address);
                     expect(protectionIds.length).to.equal(1);
