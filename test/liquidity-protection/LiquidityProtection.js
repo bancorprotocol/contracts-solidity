@@ -57,7 +57,7 @@ let governor;
 let bancorVault;
 let accounts;
 
-describe.only('LiquidityProtection', () => {
+describe('LiquidityProtection', () => {
     const getConverterName = (type) => {
         switch (type) {
             case STANDARD_CONVERTER_TYPE:
