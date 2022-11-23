@@ -1,3 +1,12 @@
+### 0.7.13
+LiquidityProtection
+* Removed protection logic
+* Removed the ability to migrate positions to v3
+* Added support for settings total positions value
+* Updated withdrawal logic
+* Updated system migration to v3 logic
+
+
 ### 0.7.12
 VortexBurner
 * BNT -> vBNT trades are routed through v3
