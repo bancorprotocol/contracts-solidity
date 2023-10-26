@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "../../ConverterVersion.sol";
@@ -26,6 +27,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     using SafeMath for uint256;
     using ReserveToken for IReserveToken;
     using SafeERC20 for IERC20;
+    using Address for address payable;
     using MathEx for *;
 
     uint256 private constant MAX_UINT128 = 2**128 - 1;
@@ -393,8 +395,20 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
 
         _setReserveBalances(1, 2, reserveBalance0, reserveBalance1);
 
-        _reserveTokens[0].safeTransfer(address(wallet), fee0);
-        _reserveTokens[1].safeTransfer(address(wallet), fee1);
+        // using a regular transfer here for the native token would revert due to exceeding
+        // the 2300 gas limit which is why we're using call instead (via sendValue),
+        // which the 2300 gas limit does not apply for
+        if (_reserveTokens[0].isNativeToken()) {
+            payable(address(wallet)).sendValue(fee0);
+        } else {
+            _reserveTokens[0].safeTransfer(address(wallet), fee0);
+        }
+
+        if (_reserveTokens[1].isNativeToken()) {
+            payable(address(wallet)).sendValue(fee1);
+        } else {
+            _reserveTokens[1].safeTransfer(address(wallet), fee1);
+        }
 
         return (reserveBalance0, reserveBalance1);
     }
