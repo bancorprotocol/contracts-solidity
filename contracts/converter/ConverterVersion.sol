@@ -5,5 +5,5 @@ contract ConverterVersion {
     // note that the version is defined as is for backward compatibility with older converters
 
     // solhint-disable-next-line const-name-snakecase
-    uint16 public constant version = 47;
+    uint16 public constant version = 48;
 }
