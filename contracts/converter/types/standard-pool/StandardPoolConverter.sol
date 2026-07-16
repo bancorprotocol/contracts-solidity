@@ -51,6 +51,9 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
     // where `numerator / denominator` gives the worth of one reserve token 0 in units of reserve token 1
     uint256 private _averageRateInfo;
 
+    // true if trading is disabled, false otherwise
+    bool private _tradingDisabled;
+
     /**
      * @dev triggered after liquidity is added
      */
@@ -72,6 +75,11 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         uint256 newBalance,
         uint256 newSupply
     );
+
+    /**
+     * @dev triggered when trading is enabled or disabled
+     */
+    event TradingEnabled(bool enabled);
 
     /**
      * @dev initializes a new StandardPoolConverter instance
@@ -185,6 +193,26 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
      */
     function averageRateInfo() external view returns (uint256) {
         return _averageRateInfo;
+    }
+
+    /**
+     * @dev returns whether trading is currently enabled
+     */
+    function tradingEnabled() external view returns (bool) {
+        return !_tradingDisabled;
+    }
+
+    /**
+     * @dev enables or disables trading
+     *
+     * Requirements:
+     *
+     * - the caller must be the owner of the contract
+     */
+    function setTradingEnabled(bool enabled) external ownerOnly {
+        _tradingDisabled = !enabled;
+
+        emit TradingEnabled(enabled);
     }
 
     /**
@@ -439,6 +467,7 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         address trader,
         address payable beneficiary
     ) external payable override nonReentrant only(BANCOR_NETWORK) returns (uint256) {
+        require(!_tradingDisabled, "ERR_TRADING_DISABLED");
         require(sourceToken != targetToken, "ERR_SAME_SOURCE_TARGET");
 
         return _doConvert(sourceToken, targetToken, sourceAmount, trader, beneficiary);
@@ -541,6 +570,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         IReserveToken targetToken,
         uint256 sourceAmount
     ) public view virtual override active returns (uint256, uint256) {
+        require(!_tradingDisabled, "ERR_TRADING_DISABLED");
+
         uint256 sourceId = _reserveIds[sourceToken];
         uint256 targetId = _reserveIds[targetToken];
 
@@ -574,6 +605,8 @@ contract StandardPoolConverter is ConverterVersion, IConverter, ContractRegistry
         IReserveToken targetToken,
         uint256 targetAmount
     ) public view virtual active returns (uint256, uint256) {
+        require(!_tradingDisabled, "ERR_TRADING_DISABLED");
+
         uint256 sourceId = _reserveIds[sourceToken];
         uint256 targetId = _reserveIds[targetToken];
 
