@@ -712,68 +712,6 @@
         "inputs":
         [
             {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "newProvider",
-                "type": "address"
-            }
-        ],
-        "name": "transferPosition",
-        "outputs":
-        [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs":
-        [
-            {
-                "internalType": "uint256",
-                "name": "id",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "newProvider",
-                "type": "address"
-            },
-            {
-                "internalType": "contract ITransferPositionCallback",
-                "name": "callback",
-                "type": "address"
-            },
-            {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
-            }
-        ],
-        "name": "transferPositionAndNotify",
-        "outputs":
-        [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs":
-        [
-            {
                 "internalType": "address",
                 "name": "newOwner",
                 "type": "address"

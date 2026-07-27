@@ -45,7 +45,6 @@ import {
     TestStandardPoolConverterFactory__factory,
     TestStandardToken__factory,
     TestTokenGovernance__factory,
-    TestTransferPositionCallback__factory,
     TestTypedConverterAnchorFactory__factory,
     TokenGovernance__factory,
     TokenHolder__factory,
@@ -203,11 +202,6 @@ const getContracts = (signer?: Signer) => {
         ),
         TestStandardToken: deployOrAttach('TestStandardToken', TestStandardToken__factory, signer),
         TestTokenGovernance: deployOrAttach('TestTokenGovernance', TestTokenGovernance__factory, signer),
-        TestTransferPositionCallback: deployOrAttach(
-            'TestTransferPositionCallback',
-            TestTransferPositionCallback__factory,
-            signer
-        ),
         TestTypedConverterAnchorFactory: deployOrAttach(
             'TestTypedConverterAnchorFactory',
             TestTypedConverterAnchorFactory__factory,

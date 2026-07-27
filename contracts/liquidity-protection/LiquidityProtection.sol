@@ -506,7 +506,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             pos.reserveRateD
         );
 
-        (uint256 targetAmount,) = _removeLiquidityAmounts(
+        (uint256 targetAmount, ) = _removeLiquidityAmounts(
             pos.poolToken,
             pos.reserveToken,
             pos.poolAmount,
@@ -639,7 +639,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
             pos.poolToken,
             pos.reserveToken,
             pos.poolAmount,
-            pos.reserveAmount, 
+            pos.reserveAmount,
             packedRates
         );
         return posValue;
@@ -687,7 +687,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         Fraction memory poolDeficit = _poolDeficit(poolToken);
 
         // calculate the available liquidity portion
-        Fraction memory availablePortion = Fraction({ n: poolDeficit.d - poolDeficit.n, d: poolDeficit.d});
+        Fraction memory availablePortion = Fraction({ n: poolDeficit.d - poolDeficit.n, d: poolDeficit.d });
 
         // return the amount the provider will receive for removing liquidity
         // as well as the specific position value (before deficit reduction)
@@ -698,11 +698,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * @dev returns the pool deficit based on the total protected amount vs. total
      * positions value, in PPM
      */
-    function poolDeficitPPM(IDSToken poolToken)
-        external
-        view
-        returns (uint256)
-    {
+    function poolDeficitPPM(IDSToken poolToken) external view returns (uint256) {
         Fraction memory poolDeficit = _poolDeficit(poolToken);
         return _mulDivF(PPM_RESOLUTION, poolDeficit.n, poolDeficit.d);
     }
@@ -712,11 +708,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
      * positions value, as a fraction.
      * note that 0/1 is returned if the pool is not in deficit
      */
-    function _poolDeficit(IDSToken poolToken)
-        private
-        view
-        returns (Fraction memory)
-    {
+    function _poolDeficit(IDSToken poolToken) private view returns (Fraction memory) {
         // get the converter balance
         IConverter converter = IConverter(payable(_ownedBy(poolToken)));
         IReserveToken reserveToken = _converterOtherReserve(converter, IReserveToken(address(_networkToken)));
@@ -737,47 +729,7 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         }
 
         // the pool is in deficit
-        return Fraction({
-            n: totalValue.sub(protectedLiquidity),
-            d: totalValue
-        });
-    }
-
-    /**
-     * @dev transfers a position to a new provider
-     *
-     * Requirements:
-     *
-     * - the caller must be the owner of the position
-     */
-    function transferPosition(uint256 id, address newProvider)
-        external
-        override
-        nonReentrant
-        validAddress(newProvider)
-        returns (uint256)
-    {
-        return _transferPosition(msg.sender, id, newProvider);
-    }
-
-    /**
-     * @dev transfers a position to a new provider and optionally notifies another contract
-     *
-     * Requirements:
-     *
-     * - the caller must be the owner of the position
-     */
-    function transferPositionAndNotify(
-        uint256 id,
-        address newProvider,
-        ITransferPositionCallback callback,
-        bytes calldata data
-    ) external override nonReentrant validAddress(newProvider) validAddress(address(callback)) returns (uint256) {
-        uint256 newId = _transferPosition(msg.sender, id, newProvider);
-
-        callback.onTransferPosition(newId, msg.sender, data);
-
-        return newId;
+        return Fraction({ n: totalValue.sub(protectedLiquidity), d: totalValue });
     }
 
     /**
@@ -851,29 +803,6 @@ contract LiquidityProtection is ILiquidityProtection, Utils, Owned, ReentrancyGu
         uint256 poolAmountToMigrate = protectedPoolTokenAmount.sub(positionsPoolTokenAmount);
         uint256 systemPoolAmount = _systemStore.systemBalance(poolToken);
         return Math.min(poolAmountToMigrate, systemPoolAmount);
-    }
-
-    /**
-     * @dev transfers a position to a new provider
-     */
-    function _transferPosition(
-        address provider,
-        uint256 id,
-        address newProvider
-    ) internal returns (uint256) {
-        // remove the position from the store and update the stats
-        Position memory removedPos = _removePosition(provider, id, PPM_RESOLUTION);
-
-        // add the position to the store, update the stats, and return the new id
-        return
-            _addPosition(
-                newProvider,
-                removedPos.poolToken,
-                removedPos.reserveToken,
-                removedPos.poolAmount,
-                removedPos.reserveAmount,
-                removedPos.timestamp
-            );
     }
 
     /**

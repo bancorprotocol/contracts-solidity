@@ -120,7 +120,8 @@ describe('VortexBurner', () => {
                     govTokenGovernance.address,
                     contractRegistry.address,
                     prevBurner.address,
-                    networkV3.address)
+                    networkV3.address
+                )
             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
@@ -131,7 +132,8 @@ describe('VortexBurner', () => {
                     ZERO_ADDRESS,
                     contractRegistry.address,
                     prevBurner.address,
-                    networkV3.address)
+                    networkV3.address
+                )
             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
@@ -142,7 +144,8 @@ describe('VortexBurner', () => {
                     govTokenGovernance.address,
                     ZERO_ADDRESS,
                     prevBurner.address,
-                    networkV3.address)
+                    networkV3.address
+                )
             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
 
@@ -153,7 +156,8 @@ describe('VortexBurner', () => {
                     govTokenGovernance.address,
                     contractRegistry.address,
                     prevBurner.address,
-                    ZERO_ADDRESS)
+                    ZERO_ADDRESS
+                )
             ).to.be.revertedWith('ERR_INVALID_ADDRESS');
         });
     });
@@ -442,7 +446,9 @@ describe('VortexBurner', () => {
 
                                             // assuming the BNT -> vBNT trade on Bancor v3 returns double the source amount,
                                             // since a mock network is used
-                                            totalBurnedAmount = totalBurnedAmount.add(netNetworkTokenConversionAmount.mul(2));
+                                            totalBurnedAmount = totalBurnedAmount.add(
+                                                netNetworkTokenConversionAmount.mul(2)
+                                            );
 
                                             return {
                                                 convertibleTokens,

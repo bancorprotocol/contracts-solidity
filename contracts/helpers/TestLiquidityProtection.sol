@@ -103,7 +103,7 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
             removeAverageRateD: removeAverageRateD
         });
 
-        (uint256 targetAmount,) = _removeLiquidityAmounts(
+        (uint256 targetAmount, ) = _removeLiquidityAmounts(
             poolToken,
             reserveToken,
             poolAmount,
@@ -112,6 +112,16 @@ contract TestLiquidityProtection is LiquidityProtection, TestTime {
         );
         _poolTokenRateOverride = false;
         return targetAmount;
+    }
+
+    function lockTokensTest(
+        address provider,
+        uint256 amount,
+        uint256 count
+    ) external {
+        for (uint256 i = 0; i < count; i++) {
+            _lockTokens(provider, amount);
+        }
     }
 
     function _poolTokenRate(IDSToken poolToken, IReserveToken reserveToken)
