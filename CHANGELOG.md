@@ -1,3 +1,9 @@
+### 0.7.14
+StandardPoolConverter
+* Added trading toggle (v49)
+* Fixed sending ETH fees to a proxy network fee wallet
+
+
 ### 0.7.13
 LiquidityProtection
 * Removed protection logic
