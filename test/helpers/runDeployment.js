@@ -177,7 +177,6 @@ module.exports = async (signer, deploy, deployed, execute, config) => {
     const liquidityProtection = await deploy(
         'liquidityProtection',
         'LiquidityProtection',
-        signerAddress, // bancor network v3, not used in this context
         signerAddress, // bancor vault v3, not used in this context
         liquidityProtectionSettings.address,
         liquidityProtectionStore.address,
