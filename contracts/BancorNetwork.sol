@@ -104,12 +104,16 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         uint256 amount = sourceAmount;
 
         // iterate over the conversion path
-        for (uint256 i = 2; i < path.length; i += 2) {
+        for (uint256 i = 2; i < path.length;) {
             IReserveToken sourceToken = IReserveToken(path[i - 2]);
             address anchor = path[i - 1];
             IReserveToken targetToken = IReserveToken(path[i]);
             IConverter converter = IConverter(payable(IConverterAnchor(anchor).owner()));
             (amount, ) = _getReturn(converter, sourceToken, targetToken, amount);
+
+            unchecked {
+                i+=2;
+            }
         }
 
         return amount;
@@ -185,7 +189,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
      * BancorNetwork
      *
      * note that ideally this transaction should've been created before the previous conversion is even complete, so
-     * so the input amount isn't known at that point - the amount is actually take from the
+     * so the input amount isn't known at that point - the amount is actually taken from the
      * BancorX contract directly by specifying the conversion id
      */
     function completeXConversion(
@@ -216,7 +220,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         uint256 targetAmount;
 
         // iterate over the conversion data
-        for (uint256 i = 0; i < data.length; i++) {
+        for (uint256 i; i < data.length;) {
             ConversionStep memory stepData = data[i];
 
             // newer converter
@@ -267,6 +271,10 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 msg.sender
             );
             sourceAmount = targetAmount;
+
+            unchecked {
+                ++i;
+            }
         }
 
         // ensure the trade meets the minimum requested amount
@@ -334,7 +342,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
 
         // iterate the conversion path and create the conversion data for each step
         uint256 i;
-        for (i = 0; i < path.length - 1; i += 2) {
+        for (i = 0; i < path.length - 1;) {
             IConverterAnchor anchor = IConverterAnchor(path[i + 1]);
             IConverter converter = IConverter(payable(anchor.owner()));
             IReserveToken targetToken = IReserveToken(path[i + 2]);
@@ -347,10 +355,14 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 beneficiary: address(0), // set flags
                 isV28OrHigherConverter: _isV28OrHigherConverter(converter)
             });
+
+            unchecked {
+                i += 2;
+            }
         }
 
         // set the beneficiary for each step
-        for (i = 0; i < data.length; i++) {
+        for (i = 0; i < data.length;) {
             ConversionStep memory stepData = data[i];
             // check if the converter in this step is newer as older converters don't even support the beneficiary argument
             if (stepData.isV28OrHigherConverter) {
@@ -368,12 +380,16 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
                 // converter in this step is older, beneficiary is the network contract
                 stepData.beneficiary = payable(address(this));
             }
+
+            unchecked {
+                ++i;
+            }
         }
 
         return data;
     }
 
-    bytes4 private constant GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
+    bytes4 private immutable GET_RETURN_FUNC_SELECTOR = bytes4(keccak256("getReturn(address,address,uint256)"));
 
     // using a static call to get the return from older converters
     function _getReturn(
@@ -398,7 +414,7 @@ contract BancorNetwork is IBancorNetwork, TokenHolder, ContractRegistryClient, R
         return (0, 0);
     }
 
-    bytes4 private constant IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
+    bytes4 private immutable IS_V28_OR_HIGHER_FUNC_SELECTOR = bytes4(keccak256("isV28OrHigher()"));
 
     // using a static call to identify converter version
     // can't rely on the version number since the function had a different signature in older converters
