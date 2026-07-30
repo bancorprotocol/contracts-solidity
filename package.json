@@ -25,7 +25,7 @@
   "scripts": {
     "build": "hardhat compile",
     "rebuild": "yarn clean && yarn build",
-    "test": "NODE_OPTIONS='--max-old-space-size=8192' hardhat test",
+    "test": "NODE_OPTIONS='--max-old-space-size=8192' hardhat test --parallel",
     "testb": "BAIL=1 yarn test",
     "size": "hardhat size-contracts",
     "verify": "hardhat verify",
